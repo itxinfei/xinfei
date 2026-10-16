@@ -14,7 +14,7 @@
  *
  * 检测规则：
  *   E001  el-button type="danger" 应改用 class="btn-delete"（操作列语义类名）
- *   E002  this.$confirm / this.$message 应改用 ReggieUI.confirm / ReggieUI.success
+ *   E002  this.$confirm / this.$message 应改用 XinfeiUI.confirm / XinfeiUI.success
  *   E003  原生 el-dialog 应改用 crud-dialog 组件
  *   W001  手写 stat-card/stat-row 应改用 stat-cards 组件
  *   W002  手写 filter-bar/cs-filter 应改用 table-bar 组件
@@ -23,7 +23,7 @@
  *   W005  缺少 ds-page 类（页面内边距不统一）
  *   W006  aria-label="页面主要内容" 应改用 aria-labelledby="page-title"
  *
- * @author Reggie Team
+ * @author Xinfei Team
  * @since 2026-09-22
  */
 
@@ -65,9 +65,9 @@ const rules = {
   },
   E002: {
     level: 'ERROR',
-    desc: 'this.$confirm / this.$message 应改用 ReggieUI',
+    desc: 'this.$confirm / this.$message 应改用 XinfeiUI',
     pattern: /this\.\$(confirm|message|notify|alert)\s*\(/g,
-    fix: '使用 ReggieUI.confirm() / ReggieUI.success() / ReggieUI.warning() / ReggieUI.error()'
+    fix: '使用 XinfeiUI.confirm() / XinfeiUI.success() / XinfeiUI.warning() / XinfeiUI.error()'
   },
   E003: {
     level: 'ERROR',
