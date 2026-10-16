@@ -172,17 +172,19 @@ public class RechargeRecordServiceImpl extends ServiceImpl<RechargeRecordMapper,
      * @param rechargeId 充值记录ID
      * @param paymentTradeNo 支付单内部交易号
      * @param channelTradeNo 渠道交易号
+     * @return true=已入账或幂等无需处理；false=钱已收但无法入账，调用方须自动退款（P1-5）
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void handleRechargePaid(Long rechargeId, String paymentTradeNo, String channelTradeNo) {
+    public boolean handleRechargePaid(Long rechargeId, String paymentTradeNo, String channelTradeNo) {
         if (rechargeId == null) {
-            return;
+            log.error("【严重】[充值支付] 支付单未携带充值记录ID，无法入账，需退款：tradeNo={}", paymentTradeNo);
+            return false;
         }
         RechargeRecord record = getById(rechargeId);
         if (record == null) {
-            log.warn("[充值支付] 支付成功但充值单不存在：rechargeId={}", rechargeId);
-            return;
+            log.warn("[充值支付] 支付成功但充值单不存在，需自动退款：rechargeId={}", rechargeId);
+            return false;
         }
         // 渠道号缺失（mock）时兜底存内部交易号，保证 trade_no 可追溯
         String storedTradeNo = channelTradeNo != null && !channelTradeNo.trim().isEmpty()
@@ -191,14 +193,15 @@ public class RechargeRecordServiceImpl extends ServiceImpl<RechargeRecordMapper,
         if (casRows == 0) {
             if (RechargeRecord.STATUS_SUCCESS.equals(record.getStatus())) {
                 log.info("[充值支付] 充值单已入账，回调幂等跳过：rechargeId={}", rechargeId);
-                return;
+                return true;
             }
-            // CANCELLED：超时取消后支付迟到，钱已收不能入账，严重告警人工退款
-            log.error("【严重】[充值支付] 支付成功但充值单已{}，未入账需人工退款：rechargeId={}, amount={}",
+            // CANCELLED：超时取消后支付迟到，钱已收不能入账——返回 false 由支付回调发起自动退款（P1-5）
+            log.warn("[充值支付] 支付成功但充值单已{}，未入账转自动退款：rechargeId={}, amount={}",
                     record.getStatus(), rechargeId, record.getAmount());
-            return;
+            return false;
         }
-        // CAS 成功后原子加余额。加钱失败不回滚终态（支付已成功），仅严重告警人工补录，避免回调悬挂
+        // CAS 成功后原子加余额。加钱失败不回滚终态（支付已成功），仅严重告警人工补录，避免回调悬挂；
+        // 充值单已 SUCCESS 终态，不退款（退款会与人工补录双重受益），由人工核查
         int rows = memberMapper.addBalance(record.getMemberId(), record.getAmount(), record.getGiftAmount());
         if (rows == 0) {
             log.error("【严重】[充值支付] 充值已支付但加余额失败（会员可能被删），需人工补录：rechargeId={}, memberId={}",
@@ -207,6 +210,7 @@ public class RechargeRecordServiceImpl extends ServiceImpl<RechargeRecordMapper,
             log.info("[充值支付] 在线充值入账成功：rechargeId={}, memberId={}, amount={}, gift={}",
                     rechargeId, record.getMemberId(), record.getAmount(), record.getGiftAmount());
         }
+        return true;
     }
 
     /**

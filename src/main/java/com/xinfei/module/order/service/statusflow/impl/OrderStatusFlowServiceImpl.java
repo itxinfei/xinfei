@@ -202,6 +202,8 @@ public class OrderStatusFlowServiceImpl
 
         // 已支付订单拒单（支付成功会把订单 1→2，待接单可能已付款）→ 自动退款，不置已取消
         if (hasSuccessPaymentOrder(id)) {
+            // P1-7：关闭遗留 PENDING 支付单，杜绝拒单退款窗口内陈旧预支付仍可付款
+            paymentOrderService.closePendingPayments(PaymentOrder.BIZ_ORDER, id);
             // 修改点(P0-5)：落拒单原因供顾客端回执
             persistCancelReason(id, "商家拒单");
             registerAutoRefund(id, "商家拒单自动退款", order.getTenantId());
@@ -214,6 +216,10 @@ public class OrderStatusFlowServiceImpl
         if (rejected == null) {
             throw new CustomException("订单状态不正确，无法拒单");
         }
+        // P1-7：订单进入已取消即联动关闭其遗留 PENDING 支付单（同事务），消除
+        // "单已取消但预支付单仍可付款"窗口；用户已在渠道端付款的竞态由
+        // handlePaymentSuccess 的 CLOSED→SUCCESS 挽救 + 已取消订单自动退款兜底。
+        paymentOrderService.closePendingPayments(PaymentOrder.BIZ_ORDER, id);
         // 修改点(P0-5)：拒单原因回执（独立字段，不覆盖顾客下单备注）
         persistCancelReason(id, "商家拒单");
 
@@ -287,6 +293,8 @@ public class OrderStatusFlowServiceImpl
         // 已支付订单取消（支付成功会把订单 1→2，配送中同样可能已付款）→ 自动退款，不置已取消
         // 订单状态由退款服务在渠道退款成功后联动为已退款(6)，避免"已取消但已付款"的资金矛盾
         if (hasSuccessPaymentOrder(id)) {
+            // P1-7：关闭遗留 PENDING 支付单，杜绝取消退款窗口内陈旧预支付仍可付款
+            paymentOrderService.closePendingPayments(PaymentOrder.BIZ_ORDER, id);
             // 修改点(P0-5)：已支付取消不置已取消，但仍需落取消原因供顾客端回执
             persistCancelReason(id, reason);
             registerAutoRefund(id, reason, order.getTenantId());
@@ -308,6 +316,11 @@ public class OrderStatusFlowServiceImpl
         if (!rows) {
             throw new CustomException("订单状态已变更，无法取消，请刷新后重试");
         }
+
+        // P1-7：未支付取消联动关闭遗留 PENDING 支付单（同事务，取消回滚则关闭回滚），
+        // 消除"单已取消但预支付单仍可付款"窗口；取消-支付竞态下用户已扣款的，
+        // 由 handlePaymentSuccess 的 CLOSED→SUCCESS 挽救 + 已取消订单自动退款兜底。
+        paymentOrderService.closePendingPayments(PaymentOrder.BIZ_ORDER, id);
 
         // 取消订单时回退库存（部分失败也允许，补偿任务会重试）
         boolean refundOk = refundStockByOrderId(id);
@@ -741,6 +754,9 @@ public class OrderStatusFlowServiceImpl
                 } catch (Exception e) {
                     // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
                     log.error("【严重】订单取消后自动退款异常，需人工处理！orderId={}", id, e);
+                    // P0 兜底：refundByOrder 进入渠道保护段前抛异常时内部来不及留痕，补写对账待办
+                    refundService.recordAutoRefundFailureTrace(id,
+                            "订单取消/拒单自动退款异常：" + e.getMessage());
                 }
                 if (refunded) {
                     try {

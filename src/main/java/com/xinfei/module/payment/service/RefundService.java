@@ -29,6 +29,17 @@ public interface RefundService {
     boolean refundByOrder(Long orderId, String reason);
 
     /**
+     * 自动退款调用方兜底留痕：refundByOrder 在进入渠道保护段之前抛异常（如支付单查询 DB 异常）时，
+     * 内部的对账留痕逻辑都来不及执行，调用方（afterCommit 自动退款）捕获异常后必须调用本方法，
+     * 把失败落成 {@code [对账待办]} 痕迹，供 RefundReconcileTask 扫描告警，禁止只打日志。
+     * <p>本方法自身吞掉一切异常（留痕失败仅 log.error），不得影响调用方流程。</p>
+     *
+     * @param orderId 业务订单ID（按最新 SUCCESS 支付单留痕）
+     * @param reason  失败原因描述
+     */
+    void recordAutoRefundFailureTrace(Long orderId, String reason);
+
+    /**
      * 判断是否为可走渠道 API 的在线支付通道（微信/支付宝）。
      * 现金/银行卡/储值/货到付款等线下通道返回 false（须走本地手动退款记账）。
      *

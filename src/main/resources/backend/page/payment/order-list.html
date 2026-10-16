@@ -187,8 +187,8 @@
   <script>
     // ========== 支付状态常量映射（统一来源） ==========
     // 修改点：新增 PAID → 已支付 映射，与后端 PaymentOrder 状态常量完全对齐
-    const PAYMENT_STATUS = { SUCCESS: '成功', PAID: '已支付', PENDING: '待支付', FAIL: '失败', REFUND: '已退款' }
-    const PAYMENT_STATUS_TAG = { SUCCESS: 'success', PAID: 'success', PENDING: 'warning', FAIL: 'danger', REFUND: 'info' }
+    const PAYMENT_STATUS = { SUCCESS: '成功', PAID: '已支付', PENDING: '待支付', FAIL: '失败', REFUND: '已退款', CLOSED: '已关闭' }
+    const PAYMENT_STATUS_TAG = { SUCCESS: 'success', PAID: 'success', PENDING: 'warning', FAIL: 'danger', REFUND: 'info', CLOSED: 'info' }
     // 修改点：normalizePayment 现在直接将 status 转为中文（不再依赖 _statusLabel 间接字段）
     function normalizePayment(row) {
       if (!row) return row

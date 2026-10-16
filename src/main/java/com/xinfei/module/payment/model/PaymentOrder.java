@@ -34,6 +34,8 @@ public class PaymentOrder implements Serializable {
     public static final String STATUS_REFUND = "REFUND";
     /** 状态常量：支付失败 */
     public static final String STATUS_FAIL = "FAIL";
+    /** 状态常量：已关闭（业务单取消/超时联动关闭；迟到支付回调/查单仍可翻回 SUCCESS 触发自动退款） */
+    public static final String STATUS_CLOSED = "CLOSED";
 
     /** 业务类型常量：普通外卖/堂食订单 */
     public static final String BIZ_ORDER = "ORDER";
@@ -67,7 +69,7 @@ public class PaymentOrder implements Serializable {
     @Schema(description = "支付金额（元）", example = "88.00")
     private BigDecimal amount;
 
-    @Schema(description = "支付状态：PENDING=待支付，SUCCESS=成功，REFUND=已退款，FAIL=失败", example = "SUCCESS")
+    @Schema(description = "支付状态：PENDING=待支付，SUCCESS=成功，REFUND=已退款，FAIL=失败，CLOSED=已关闭（业务单取消联动关闭；迟到支付可翻回 SUCCESS 并自动退款）", example = "SUCCESS")
     private String status;
 
     @Schema(description = "支付时间", example = "2026-07-09 12:00:00")

@@ -160,12 +160,15 @@ public class OrderMainFlowIntegrationTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.data.mockMode").value(true))
                 .andReturn();
         String tradeNo = (String) dataOf(payResult).get("tradeNo");
+        // 回调金额必填（fail-closed），取支付单实际金额，与前端真实行为一致
+        String payAmount = jdbcTemplate.queryForObject(
+                "SELECT CAST(amount AS CHAR) FROM payment_order WHERE trade_no = ?", String.class, tradeNo);
 
-        // 4. 模拟支付成功回调（mock 验签恒真，只需 sign + out_trade_no）
+        // 4. 模拟支付成功回调（mock 验签恒真，但 out_trade_no + total_amount 必填并做服务端比对）
         mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/notify/ALIPAY")
                 .sessionAttr("user", USER_ID).sessionAttr("tenantId", 999L)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"sign\":\"mock\",\"out_trade_no\":\"" + tradeNo + "\"}")))
+                .content("{\"sign\":\"mock\",\"out_trade_no\":\"" + tradeNo + "\",\"total_amount\":\"" + payAmount + "\"}")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(1));
         // 回调联动订单 待付款(1) → 待接单(2)

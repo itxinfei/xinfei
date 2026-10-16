@@ -394,34 +394,37 @@ public class PaymentController {
                     channel, exist.getChannel(), tradeNo);
             return R.error("支付渠道不匹配");
         }
-        // 金额一致性校验：微信回调 total_fee（分），支付宝 total_amount（元）
+        // 金额一致性校验（fail-closed，与真实路径对齐）：微信回调 total_fee（分），支付宝 total_amount（元）。
+        // 缺失金额参数直接拒绝——此前"缺参即跳过比对"允许只传 tradeNo 就伪造支付成功（mock 验签恒真场景下为完整利用链）。
         String channelFeeField = "WECHAT".equalsIgnoreCase(channel) ? "total_fee" : "total_amount";
         String notifyAmountStr = params.get(channelFeeField);
-        if (notifyAmountStr != null && !notifyAmountStr.trim().isEmpty()) {
-            try {
-                BigDecimal notifyAmount;
-                if ("WECHAT".equalsIgnoreCase(channel)) {
-                    notifyAmount = new BigDecimal(notifyAmountStr).divide(new BigDecimal("100"), 2,
-                            java.math.RoundingMode.HALF_UP);
-                } else {
-                    notifyAmount = new BigDecimal(notifyAmountStr);
-                }
-                BigDecimal existAmount = exist.getAmount();
-                // fail-closed：支付单金额缺失属数据异常，拒绝而非放行
-                if (existAmount == null) {
-                    log.warn("支付单金额缺失，拒绝处理：tradeNo={}", tradeNo);
-                    return R.error("支付金额非法");
-                }
-                if (notifyAmount.compareTo(existAmount) != 0) {
-                    log.warn("支付回调金额不一致，拒绝处理：notifyAmount={}, orderAmount={}, tradeNo={}",
-                            notifyAmount, existAmount, tradeNo);
-                    return R.error("支付金额不一致");
-                }
-            } catch (NumberFormatException e) {
-                log.warn("支付回调 {} 格式非法，拒绝处理：value={}, tradeNo={}",
-                        channelFeeField, notifyAmountStr, tradeNo);
-                return R.error("支付金额格式非法");
+        if (notifyAmountStr == null || notifyAmountStr.trim().isEmpty()) {
+            log.warn("支付回调缺少金额参数 {}，拒绝处理：channel={}, tradeNo={}", channelFeeField, channel, tradeNo);
+            return R.error("回调缺少金额参数");
+        }
+        try {
+            BigDecimal notifyAmount;
+            if ("WECHAT".equalsIgnoreCase(channel)) {
+                notifyAmount = new BigDecimal(notifyAmountStr).divide(new BigDecimal("100"), 2,
+                        java.math.RoundingMode.HALF_UP);
+            } else {
+                notifyAmount = new BigDecimal(notifyAmountStr);
             }
+            BigDecimal existAmount = exist.getAmount();
+            // fail-closed：支付单金额缺失属数据异常，拒绝而非放行
+            if (existAmount == null) {
+                log.warn("支付单金额缺失，拒绝处理：tradeNo={}", tradeNo);
+                return R.error("支付金额非法");
+            }
+            if (notifyAmount.compareTo(existAmount) != 0) {
+                log.warn("支付回调金额不一致，拒绝处理：notifyAmount={}, orderAmount={}, tradeNo={}",
+                        notifyAmount, existAmount, tradeNo);
+                return R.error("支付金额不一致");
+            }
+        } catch (NumberFormatException e) {
+            log.warn("支付回调 {} 格式非法，拒绝处理：value={}, tradeNo={}",
+                    channelFeeField, notifyAmountStr, tradeNo);
+            return R.error("支付金额格式非法");
         }
         PayResponse response = notifyChannel.handleNotify(params);
         if (response.isSuccess()) {
@@ -695,7 +698,7 @@ public class PaymentController {
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "订单ID") Long orderId,
             @Parameter(description = "支付渠道：ALIPAY-支付宝, WECHAT-微信") String channel,
-            @Parameter(description = "支付状态：PENDING-待支付, SUCCESS-成功, FAIL-失败, REFUND-已退款") String status,
+            @Parameter(description = "支付状态：PENDING-待支付, SUCCESS-成功, FAIL-失败, REFUND-已退款, CLOSED-已关闭") String status,
             @Parameter(description = "开始时间（yyyy-MM-dd HH:mm:ss）") String beginTime,
             @Parameter(description = "结束时间（yyyy-MM-dd HH:mm:ss）") String endTime) {
         Page<PaymentOrder> pageInfo = PageUtils.of(page, pageSize);
@@ -710,6 +713,7 @@ public class PaymentController {
                         .STATUS_FAIL); break;
                 case "已退款": case "REFUND": case "REFUNDED": qw.eq(PaymentOrder::getStatus, PaymentOrder
                         .STATUS_REFUND); break;
+                case "已关闭": case "CLOSED":    qw.eq(PaymentOrder::getStatus, PaymentOrder.STATUS_CLOSED); break;
                 default:                        qw.eq(PaymentOrder::getStatus, status); break;
             }
         }

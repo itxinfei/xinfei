@@ -3,6 +3,7 @@ package com.xinfei.module.payment.channel.real;
 import com.xinfei.module.payment.channel.PayRequest;
 import com.xinfei.module.payment.channel.PayResponse;
 import com.xinfei.module.payment.channel.PaymentChannel;
+import com.xinfei.module.payment.channel.RefundQueryCapable;
 import com.xinfei.module.payment.channel.RefundRequest;
 import com.xinfei.module.payment.channel.RefundResponse;
 import com.xinfei.module.payment.channel.notify.NotifyRequest;
@@ -24,6 +25,7 @@ import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByIdReques
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest;
 import com.wechat.pay.java.service.refund.model.AmountReq;
 import com.wechat.pay.java.service.refund.model.CreateRequest;
+import com.wechat.pay.java.service.refund.model.QueryByOutRefundNoRequest;
 import com.wechat.pay.java.service.refund.model.Refund;
 import com.wechat.pay.java.service.refund.model.RefundNotification;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +46,7 @@ import java.math.RoundingMode;
  * @since 2026-09-21
  */
 @Slf4j
-public class WechatV3PayChannel implements PaymentChannel, RealNotifyCapable {
+public class WechatV3PayChannel implements PaymentChannel, RealNotifyCapable, RefundQueryCapable {
 
     private static final String CURRENCY_CNY = "CNY";
     private static final String H5_TYPE_WAP = "Wap";
@@ -220,6 +222,30 @@ public class WechatV3PayChannel implements PaymentChannel, RealNotifyCapable {
             response.setSuccess(false);
             response.setErrorMsg(errOf(e));
             return response;
+        }
+    }
+
+    /**
+     * 按商户退款单号查询微信退款终态（PROCESSING 退款对账兜底）。
+     */
+    @Override
+    public RefundNotifyResult queryRefundStatus(String outRefundNo) {
+        log.info("[微信支付] 查询退款单 outRefundNo={}", outRefundNo);
+        RefundNotifyResult result = new RefundNotifyResult();
+        result.setOutRefundNo(outRefundNo);
+        try {
+            QueryByOutRefundNoRequest request = new QueryByOutRefundNoRequest();
+            request.setOutRefundNo(outRefundNo);
+            Refund refund = clients.getRefundService().queryByOutRefundNo(request);
+            result.setSuccess(true);
+            result.setStatus(refund.getStatus() == null ? null : refund.getStatus().name());
+            result.setRefundId(refund.getRefundId());
+            return result;
+        } catch (Exception e) {
+            log.error("[微信支付] 查询退款单失败 outRefundNo={}, err={}", outRefundNo, errOf(e), e);
+            result.setSuccess(false);
+            result.setErrorMsg(errOf(e));
+            return result;
         }
     }
 

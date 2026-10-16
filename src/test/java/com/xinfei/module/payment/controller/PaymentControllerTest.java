@@ -338,6 +338,32 @@ public class PaymentControllerTest {
                 .andExpect(jsonPath("$.msg").value("支付金额格式非法"));
     }
 
+    @Test
+    @DisplayName("10b. 支付回调 - 缺少金额参数直接拒绝（fail-closed，防零金额伪造支付成功）")
+    void testNotify_missing_amount_rejected() throws Exception {
+        PaymentOrder po = paymentOrderService.createPaymentOrder(201L, "WECHAT", new BigDecimal("50.00"));
+        String tradeNo = po.getTradeNo();
+
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("out_trade_no", tradeNo);
+        params.put("transaction_id", "WECHAT_TXN_006");
+        params.put("sign", "test_sign");
+        // 故意不带 total_fee：mock 模式验签跳过，若不强制金额校验即可零成本置支付成功
+
+        mockMvc.perform(withCsrfToken(post("/api/payment/notify/WECHAT")
+                        .sessionAttr("employee", 1L)
+                        .sessionAttr("tenantId", 999L)
+                        .contentType("application/json")
+                        .content(toJson(params))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.msg").value("回调缺少金额参数"));
+
+        // 支付单必须仍为 PENDING，未被伪造回调翻转
+        PaymentOrder after = paymentOrderService.selectByTradeNoIgnoreTenant(tradeNo);
+        assertThat(after.getStatus()).isEqualTo("PENDING");
+    }
+
     // ==================== 退款 ====================
 
     @Test

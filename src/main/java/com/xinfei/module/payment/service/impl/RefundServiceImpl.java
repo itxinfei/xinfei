@@ -239,6 +239,37 @@ public class RefundServiceImpl implements RefundService {
     }
 
     /**
+     * 自动退款调用方兜底留痕（P0 资金闭环）：refundByOrder 在进入渠道保护段之前抛异常时
+     * （支付单查询/锁前校验等 DB 异常），其内部各处对账留痕都来不及执行，
+     * 由调用方 afterCommit 捕获后调用本方法补写 {@code [对账待办]} 痕迹，供 RefundReconcileTask 扫描告警。
+     * 自身吞掉一切异常，绝不阻断调用方。
+     */
+    @Override
+    public void recordAutoRefundFailureTrace(Long orderId, String reason) {
+        if (orderId == null) {
+            return;
+        }
+        try {
+            PaymentOrder paymentOrder = paymentOrderService.lambdaQuery()
+                    .eq(PaymentOrder::getOrderId, orderId)
+                    .eq(PaymentOrder::getStatus, STATUS_SUCCESS)
+                    .orderByDesc(PaymentOrder::getId)
+                    .last("limit 1")
+                    .one();
+            if (paymentOrder == null || paymentOrder.getAmount() == null) {
+                log.error("【严重】自动退款失败且未找到可留痕的 SUCCESS 支付单，需人工按订单核查: orderId={}, reason={}",
+                        orderId, reason);
+                return;
+            }
+            recordReconcileTraceSafely(paymentOrder, paymentOrder.getAmount(),
+                    "自动退款发起前异常未走渠道：" + reason);
+        } catch (Exception e) {
+            // 宽异常兜底：留痕路径自身失败仅告警，不阻断调用方
+            log.error("【严重】自动退款失败兜底留痕异常，需人工核查: orderId={}, reason={}", orderId, reason, e);
+        }
+    }
+
+    /**
      * 判断是否为可走渠道 API 的在线支付通道（微信/支付宝）。
      * 现金/银行卡/储值/货到付款等线下通道无法调渠道退款 API，须走本地手动退款记账。
      *
@@ -287,7 +318,7 @@ public class RefundServiceImpl implements RefundService {
                         .set(PaymentOrder::getStatus, STATUS_REFUND)
                         .set(PaymentOrder::getUpdateTime, LocalDateTime.now())
                         .update();
-                Orders order = orderService.getById(latest.getOrderId());
+                Orders order = isOrderLinkedBiz(latest) ? orderService.getById(latest.getOrderId()) : null;
                 if (order != null) {
                     updateOrderOnFullRefund(order, latest);
                 }
@@ -470,13 +501,27 @@ public class RefundServiceImpl implements RefundService {
                 if (!poUpdated) {
                     throw new CustomException("支付单状态已变更，退款失败");
                 }
-                Orders order = orderService.getById(latest.getOrderId());
+                Orders order = isOrderLinkedBiz(latest) ? orderService.getById(latest.getOrderId()) : null;
                 if (order != null) {
                     updateOrderOnFullRefund(order, latest);
+                } else if (!isOrderLinkedBiz(latest)) {
+                    log.info("支付单业务类型={}，非订单联动类型，跳过订单状态流转: paymentOrderId={}",
+                            latest.getBizType(), latest.getId());
                 }
             }
             return null;
         });
+    }
+
+    /**
+     * 支付单是否关联 orders 表（P1-5）：bizType=ORDER 或历史 NULL 才可按 order_id 查订单做全额联动；
+     * RECHARGE 的 order_id 存的是充值记录ID，与订单ID同序列可能撞号，误翻订单/回退权益会造成资金数据错乱。
+     *
+     * @param po 支付单
+     * @return 是否订单类型
+     */
+    private boolean isOrderLinkedBiz(PaymentOrder po) {
+        return po.getBizType() == null || PaymentOrder.BIZ_ORDER.equals(po.getBizType());
     }
 
     /**

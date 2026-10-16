@@ -5,6 +5,7 @@ import com.xinfei.module.order.model.Orders;
 import com.xinfei.module.order.service.OrderService;
 import com.xinfei.module.payment.model.PaymentOrder;
 import com.xinfei.module.payment.service.PaymentOrderService;
+import com.xinfei.module.payment.service.RefundService;
 import com.xinfei.test.TestDatabaseCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -56,6 +58,9 @@ public class PaymentRefundFlowIntegrationTest extends BaseControllerTest {
     private PaymentOrderService paymentOrderService;
 
     @Autowired
+    private RefundService refundService;
+
+    @Autowired
     private TestDatabaseCleaner cleaner;
 
     @Autowired
@@ -63,7 +68,7 @@ public class PaymentRefundFlowIntegrationTest extends BaseControllerTest {
 
     @BeforeEach
     void setUp() {
-        cleaner.cleanTables("refund_record", "payment_order", "orders");
+        cleaner.cleanTables("refund_record", "payment_order", "orders", "recharge_record");
         // 清限流计数，避免跨用例 429
         Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
         if (rateLimitKeys != null && !rateLimitKeys.isEmpty()) {
@@ -275,7 +280,7 @@ public class PaymentRefundFlowIntegrationTest extends BaseControllerTest {
         mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/notify/ALIPAY")
                 .sessionAttr("user", USER_ID).sessionAttr("tenantId", 999L)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"sign\":\"mock\",\"out_trade_no\":\"TR-CANCEL-990608\"}")))
+                .content("{\"sign\":\"mock\",\"out_trade_no\":\"TR-CANCEL-990608\",\"total_amount\":\"38.00\"}")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(1));
 
@@ -288,5 +293,167 @@ public class PaymentRefundFlowIntegrationTest extends BaseControllerTest {
                         + "AND rr.payment_order_id IN (SELECT id FROM payment_order WHERE order_id = 990608)",
                 Integer.class);
         assertEquals(1, refundCnt == null ? 0 : refundCnt.intValue());
+    }
+
+    // ==================== 支付单 CLOSED 终态联动（P1-7） ====================
+
+    @Test
+    void testCancelUnpaidOrder_closesPendingPayment() throws Exception {
+        // 待付款(1) + PENDING 支付单 → 取消订单同事务联动关闭支付单为 CLOSED，
+        // 消除"订单已取消但渠道预支付单仍可付款"的资金悬置窗口
+        saveOrder(990611L, Orders.STATUS_PENDING_PAY, "38.00");
+        savePayment(990611L, "PENDING", "ALIPAY", "38.00", "TR-CLOSE-990611");
+
+        mockMvc.perform(withCsrfToken(mockMvc, put("/order/userCancel")
+                .param("id", "990611")
+                .sessionAttr("user", USER_ID).sessionAttr("tenantId", 999L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value("订单已取消"));
+
+        assertEquals(Orders.STATUS_CANCELLED, orderStatus(990611L));
+        assertEquals("CLOSED", paymentStatus(990611L));
+    }
+
+    @Test
+    void testNotifyWhenPaymentClosed_rescuesAndAutoRefunds() throws Exception {
+        // 取消-支付竞态：支付单已 CLOSED，但用户实际已在渠道端付款（迟到回调）
+        // → handlePaymentSuccess 的 CLOSED→SUCCESS 挽救落地 → 订单已取消触发自动全额退款
+        saveOrder(990612L, Orders.STATUS_CANCELLED, "38.00");
+        savePayment(990612L, "CLOSED", "ALIPAY", "38.00", "TR-RESCUE-990612");
+
+        mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/notify/ALIPAY")
+                .sessionAttr("user", USER_ID).sessionAttr("tenantId", 999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sign\":\"mock\",\"out_trade_no\":\"TR-RESCUE-990612\",\"total_amount\":\"38.00\"}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1));
+
+        assertEquals(Orders.STATUS_REFUNDED, orderStatus(990612L));
+        assertEquals("REFUND", paymentStatus(990612L));
+        Integer refundCnt = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM refund_record rr WHERE rr.status = 'SUCCESS' "
+                        + "AND rr.payment_order_id IN (SELECT id FROM payment_order WHERE order_id = 990612)",
+                Integer.class);
+        assertEquals(1, refundCnt == null ? 0 : refundCnt.intValue());
+    }
+
+    @Test
+    void testNotifyFailOnClosedPayment_staysClosed() throws Exception {
+        // CLOSED 支付单收到"支付失败"回调：不翻 FAIL、不联动，保持 CLOSED 终态（只有 SUCCESS 可挽救）
+        saveOrder(990613L, Orders.STATUS_CANCELLED, "38.00");
+        savePayment(990613L, "CLOSED", "ALIPAY", "38.00", "TR-KEEP-990613");
+
+        paymentOrderService.handlePaymentFail("TR-KEEP-990613", "测试：渠道失败回调迟到");
+
+        assertEquals("CLOSED", paymentStatus(990613L));
+        assertEquals(Orders.STATUS_CANCELLED, orderStatus(990613L));
+    }
+
+    // ==================== 自动退款失败兜底留痕（P0-4） ====================
+
+    @Test
+    void testRecordAutoRefundFailureTrace_writesPendingTrace() {
+        saveOrder(990609L, Orders.STATUS_ORDERED, "66.00");
+        savePayment(990609L, "SUCCESS", "ALIPAY", "66.00", "TR-TRACE-990609");
+
+        refundService.recordAutoRefundFailureTrace(990609L, "测试：渠道保护段前异常");
+
+        String reason = jdbcTemplate.queryForObject(
+                "SELECT reason FROM refund_record WHERE status = 'PENDING' "
+                        + "AND payment_order_id = (SELECT id FROM payment_order WHERE order_id = 990609)",
+                String.class);
+        assertTrue(reason.startsWith("[对账待办]自动退款发起前异常未走渠道："));
+    }
+
+    @Test
+    void testRecordAutoRefundFailureTrace_noSuccessPayment_noTraceNoThrow() {
+        saveOrder(990610L, Orders.STATUS_PENDING_PAY, "20.00");
+        savePayment(990610L, "PENDING", "ALIPAY", "20.00", "TR-TRACE-990610");
+
+        // 无 SUCCESS 支付单：只告警不抛异常、不落痕迹
+        refundService.recordAutoRefundFailureTrace(990610L, "测试：无可退支付单");
+
+        Integer cnt = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM refund_record WHERE payment_order_id = "
+                        + "(SELECT id FROM payment_order WHERE order_id = 990610)",
+                Integer.class);
+        assertEquals(0, cnt == null ? 0 : cnt.intValue());
+    }
+
+    // ==================== 充值迟到支付自动退款（P1-5） ====================
+
+    /** 造一条挂在租户 999 的充值记录（jdbcTemplate 直插，绕开 MP 租户插件）。 */
+    private void insertRecharge(long rechargeId, String status, String amount) {
+        jdbcTemplate.update("INSERT INTO recharge_record "
+                        + "(id, tenant_id, member_id, recharge_no, status, amount, gift_amount, payment_method, created_time) "
+                        + "VALUES (?, 999, 799001, ?, ?, ?, 0.00, 'ALIPAY', NOW())",
+                rechargeId, "RC-TEST-" + rechargeId, status, new BigDecimal(amount));
+    }
+
+    /** 为充值单造一条 bizType=RECHARGE 的支付单（order_id 列存充值记录ID）。 */
+    private void saveRechargePayment(long rechargeId, String status, String amount, String tradeNo) {
+        PaymentOrder po = new PaymentOrder();
+        po.setOrderId(rechargeId);
+        po.setBizType(PaymentOrder.BIZ_RECHARGE);
+        po.setTenantId(999L);
+        po.setTradeNo(tradeNo);
+        po.setChannel("ALIPAY");
+        po.setAmount(new BigDecimal(amount));
+        po.setStatus(status);
+        paymentOrderService.save(po);
+    }
+
+    @Test
+    void testLatePaymentOnCancelledRecharge_autoRefunds_noOrderLinkage() throws Exception {
+        // 充值单已被超时任务取消(CANCELLED)、支付单已联动 CLOSED，但用户实际在渠道端完成了支付（迟到回调）。
+        // → CLOSED→SUCCESS 挽救 → 充值无法入账(返回false) → afterCommit 自动全额退款。
+        // 同 ID 撞号订单(990701 已完成)必须不被误翻：验证 bizType 守卫杜绝 RECHARGE 误联 orders。
+        insertRecharge(990701L, "CANCELLED", "50.00");
+        saveOrder(990701L, Orders.STATUS_COMPLETED, "88.00");
+        saveRechargePayment(990701L, "CLOSED", "50.00", "TR-RCLATE-990701");
+
+        mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/notify/ALIPAY")
+                .sessionAttr("user", USER_ID).sessionAttr("tenantId", 999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sign\":\"mock\",\"out_trade_no\":\"TR-RCLATE-990701\",\"total_amount\":\"50.00\"}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1));
+
+        // 支付单 CLOSED→SUCCESS→REFUND；产生 1 条 SUCCESS 退款记录；充值单保持 CANCELLED
+        assertEquals("REFUND", paymentStatus(990701L));
+        Integer refundCnt = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM refund_record rr WHERE rr.status = 'SUCCESS' "
+                        + "AND rr.payment_order_id IN (SELECT id FROM payment_order WHERE trade_no = 'TR-RCLATE-990701')",
+                Integer.class);
+        assertEquals(1, refundCnt == null ? 0 : refundCnt.intValue());
+        String rcStatus = jdbcTemplate.queryForObject(
+                "SELECT status FROM recharge_record WHERE id = 990701", String.class);
+        assertEquals("CANCELLED", rcStatus);
+        // 撞号订单状态纹丝不动（4=已完成，未被误翻 6=已退款）
+        assertEquals(Orders.STATUS_COMPLETED, orderStatus(990701L));
+    }
+
+    @Test
+    void testLatePaymentOnPendingRecharge_creditsWithoutRefund() throws Exception {
+        // 正常迟到场景：充值单仍 PENDING → 回调入账成功(返回true)，不触发退款、支付单保持 SUCCESS
+        insertRecharge(990702L, "PENDING", "30.00");
+        saveRechargePayment(990702L, "PENDING", "30.00", "TR-RCPAY-990702");
+
+        mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/notify/ALIPAY")
+                .sessionAttr("user", USER_ID).sessionAttr("tenantId", 999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sign\":\"mock\",\"out_trade_no\":\"TR-RCPAY-990702\",\"total_amount\":\"30.00\"}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1));
+
+        assertEquals("SUCCESS", paymentStatus(990702L));
+        String rcStatus = jdbcTemplate.queryForObject(
+                "SELECT status FROM recharge_record WHERE id = 990702", String.class);
+        assertEquals("SUCCESS", rcStatus);
+        Integer refundCnt = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM refund_record WHERE payment_order_id = "
+                        + "(SELECT id FROM payment_order WHERE trade_no = 'TR-RCPAY-990702')",
+                Integer.class);
+        assertEquals(0, refundCnt == null ? 0 : refundCnt.intValue());
     }
 }

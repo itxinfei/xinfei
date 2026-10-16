@@ -13,6 +13,8 @@ import com.xinfei.module.member.service.RechargeRecordService;
 import com.xinfei.module.report.service.ReportService;
 import com.xinfei.module.order.service.OrderService;
 import com.xinfei.module.order.service.statusflow.OrderStatusFlowService;
+import com.xinfei.module.payment.model.PaymentOrder;
+import com.xinfei.module.payment.service.PaymentOrderService;
 import com.xinfei.module.tenant.service.TenantService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +60,10 @@ public class OrderTimeoutTask {
     /** 会员充值记录服务（充值单超时取消） */
     @Autowired
     private RechargeRecordService rechargeRecordService;
+
+    /** 支付单服务（充值超时取消联动关闭遗留 PENDING 支付单，P1-7） */
+    @Autowired
+    private PaymentOrderService paymentOrderService;
 
     /** 租户服务（用于获取活跃租户列表） */
     @Autowired
@@ -284,6 +290,15 @@ public class OrderTimeoutTask {
                     cancelled++;
                     log.warn("[定时任务] 充值单超时自动取消: rechargeId={}, rechargeNo={}, tenantId={}",
                             record.getId(), record.getRechargeNo(), BaseContext.getCurrentTenantId());
+                    // P1-7：联动关闭遗留 PENDING 支付单，消除"充值单已取消但预支付仍可付款"窗口；
+                    // 用户已在渠道端付款的，迟到回调经 CLOSED→SUCCESS 挽救后由充值入账链路兜底。
+                    // 关闭失败不影响取消结果（充值单 CAS 已提交），迟到付款仍有挽救+退款路径。
+                    try {
+                        paymentOrderService.closePendingPayments(PaymentOrder.BIZ_RECHARGE, record.getId());
+                    } catch (Exception e) {
+                        log.error("[定时任务] 充值单已取消但遗留支付单关闭失败: rechargeId={}, err={}",
+                                record.getId(), e.getMessage());
+                    }
                 }
             } catch (Exception e) {
                 // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程

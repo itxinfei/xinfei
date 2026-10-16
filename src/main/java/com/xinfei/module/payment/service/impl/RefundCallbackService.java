@@ -162,6 +162,14 @@ public class RefundCallbackService {
                 .set(PaymentOrder::getStatus, PaymentOrder.STATUS_REFUND)
                 .update();
 
+        // P1-5：非订单类型（如 RECHARGE，order_id 存充值记录ID，同序列可能撞号）只翻支付单终态，
+        // 绝不能按 order_id 误联订单状态/库存/会员权益
+        if (!(paymentOrder.getBizType() == null || PaymentOrder.BIZ_ORDER.equals(paymentOrder.getBizType()))) {
+            log.info("[退款回调] 支付单业务类型={}，非订单联动类型，跳过订单/库存/权益联动: paymentOrderId={}",
+                    paymentOrder.getBizType(), paymentOrderId);
+            return;
+        }
+
         Long orderId = paymentOrder.getOrderId();
         if (orderId == null) {
             log.warn("[退款回调] 支付单未关联订单，仅退款支付单: paymentOrderId={}", paymentOrderId);

@@ -55,12 +55,15 @@ public interface RechargeRecordService extends IService<RechargeRecord> {
     /**
      * 在线支付成功回调：CAS PENDING→SUCCESS、回填渠道流水，然后原子加余额（本金+赠送）。
      *
-     * <p>幂等口径：充值单已 SUCCESS 直接返回不重复入账；
-     * 充值单已超时取消（CANCELLED）说明支付迟到，不记入账，仅告警人工退款，避免钱与余额错配。</p>
+     * <p>幂等口径：充值单已 SUCCESS 视为已入账，幂等跳过；
+     * 充值单已超时取消（CANCELLED）/记录缺失说明支付迟到或数据异常，不能入账，
+     * 由调用方（支付回调）发起自动退款，杜绝"钱已收、未入账、静默吞款"（P1-5）。
+     * CAS 成功但加余额失败（会员被删）属人工补录场景，钱已对应终态，不触发退款。</p>
      *
      * @param rechargeId     充值记录ID
      * @param paymentTradeNo 支付单内部交易号
      * @param channelTradeNo 渠道交易号（mock 下可能为 null）
+     * @return true=已入账或幂等无需处理；false=钱已收但无法入账，调用方须自动退款
      */
-    void handleRechargePaid(Long rechargeId, String paymentTradeNo, String channelTradeNo);
+    boolean handleRechargePaid(Long rechargeId, String paymentTradeNo, String channelTradeNo);
 }

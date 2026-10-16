@@ -37,6 +37,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static com.xinfei.module.payment.model.PaymentOrder.STATUS_CLOSED;
 import static com.xinfei.module.payment.model.PaymentOrder.STATUS_FAIL;
 import static com.xinfei.module.payment.model.PaymentOrder.STATUS_PENDING;
 import static com.xinfei.module.payment.model.PaymentOrder.STATUS_SUCCESS;
@@ -87,6 +88,10 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
     /** 会员充值记录服务（bizType=RECHARGE 支付成功时联动入账；member 不反向依赖 payment，无循环） */
     @Autowired
     private com.xinfei.module.member.service.RechargeRecordService rechargeRecordService;
+
+    /** 退款记录服务（充值迟到支付自动退款失败时对账留痕，独立事务） */
+    @Autowired
+    private com.xinfei.module.payment.service.RefundRecordService refundRecordService;
 
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
@@ -286,6 +291,44 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
     }
 
     /**
+     * 关闭业务单遗留的 PENDING 支付单（P1-7：CLOSED 终态联动）。
+     * @param bizType 业务类型（ORDER/RECHARGE）
+     * @param bizId 业务单ID
+     * @return 关闭笔数
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int closePendingPayments(String bizType, Long bizId) {
+        if (bizId == null) {
+            return 0;
+        }
+        // 先查遗留 PENDING（用于告警留痕），再 CAS PENDING→CLOSED。
+        // 读写间隙并发回调翻 SUCCESS 时 update 条件不命中，只少关不误翻——绝不覆盖终态。
+        List<PaymentOrder> pendings = lambdaQuery()
+                .eq(PaymentOrder::getOrderId, bizId)
+                .eq(bizType != null, PaymentOrder::getBizType, bizType)
+                .eq(PaymentOrder::getStatus, STATUS_PENDING)
+                .list();
+        if (pendings.isEmpty()) {
+            return 0;
+        }
+        boolean updated = lambdaUpdate()
+                .eq(PaymentOrder::getOrderId, bizId)
+                .eq(bizType != null, PaymentOrder::getBizType, bizType)
+                .eq(PaymentOrder::getStatus, STATUS_PENDING)
+                .set(PaymentOrder::getStatus, STATUS_CLOSED)
+                .update();
+        if (!updated) {
+            return 0;
+        }
+        for (PaymentOrder p : pendings) {
+            log.warn("业务单取消联动关闭支付单: tradeNo={}, bizType={}, bizId={}, channel={}, amount={}",
+                    p.getTradeNo(), bizType, bizId, p.getChannel(), p.getAmount());
+        }
+        return pendings.size();
+    }
+
+    /**
      * 0 元订单自动完成支付（单事务原子更新：PENDING 支付单（若有）翻 SUCCESS + 待付款订单 1→2）。
      * <p>收敛自 PaymentController.pay 的 0 元分支——原实现直接双表 lambdaUpdate 且无事务，支付单与订单
      * 可能部分更新（支付单已 SUCCESS 而订单仍待付款）。归属/状态校验仍由调用方（Controller）完成，此处只做原子落库。</p>
@@ -323,9 +366,17 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
         int affected = baseMapper.casUpdateStatus(tradeNo, STATUS_PENDING, STATUS_SUCCESS,
                 channelTradeNo, LocalDateTime.now());
         if (affected == 0) {
-            // 状态已非 PENDING（已成功/已失败/已退款），幂等跳过
-            log.info("支付回调幂等跳过：支付单状态已非PENDING，tradeNo={}", tradeNo);
-            return;
+            // P1-7：业务单取消/超时时其 PENDING 支付单已被联动关闭为 CLOSED，但渠道预支付单在关闭
+            // 前可能已被用户付款（取消-支付竞态）。迟到回调必须仍可落地：CAS CLOSED→SUCCESS 挽救，
+            // 随后下游联动因订单已取消走既有自动退款兜底（registerAutoRefundOnCancelled），
+            // 杜绝"钱已收、单已关、静默吞款"。非 CLOSED 终态（已成功/失败/已退款）保持幂等跳过。
+            int rescued = baseMapper.casUpdateStatus(tradeNo, STATUS_CLOSED, STATUS_SUCCESS,
+                    channelTradeNo, LocalDateTime.now());
+            if (rescued == 0) {
+                log.info("支付回调幂等跳过：支付单状态已非PENDING/CLOSED，tradeNo={}", tradeNo);
+                return;
+            }
+            log.warn("支付单已CLOSED但渠道已扣款，挽救翻SUCCESS并联动: tradeNo={}", tradeNo);
         }
         log.info("支付成功: tradeNo={}, channelTradeNo={}", tradeNo, channelTradeNo);
 
@@ -340,7 +391,13 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
         try {
             // P1-4：bizType=RECHARGE 的支付单联动充值入账，不进订单逻辑；finally 统一清理租户上下文
             if (PaymentOrder.BIZ_RECHARGE.equals(po.getBizType())) {
-                rechargeRecordService.handleRechargePaid(po.getOrderId(), tradeNo, channelTradeNo);
+                // P1-5：充值单已取消/缺失导致无法入账（钱已收）时，注册 afterCommit 自动全额退款，
+                // 杜绝"支付成功 + 充值未入账 + 仅告警"的静默吞款
+                boolean credited = rechargeRecordService.handleRechargePaid(po.getOrderId(), tradeNo,
+                        channelTradeNo);
+                if (!credited) {
+                    registerAutoRefundOnUncreditableRecharge(po);
+                }
                 return;
             }
             Orders order = orderService.getById(po.getOrderId());
@@ -497,6 +554,57 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
                     // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
                     log.error("【严重】订单已取消但支付成功，自动退款异常，需人工处理！orderId={}, tenantId={}",
                             orderId, tenantId, e);
+                    // P0 兜底：refundByOrder 进入渠道保护段前抛异常时内部来不及留痕，补写对账待办
+                    refundService.recordAutoRefundFailureTrace(orderId,
+                            "已取消订单支付成功自动退款异常：" + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * 充值单无法入账（超时取消/记录缺失）但支付成功：主事务提交后自动发起渠道全额退款（P1-5 迟到付款资金闭环）。
+     * <p>
+     * 复用 {@code refundService.refundByPaymentOrder}（内部含 Redis 锁 + 事务内累计退款复查 + 渠道幂等单号，
+     * 重复触发安全）：RECHARGE 支付单退款仅将支付单翻 REFUND，不联动 orders 表（bizType 守卫见
+     * RefundServiceImpl）；渠道返回处理中由退款回调/对账查单任务定终态。退款发起抛异常时以
+     * paymentOrderId 落 {@code [对账待办]} 痕迹，供 RefundReconcileTask 扫描告警人工。
+     * afterCommit 已脱离回调租户上下文，须显式回填支付单租户再退款。
+     * </p>
+     */
+    private void registerAutoRefundOnUncreditableRecharge(PaymentOrder po) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * 处理 after commit：充值迟到支付自动全额退款。
+             */
+            @Override
+            public void afterCommit() {
+                Long originalTenantId = BaseContext.getCurrentTenantId();
+                BaseContext.setCurrentTenantId(po.getTenantId());
+                try {
+                    String result = refundService.refundByPaymentOrder(po.getTenantId(), po.getId(),
+                            po.getAmount(), "充值单已取消或缺失，迟到支付自动退款");
+                    log.info("充值单未入账但支付成功，自动退款已发起: paymentOrderId={}, rechargeId={}, result={}",
+                            po.getId(), po.getOrderId(), result);
+                } catch (Exception e) {
+                    // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
+                    log.error("【严重】充值单未入账但支付成功，自动退款异常，需人工处理！"
+                            + "paymentOrderId={}, rechargeId={}, tenantId={}",
+                            po.getId(), po.getOrderId(), po.getTenantId(), e);
+                    try {
+                        refundRecordService.recordReconcileTrace(po.getId(), po.getAmount(),
+                                "充值单自动退款发起前异常未走渠道：" + e.getMessage());
+                    } catch (Exception traceEx) {
+                        // 宽异常兜底：留痕路径自身失败仅告警，不阻断调用方
+                        log.error("【严重】充值自动退款失败留痕也失败，需人工核查: paymentOrderId={}",
+                                po.getId(), traceEx);
+                    }
+                } finally {
+                    if (originalTenantId != null) {
+                        BaseContext.setCurrentTenantId(originalTenantId);
+                    } else {
+                        BaseContext.remove();
+                    }
                 }
             }
         });

@@ -190,7 +190,14 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
     @Transactional(rollbackFor = Exception.class)
     public boolean saveCashierRecord(CashierRecord cashierRecord) {
         cashierRecord.setCreateTime(LocalDateTime.now());
-        return cashierRecordMapper.insert(cashierRecord) > 0;
+        try {
+            return cashierRecordMapper.insert(cashierRecord) > 0;
+        } catch (DuplicateKeyException e) {
+            // uk_tenant_order：同一订单已有收银记录，手工补录同样禁止双记
+            log.warn("保存收银记录被唯一索引拒绝（同订单已存在收银记录）: tenantId={}, orderId={}",
+                    cashierRecord.getTenantId(), cashierRecord.getOrderId());
+            return false;
+        }
     }
 
     /**
@@ -297,7 +304,14 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
         // 6-7. 创建并保存收银记录（金额以服务端计算为准）
         CashierRecord cashierRecord = buildCashierRecord(orderId, orderNumber, payType, orderAmount,
                 actualAmount, changeAmount, cashierId, cashierName, remark, voucherUrl);
-        cashierRecordMapper.insert(cashierRecord);
+        try {
+            cashierRecordMapper.insert(cashierRecord);
+        } catch (DuplicateKeyException e) {
+            // P0 兜底：Redis 幂等锁不可用时降级 fail-open，上面的"先查再写"存在并发窗口，
+            // uk_tenant_order 唯一索引是 DB 层第二道防线，命中即回滚本事务，等效重复收银拒绝
+            log.warn("收银幂等兜底：唯一索引拦截同订单重复收银记录: orderId={}", orderId);
+            throw new CustomException("该订单已完成收银，请勿重复结账");
+        }
 
         // 8. 更新订单状态为已支付（待接单），支付方式按真实选择记录；amount 回写为折后实收
         boolean eatIn = order.getTableId() != null
