@@ -112,3 +112,9 @@ src/main/resources/backend/.playwright-cli/
 PAGES.md
 scripts_version_api.js
 nul
+
+# ===== 环境/密钥相关配置（本地维护，不入版本库；对齐 AGENTS.md 口径）=====
+# application.yml 为无密钥的基础默认配置，保留跟踪；-dev/-prod 含主机地址与凭据外部化模板，
+# 实际值放 .env / 环境注入。新克隆须按 application*.yml 的 ${ENV} 占位符自行准备这两份。
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml

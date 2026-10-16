@@ -190,7 +190,10 @@ public class WechatV3PayChannel implements PaymentChannel, RealNotifyCapable, Re
                 createRequest.setReason(request.getReason());
             }
             if (!isBlank(config.getRefundNotifyUrl())) {
-                createRequest.setNotifyUrl(config.getRefundNotifyUrl());
+                // 与支付回调同口径追加租户路由参数：refund-notify 消费端强制要求 tenantId，
+                // 漏拼会让所有微信退款通知被拒（只能靠对账查单延迟兜底）
+                createRequest.setNotifyUrl(
+                        NotifyUrlRouter.withTenant(config.getRefundNotifyUrl(), config.getTenantId()));
             }
             AmountReq amountReq = new AmountReq();
             amountReq.setRefund((long) toFen(request.getAmount()));

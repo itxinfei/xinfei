@@ -22,6 +22,7 @@ import com.xinfei.module.auth.dto.UpdateEmployeeStatusDTO;
 import com.xinfei.module.auth.model.Employee;
 import com.xinfei.enums.UserStatus;
 import com.xinfei.module.auth.service.EmployeeService;
+import com.xinfei.module.auth.service.LoginAttemptService;
 import com.xinfei.module.sys.model.Role;
 import com.xinfei.module.sys.service.RoleService;
 import com.xinfei.utils.QRCodeUtil;
@@ -88,6 +89,14 @@ public class EmployeeController {
     @Autowired
     private QRCodeUtil qrCodeUtil;
 
+    /** 登录失败次数记录与账号锁定（P0-5：防暴力破解） */
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
+    /** 登录被锁定时的统一提示文案 */
+    private static final String LOGIN_LOCKED_MESSAGE = "登录失败次数过多，账号已被临时锁定，请"
+            + SecurityConstants.LOGIN_LOCK_DURATION + "分钟后重试";
+
     @Value("${xinfei.sms.sign-name:心飞外卖}")
     private String smsSignName = "心飞外卖";
 
@@ -130,6 +139,13 @@ public class EmployeeController {
         //1、根据页面提交的用户名username查询数据库
         // 修复 P2-1：employee 表在 IGNORE_TABLES 中，需手动附加租户条件，防止跨租户用户名枚举
         Long tenantId = BaseContext.getCurrentTenantId();
+        String username = loginDTO.getUsername() == null ? "" : loginDTO.getUsername().trim().toLowerCase();
+        // P0-5：账号锁定检查前置于查库，命中锁定直接拒绝，不暴露账号是否存在
+        String lockIdentity = (tenantId != null ? tenantId : 0L) + ":" + username;
+        if (loginAttemptService.isLocked(LoginAttemptService.Scope.EMP, lockIdentity)) {
+            log.warn("账号锁定中仍尝试登录 - 用户名：{}", LogMaskUtils.maskUsername(loginDTO.getUsername()));
+            return R.error(LOGIN_LOCKED_MESSAGE);
+        }
         LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Employee::getUsername, loginDTO.getUsername());
         if (tenantId != null) {
@@ -139,12 +155,15 @@ public class EmployeeController {
 
         //2、如果没有查询到则返回登录失败结果
         if (emp == null) {
+            // 与密码错误统一计数，攻击者无法通过"不存在的账号不受锁定"探测账号是否存在
+            loginAttemptService.recordFailure(LoginAttemptService.Scope.EMP, lockIdentity);
             return R.error("用户名或密码错误");
         }
 
         //2a、员工状态检查（修复P0-5：原检查在密码校验之后，禁用用户可完成登录并触发密码升级）
         // 修复说明：状态检查必须在密码校验和密码升级之前执行，避免禁用用户完成完整登录流程，
         // 且状态检查失败不应记录登录失败次数（避免攻击者通过错误信息探测账号状态）。
+        // 锁定计数亦不适用于此分支：禁用账号本就无法登录，不构成爆破面，无需占用锁定额度。
         if (emp.getStatus() != null && UserStatus.DISABLED.getValue() == emp.getStatus().intValue()) {
             log.warn("禁用账号尝试登录 - 用户名：{}", LogMaskUtils.maskUsername(loginDTO.getUsername()));
             return R.error("用户名或密码错误");
@@ -152,10 +171,12 @@ public class EmployeeController {
 
         //3-4、密码校验并在需要时升级密码类型（等价抽取）
         if (!verifyAndUpgradePassword(emp, loginDTO.getPassword())) {
+            loginAttemptService.recordFailure(LoginAttemptService.Scope.EMP, lockIdentity);
             return R.error("用户名或密码错误");
         }
 
-        //5、登录成功，建立会话并返回脱敏信息（等价抽取）
+        //5、登录成功，清除失败计数并建立会话返回脱敏信息（等价抽取）
+        loginAttemptService.clearOnSuccess(LoginAttemptService.Scope.EMP, lockIdentity);
         return R.success(establishSessionAndBuildResult(request, emp));
     }
 

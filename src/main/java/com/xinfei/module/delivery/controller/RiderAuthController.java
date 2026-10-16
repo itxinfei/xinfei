@@ -1,11 +1,14 @@
 package com.xinfei.module.delivery.controller;
 
 import com.xinfei.common.BaseContext;
+import com.xinfei.common.LogMaskUtils;
 import com.xinfei.common.PasswordUtils;
 import com.xinfei.common.R;
 import com.xinfei.common.RateLimit;
 import com.xinfei.common.RateLimitType;
+import com.xinfei.common.SecurityConstants;
 import com.xinfei.common.annotation.RequireRider;
+import com.xinfei.module.auth.service.LoginAttemptService;
 import com.xinfei.module.delivery.mapper.RiderMapper;
 import com.xinfei.module.delivery.model.Rider;
 import com.xinfei.module.delivery.model.RiderRememberToken;
@@ -53,6 +56,14 @@ public class RiderAuthController {
     @Autowired
     private RiderRememberTokenService riderRememberTokenService;
 
+    /** 登录失败次数记录与账号锁定（P0-5：防暴力破解，与员工端共用 LoginAttemptService） */
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
+    /** 登录被锁定时的统一提示文案 */
+    private static final String LOGIN_LOCKED_MESSAGE = "登录失败次数过多，账号已被临时锁定，请"
+            + SecurityConstants.LOGIN_LOCK_DURATION + "分钟后重试";
+
     /** 短信验证码有效期 5 分钟，与 C 端发码逻辑一致 */
     private static final long SMS_CODE_EXPIRE_MS = 5L * 60 * 1000;
 
@@ -74,16 +85,28 @@ public class RiderAuthController {
         if (phone == null || phone.trim().isEmpty() || password == null || password.isEmpty()) {
             return R.error("手机号和密码不能为空");
         }
+        String normalizedPhone = phone.trim();
+
+        // P0-5：账号锁定检查前置于查库，命中锁定直接拒绝，不暴露手机号是否注册过
+        if (loginAttemptService.isLocked(LoginAttemptService.Scope.RIDER, normalizedPhone)) {
+            log.warn("骑手账号锁定中仍尝试登录：phone={}", LogMaskUtils.maskPhone(normalizedPhone));
+            return R.error(LOGIN_LOCKED_MESSAGE);
+        }
 
         // 登录前无租户上下文，selectByPhone 内部关闭了租户过滤
-        Rider rider = riderMapper.selectByPhone(phone.trim());
+        Rider rider = riderMapper.selectByPhone(normalizedPhone);
         // 账号不存在或未设置密码（历史档案骑手），统一返回相同提示，避免账号枚举
         if (rider == null || rider.getPassword() == null || rider.getPassword().isEmpty()) {
+            loginAttemptService.recordFailure(LoginAttemptService.Scope.RIDER, normalizedPhone);
             return R.error("手机号或密码错误");
         }
         if (!PasswordUtils.matches(password, rider.getPassword())) {
+            loginAttemptService.recordFailure(LoginAttemptService.Scope.RIDER, normalizedPhone);
             return R.error("手机号或密码错误");
         }
+
+        // 登录成功，清除失败计数
+        loginAttemptService.clearOnSuccess(LoginAttemptService.Scope.RIDER, normalizedPhone);
 
         // 建立骑手会话
         request.getSession().setAttribute("rider", rider.getId());
