@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>排班管理 - 瑞吉外卖管理端</title>
+  <title>排班管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -216,14 +216,14 @@
                 return { id: emp.id, name: emp.name }
               })
             } else {
-              ReggieUI.error((res && res.msg) || '员工列表加载失败')
+              XinfeiUI.error((res && res.msg) || '员工列表加载失败')
               self.employeeOptions = []
             }
             // 员工到位后重算统计/周分布（员工列表与排班请求并发，避免统计恒 0）
             self.buildStats()
             self.buildWeekShiftData()
           }).catch(function () {
-            ReggieUI.error('员工列表加载失败，请刷新重试')
+            XinfeiUI.error('员工列表加载失败，请刷新重试')
             self.employeeOptions = []
           })
         },
@@ -236,12 +236,12 @@
             if (res && res.code === 1) {
               self.buildSchedule(res.data)
             } else {
-              ReggieUI.error((res && res.msg) || '排班数据加载失败')
+              XinfeiUI.error((res && res.msg) || '排班数据加载失败')
               self.buildEmptyMonth()
             }
             self.loading = false
           }).catch(function () {
-            ReggieUI.error('排班数据加载失败，请刷新重试')
+            XinfeiUI.error('排班数据加载失败，请刷新重试')
             self.buildEmptyMonth()
             self.loading = false
           })
@@ -438,16 +438,16 @@
               if (res && res.code === 1) {
                 self.submitting = false
                 self.dialog.visible = false
-                ReggieUI.success('排班保存成功')
+                XinfeiUI.success('排班保存成功')
                 self.fetchScheduleData()
               } else {
                 // 业务失败：保持弹窗以便修改，不提示成功
                 self.submitting = false
-                ReggieUI.error((res && res.msg) || '排班保存失败')
+                XinfeiUI.error((res && res.msg) || '排班保存失败')
               }
             }).catch(function (e) {
               self.submitting = false
-              ReggieUI.error((e && e.message) || '保存失败，请重试')
+              XinfeiUI.error((e && e.message) || '保存失败，请重试')
             })
           })
         },

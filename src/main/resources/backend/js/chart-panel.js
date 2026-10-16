@@ -18,7 +18,7 @@
  *        </chart-panel>
  *      </page-shell>
  *
- * @author Reggie Team
+ * @author Xinfei Team
  * @since 2026-07-16
  */
 

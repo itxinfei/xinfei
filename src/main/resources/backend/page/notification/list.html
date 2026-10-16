@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>消息通知管理 - 瑞吉外卖管理端</title>
+    <title>消息通知管理 - 心飞外卖管理端</title>
 
     <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
     <!-- main.css 已 @import tokens/element 样式/各组件样式，仅额外引 stat-cards 独立产物 -->
@@ -488,7 +488,7 @@
                 <el-row :gutter="16">
                     <el-col :span="12" :xs="24" v-if="templateModal.form.channel !== 2">
                         <el-form-item label="短信签名">
-                            <el-input v-model="templateModal.form.signName" placeholder="如：瑞吉外卖"></el-input>
+                            <el-input v-model="templateModal.form.signName" placeholder="如：心飞外卖"></el-input>
                         </el-form-item>
                     </el-col>
                     <el-col :span="12" :xs="24" v-if="templateModal.form.channel !== 1">
@@ -702,7 +702,7 @@
                             self.userTotal = res.data.total || 0;
                         }
                     }).catch(function () {
-                        ReggieUI.error('加载用户失败');
+                        XinfeiUI.error('加载用户失败');
                     });
                 },
                 searchUsers: function () { this.loadUsers(1); },
@@ -757,7 +757,7 @@
                             self.pushUserTotal = res.data.total || 0;
                         }
                     }).catch(function () {
-                        ReggieUI.error('加载推送用户失败');
+                        XinfeiUI.error('加载推送用户失败');
                     });
                 },
                 searchPushUsers: function () { this.loadPushUsers(1); },
@@ -802,10 +802,10 @@
                     var self = this;
                     var phones = self.selectedUsers.map(function (u) { return u.phone; }).filter(function (p) { return p; });
 
-                    if (phones.length === 0) { ReggieUI.warning('所选用户没有手机号，无法发送短信'); return; }
-                    if (!self.smsForm.content.trim()) { ReggieUI.warning('请输入短信内容'); return; }
+                    if (phones.length === 0) { XinfeiUI.warning('所选用户没有手机号，无法发送短信'); return; }
+                    if (!self.smsForm.content.trim()) { XinfeiUI.warning('请输入短信内容'); return; }
 
-                    ReggieUI.confirm('确认向 ' + phones.length + ' 位用户发送短信？短信提交后不可撤回。', '发送确认', {
+                    XinfeiUI.confirm('确认向 ' + phones.length + ' 位用户发送短信？短信提交后不可撤回。', '发送确认', {
                         confirmButtonText: '确定发送', cancelButtonText: '取消', type: 'warning'
                     }).then(function () {
                         self.smsForm.sending = true;
@@ -826,7 +826,7 @@
                                     failReason: res ? res.msg : '发送失败' };
                             }
                         }).catch(function () {
-                            ReggieUI.error('短信发送异常');
+                            XinfeiUI.error('短信发送异常');
                             self.smsForm.result = { status: 3, successCount: 0, failCount: phones.length,
                                 failReason: '网络异常，请重试' };
                         }).finally(function () {
@@ -838,11 +838,11 @@
                 // ==================== 发送APP推送 ====================
                 doSendPush: function () {
                     var self = this;
-                    if (self.pushSelectedUsers.length === 0) { ReggieUI.warning('请选择推送用户'); return; }
-                    if (!self.pushForm.title.trim()) { ReggieUI.warning('请输入推送标题'); return; }
-                    if (!self.pushForm.content.trim()) { ReggieUI.warning('请输入推送内容'); return; }
+                    if (self.pushSelectedUsers.length === 0) { XinfeiUI.warning('请选择推送用户'); return; }
+                    if (!self.pushForm.title.trim()) { XinfeiUI.warning('请输入推送标题'); return; }
+                    if (!self.pushForm.content.trim()) { XinfeiUI.warning('请输入推送内容'); return; }
 
-                    ReggieUI.confirm('确认向 ' + self.pushSelectedUsers.length + ' 位用户发送APP推送？推送提交后不可撤回。', '发送确认', {
+                    XinfeiUI.confirm('确认向 ' + self.pushSelectedUsers.length + ' 位用户发送APP推送？推送提交后不可撤回。', '发送确认', {
                         confirmButtonText: '确定发送', cancelButtonText: '取消', type: 'warning'
                     }).then(function () {
                         self.pushForm.sending = true;
@@ -865,7 +865,7 @@
                                     failReason: res ? res.msg : '推送失败' };
                             }
                         }).catch(function () {
-                            ReggieUI.error('推送异常');
+                            XinfeiUI.error('推送异常');
                             self.pushForm.result = { status: 3, successCount: 0, failCount: userIds.length,
                                 failReason: '网络异常，请重试' };
                         }).finally(function () {
@@ -891,7 +891,7 @@
                             self.recordTotal = res.data.total || 0;
                         }
                     }).catch(function () {
-                        ReggieUI.error('加载记录失败');
+                        XinfeiUI.error('加载记录失败');
                     }).finally(function () {
                         self.recordLoading = false;
                     });
@@ -914,15 +914,15 @@
                 },
                 resendRecord: function (row) {
                     var self = this;
-                    ReggieUI.confirm('确定重新发送该记录？将向全部 ' + row.targetCount + ' 个目标重新发送。',
+                    XinfeiUI.confirm('确定重新发送该记录？将向全部 ' + row.targetCount + ' 个目标重新发送。',
                         '提示', { confirmButtonText: '重发', cancelButtonText: '取消', type: 'warning' })
                         .then(function () {
                             notificationApi.resendRecord(row.id).then(function (res) {
                                 if (res && String(res.code) === '1') {
-                                    ReggieUI.success('已重新发送');
+                                    XinfeiUI.success('已重新发送');
                                     self.loadRecords(self.recordPage);
                                 } else {
-                                    ReggieUI.error((res && res.msg) || '重发失败');
+                                    XinfeiUI.error((res && res.msg) || '重发失败');
                                 }
                             }).catch(function () {});
                         }).catch(function () {});
@@ -968,7 +968,7 @@
                             self.templateTotal = res.data.total || 0;
                         }
                     }).catch(function () {
-                        ReggieUI.error('加载模板失败');
+                        XinfeiUI.error('加载模板失败');
                     }).finally(function () {
                         self.templateLoading = false;
                     });
@@ -1021,10 +1021,10 @@
                                 self.templateModal.show = false;
                                 self.loadTemplates(self.templatePage);
                             } else {
-                                ReggieUI.error(res ? res.msg : '保存失败');
+                                XinfeiUI.error(res ? res.msg : '保存失败');
                             }
                         }).catch(function () {
-                            ReggieUI.error('保存失败，请检查网络连接');
+                            XinfeiUI.error('保存失败，请检查网络连接');
                         }).finally(function () {
                             self.templateModal.saving = false;
                         });
@@ -1036,19 +1036,19 @@
                     notificationApi.toggleTemplate(t.id, newStatus).then(function (res) {
                         if (res && res.code === 1) t.status = newStatus;
                     }).catch(function () {
-                        ReggieUI.error('切换模板状态异常');
+                        XinfeiUI.error('切换模板状态异常');
                     });
                 },
 
                 deleteTemplate: function (id) {
                     var self = this;
-                    ReggieUI.confirm('确定删除该模板吗？', '提示', {
+                    XinfeiUI.confirm('确定删除该模板吗？', '提示', {
                         confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
                     }).then(function () {
                         notificationApi.deleteTemplate(id).then(function (res) {
                             if (res && res.code === 1) self.loadTemplates(self.templatePage);
                         }).catch(function () {
-                            ReggieUI.error('删除模板异常');
+                            XinfeiUI.error('删除模板异常');
                         });
                     }).catch(function (err) { console.warn('[通知] 删除确认取消或失败:', err); });
                 },

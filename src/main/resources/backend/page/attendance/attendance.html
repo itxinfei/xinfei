@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>考勤管理 - 瑞吉外卖管理端</title>
+  <title>考勤管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -174,14 +174,14 @@
           attendanceClockIn().then(function (res) {
             self.signInLoading = false
             if (String(res.code) === '1') {
-              ReggieUI.success('签到成功')
+              XinfeiUI.success('签到成功')
               self.fetchAll()
             } else {
-              ReggieUI.error(res.msg || '签到失败')
+              XinfeiUI.error(res.msg || '签到失败')
             }
           }).catch(function (e) {
             self.signInLoading = false
-            ReggieUI.error('签到失败，请稍后重试')
+            XinfeiUI.error('签到失败，请稍后重试')
           })
         },
         handleClockOut: function () {
@@ -190,14 +190,14 @@
           attendanceClockOut({}).then(function (res) {
             self.signOutLoading = false
             if (String(res.code) === '1') {
-              ReggieUI.success('签退成功')
+              XinfeiUI.success('签退成功')
               self.fetchAll()
             } else {
-              ReggieUI.error(res.msg || '签退失败')
+              XinfeiUI.error(res.msg || '签退失败')
             }
           }).catch(function (e) {
             self.signOutLoading = false
-            ReggieUI.error('签退失败，请稍后重试')
+            XinfeiUI.error('签退失败，请稍后重试')
           })
         },
         // ===== 日期初始化 =====
@@ -220,11 +220,11 @@
                 self.calendarEmployee = self.employeeOptions[0].id
               }
             } else {
-              ReggieUI.error((res && res.msg) || '员工列表加载失败')
+              XinfeiUI.error((res && res.msg) || '员工列表加载失败')
               self.employeeOptions = []
             }
           }).catch(function () {
-            ReggieUI.error('员工列表加载失败，请刷新重试')
+            XinfeiUI.error('员工列表加载失败，请刷新重试')
             self.employeeOptions = []
           })
         },
@@ -242,7 +242,7 @@
             self.loading = false
           }).catch(function (e) {
             self.loading = false
-            ReggieUI.warning('数据加载失败，已使用演示数据')
+            XinfeiUI.warning('数据加载失败，已使用演示数据')
           })
         },
         fetchWeekSummary: function () {

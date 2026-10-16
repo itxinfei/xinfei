@@ -4,7 +4,7 @@
     <meta charset="UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>总部控制台 - 瑞吉外卖管理端</title>
+    <title>总部控制台 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
@@ -371,14 +371,14 @@
                 if (summary && summary.code === 1) {
                     self.storeSummary = summary.data || {};
                 } else {
-                    ReggieUI.error((summary && summary.msg) || '加载门店数据失败');
+                    XinfeiUI.error((summary && summary.msg) || '加载门店数据失败');
                 }
                 var ov = results[1];
                 if (ov && ov.code === 1 && ov.data) {
                     self.dashboard = ov.data;
                 } else {
                     // 修改点：此前 overview 失败静默，补齐 else 与 summary 分支一致
-                    ReggieUI.error((ov && ov.msg) || '加载门店排行失败');
+                    XinfeiUI.error((ov && ov.msg) || '加载门店排行失败');
                 }
                 // 始终用实时排行中的店名；URL ?name= 仅作加载初始占位，
                 // 避免收藏旧链接后改名仍显示旧店名（快照不同步）
@@ -399,7 +399,7 @@
                     self.renderCategoryChart();
                 });
             }).catch(function(err) {
-                ReggieUI.error('加载失败：' + (err.message || '网络异常'));
+                XinfeiUI.error('加载失败：' + (err.message || '网络异常'));
             }).finally(function() { self.loading = false; });
             // 并行加载排行详情、趋势数据、品类数据（集团模式也需要排行三维切换）
             Promise.all([
@@ -418,7 +418,7 @@
             ]).catch(function(err) {
                 // NOTLOGIN 已由全局拦截器处理；其余失败明确提示，不伪装成空数据
                 if (err && err.message === 'NOTLOGIN') return;
-                ReggieUI.error('图表数据加载失败：' + ((err && err.message) || '网络异常'));
+                XinfeiUI.error('图表数据加载失败：' + ((err && err.message) || '网络异常'));
             });
         },
         loadDashboard() {
@@ -427,10 +427,10 @@
                 if (res.code === 1) {
                     self.dashboard = res.data;
                 } else {
-                    ReggieUI.error(res.msg || '加载数据失败');
+                    XinfeiUI.error(res.msg || '加载数据失败');
                 }
             }).catch(function(err) {
-                ReggieUI.error('加载失败：' + (err.message || '网络异常'));
+                XinfeiUI.error('加载失败：' + (err.message || '网络异常'));
             });
             // 并行加载集团看板三个接口
             Promise.all([
@@ -456,7 +456,7 @@
             }).catch(function(err) {
                 // 单接口失败不阻断其他图表渲染，但明确提示加载失败，不静默伪装空态
                 if (err && err.message !== 'NOTLOGIN') {
-                    ReggieUI.error('图表数据加载失败：' + (err.message || '网络异常'));
+                    XinfeiUI.error('图表数据加载失败：' + (err.message || '网络异常'));
                 }
                 self.$nextTick(function() {
                     self.renderBarChart();

@@ -15,10 +15,10 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   // request拦截器：写操作带 CSRF 头（统一实现见 /shared/js/request-core.js）。
   // 注意：document.write 注入的脚本在本文件顶层代码「之后」才执行，
   // 故 core 未就绪时先登记 pending 列表，由其加载完成时统一补挂。
-  if (win.ReggieCsrf) {
-    win.ReggieCsrf.attachRequestInterceptor(service, win.ReggieCsrf.get);
+  if (win.XinfeiCsrf) {
+    win.XinfeiCsrf.attachRequestInterceptor(service, win.XinfeiCsrf.get);
   } else {
-    (win.__reggieCsrfPending = win.__reggieCsrfPending || []).push(service);
+    (win.__xinfeiCsrfPending = win.__xinfeiCsrfPending || []).push(service);
   }
 
   // 修改点(2026-09-18)：未登录跳登录页时携带当前地址，登录成功后回跳来源页（仅站内相对路径，登录页再做安全校验）
@@ -31,7 +31,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   // 打开页面必须是登录态，未登录直接进登录页；防重入，并发请求同时 401 只跳一次）
   var notLoginHandled = false;
   function redirectToLogin() {
-    if (win.ReggieCsrf) { win.ReggieCsrf.clear(); }
+    if (win.XinfeiCsrf) { win.XinfeiCsrf.clear(); }
     if (window.location.pathname.indexOf('login') !== -1) { return; }
     if (notLoginHandled) { return; }
     notLoginHandled = true;
@@ -42,8 +42,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   service.interceptors.response.use(res => {
       // 修改点(2026-09-01)：保存后端通过响应头返回的CSRF Token
       var csrfToken = res.headers ? res.headers['x-csrf-token'] : null;
-      if (csrfToken && win.ReggieCsrf) {
-        win.ReggieCsrf.save(csrfToken);
+      if (csrfToken && win.XinfeiCsrf) {
+        win.XinfeiCsrf.save(csrfToken);
       }
       // 修改点：防御性检查res和res.data，防止异常响应导致TypeError
       if (res && res.data && res.data.code === 0 && res.data.msg === 'NOTLOGIN') {
@@ -125,15 +125,15 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
 
   // ===== C端 SSE 实时消息通道（2026-09-26）=====
   // 登录后建立一条同源 EventSource（自动带 JSESSIONID，无需 CSRF 头）。
-  // 后台推送到达时：弹 Vant 提醒 → 拉最新未读数 → 广播 reggie:new-message 事件，
+  // 后台推送到达时：弹 Vant 提醒 → 拉最新未读数 → 广播 xinfei:new-message 事件，
   // 供当前页面的 Vue（首页/消息中心）刷新角标与列表。
   function initSseChannel() {
-    if (win.__reggieSSE || typeof win.EventSource === 'undefined') { return; }
+    if (win.__xinfeiSSE || typeof win.EventSource === 'undefined') { return; }
     var es;
     try {
       es = new win.EventSource('/notification/sse/subscribe');
     } catch (e) { return; }
-    win.__reggieSSE = es;
+    win.__xinfeiSSE = es;
 
     es.addEventListener('message', function (ev) {
       var msg = null;
@@ -149,7 +149,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       }
       // 广播事件，让当前页 Vue 刷新（无论拉未读数成败都广播，页面自行兜底）
       var notifyPages = function () {
-        try { win.dispatchEvent(new win.CustomEvent('reggie:new-message', { detail: msg })); } catch (e) {}
+        try { win.dispatchEvent(new win.CustomEvent('xinfei:new-message', { detail: msg })); } catch (e) {}
       };
       win.$axios({ url: '/recommend/messages/unread-count', method: 'get',
                    silent: true, skipAuthRedirect: true })
@@ -162,7 +162,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       try { phone = sessionStorage.getItem('userPhone'); } catch (e) {}
       if (!phone) {
         try { es.close(); } catch (e) {}
-        win.__reggieSSE = null;
+        win.__xinfeiSSE = null;
       }
     };
   }
@@ -268,6 +268,6 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   win.addEventListener('pagehide', function (e) {
     if (e.persisted) { return; }
     if (win.__csUnreadTimer) { clearInterval(win.__csUnreadTimer); win.__csUnreadTimer = null; }
-    if (win.__reggieSSE) { try { win.__reggieSSE.close(); } catch (e) {} win.__reggieSSE = null; }
+    if (win.__xinfeiSSE) { try { win.__xinfeiSSE.close(); } catch (e) {} win.__xinfeiSSE = null; }
   });
 })(window);

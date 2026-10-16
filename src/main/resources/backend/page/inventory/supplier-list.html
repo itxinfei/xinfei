@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>供应商管理 - 瑞吉外卖管理端</title>
+  <title>供应商管理 - 心飞外卖管理端</title>
   <!-- 引入样式 -->
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
@@ -324,7 +324,7 @@
               this.tableData = pageRes.data.records || []
               this.counts = Number(pageRes.data.total)
             } else {
-              ReggieUI.error(pageRes.msg || '加载数据失败')
+              XinfeiUI.error(pageRes.msg || '加载数据失败')
             }
 
             // 从 total 字段直接获取统计数量，无需拉取全量数据再前端过滤
@@ -338,7 +338,7 @@
               }
             }
           } catch (err) {
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           }
 
           this.loading = false
@@ -436,10 +436,10 @@
               self.purchaseList = res.data.records || []
               self.purchaseTotal = Number(res.data.total) || 0
             } else {
-              ReggieUI.error(res.msg || '加载采购记录失败')
+              XinfeiUI.error(res.msg || '加载采购记录失败')
             }
           }).catch(function() {
-            ReggieUI.error('加载采购记录失败')
+            XinfeiUI.error('加载采购记录失败')
           }).finally(function() {
             self.purchaseLoading = false
           })
@@ -514,15 +514,15 @@
           apiCall.then(function (res) {
             self.submitting = false
             if (res.code === 1) {
-              ReggieUI.success(self.editMode ? '修改成功！' : '添加成功！')
+              XinfeiUI.success(self.editMode ? '修改成功！' : '添加成功！')
               self.dialogVisible = false
               self.loadData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function (err) {
             self.submitting = false
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           })
         },
 
@@ -536,24 +536,24 @@
 
         handleDelete(id) {
           const self = this
-          ReggieUI.confirm('此操作将永久删除该供应商, 是否继续?', '提示', {
+          XinfeiUI.confirm('此操作将永久删除该供应商, 是否继续?', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(function () {
             deleteSupplier(id).then(function (res) {
               if (res.code === 1) {
-                ReggieUI.success('删除成功！')
+                XinfeiUI.success('删除成功！')
                 // 如果当前页删除后为空，回退一页
                 if (self.tableData.length === 1 && self.page > 1) {
                   self.page--
                 }
                 self.loadData()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(function (err) {
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           })
         },

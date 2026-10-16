@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>排队叫号 - 瑞吉外卖管理端</title>
+  <title>排队叫号 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -448,14 +448,14 @@
           queueCall(body).then(function(res) {
             self.callLoading = false
             if (res.code === 1 && res.data) {
-              ReggieUI.success('叫号成功！排队号：' + res.data.queueNo)
+              XinfeiUI.success('叫号成功！排队号：' + res.data.queueNo)
               self.fetchData()
             } else {
-              ReggieUI.warning(res.msg || '没有等待中的顾客')
+              XinfeiUI.warning(res.msg || '没有等待中的顾客')
             }
           }).catch(function(err) {
             self.callLoading = false
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           })
         },
         // 单独叫号（已移除行操作按钮，全局"叫下一位"按钮替代）
@@ -478,15 +478,15 @@
             queueTake({ phone: self.takeForm.phone, seatCount: self.takeForm.seatCount }).then(function(res) {
               self.takeLoading = false
               if (res.code === 1) {
-                ReggieUI.success('取号成功！排队号：' + (res.data ? res.data.queueNo : ''))
+                XinfeiUI.success('取号成功！排队号：' + (res.data ? res.data.queueNo : ''))
                 self.takeForm.dialogVisible = false
                 self.fetchData()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(function(err) {
               self.takeLoading = false
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           })
         },
@@ -514,52 +514,52 @@
           queueSeat(data).then(function(res) {
             self.seatLoading = false
             if (res.code === 1) {
-              ReggieUI.success('安排入座成功！')
+              XinfeiUI.success('安排入座成功！')
               self.seatForm.dialogVisible = false
               self.fetchData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
             self.seatLoading = false
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           })
         },
         /* ── 状态流转操作 ── */
         // CALLED → WAITING（退回等待，用于误叫号纠错）
         recallHandle: function(row) {
           var self = this
-          ReggieUI.confirm('确认将 ' + (row.queueNo || '该记录') + ' 退回等待？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认将 ' + (row.queueNo || '该记录') + ' 退回等待？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               var id = row.id || row.queueId
               if (id) { recallQueue(id).then(function(res) {
-                if (res.code === 1) { ReggieUI.success('已退回等待'); self.fetchData() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) }) }
+                if (res.code === 1) { XinfeiUI.success('已退回等待'); self.fetchData() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) }) }
             })
             .catch(function() {})
         },
         // CANCELLED → WAITING（恢复排队，用于误取消纠错）
         reactivateHandle: function(id) {
           var self = this
-          ReggieUI.confirm('确认恢复该排队记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认恢复该排队记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               reactivateQueue(id).then(function(res) {
-                if (res.code === 1) { ReggieUI.success('已恢复排队'); self.fetchData() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (res.code === 1) { XinfeiUI.success('已恢复排队'); self.fetchData() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
             .catch(function() {})
         },
         // 取消排队
         cancelHandle: function(id) {
           var self = this
-          ReggieUI.confirm('确认取消该排队记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认取消该排队记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               queueCancel(id).then(function(res) {
-                if (res.code === 1) { ReggieUI.success('已取消！'); self.fetchData() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (res.code === 1) { XinfeiUI.success('已取消！'); self.fetchData() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
             .catch(function() {})
         }

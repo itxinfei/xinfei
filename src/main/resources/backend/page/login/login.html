@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>登录 - 瑞吉外卖管理端</title>
+  <title>登录 - 心飞外卖管理端</title>
   <link rel="shortcut icon" href="../../favicon.ico">
     <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <!-- 修改点：补设计令牌（全站后台页均已加载，登录页此前漏链，导致 login.css 内 var(--color-brand-500)/var(--color-white) 等令牌 undefined、配色错乱） -->
@@ -21,7 +21,7 @@
         <div class="left-inner">
           <div class="left-brand">
             <span class="brand-icon"><i class="ri-restaurant-2-fill"></i></span>
-            <span class="brand-name">瑞吉外卖</span>
+            <span class="brand-name">心飞外卖</span>
           </div>
           <h1 class="left-heading">智能餐饮管理平台</h1>
           <p class="left-sub">门店经营 · 菜品管理 · 订单履约 · 数据分析</p>
@@ -78,7 +78,7 @@
           </el-form>
 
           <div class="card-foot">
-            <span>&copy; 2026 瑞吉外卖</span>
+            <span>&copy; 2026 心飞外卖</span>
           </div>
         </div>
       </div>
@@ -182,11 +182,11 @@
                 localStorage.setItem('userInfo', JSON.stringify(safeUserInfo))
                 window.location.href = '/backend/index.html'
               } else {
-                ReggieUI.error(res.msg || '登录失败')
+                XinfeiUI.error(res.msg || '登录失败')
                 self.loading = false
               }
             }).catch(function(err) {
-              ReggieUI.error((err && err.message) || '网络异常，请稍后重试')
+              XinfeiUI.error((err && err.message) || '网络异常，请稍后重试')
               self.loading = false
             })
           })

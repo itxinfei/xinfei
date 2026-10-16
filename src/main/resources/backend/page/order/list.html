@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>订单明细 - 瑞吉外卖管理端</title>
+  <title>订单明细 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -322,7 +322,7 @@
   <script src="../../api/export.js?v=20260926"></script>
   <script src="../../api/meta.js?v=20260926"></script>
   <script>
-    // 订单状态兜底常量（与后端 com.reggie.enums.OrderStatus 严格一致，1 基）
+    // 订单状态兜底常量（与后端 com.xinfei.enums.OrderStatus 严格一致，1 基）
     // 仅在 /api/meta/enums 不可用时使用，保证任何情况下显示都不会出错
     var ORDER_STATUS_FALLBACK = {
       '1': '待付款', '2': '待接单', '3': '配送中',
@@ -592,7 +592,7 @@
         formatDiningType: function(val) {
           if (!val) return '-'
           // 与 /api/meta/enums orderSource 字典一致；OUTSIDE/DELIVERY/TAKEOUT 均为外卖配送
-          // （OUTSIDE 为瑞吉原版下单写入值，DELIVERY 为加列前老数据默认值）
+          // （OUTSIDE 为心飞原版下单写入值，DELIVERY 为加列前老数据默认值）
           const map = { DELIVERY: '外卖配送', TAKEOUT: '外卖配送', OUTSIDE: '外卖配送', EAT_IN: '堂食扫码', QUEUE: '排队', RESERVATION: '预订' }
           return map[val] || val
         },
@@ -608,7 +608,7 @@
             if (res && String(res.code) === '1' && res.data) {
               window.PrintUtil.printText(res.data, '小票 ' + (row.number || row.id))
             } else {
-              window.ReggieUI.error((res && res.msg) || '打印失败')
+              window.XinfeiUI.error((res && res.msg) || '打印失败')
             }
           }).catch(function() {})
         },
@@ -636,14 +636,14 @@
           self.noteSaving = true
           updateInternalRemark(self.diaForm.id, self.internalNote || '').then(function(res) {
             if (res && res.code === 1) {
-              ReggieUI.success('备注已保存')
+              XinfeiUI.success('备注已保存')
               // 同步更新 diaForm 避免再次打开弹窗时数据过期
               self.diaForm.internalRemark = self.internalNote
             } else {
-              ReggieUI.error((res && res.msg) || '保存失败')
+              XinfeiUI.error((res && res.msg) || '保存失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('保存失败')
+            XinfeiUI.error('保存失败')
             console.warn('[order] 保存内部备注失败:', err)
           }).finally(function() { self.noteSaving = false })
         },
@@ -663,11 +663,11 @@
             cancelOrderApi({ id: self.cancelDiaForm.id, reason: self.cancelDiaForm.reason })
               .then(function(res) {
                 if (res && res.code === 1) {
-                  ReggieUI.success('订单已取消')
+                  XinfeiUI.success('订单已取消')
                   self.cancelDiaVisible = false
                   self.init()
-                } else { ReggieUI.error((res && res.msg) || '取消失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                } else { XinfeiUI.error((res && res.msg) || '取消失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
               .finally(function() { self.cancelDiaLoading = false })
           })
         },
@@ -682,13 +682,13 @@
         // 商家拒单：待接单单，confirm 后走 /order/reject（自动退款/回库存）
         rejectOrderRow: function(row) {
           const self = this
-          ReggieUI.confirm('确认拒单？已支付订单将自动全额退款，库存与优惠将回退。', '拒单确认',
+          XinfeiUI.confirm('确认拒单？已支付订单将自动全额退款，库存与优惠将回退。', '拒单确认',
             { confirmButtonText: '确定拒单', cancelButtonText: '再想想', type: 'warning' })
             .then(function() {
               rejectOrderApi({ id: row.id }).then(function(res) {
-                if (res && res.code === 1) { ReggieUI.success('已拒单'); self.init() }
-                else { ReggieUI.error((res && res.msg) || '拒单失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (res && res.code === 1) { XinfeiUI.success('已拒单'); self.init() }
+                else { XinfeiUI.error((res && res.msg) || '拒单失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
         },
         // 自提核销弹窗
@@ -707,11 +707,11 @@
             verifySelfPickupApi({ id: self.verifyForm.id, pickupCode: self.verifyForm.pickupCode })
               .then(function(res) {
                 if (res && res.code === 1) {
-                  ReggieUI.success('核销成功')
+                  XinfeiUI.success('核销成功')
                   self.verifyVisible = false
                   self.init()
-                } else { ReggieUI.error((res && res.msg) || '核销失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                } else { XinfeiUI.error((res && res.msg) || '核销失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
               .finally(function() { self.verifyLoading = false })
           })
         },
@@ -726,16 +726,16 @@
           const okMsg = row.status === 2
             ? (eatIn ? '已开始制作' : (selfPickup ? '已接单制作' : '已接单'))
             : (eatIn ? '已上菜完成，桌台已释放' : '订单已完成')
-          ReggieUI.confirm(tip, '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm(tip, '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               // 走状态机：2→3 confirm，3→4 complete（不再用通用 PUT /order 绕过联动）
               const apiCall = row.status === 2
                 ? confirmOrderApi({ id: row.id })
                 : completeOrderApi({ id: row.id })
               apiCall.then(function(res) {
-                if (res.code === 1) { ReggieUI.success(okMsg); self.init() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (res.code === 1) { XinfeiUI.success(okMsg); self.init() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
         },
         // ---- 店长派单 ----
@@ -759,12 +759,12 @@
         submitDispatch: async function() {
           const self = this
           if (self.dispatchLoading) return
-          if (!self.dispatchForm.riderId) { ReggieUI.warning('请选择骑手'); return }
+          if (!self.dispatchForm.riderId) { XinfeiUI.warning('请选择骑手'); return }
           self.dispatchLoading = true
           try {
             const res = await dispatchOrderApi({ orderId: self.dispatchForm.orderId, riderId: self.dispatchForm.riderId })
             if (res.code === 1) {
-              ReggieUI.success('派单成功')
+              XinfeiUI.success('派单成功')
               self.dispatchVisible = false
               self.init(false)
             }
@@ -788,9 +788,9 @@
           }
           let reason = self.refundForm.reasonType
           if (reason === '其他原因') reason = self.refundForm.reasonDetail
-          // 修改点：退款为资金敏感操作，ReggieUI.confirm 二次确认
+          // 修改点：退款为资金敏感操作，XinfeiUI.confirm 二次确认
           try {
-            await ReggieUI.confirm('确认向用户退款 ¥' + self.refundForm.amount + '？退款后不可撤销。', '订单退款确认', { confirmButtonText: '确认退款', cancelButtonText: '再想想', type: 'warning' })
+            await XinfeiUI.confirm('确认向用户退款 ¥' + self.refundForm.amount + '？退款后不可撤销。', '订单退款确认', { confirmButtonText: '确认退款', cancelButtonText: '再想想', type: 'warning' })
           } catch (canceled) { return }
           self.refundLoading = true
           try {
@@ -799,17 +799,17 @@
             if (paymentRes && paymentRes.code === 1 && paymentRes.data && paymentRes.data.records && paymentRes.data.records.length > 0) {
               paymentOrderId = paymentRes.data.records[0].id
             }
-            if (!paymentOrderId) { ReggieUI.error('未找到对应支付订单，无法退款'); self.refundLoading = false; return }
+            if (!paymentOrderId) { XinfeiUI.error('未找到对应支付订单，无法退款'); self.refundLoading = false; return }
             const res = await paymentRefund({ paymentOrderId: paymentOrderId, amount: parseFloat(self.refundForm.amount), reason: reason })
-            if (res && res.code === 1) { ReggieUI.success('退款成功'); self.refundVisible = false; self.init() }
-            else { ReggieUI.error(res ? res.msg : '退款失败') }
-          } catch (err) { ReggieUI.error('退款请求失败：' + err) }
+            if (res && res.code === 1) { XinfeiUI.success('退款成功'); self.refundVisible = false; self.init() }
+            else { XinfeiUI.error(res ? res.msg : '退款失败') }
+          } catch (err) { XinfeiUI.error('退款请求失败：' + err) }
           self.refundLoading = false
         },
         exportOrders: async function(format) {
           // 仅导出勾选行（跨翻页保留；未勾选时导出按钮已禁用）
           if (this.selectedIds.length === 0) {
-            ReggieUI.warning('请先勾选要导出的订单')
+            XinfeiUI.warning('请先勾选要导出的订单')
             return
           }
           const params = { ids: this.selectedIds.join(',') }
@@ -817,8 +817,8 @@
             const ext = format === 'excel' ? 'xlsx' : 'pdf'
             const apiCall = format === 'excel' ? exportApi.exportOrdersExcel(params) : exportApi.exportOrdersPdf(params)
             await exportApi.downloadFile(apiCall, '订单数据.' + ext)
-            ReggieUI.success('已导出选中的 ' + this.selectedIds.length + ' 条订单')
-          } catch (err) { ReggieUI.error('导出失败：' + (err.message || err)) }
+            XinfeiUI.success('已导出选中的 ' + this.selectedIds.length + ' 条订单')
+          } catch (err) { XinfeiUI.error('导出失败：' + (err.message || err)) }
         }
       }
     })

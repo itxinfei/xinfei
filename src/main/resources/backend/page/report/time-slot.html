@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>时段分析 - 瑞吉外卖管理端</title>
+  <title>时段分析 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -215,15 +215,15 @@
           loadData: function() {
             const self = this;
             if (!self.dateRange || self.dateRange.length < 2) {
-              ReggieUI.warning('请选择日期范围'); return;
+              XinfeiUI.warning('请选择日期范围'); return;
             }
             self.loading = true;
             reportTimeSlot({ startDate: self.dateRange[0], endDate: self.dateRange[1] }).then(function(res) {
               if (String(res.code) === '1') {
                 self.tableData = res.data || [];
                 self.$nextTick(function() { self.renderCharts(); self.loadHeatmap(); });
-              } else { ReggieUI.error(res.msg || '加载时段数据失败'); }
-            }).catch(function(err) { ReggieUI.error('请求失败：' + (err || '网络异常')); })
+              } else { XinfeiUI.error(res.msg || '加载时段数据失败'); }
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + (err || '网络异常')); })
             .finally(function() { self.loading = false; });
           },
           loadHeatmap: function() {
@@ -234,10 +234,10 @@
                   self.renderHeatmap(res.data);
                 } else {
                   // 修改点：此前仅 console.warn 静默，失败无用户提示
-                  ReggieUI.error((res && res.msg) || '加载热力图失败');
+                  XinfeiUI.error((res && res.msg) || '加载热力图失败');
                 }
               })
-              .catch(function(err) { ReggieUI.error('加载热力图失败：' + (err || '网络异常')); });
+              .catch(function(err) { XinfeiUI.error('加载热力图失败：' + (err || '网络异常')); });
           },
           renderHeatmap: function(data) {
             if (!this.heatmapChart) return;
@@ -375,8 +375,8 @@
           // 修改点：改为导出当前表格数据生成 CSV（此前误调日报接口且扩展名 .csv 内容为 xlsx）
           handleExport: function() {
             const self = this;
-            if (!self.dateRange || self.dateRange.length < 2) { ReggieUI.warning('请先选择日期范围'); return; }
-            if (!self.exportRows || !self.exportRows.length) { ReggieUI.warning('请先勾选要导出的记录'); return; }
+            if (!self.dateRange || self.dateRange.length < 2) { XinfeiUI.warning('请先选择日期范围'); return; }
+            if (!self.exportRows || !self.exportRows.length) { XinfeiUI.warning('请先勾选要导出的记录'); return; }
             const esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"' }
             const header = ['时段', '订单数', '营业额（元）', '占比']
             const lines = self.exportRows.map(function(r) {
@@ -389,7 +389,7 @@
             link.download = '时段分析_' + self.dateRange[0] + '_' + self.dateRange[1] + '.csv';
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
-            ReggieUI.success('导出成功');
+            XinfeiUI.success('导出成功');
           },
           // 修改点：table-bar 组件回调桥接
           handleSearch: function(params) {

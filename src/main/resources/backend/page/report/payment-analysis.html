@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支付分析 - 瑞吉外卖管理端</title>
+  <title>支付分析 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -242,15 +242,15 @@
           loadData: function() {
             const self = this;
             if (!self.dateRange || self.dateRange.length < 2) {
-              ReggieUI.warning('请选择日期范围'); return;
+              XinfeiUI.warning('请选择日期范围'); return;
             }
             self.loading = true;
             reportPayment({ startDate: self.dateRange[0], endDate: self.dateRange[1] }).then(function(res) {
               if (String(res.code) === '1') {
                 self.tableData = self.convertToArray(res.data || {});
                 self.$nextTick(function() { self.renderCharts(); self.loadPaymentTrend(); self.loadRefundAnalysis(); });
-              } else { ReggieUI.error(res.msg || '加载支付数据失败'); }
-            }).catch(function(err) { ReggieUI.error('请求失败：' + (err || '网络异常')); })
+              } else { XinfeiUI.error(res.msg || '加载支付数据失败'); }
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + (err || '网络异常')); })
             .finally(function() { self.loading = false; });
           },
           // ====== 退款分析（8.5.2） ======
@@ -262,12 +262,12 @@
                 self.$nextTick(function() { self.renderRefundChart(); });
               } else {
                 // 失败提示，并渲染占位避免图表区永久留白
-                ReggieUI.error((res && res.msg) || '加载退款分析失败');
+                XinfeiUI.error((res && res.msg) || '加载退款分析失败');
                 self.refundAnalysis = null;
                 self.renderRefundChart();
               }
             }).catch(function(err) {
-              ReggieUI.error('加载退款分析失败：' + (err || '网络异常'));
+              XinfeiUI.error('加载退款分析失败：' + (err || '网络异常'));
               self.refundAnalysis = null;
               self.renderRefundChart();
             });
@@ -323,12 +323,12 @@
                   self.renderPaymentTrend(res.data);
                 } else {
                   // 失败提示，并渲染占位避免图表区永久留白
-                  ReggieUI.error((res && res.msg) || '加载支付趋势失败');
+                  XinfeiUI.error((res && res.msg) || '加载支付趋势失败');
                   self.renderPaymentTrend(null);
                 }
               })
               .catch(function(err) {
-                ReggieUI.error('加载支付趋势失败：' + (err || '网络异常'));
+                XinfeiUI.error('加载支付趋势失败：' + (err || '网络异常'));
                 self.renderPaymentTrend(null);
               });
           },
@@ -469,8 +469,8 @@
           // 修改点：改为导出当前表格数据生成 CSV（此前误调日报接口且扩展名 .csv 内容为 xlsx）
           handleExport: function() {
             const self = this;
-            if (!self.dateRange || self.dateRange.length < 2) { ReggieUI.warning('请先选择日期范围'); return; }
-            if (!self.exportRows || !self.exportRows.length) { ReggieUI.warning('请先勾选要导出的记录'); return; }
+            if (!self.dateRange || self.dateRange.length < 2) { XinfeiUI.warning('请先选择日期范围'); return; }
+            if (!self.exportRows || !self.exportRows.length) { XinfeiUI.warning('请先勾选要导出的记录'); return; }
             const esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"' }
             const header = ['支付渠道', '交易笔数', '交易金额（元）']
             const lines = self.exportRows.map(function(r) {
@@ -483,7 +483,7 @@
             link.download = '支付分析_' + self.dateRange[0] + '_' + self.dateRange[1] + '.csv';
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
-            ReggieUI.success('导出成功');
+            XinfeiUI.success('导出成功');
           },
           // 修改点：table-bar 组件回调桥接
           handleSearch: function(params) {

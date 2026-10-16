@@ -1,4 +1,4 @@
-/* 瑞吉外卖官网交互脚本（原生 JS，无依赖） */
+/* 心飞外卖官网交互脚本（原生 JS，无依赖） */
 (function () {
   'use strict';
 
@@ -6,14 +6,14 @@
   var root = document.documentElement;
   var themeBtn = document.getElementById('themeToggle');
   var saved = null;
-  try { saved = localStorage.getItem('reggie-theme'); } catch (e) {}
+  try { saved = localStorage.getItem('xinfei-theme'); } catch (e) {}
   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   setTheme(saved || (prefersDark ? 'dark' : 'light'));
 
   function setTheme(t) {
     root.setAttribute('data-theme', t);
     themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
-    try { localStorage.setItem('reggie-theme', t); } catch (e) {}
+    try { localStorage.setItem('xinfei-theme', t); } catch (e) {}
   }
   themeBtn.addEventListener('click', function () {
     setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>菜品排行 - 瑞吉外卖管理端</title>
+  <title>菜品排行 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -253,8 +253,8 @@
                 self.stats = self.computeStats(rows);
                 self.renderChart();
                 self.loadTopTrend();
-              } else { ReggieUI.error(res.msg || '加载失败'); }
-            }).catch(function(err) { ReggieUI.error('请求失败：' + err); })
+              } else { XinfeiUI.error(res.msg || '加载失败'); }
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + err); })
             .finally(function() { self.loading = false; });
         },
         // 统计口径：当前 Top N 榜单内汇总（接口本身按 limit 截断，非全店数据）
@@ -401,10 +401,10 @@
         handleExport: function() {
           const self = this
           if (!self.dateRange || self.dateRange.length < 2) {
-            ReggieUI.warning('请先选择日期范围'); return;
+            XinfeiUI.warning('请先选择日期范围'); return;
           }
           if (!self.exportRows || !self.exportRows.length) {
-            ReggieUI.warning('请先勾选要导出的记录'); return;
+            XinfeiUI.warning('请先勾选要导出的记录'); return;
           }
           const esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"' }
           const header = ['排名', '菜品名称', '销量（份）', '相对榜首(%)']
@@ -420,7 +420,7 @@
           link.download = '菜品排行_' + self.dateRange[0] + '_' + self.dateRange[1] + '.csv'
           document.body.appendChild(link); link.click(); document.body.removeChild(link)
           URL.revokeObjectURL(link.href)
-          ReggieUI.success('导出成功')
+          XinfeiUI.success('导出成功')
         }
       }
     })

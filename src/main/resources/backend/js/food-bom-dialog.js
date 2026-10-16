@@ -1,5 +1,5 @@
 /**
- * 瑞吉外卖后台 — 菜品配方（BOM）编辑弹窗组件
+ * 心飞外卖后台 — 菜品配方（BOM）编辑弹窗组件
  * 修改点(2026-09-24)：从 page/food/list.html（941 行）拆出独立组件文件，
  *   降低最高频菜品页的体积与回归风险；API 依赖 api/inventory.js 的
  *   materialList / dishMaterialListByDish / dishMaterialBatchSave（页面已引入）。
@@ -84,7 +84,7 @@
         if (typeof materialList !== 'function') { return; }
         materialList().then(function (res) {
           if (res.code === 1) { self.materialOptions = res.data || []; }
-        }).catch(function (err) { ReggieUI.error('加载食材列表失败：' + err); });
+        }).catch(function (err) { XinfeiUI.error('加载食材列表失败：' + err); });
       },
       loadItems: function () {
         var self = this;
@@ -105,8 +105,8 @@
               };
             });
             if (self.items.length === 0) { self.addItem(); }
-          } else { ReggieUI.error(res.msg || '加载配方失败'); }
-        }).catch(function (err) { ReggieUI.error('请求失败：' + err); });
+          } else { XinfeiUI.error(res.msg || '加载配方失败'); }
+        }).catch(function (err) { XinfeiUI.error('请求失败：' + err); });
       },
       addItem: function () {
         this.items.push({
@@ -119,7 +119,7 @@
         });
       },
       delItem: function (index) {
-        if (this.items.length <= 1) { ReggieUI.warning('至少保留一条'); return; }
+        if (this.items.length <= 1) { XinfeiUI.warning('至少保留一条'); return; }
         this.items.splice(index, 1);
       },
       onMaterialChange: function (row, value) {
@@ -136,8 +136,8 @@
         // 校验：所有行必须选食材且用量 > 0
         for (var i = 0; i < self.items.length; i++) {
           var item = self.items[i];
-          if (!item.materialId) { ReggieUI.warning('第 ' + (i + 1) + ' 行未选择食材'); return; }
-          if (!item.usageQty || item.usageQty <= 0) { ReggieUI.warning('第 ' + (i + 1) + ' 行用量必须大于 0'); return; }
+          if (!item.materialId) { XinfeiUI.warning('第 ' + (i + 1) + ' 行未选择食材'); return; }
+          if (!item.usageQty || item.usageQty <= 0) { XinfeiUI.warning('第 ' + (i + 1) + ' 行用量必须大于 0'); return; }
         }
         var items = self.items.map(function (it) {
           return {
@@ -153,14 +153,14 @@
         dishMaterialBatchSave(params).then(function (res) {
           self.submitting = false;
           if (res.code === 1) {
-            ReggieUI.success('配方保存成功！');
+            XinfeiUI.success('配方保存成功！');
             self.visible = false;
             self.items = [];
             self.$emit('saved');
-          } else { ReggieUI.error(res.msg || '保存失败'); }
+          } else { XinfeiUI.error(res.msg || '保存失败'); }
         }).catch(function (err) {
           self.submitting = false;
-          ReggieUI.error('请求失败：' + err);
+          XinfeiUI.error('请求失败：' + err);
         });
       }
     }

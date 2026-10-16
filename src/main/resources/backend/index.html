@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>瑞吉外卖管理端</title>
+    <title>心飞外卖管理端</title>
     <link rel="shortcut icon" href="favicon.ico">
     <!-- 引入样式 -->
     <!-- 修改点(2026-09-01)：移除 plugins/element-ui/index.css 官方样式表 ——
@@ -61,7 +61,7 @@
             </div>
             <div class="logo-text">
               <span class="logo-brand">{{ shopName }}</span>
-              <span class="logo-sub">REGGIE TAKEOUT</span>
+              <span class="logo-sub">XINFEI TAKEOUT</span>
             </div>
           </div>
 
@@ -227,7 +227,7 @@
             menuActived: '1',
             userInfo: {},
             // 侧边栏品牌：登录后从 /restaurant/info 实时拉取，商家"店铺设置"改名后同步
-            shopName: '瑞吉外卖',
+            shopName: '心飞外卖',
             shopLogo: '',
             sidebarCollapsed: false,
             sidebarOpen: false,
@@ -601,15 +601,15 @@
                 localStorage.removeItem('userInfo')
                 window.location.href = '/backend/page/login/login.html'
               } else {
-                ReggieUI.error((res && res.msg) || '退出失败，请稍后重试')
+                XinfeiUI.error((res && res.msg) || '退出失败，请稍后重试')
               }
             }).catch(function () {
-              ReggieUI.error('退出请求失败，请检查网络后重试')
+              XinfeiUI.error('退出请求失败，请检查网络后重试')
             })
           },
           // 修改点(2026-08-12)：接收子页面（iframe）发来的未登录信号，由顶层窗口统一跳转登录页
           handleChildNotLogin(event) {
-            if (event && event.data && event.data.type === 'REGGIE_NOTLOGIN') {
+            if (event && event.data && event.data.type === 'XINFEI_NOTLOGIN') {
               if (this.notLoginJumping) return  // 防重入：并发 401 只跳转一次
               this.notLoginJumping = true
               // 未登录立即跳转登录页，不提示不延迟（2026-09-26）

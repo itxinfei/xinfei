@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>提现管理 - 瑞吉外卖管理端</title>
+  <title>提现管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
     <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <!-- ==================== 提现管理 ==================== -->
@@ -362,7 +362,7 @@
               this.allData = res.data || []
             }
           } catch (err) {
-            ReggieUI.error('加载数据失败')
+            XinfeiUI.error('加载数据失败')
           } finally {
             this.loading = false
           }
@@ -378,7 +378,7 @@
               this.statsCards[3].value = '¥' + this.formatMoney(this.statistics.totalWithdrawal || this.statistics.totalAmount || 0)
             }
           } catch (err) {
-            ReggieUI.error('加载统计数据失败')
+            XinfeiUI.error('加载统计数据失败')
           }
         },
         resetSearch() {
@@ -407,22 +407,22 @@
               self.$refs.addForm.validate(function(valid) { valid ? resolve() : reject() })
             })
           } catch (e) {
-            ReggieUI.warning('请完善表单必填项')
+            XinfeiUI.warning('请完善表单必填项')
             return
           }
 
           self.submitLoading = true
           createWithdrawal(self.addForm).then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success('提交成功')
+              XinfeiUI.success('提交成功')
               self.addDialogVisible = false
               self.fetchData()
               self.fetchStatistics()
             } else {
-              ReggieUI.error(res.msg || '提交失败')
+              XinfeiUI.error(res.msg || '提交失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('提交失败，请稍后重试')
+            XinfeiUI.error('提交失败，请稍后重试')
           }).finally(function() {
             self.submitLoading = false
           })
@@ -459,15 +459,15 @@
               remark: self.reviewForm.remark
             }).then(function(res) {
               if (res.code === 1) {
-                ReggieUI.success('审核完成')
+                XinfeiUI.success('审核完成')
                 self.reviewDialogVisible = false
                 self.fetchData()
                 self.fetchStatistics()
               } else {
-                ReggieUI.error(res.msg || '审核失败')
+                XinfeiUI.error(res.msg || '审核失败')
               }
             }).catch(function(err) {
-              ReggieUI.error('审核失败')
+              XinfeiUI.error('审核失败')
             }).finally(function() {
               self.submitLoading = false
             })
@@ -493,15 +493,15 @@
               paymentNo: self.paymentForm.paymentNo
             }).then(function(res) {
               if (res.code === 1) {
-                ReggieUI.success('打款成功')
+                XinfeiUI.success('打款成功')
                 self.paymentDialogVisible = false
                 self.fetchData()
                 self.fetchStatistics()
               } else {
-                ReggieUI.error(res.msg || '打款失败')
+                XinfeiUI.error(res.msg || '打款失败')
               }
             }).catch(function(err) {
-              ReggieUI.error('打款失败')
+              XinfeiUI.error('打款失败')
             }).finally(function() {
               self.submitLoading = false
             })
@@ -509,7 +509,7 @@
         },
         async handleCancel(row) {
           try {
-            await ReggieUI.confirm('确定要取消该提现申请吗？', '取消确认', {
+            await XinfeiUI.confirm('确定要取消该提现申请吗？', '取消确认', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -517,16 +517,16 @@
             
             const res = await cancelWithdrawal(row.id)
             if (res.code === 1) {
-              ReggieUI.success('已取消')
+              XinfeiUI.success('已取消')
               this.fetchData()
               this.fetchStatistics()
             } else {
-              ReggieUI.error(res.msg || '取消失败')
+              XinfeiUI.error(res.msg || '取消失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[withdrawal] 取消提现失败:', err)
-            ReggieUI.error('取消失败')
+            XinfeiUI.error('取消失败')
           }
         }
       }

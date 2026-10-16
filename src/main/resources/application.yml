@@ -18,7 +18,7 @@ server:
 
 spring:
   application:
-    name: reggie_take_out
+    name: xinfei_take_out
   profiles:
     active: dev  # 默认开发环境
   devtools:
@@ -33,16 +33,16 @@ spring:
 mybatis-plus:
   mapper-locations:
     - classpath*:/mapper/**/*.xml
-    - classpath*:/com/reggie/mapper/**/*.xml
-    - classpath*:/com/reggie/module/*/mapper/**/*.xml
-    - classpath*:/com/reggie/module/*/*.xml
+    - classpath*:/com/xinfei/mapper/**/*.xml
+    - classpath*:/com/xinfei/module/*/mapper/**/*.xml
+    - classpath*:/com/xinfei/module/*/*.xml
   configuration:
     map-underscore-to-camel-case: true
   global-config:
     db-config:
       id-type: ASSIGN_ID
 # 测试图片生成配置
-reggie:
+xinfei:
   server-url: http://localhost:8080
   image:
     # 是否在启动时下载真实网络图片（true=仅首次启动时下载，false=禁用）
@@ -55,7 +55,7 @@ reggie:
   # 短信服务配置
   sms:
     # 短信签名（生产环境需在application-prod.yml中覆盖）
-    sign-name: 瑞吉外卖
+    sign-name: 心飞外卖
     # 短信模板编码（开发环境留空，不实际发送；生产环境在application-prod.yml中配置）
     template-code:
     # 修改点：短信Mock模式开关（开发环境默认true，仅打印日志不实际发送）
@@ -126,7 +126,7 @@ reggie:
         base-url: https://open.douyin.com
         notify-token:
 
-# API文档配置（必须在Spring根级别，不能嵌套在reggie下）
+# API文档配置（必须在Spring根级别，不能嵌套在xinfei下）
 springdoc:
   api-docs:
     enabled: true

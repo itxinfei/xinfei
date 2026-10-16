@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>系统配置 - 瑞吉外卖管理端</title>
+  <title>系统配置 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -199,14 +199,14 @@
               this.counts = listRes.data.total || 0
             } else {
               // 修改点：接口失败兜底提示（原无 else 分支静默）
-              ReggieUI.error((listRes && listRes.msg) || '加载配置列表失败')
+              XinfeiUI.error((listRes && listRes.msg) || '加载配置列表失败')
             }
             if (reloadStats && statsRes && statsRes.code === 1) {
               this.stats = Object.assign({}, this.stats, statsRes.data  || {})
             }
           } catch (err) {
             if (err.message !== 'NOTLOGIN') {
-              ReggieUI.error('加载配置列表失败，请刷新重试')
+              XinfeiUI.error('加载配置列表失败，请刷新重试')
             }
           } finally {
             this.loading = false
@@ -280,36 +280,36 @@
           const self = this
           self.$refs.configForm.validate(function(valid) {
             if (!valid) {
-              ReggieUI.warning('请完善表单必填项')
+              XinfeiUI.warning('请完善表单必填项')
               return
             }
             self.submitting = true
           const api = self.formData.id ? sysApi.configUpdate(self.formData) : sysApi.configAdd(self.formData)
           api.then(function(res) {
             if (res && res.code === 1) {
-              ReggieUI.success(res.msg || '操作成功')
+              XinfeiUI.success(res.msg || '操作成功')
               self.formData.dialogVisible = false
               self.init()
             } else {
-              ReggieUI.error(res ? res.msg : '操作失败')
+              XinfeiUI.error(res ? res.msg : '操作失败')
             }
-            }).catch(function() { ReggieUI.error('操作失败') })
+            }).catch(function() { XinfeiUI.error('操作失败') })
             .finally(function() { self.submitting = false })
           })
         },
         deleteHandle(id) {
           const self = this
-          ReggieUI.confirm('确定删除该配置吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确定删除该配置吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               sysApi.configDelete(id).then(function(res) {
                 if (res && res.code === 1) {
-                  ReggieUI.success('删除成功')
+                  XinfeiUI.success('删除成功')
                   self.init()
                 }
               })
             }).catch(function(err) {
               // request.js 对业务失败 reject(new Error(msg))，需明确提示；用户点取消 reject('cancel')，静默
-              if (err instanceof Error) { ReggieUI.error(err.message || '删除失败') }
+              if (err instanceof Error) { XinfeiUI.error(err.message || '删除失败') }
             })
         }
       }

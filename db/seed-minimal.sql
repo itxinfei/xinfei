@@ -1,9 +1,9 @@
 -- ============================================================
--- Reggie 外卖系统 — 最小初始化数据（自助建表路径专用）
+-- Xinfei 外卖系统 — 最小初始化数据（自助建表路径专用）
 -- ============================================================
 -- 用途：配合 src/test/resources/schema*.sql 建表后，插入最小可登录数据集。
 -- 前提：必须用 UTF-8 导入，否则中文乱码：
---   mysql -uroot -p --default-character-set=utf8mb4 reggie < db/seed-minimal.sql
+--   mysql -uroot -p --default-character-set=utf8mb4 xinfei < db/seed-minimal.sql
 --
 -- 说明：
 --   1) 密码为 MD5('123456')，系统登录校验通过后会自动升级为 BCrypt。
@@ -20,7 +20,7 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), update_time = NOW();
 
 -- 门店
 INSERT INTO store (id, name, address, phone, status, create_time, update_time, is_deleted, tenant_id)
-VALUES (1, '瑞吉外卖旗舰店', '北京市朝阳区示例路 1 号', '13900000000', 1, NOW(), NOW(), 0, 1)
+VALUES (1, '心飞外卖旗舰店', '北京市朝阳区示例路 1 号', '13900000000', 1, NOW(), NOW(), 0, 1)
 ON DUPLICATE KEY UPDATE name = VALUES(name), address = VALUES(address), update_time = NOW();
 
 -- 角色（role_key=SUPER_ADMIN 是 @RequiresAdmin 的放行依据）

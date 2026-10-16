@@ -1,5 +1,5 @@
--- 瑞吉外卖测试数据库 Schema (H2兼容)
--- 从 reggie.sql 提取并转换为 H2 语法
+-- 心飞外卖测试数据库 Schema (H2兼容)
+-- 从 xinfei.sql 提取并转换为 H2 语法
 
 -- 核心表
 
@@ -425,7 +425,7 @@ CREATE TABLE IF NOT EXISTS ai_provider_config (
 );
 
 -- ==================== 区域表 ====================
--- 字段与 Region 实体（com.reggie.module.region.model.Region）及
+-- 字段与 Region 实体（com.xinfei.module.region.model.Region）及
 -- src/test/resources/schema-mysql.sql 中的权威定义保持一致。
 -- 说明：早期此处仅有 id/name/sort 等 6 列，缺少实体映射的
 -- code/parent_id/level/create_user/update_user，任何走 RegionMapper 的
@@ -859,7 +859,7 @@ CREATE TABLE IF NOT EXISTS complaint (
   PRIMARY KEY (id)
 );
 
--- ==================== 实体表补齐（由 .review/test-schema-backfill.js 依据 db/reggie.sql 生成）
+-- ==================== 实体表补齐（由 .review/test-schema-backfill.js 依据 db/xinfei.sql 生成）
 -- 实体与物理表对账见 DatabaseSchemaHealthCheckTest；新增表请同步登记。
 
 -- ai_attachment

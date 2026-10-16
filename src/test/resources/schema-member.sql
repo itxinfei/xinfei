@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS coupon_user (
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (id)
 );
--- 修改点：防重复领取唯一索引（与 reggie.sql uk_member_template 对齐）
+-- 修改点：防重复领取唯一索引（与 xinfei.sql uk_member_template 对齐）
 
 CREATE TABLE IF NOT EXISTS points_record (
   id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',

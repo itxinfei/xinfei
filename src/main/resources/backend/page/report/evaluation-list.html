@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>菜品评价管理 - 瑞吉外卖管理端</title>
+  <title>菜品评价管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -338,10 +338,10 @@
             dishOptions().then(function(res) {
               if (String(res.code) === '1' && res.data) {
                 self.filterOptions.names = res.data.names || [];
-              } else { self.optionsLoadError = true; ReggieUI.warning('加载菜品选项失败：' + (res.msg || '接口返回异常')); }
+              } else { self.optionsLoadError = true; XinfeiUI.warning('加载菜品选项失败：' + (res.msg || '接口返回异常')); }
             }).catch(function(err) {
               if (err && err.message === 'NOTLOGIN') return;
-              self.optionsLoadError = true; ReggieUI.error('加载菜品选项失败');
+              self.optionsLoadError = true; XinfeiUI.error('加载菜品选项失败');
             }).finally(function() { self.optionsLoading = false; });
           },
           onFilterDropdownVisible: function(visible) {
@@ -361,8 +361,8 @@
             getEvaluationPage(params).then(function(res) {
               if (String(res.code) === '1') {
                 self.tableData = res.data.records || []; self.total = res.data.total || 0;
-              } else { ReggieUI.error(res.msg || '加载评价列表失败'); }
-            }).catch(function(err) { ReggieUI.error('请求失败：' + (err.message || err)); })
+              } else { XinfeiUI.error(res.msg || '加载评价列表失败'); }
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + (err.message || err)); })
             .finally(function() { self.loading = false; });
           },
           loadStats: function() {
@@ -403,18 +403,18 @@
           handleAudit: function(row, status) {
             const self = this;
             const action = status === 1 ? '通过' : '拒绝';
-            ReggieUI.confirm('确认' + action + '该评价吗？', '提示', {
+            XinfeiUI.confirm('确认' + action + '该评价吗？', '提示', {
               confirmButtonText: '确 定', cancelButtonText: '取 消',
               type: status === 1 ? 'success' : 'warning'
             }).then(function() {
               return auditEvaluation(row.id, status);
             }).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('审核' + action + '成功');
+                XinfeiUI.success('审核' + action + '成功');
                 self.loadData(); self.loadStats();
-              } else { ReggieUI.error(res.msg || '审核' + action + '失败'); }
+              } else { XinfeiUI.error(res.msg || '审核' + action + '失败'); }
             }).catch(function(e) {
-              if (e !== 'cancel') ReggieUI.error('审核操作失败');
+              if (e !== 'cancel') XinfeiUI.error('审核操作失败');
             });
           },
           // 修改点：8.5.3 回复状态 Tab 切换
@@ -435,14 +435,14 @@
           submitInlineReply: function(row) {
             const self = this;
             const draft = (row._replyDraft || '').trim();
-            if (!draft) { ReggieUI.warning('请输入回复内容'); return; }
+            if (!draft) { XinfeiUI.warning('请输入回复内容'); return; }
             if (row._replying) return;
             this.$set(row, '_replying', true);
             replyEvaluation(row.id, draft).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('回复成功'); self.collapseReply(row); self.loadData();
-              } else { ReggieUI.error(res.msg || '回复失败'); }
-            }).catch(function(err) { ReggieUI.error('请求失败：' + (err.message || err)); })
+                XinfeiUI.success('回复成功'); self.collapseReply(row); self.loadData();
+              } else { XinfeiUI.error(res.msg || '回复失败'); }
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + (err.message || err)); })
             .finally(function() { self.$set(row, '_replying', false); });
           },
           /* ========== 分页处理 ========== */

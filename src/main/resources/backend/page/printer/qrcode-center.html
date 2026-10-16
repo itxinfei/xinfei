@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>二维码打印中心 - 瑞吉外卖管理端</title>
+  <title>二维码打印中心 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../plugins/element-ui/index.css" />
@@ -215,7 +215,7 @@
   <script>
     // 每页数 → 网格列×行（按竖版海报 800×1040，保证不溢出 A4）
     var LAYOUT_GRID = { 1: [1, 1], 2: [1, 2], 4: [2, 2], 6: [2, 3], 9: [3, 3] };
-    var SITE_STORE_KEY = 'reggie_qrcode_site';
+    var SITE_STORE_KEY = 'xinfei_qrcode_site';
     var EXPORT_DPI = 200;                 // 导出 PNG 分辨率（二维码缩小后仍清晰好扫）
 
     new Vue({
@@ -307,13 +307,13 @@
         generate: function () {
           var vm = this;
           if (!vm.selected.length) {
-            ReggieUI.warning('请先勾选要生成海报的桌台');
+            XinfeiUI.warning('请先勾选要生成海报的桌台');
             return;
           }
           var url = (vm.siteUrl || '').replace(/\/+$/, '');
           var run = function () { vm.runGenerate(url); };
           if (/^https?:\/\/(localhost|127\.|0\.0\.0\.0)/i.test(url)) {
-            ReggieUI.confirm('当前站点地址像是本机地址（' + url + '），手机扫码可能无法访问。是否仍要生成？',
+            XinfeiUI.confirm('当前站点地址像是本机地址（' + url + '），手机扫码可能无法访问。是否仍要生成？',
                         '地址提醒', { confirmButtonText: '仍要生成', cancelButtonText: '取消', type: 'warning' })
               .then(run).catch(function () { });
           } else {
@@ -351,16 +351,16 @@
             vm.posters = ordered.filter(function (x) { return !!x; });
             vm.generating = false;
             if (!vm.posters.length) {
-              ReggieUI.error('海报全部生成失败，请稍后重试');
+              XinfeiUI.error('海报全部生成失败，请稍后重试');
               return;
             }
-            ReggieUI.success('已生成 ' + vm.posters.length + ' 张，排成 ' + vm.posterPages.length + ' 张 A4');
+            XinfeiUI.success('已生成 ' + vm.posters.length + ' 张，排成 ' + vm.posterPages.length + ' 张 A4');
             vm.openPreview();   // 生成完成立即弹窗看效果
           });
         },
         doPrint: function () {
           if (!this.posters.length) {
-            ReggieUI.warning('请先生成海报');
+            XinfeiUI.warning('请先生成海报');
             return;
           }
           window.print();
@@ -433,18 +433,18 @@
           vm.renderPageCanvas(pg).then(function (canvas) {
             return vm.saveCanvas(canvas, '桌贴A4_第' + (index + 1) + '页.png');
           }).then(function () {
-            ReggieUI.success('已下载第 ' + (index + 1) + ' 页（高清 PNG，可直接按 A4 打印）');
+            XinfeiUI.success('已下载第 ' + (index + 1) + ' 页（高清 PNG，可直接按 A4 打印）');
           });
         },
         downloadAll: function () {
           var vm = this;
           if (vm.posterPages.length > 1) {
-            ReggieUI.info('若浏览器询问是否允许多个文件下载，请点「允许」');
+            XinfeiUI.info('若浏览器询问是否允许多个文件下载，请点「允许」');
           }
           var i = 0;
           function step() {
             if (i >= vm.posterPages.length) {
-              ReggieUI.success('已下载全部 ' + vm.posterPages.length + ' 张 A4 拼版图片');
+              XinfeiUI.success('已下载全部 ' + vm.posterPages.length + ' 张 A4 拼版图片');
               return;
             }
             var idx = i++;

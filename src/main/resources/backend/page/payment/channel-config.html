@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支付渠道配置 - 瑞吉外卖管理端</title>
+  <title>支付渠道配置 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
@@ -184,7 +184,7 @@
   new Vue({
     el: '#payment-channel-app',
     // 列表通用 Mixin：提供 page/pageSize/counts/loading 与翻页处理
-    mixins: [window.ReggieListMixin],
+    mixins: [window.XinfeiListMixin],
     data() {
       return {
         tableData: [],
@@ -287,7 +287,7 @@
             this.tableData = res.data.records || []
             this.counts = Number(res.data.total) || 0
           } else {
-            ReggieUI.error((res && res.msg) || '加载支付渠道失败')
+            XinfeiUI.error((res && res.msg) || '加载支付渠道失败')
           }
           if (reloadStats) {
             var statsRes = results[1]
@@ -297,7 +297,7 @@
           }
         } catch (err) {
           if (err.message !== 'NOTLOGIN') {
-            ReggieUI.error('加载支付渠道失败，请刷新重试')
+            XinfeiUI.error('加载支付渠道失败，请刷新重试')
           }
         } finally {
           this.loading = false
@@ -367,14 +367,14 @@
             var api = this.action === 'edit' ? window.paymentChannelApi.update : window.paymentChannelApi.add
             var res = await api(this.form)
             if (res && String(res.code) === '1') {
-              ReggieUI.success('保存成功')
+              XinfeiUI.success('保存成功')
               this.dialogVisible = false
               this.fetchData()
             } else {
-              ReggieUI.error((res && res.msg) || '保存失败')
+              XinfeiUI.error((res && res.msg) || '保存失败')
             }
           } catch (err) {
-            ReggieUI.error('保存失败，请重试')
+            XinfeiUI.error('保存失败，请重试')
           } finally {
             this.submitting = false
           }
@@ -386,13 +386,13 @@
         try {
           var res = await window.paymentChannelApi.testConnection({ id: row.id, channel: row.channel })
           if (res && String(res.code) === '1') {
-            ReggieUI.success(res.data || res.msg || '连通正常')
+            XinfeiUI.success(res.data || res.msg || '连通正常')
           } else {
-            ReggieUI.error((res && res.msg) || '连通测试失败')
+            XinfeiUI.error((res && res.msg) || '连通测试失败')
           }
         } catch (err) {
           if (err.message !== 'NOTLOGIN') {
-            ReggieUI.error('连通测试失败，请重试')
+            XinfeiUI.error('连通测试失败，请重试')
           }
         } finally {
           this.testingId = null
@@ -402,29 +402,29 @@
       toggle(row) {
         var enabled = row.enabled === 1 ? 0 : 1
         var tip = enabled === 1 ? '确认启用该支付渠道？' : '确认停用该支付渠道？'
-        ReggieUI.confirm(tip, '提示', { type: 'warning' }).then(async () => {
+        XinfeiUI.confirm(tip, '提示', { type: 'warning' }).then(async () => {
           var res = await window.paymentChannelApi.toggle(row.id, enabled)
           if (res && String(res.code) === '1') {
-            ReggieUI.success(enabled === 1 ? '已启用' : '已停用')
+            XinfeiUI.success(enabled === 1 ? '已启用' : '已停用')
             this.fetchData()
           } else {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }
         }).catch((err) => {
-          if (err instanceof Error) { ReggieUI.error(err.message || '操作失败') }
+          if (err instanceof Error) { XinfeiUI.error(err.message || '操作失败') }
         })
       },
       remove(row) {
-        ReggieUI.confirm('确认删除该支付渠道？删除后历史支付单仍可追溯，但该渠道不可再用于收款。', '提示', { type: 'warning' }).then(async () => {
+        XinfeiUI.confirm('确认删除该支付渠道？删除后历史支付单仍可追溯，但该渠道不可再用于收款。', '提示', { type: 'warning' }).then(async () => {
           var res = await window.paymentChannelApi.remove(row.id)
           if (res && String(res.code) === '1') {
-            ReggieUI.success('已删除')
+            XinfeiUI.success('已删除')
             this.fetchData()
           } else {
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         }).catch((err) => {
-          if (err instanceof Error) { ReggieUI.error(err.message || '删除失败') }
+          if (err instanceof Error) { XinfeiUI.error(err.message || '删除失败') }
         })
       }
     }

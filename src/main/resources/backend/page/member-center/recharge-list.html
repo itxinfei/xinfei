@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>充值记录 - 瑞吉外卖管理端</title>
+  <title>充值记录 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -161,7 +161,7 @@
     new Vue({
       el: '#recharge-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data: function() {
         return {
           loading: false,
@@ -249,7 +249,7 @@
             if (String(pageRes.code) === '1') {
               this.tableData = pageRes.data.records || []
               this.counts = Number(pageRes.data.total) || 0
-            } else { ReggieUI.error(pageRes.msg || '操作失败') }
+            } else { XinfeiUI.error(pageRes.msg || '操作失败') }
             if (reloadStats) {
               const statsRes = results[1]
               if (statsRes && String(statsRes.code) === '1') {
@@ -260,7 +260,7 @@
                 this.$nextTick(function() { this.renderCharts() })
               }
             }
-          } catch(e) { ReggieUI.error('请求失败：' + e) }
+          } catch(e) { XinfeiUI.error('请求失败：' + e) }
           this.loading = false
         },
         /* ── 图表初始化与渲染 ── */
@@ -365,7 +365,7 @@
         },
         async queryRechargeMember() {
           if (!this.rechargeForm.phone || !this.rechargeForm.phone.trim()) {
-            ReggieUI.warning('请输入会员手机号')
+            XinfeiUI.warning('请输入会员手机号')
             return
           }
           this.memberLoading = true
@@ -377,11 +377,11 @@
             } else {
               this.rechargeMember = null
               this.rechargeSearched = true
-              ReggieUI.warning(res.msg || '未找到该会员')
+              XinfeiUI.warning(res.msg || '未找到该会员')
             }
           } catch (e) {
             console.warn('查询会员失败:', e)
-            ReggieUI.error('查询失败，请重试')
+            XinfeiUI.error('查询失败，请重试')
           } finally {
             this.memberLoading = false
           }
@@ -392,7 +392,7 @@
           this.$refs.rechargeFormRef.validate(function(valid) {
             if (!valid) return
             if (!self.rechargeMember) {
-              ReggieUI.warning('请先查询并选择会员')
+              XinfeiUI.warning('请先查询并选择会员')
               return
             }
             self.rechargeLoading = true
@@ -403,13 +403,13 @@
               paymentMethod: self.rechargeForm.paymentMethod
             }).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('充值成功，余额已更新')
+                XinfeiUI.success('充值成功，余额已更新')
                 self.rechargeForm.dialogVisible = false
                 self.handleQuery()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
-            }).catch(function(e) { ReggieUI.error('请求失败：' + e) })
+            }).catch(function(e) { XinfeiUI.error('请求失败：' + e) })
               .finally(function() { self.rechargeLoading = false })
           })
         },
@@ -425,26 +425,26 @@
             : status === 'CANCELLED' ? 'info' : 'info'
         },
         confirmRecharge: function(row) {
-          if (!row || !row.rechargeNo) { ReggieUI.warning('该记录无充值单号，无法确认'); return }
+          if (!row || !row.rechargeNo) { XinfeiUI.warning('该记录无充值单号，无法确认'); return }
           const self = this
-          ReggieUI.confirm('确认为会员「' + (row.memberName || '') + '」的 ¥' + self.formatMoney(row.amount)
+          XinfeiUI.confirm('确认为会员「' + (row.memberName || '') + '」的 ¥' + self.formatMoney(row.amount)
             + ' 充值已收款到账？确认后余额将立即计入会员账户。', '确认到账', {
             confirmButtonText: '确认到账', cancelButtonText: '取消', type: 'warning'
           }).then(function() {
             return confirmRechargeApi(row.rechargeNo)
           }).then(function(res) {
             if (String(res.code) === '1') {
-              ReggieUI.success('已确认到账，余额已更新')
+              XinfeiUI.success('已确认到账，余额已更新')
               self.fetchData(true)
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(e) {
             if (e === 'cancel') { return } // 用户取消二次确认框，不提示
-            ReggieUI.error('请求失败：' + e)
+            XinfeiUI.error('请求失败：' + e)
           })
         },
-        // 修改点：F9 性能 — 覆盖 ReggieListMixin 分页方法，翻页不重算全局统计
+        // 修改点：F9 性能 — 覆盖 XinfeiListMixin 分页方法，翻页不重算全局统计
         onPageChange: function(payload) {
           this.page = payload.page
           this.pageSize = payload.pageSize

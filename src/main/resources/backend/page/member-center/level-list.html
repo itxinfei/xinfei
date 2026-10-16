@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>会员等级 - 瑞吉外卖管理端</title>
+  <title>会员等级 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -141,7 +141,7 @@
     new Vue({
       el: '#level-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data: function() {
         return {
           submitting: false, // 提交防重：请求期间锁定弹窗确认按钮
@@ -215,7 +215,7 @@
             if (String(res.code) === '1') {
               this.tableData = res.data.records || []
               this.counts = res.data.total
-            } else { ReggieUI.error(res.msg || '操作失败') }
+            } else { XinfeiUI.error(res.msg || '操作失败') }
             if (reloadStats) {
               const statsRes = results[1]
               if (String(statsRes.code) === '1' && statsRes.data) {
@@ -227,7 +227,7 @@
                 }
               }
             }
-          } catch(e) { ReggieUI.error('请求失败：' + e) }
+          } catch(e) { XinfeiUI.error('请求失败：' + e) }
           this.loading = false
         },
         /* ========== 等级阶梯展示 ========== */
@@ -280,28 +280,28 @@
           if (this.submitting) return // 提交防重
           const self = this
           this.$refs.levelForm.validate(function(valid) {
-            if (!valid) { ReggieUI.warning('请完善表单信息'); return false }
+            if (!valid) { XinfeiUI.warning('请完善表单信息'); return false }
             // 等级门槛不重叠：minPoints 不能与其他等级相同（排序后才能严格递增）
             var pts = Number(self.formData.minPoints)
             var overlap = self.sortedLevels.some(function(lv) {
               return String(lv.id) !== String(self.formData.id) && Number(lv.minPoints) === pts
             })
-            if (overlap) { ReggieUI.warning('该所需积分与已有等级相同，等级门槛不可重叠'); return false }
+            if (overlap) { XinfeiUI.warning('该所需积分与已有等级相同，等级门槛不可重叠'); return false }
             self.submitting = true
             const data = Object.assign({}, self.formData)
             if (self.action === 'add') {
               addLevel(data).then(function(res) {
                 self.submitting = false
-                if (res.code === 1) { ReggieUI.success('等级添加成功！'); self.formData.dialogVisible = false; self.handleQuery() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(e) { self.submitting = false; ReggieUI.error('请求失败：' + e) })
+                if (res.code === 1) { XinfeiUI.success('等级添加成功！'); self.formData.dialogVisible = false; self.handleQuery() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(e) { self.submitting = false; XinfeiUI.error('请求失败：' + e) })
             } else {
               data.id = self.formData.id
               updateLevel(data).then(function(res) {
                 self.submitting = false
-                if (res.code === 1) { ReggieUI.success('等级修改成功！'); self.formData.dialogVisible = false; self.handleQuery() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(e) { self.submitting = false; ReggieUI.error('请求失败：' + e) })
+                if (res.code === 1) { XinfeiUI.success('等级修改成功！'); self.formData.dialogVisible = false; self.handleQuery() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(e) { self.submitting = false; XinfeiUI.error('请求失败：' + e) })
             }
           })
         },
@@ -311,15 +311,15 @@
         },
         deleteHandle: function(id) {
           const self = this
-          ReggieUI.confirm('此操作将永久删除该等级, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('此操作将永久删除该等级, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               deleteLevel(id).then(function(res) {
-                if (res.code === 1) { ReggieUI.success('删除成功！'); self.handleQuery() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(e) { ReggieUI.error('请求失败：' + e) })
+                if (res.code === 1) { XinfeiUI.success('删除成功！'); self.handleQuery() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(e) { XinfeiUI.error('请求失败：' + e) })
             }).catch(function() {})
         },
-        // 修改点：分页处理统一交由 ReggieListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
+        // 修改点：分页处理统一交由 XinfeiListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
       }
     })
   </script>

@@ -39,7 +39,7 @@ spring:
   datasource:
     druid:
       # 内网 MySQL 未开 SSL：useSSL=false（原 useSSL=true&requireSSL=true 会连接失败）
-      url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:reggie}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:xinfei}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${DB_USERNAME:root}
       # 支持环境变量 DB_PASSWORD 外部化（Docker compose 等场景注入）；未设置时回退本地默认 123456
       password: ${DB_PASSWORD:123456}
@@ -102,12 +102,12 @@ mybatis-plus:
     log-impl:
 
 # 生产环境短信和推送配置
-reggie:
-  # 堂食二维码等链接用的服务器地址：环境变量优先（Docker compose 传 REGGIE_SERVER_URL），
+xinfei:
+  # 堂食二维码等链接用的服务器地址：环境变量优先（Docker compose 传 XINFEI_SERVER_URL），
   # 未设置时回退本机内网IP；部署到其他机器改环境变量即可，无需改配置文件
-  server-url: ${REGGIE_SERVER_URL:http://192.168.101.172:8080}
+  server-url: ${XINFEI_SERVER_URL:http://192.168.101.172:8080}
   sms:
-    sign-name: ${SMS_SIGN_NAME:瑞吉外卖}
+    sign-name: ${SMS_SIGN_NAME:心飞外卖}
     template-code: ${SMS_TEMPLATE_CODE:}
     mock-mode: false
   push:
@@ -115,7 +115,7 @@ reggie:
   payment:
     # 生产必须关闭 mock：走真实微信/支付宝回调验签，防止伪造回调把订单标记已支付
     mock-mode: false
-    # 本次暂不启用真实支付：不强制 REGGIE_PAYMENT_KEY，避免无密钥无法启动
+    # 本次暂不启用真实支付：不强制 XINFEI_PAYMENT_KEY，避免无密钥无法启动
     require-env-key: false
 
 # 生产环境禁用 Swagger/OpenAPI 文档，防止暴露接口信息

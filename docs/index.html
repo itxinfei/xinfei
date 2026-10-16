@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>瑞吉外卖 · 搭载 AI 大模型的餐饮全栈管理系统</title>
-  <meta name="description" content="瑞吉外卖 (Reggie Takeout)：基于 Spring Boot + Vue 的多租户餐饮全栈管理系统，三端覆盖、内置 AI 智能引擎、自有骑手体系，开源可商用。">
+  <title>心飞外卖 · 搭载 AI 大模型的餐饮全栈管理系统</title>
+  <meta name="description" content="心飞外卖 (Xinfei Takeout)：基于 Spring Boot + Vue 的多租户餐饮全栈管理系统，三端覆盖、内置 AI 智能引擎、自有骑手体系，开源可商用。">
   <link rel="stylesheet" href="site/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍜</text></svg>">
 </head>
@@ -13,7 +13,7 @@
 <!-- ============ 导航 ============ -->
 <header class="nav">
   <div class="container nav-inner">
-    <a class="nav-logo" href="#top"><span class="bowl">🍜</span> 瑞吉外卖</a>
+    <a class="nav-logo" href="#top"><span class="bowl">🍜</span> 心飞外卖</a>
     <nav class="nav-links" id="navLinks">
       <a href="#features">核心亮点</a>
       <a href="#gallery">界面预览</a>
@@ -26,7 +26,7 @@
     </nav>
     <div class="nav-actions">
       <button class="icon-btn" id="themeToggle" title="切换明暗主题" aria-label="切换主题">🌙</button>
-      <a class="btn btn-dark btn-sm" href="https://github.com/itxinfei/reggie" target="_blank" rel="noopener">⭐ Star</a>
+      <a class="btn btn-dark btn-sm" href="https://github.com/itxinfei/xinfei" target="_blank" rel="noopener">⭐ Star</a>
       <button class="icon-btn nav-toggle" id="navToggle" title="菜单" aria-label="菜单">☰</button>
     </div>
   </div>
@@ -49,8 +49,8 @@
       </div>
       <div class="hero-cta">
         <a class="btn btn-primary" href="#start">🚀 快速开始</a>
-        <a class="btn btn-dark" href="https://github.com/itxinfei/reggie" target="_blank" rel="noopener">GitHub</a>
-        <a class="btn btn-ghost" href="https://gitee.com/itxinfei/reggie" target="_blank" rel="noopener">Gitee 镜像</a>
+        <a class="btn btn-dark" href="https://github.com/itxinfei/xinfei" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn btn-ghost" href="https://gitee.com/itxinfei/xinfei" target="_blank" rel="noopener">Gitee 镜像</a>
       </div>
       <div class="hero-stats">
         <div><div class="num" data-count="39">0</div><div class="lab">业务模块</div></div>
@@ -60,7 +60,7 @@
       </div>
     </div>
     <div class="hero-shot">
-      <img src="screenshots/02-dashboard.png" alt="瑞吉外卖工作台">
+      <img src="screenshots/02-dashboard.png" alt="心飞外卖工作台">
       <div class="cap">📊 管理后台工作台：今日经营、趋势、热销、状态分布一屏掌握</div>
     </div>
   </div>
@@ -70,8 +70,8 @@
 <section class="section" id="features">
   <div class="container">
     <div class="section-head reveal">
-      <span class="eyebrow">Why Reggie</span>
-      <h2>为什么选择瑞吉外卖</h2>
+      <span class="eyebrow">Why Xinfei</span>
+      <h2>为什么选择心飞外卖</h2>
       <p>不是又一个练手 Demo，而是一套覆盖真实餐饮经营全流程、可直接落地的生产级系统。</p>
     </div>
     <div class="features">
@@ -236,18 +236,18 @@
     <div class="codeblock reveal">
       <div class="codebar"><i></i><i></i><i></i><span class="fname">bash</span><button class="copy">复制</button></div>
 <pre><span class="cmt"># 克隆并进入</span>
-git clone https://github.com/itxinfei/reggie.git &amp;&amp; cd reggie
+git clone https://github.com/itxinfei/xinfei.git &amp;&amp; cd xinfei
 
 <span class="cmt"># 创建数据库（utf8mb4 防中文乱码）</span>
-mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS reggie CHARACTER SET utf8mb4;"
+mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS xinfei CHARACTER SET utf8mb4;"
 
 <span class="cmt"># 建表（脚本可重复执行）</span>
 for f in src/test/resources/schema*.sql; do
-  mysql -uroot -p --default-character-set=utf8mb4 reggie &lt; "$f"
+  mysql -uroot -p --default-character-set=utf8mb4 xinfei &lt; "$f"
 done
 
 <span class="cmt"># 最小初始化数据（租户 / 门店 / 超管，必执行）</span>
-mysql -uroot -p --default-character-set=utf8mb4 reggie &lt; db/seed-minimal.sql
+mysql -uroot -p --default-character-set=utf8mb4 xinfei &lt; db/seed-minimal.sql
 
 <span class="cmt"># 启动</span>
 mvn spring-boot:run</pre>
@@ -301,10 +301,10 @@ mvn spring-boot:run</pre>
 <!-- ============ 页脚 ============ -->
 <footer class="footer">
   <div class="container footer-inner">
-    <div class="logo">🍜 瑞吉外卖 Reggie Takeout</div>
+    <div class="logo">🍜 心飞外卖 Xinfei Takeout</div>
     <div class="links">
-      <a href="https://github.com/itxinfei/reggie" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://gitee.com/itxinfei/reggie" target="_blank" rel="noopener">Gitee</a>
+      <a href="https://github.com/itxinfei/xinfei" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://gitee.com/itxinfei/xinfei" target="_blank" rel="noopener">Gitee</a>
       <a href="doc.html?p=README.md">文档首页</a>
       <a href="doc.html?p=项目总览.md">项目总览</a>
       <a href="api.html">模块与接口</a>

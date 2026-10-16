@@ -1,0 +1,18 @@
+package com.xinfei.module.sys.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.xinfei.module.sys.model.RolePermission;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * <p>
+ * 角色权限关联 Mapper 接口
+ * </p>
+ *
+ * @author 心飞为你飞
+ * @since 2024-01-01
+ */
+@Mapper
+public interface RolePermissionMapper extends BaseMapper<RolePermission> {
+}
+

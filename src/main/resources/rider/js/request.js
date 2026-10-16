@@ -16,7 +16,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   }
 
   function goLogin() {
-    win.ReggieCsrf.clear();
+    win.XinfeiCsrf.clear();
     if (win.location.pathname.indexOf('/rider/login.html') === -1) {
       win.location.href = '/rider/login.html';
     }
@@ -24,16 +24,16 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
 
   // 请求拦截：写操作带 CSRF 头（统一实现见 request-core.js）。
   // document.write 注入的脚本在本文件顶层之后执行，core 未就绪时登记 pending 由其补挂。
-  if (win.ReggieCsrf) {
-    win.ReggieCsrf.attachRequestInterceptor(service, win.ReggieCsrf.get);
+  if (win.XinfeiCsrf) {
+    win.XinfeiCsrf.attachRequestInterceptor(service, win.XinfeiCsrf.get);
   } else {
-    (win.__reggieCsrfPending = win.__reggieCsrfPending || []).push(service);
+    (win.__xinfeiCsrfPending = win.__xinfeiCsrfPending || []).push(service);
   }
 
   // 响应拦截
   service.interceptors.response.use(function (res) {
     var t = res.headers['x-csrf-token'];
-    if (t) { win.ReggieCsrf.save(t); }
+    if (t) { win.XinfeiCsrf.save(t); }
 
     var body = res.data || {};
     if (body.code === 1) {
@@ -55,7 +55,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
     if (status === 403 && cfg && !cfg.__csrfRetried) {
       var newToken = error.response.headers['x-csrf-token'];
       if (newToken) {
-        win.ReggieCsrf.save(newToken);
+        win.XinfeiCsrf.save(newToken);
         cfg.__csrfRetried = true;
         cfg.headers['X-CSRF-Token'] = newToken;
         return service(cfg);

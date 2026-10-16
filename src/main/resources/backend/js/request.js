@@ -1,6 +1,6 @@
 /**
  * 后台管理端请求封装：axios 实例 + CSRF 自动带头 + 统一响应/未登录处理。
- * 依赖全局 axios、ELEMENT/ReggieUI；CSRF 存取与请求拦截复用 /shared/js/request-core.js。
+ * 依赖全局 axios、ELEMENT/XinfeiUI；CSRF 存取与请求拦截复用 /shared/js/request-core.js。
  */
 document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>');
 (function (win) {
@@ -15,16 +15,16 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   // request拦截器：写操作带 CSRF 头（统一实现见 /shared/js/request-core.js）。
   // 注意：document.write 注入的脚本在本文件顶层代码「之后」才执行，
   // 故 core 未就绪时先登记 pending 列表，由其加载完成时统一补挂。
-  if (win.ReggieCsrf) {
-    win.ReggieCsrf.attachRequestInterceptor(service, win.ReggieCsrf.get);
+  if (win.XinfeiCsrf) {
+    win.XinfeiCsrf.attachRequestInterceptor(service, win.XinfeiCsrf.get);
   } else {
-    (win.__reggieCsrfPending = win.__reggieCsrfPending || []).push(service);
+    (win.__xinfeiCsrfPending = win.__xinfeiCsrfPending || []).push(service);
   }
 
   // 暴露给 el-upload 等绕过 axios 的上传场景复用同一 Token（如 /common/upload、/employee/import）
   // 惰性取值：调用发生在运行时，此时 request-core 必然已就绪
   win.getCsrfToken = function () {
-    return win.ReggieCsrf ? win.ReggieCsrf.get() : null;
+    return win.XinfeiCsrf ? win.XinfeiCsrf.get() : null;
   };
 
   /**
@@ -37,12 +37,12 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   var notLoginHandled = false;
   function handleNotLogin() {
     try { localStorage.removeItem('userInfo'); } catch (_) {}
-    win.ReggieCsrf.clear();
+    win.XinfeiCsrf.clear();
     if (notLoginHandled) { return; }
     notLoginHandled = true;
     if (window.self !== window.top) {
       try {
-        window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*');
+        window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*');
       } catch (_) {}
     } else {
       window.location.replace('/backend/page/login/login.html');
@@ -74,8 +74,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
 
   function emitListState (failed) {
     try {
-      win.__reggieListFailed = failed
-      win.dispatchEvent(new win.CustomEvent(failed ? 'reggie:list-fail' : 'reggie:list-ok'))
+      win.__xinfeiListFailed = failed
+      win.dispatchEvent(new win.CustomEvent(failed ? 'xinfei:list-fail' : 'xinfei:list-ok'))
     } catch (e) { /* noop */ }
   }
 
@@ -84,7 +84,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       // 修改点：保存后端返回的CSRF Token
       var csrfToken = res.headers['x-csrf-token'];
       if (csrfToken) {
-        win.ReggieCsrf.save(csrfToken);
+        win.XinfeiCsrf.save(csrfToken);
       }
       // 修改点：统一code判断，code===0为业务失败，code===1为成功
       const code = res.data ? res.data.code : undefined;
@@ -156,10 +156,10 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
           message = "系统接口" + message.substring(message.length - 3) + "异常";
         }
       }
-      if (window.ReggieUI && window.ReggieUI.error) {
-        // 统一走 ReggieUI 反馈入口（common.js 规范：禁止混用 $message / ElMessage 直写）；
+      if (window.XinfeiUI && window.XinfeiUI.error) {
+        // 统一走 XinfeiUI 反馈入口（common.js 规范：禁止混用 $message / ElMessage 直写）；
         // 错误提示保留 5s，便于阅读完整错误信息
-        window.ReggieUI.error(message, 5 * 1000)
+        window.XinfeiUI.error(message, 5 * 1000)
       } else if (window.ELEMENT && window.ELEMENT.Message) {
         window.ELEMENT.Message({
           message: message,
@@ -183,7 +183,7 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
     win.$axios({ url: '/employee/me', method: 'get', silent: true }).catch(function () {});
   })();
 
-  /* ===== ReggieUI 统一交互反馈（挂载于 window.ReggieUI） =====
+  /* ===== XinfeiUI 统一交互反馈（挂载于 window.XinfeiUI） =====
      规范（前端二次审查 2026-07-17）：所有页面的 toast / loading / confirm /
      notify 必须经由本模块，禁止在业务页混用 this.$message / ElMessage /
      Notification 直写，确保提示样式与交互反馈一致、可统一管控。
@@ -204,8 +204,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       }
       return null;
     }
-    var ReggieUI = {
-      /** 兼容 Element $message 对象形式，如 ReggieUI.message({ type:'success', message:'x' }) */
+    var XinfeiUI = {
+      /** 兼容 Element $message 对象形式，如 XinfeiUI.message({ type:'success', message:'x' }) */
       message: function (options) {
         var res = callMethod('$message', global.ELEMENT && global.ELEMENT.Message, options);
         if (res === null && options && options.message) { global.alert(options.message); }
@@ -251,6 +251,6 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
         if (res === null && options && options.message) { global.alert(options.message); }
       }
     };
-    global.ReggieUI = ReggieUI;
+    global.XinfeiUI = XinfeiUI;
   })(window);
 })(window);

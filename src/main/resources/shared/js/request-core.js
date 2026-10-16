@@ -3,7 +3,7 @@
  * 单一真源，三端 request.js 共同依赖（消除三套重复实现、统一编码/解码行为）。
  * 引入方式：由各端 request.js 在文件顶部 document.write 本文件（与 util.js 引入
  * img-path.js / order-status.js 同机制）。注意：document.write 注入的脚本在本端
- * request.js 顶层代码「之后」执行，因此顶层需经 __reggieCsrfPending 握手（见文件末尾）。
+ * request.js 顶层代码「之后」执行，因此顶层需经 __xinfeiCsrfPending 握手（见文件末尾）。
  */
 (function (win) {
   // ---- CSRF Token 存取（统一：保存时编码、读取时解码；HTTPS 下补 Secure） ----
@@ -68,7 +68,7 @@
     });
   }
 
-  win.ReggieCsrf = {
+  win.XinfeiCsrf = {
     get: getCsrfToken,
     save: saveCsrfToken,
     clear: clearCsrfToken,
@@ -77,10 +77,10 @@
 
   // 各端 request.js 通过 document.write 引入本文件时，本文件必然在该脚本顶层代码
   // 执行完毕之后才运行（document.write 的插入点在当前标签之后），故客户端在
-  // ReggieCsrf 未就绪时先把 axios 实例登记到 pending 列表，此处统一补挂拦截器。
-  var pending = win.__reggieCsrfPending || [];
+  // XinfeiCsrf 未就绪时先把 axios 实例登记到 pending 列表，此处统一补挂拦截器。
+  var pending = win.__xinfeiCsrfPending || [];
   for (var i = 0; i < pending.length; i++) {
     attachRequestInterceptor(pending[i], getCsrfToken);
   }
-  win.__reggieCsrfPending = [];
+  win.__xinfeiCsrfPending = [];
 })(window);

@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     druid:
-      url: jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://localhost:3306/xinfei?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: 123456
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -63,7 +63,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 # 地图服务（高德地理编码/逆地理编码）
-reggie:
+xinfei:
   geo:
     amap:
       key: 6b61d9cad654dd646073c4c580c90444

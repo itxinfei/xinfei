@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>门店管理 - 瑞吉外卖管理端</title>
+    <title>门店管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -151,7 +151,7 @@
             <el-row :gutter="16">
                 <el-col :span="12">
                     <el-form-item label="门店名称" prop="storeName">
-                        <el-input v-model="form.storeName" placeholder="如：瑞吉外卖-朝阳店" maxlength="100" ></el-input>
+                        <el-input v-model="form.storeName" placeholder="如：心飞外卖-朝阳店" maxlength="100" ></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -503,7 +503,7 @@
                     if (reloadStats) { self.updateStats(); }
                 }
             }).catch(function(err) {
-                ReggieUI.error('加载门店数据失败');
+                XinfeiUI.error('加载门店数据失败');
             }).finally(function() { self.loading = false; });
         },
         updateStats: function() {
@@ -592,19 +592,19 @@
         batchConfirm: function(status, label) {
             var self = this;
             var ids = self.selection.map(function(r) { return r.tenantId; });
-            if (ids.length === 0) { ReggieUI.warning('请选择门店'); return; }
-            ReggieUI.confirm('确认' + label + '已选的 ' + ids.length + ' 个门店吗？', '提示', {
+            if (ids.length === 0) { XinfeiUI.warning('请选择门店'); return; }
+            XinfeiUI.confirm('确认' + label + '已选的 ' + ids.length + ' 个门店吗？', '提示', {
                 confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
             }).then(function() {
                 batchUpdateStatus(ids, status).then(function(res) {
                     if (res && res.code === 1) {
                         var result = res.data;
-                        ReggieUI.success(label + '成功：' + result.successCount + '/' + result.total);
+                        XinfeiUI.success(label + '成功：' + result.successCount + '/' + result.total);
                         self.loadData();
                     } else {
-                        ReggieUI.error(label + '失败');
+                        XinfeiUI.error(label + '失败');
                     }
-                }).catch(function() { ReggieUI.error(label + '失败'); });
+                }).catch(function() { XinfeiUI.error(label + '失败'); });
             }).catch(function(err) { console.warn('[门店管理] 批量操作取消或失败:', err) });
         },
         doExport: function() {
@@ -613,7 +613,7 @@
             if (self.exporting) return;
             // 仅导出勾选行（未勾选时按钮已禁用）
             var rows = self.selection || [];
-            if (!rows.length) { ReggieUI.warning('请先勾选要导出的门店'); return; }
+            if (!rows.length) { XinfeiUI.warning('请先勾选要导出的门店'); return; }
             self.exporting = true;
             var esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
             var header = ['门店名称', '门店编码', '联系人', '状态', '今日订单', '今日营收（元）'];
@@ -632,7 +632,7 @@
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             self.exporting = false;
-            ReggieUI.success('已导出选中的 ' + rows.length + ' 家门店');
+            XinfeiUI.success('已导出选中的 ' + rows.length + ' 家门店');
         },
 
         // ========== 单行操作 ==========
@@ -640,19 +640,19 @@
             var self = this;
             // 说明：el-switch 的 @change 在 v-model 更新【之后】触发，此时 row.status 已是目标状态，直接透传
             var targetStatus = row.status === 1 ? '启用' : '停用';
-            ReggieUI.confirm('确认' + targetStatus + '门店「' + (row.storeName || row.storeCode || '') + '」？', '状态变更', { type: 'warning' }).then(function() {
+            XinfeiUI.confirm('确认' + targetStatus + '门店「' + (row.storeName || row.storeCode || '') + '」？', '状态变更', { type: 'warning' }).then(function() {
                 return updateStatus(row.tenantId, row.status);
             }).then(function(res) {
                 if (res && res.code === 1) {
-                    ReggieUI.success('状态已更新');
+                    XinfeiUI.success('状态已更新');
                     self.loadData(true);
                 } else {
-                    ReggieUI.error((res && res.msg) || '状态更新失败');
+                    XinfeiUI.error((res && res.msg) || '状态更新失败');
                 }
             }).catch(function(err) {
                 if (err !== 'cancel') {
                   console.warn('[门店管理] 状态更新失败:', err);
-                  ReggieUI.error('状态更新失败，请重试');
+                  XinfeiUI.error('状态更新失败，请重试');
                 }
                 self.loadData();
             });
@@ -664,33 +664,33 @@
             var msg = pause
                 ? '确认暂停门店「' + (row.storeName || row.storeCode || '') + '」的接单？暂停后用户将无法下单。'
                 : '确认恢复门店「' + (row.storeName || row.storeCode || '') + '」的接单？';
-            ReggieUI.confirm(msg, label, { type: 'warning' }).then(function() {
+            XinfeiUI.confirm(msg, label, { type: 'warning' }).then(function() {
                 return togglePauseOrder(row.tenantId, pause);
             }).then(function(res) {
                 if (res && res.code === 1) {
-                    ReggieUI.success(res.msg || label + '成功');
+                    XinfeiUI.success(res.msg || label + '成功');
                     self.loadData(false);
                 } else {
-                    ReggieUI.error((res && res.msg) || label + '失败');
+                    XinfeiUI.error((res && res.msg) || label + '失败');
                 }
             }).catch(function(err) {
                 if (err === 'cancel') return;
                 console.warn('[门店管理] ' + label + '失败:', err);
-                ReggieUI.error(label + '失败，请重试');
+                XinfeiUI.error(label + '失败，请重试');
             });
         },
         switchToStore: function(row) {
             var self = this;
             switchStore(row.tenantId).then(function(res) {
                 if (res && res.code === 1) {
-                    ReggieUI.success('已切换到门店：' + row.storeName);
+                    XinfeiUI.success('已切换到门店：' + row.storeName);
                     self.loadData(true);
                 } else {
-                    ReggieUI.error((res && res.msg) || '切换门店失败');
+                    XinfeiUI.error((res && res.msg) || '切换门店失败');
                 }
             }).catch(function(err) {
                 console.warn('[门店管理] 切换门店失败:', err);
-                ReggieUI.error('切换门店失败，请重试');
+                XinfeiUI.error('切换门店失败，请重试');
             });
         },
 
@@ -709,7 +709,7 @@
         // 修改点：8.7.2 门店列表 → 点门店进看板（新窗口打开单店看板，URL 带 storeId/name）
         openDashboard: function(row) {
             if (!row || !row.tenantId) {
-                ReggieUI.warning('该门店缺少租户标识，无法打开看板');
+                XinfeiUI.warning('该门店缺少租户标识，无法打开看板');
                 return;
             }
             var name = encodeURIComponent(row.storeName || '');
@@ -725,10 +725,10 @@
                     self.detailData = d;
                     self.detailDialogVisible = true;
                 } else {
-                    ReggieUI.error('获取门店详情失败');
+                    XinfeiUI.error('获取门店详情失败');
                 }
             }).catch(function() {
-                ReggieUI.error('获取门店详情失败');
+                XinfeiUI.error('获取门店详情失败');
             });
         },
         // 点击行打开详情（排除点击操作按钮 / 复选框 / 状态开关等交互元素时的误触发）
@@ -776,7 +776,7 @@
                     self.formDialogVisible = true;
                 }
             }).catch(function() {
-                ReggieUI.error('获取门店详情失败');
+                XinfeiUI.error('获取门店详情失败');
             });
         },
 
@@ -837,14 +837,14 @@
 
                 apiCall.then(function(res) {
                     if (res && res.code === 1) {
-                        ReggieUI.success(self.isCreate ? '门店创建成功' : '编辑成功');
+                        XinfeiUI.success(self.isCreate ? '门店创建成功' : '编辑成功');
                         self.formDialogVisible = false;
                         self.loadData();
                     } else {
-                        ReggieUI.error(res.msg || '操作失败');
+                        XinfeiUI.error(res.msg || '操作失败');
                     }
                 }).catch(function(err) {
-                    ReggieUI.error('操作失败: ' + (err.response && err.response.data && err.response.data.msg || err.message));
+                    XinfeiUI.error('操作失败: ' + (err.response && err.response.data && err.response.data.msg || err.message));
                 }).finally(function() { self.submitting = false; });
             });
         },
@@ -866,7 +866,7 @@
                 var sourceRow = records[0];
                 var sourceTenantId = sourceRow ? sourceRow.tenantId : null;
                 if (!sourceTenantId) {
-                    ReggieUI.error('未找到「直营总店」，无法作为同步源');
+                    XinfeiUI.error('未找到「直营总店」，无法作为同步源');
                     return;
                 }
                 var apiMap = {
@@ -879,12 +879,12 @@
                 return apiCall.then(function(res) {
                     if (res && res.code === 1) {
                         self.syncResult = res.data;
-                        ReggieUI.success('同步完成');
+                        XinfeiUI.success('同步完成');
                     }
                 });
             }).catch(function(err) {
                 if (err && err.message === 'NOTLOGIN') return;
-                ReggieUI.error('同步失败：' + (err && err.message ? err.message : err));
+                XinfeiUI.error('同步失败：' + (err && err.message ? err.message : err));
             }).finally(function() { self.syncing[type] = false; });
         },
 

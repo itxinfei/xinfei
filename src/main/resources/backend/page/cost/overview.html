@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>成本核算 - 瑞吉外卖管理端</title>
+  <title>成本核算 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
@@ -331,11 +331,11 @@
             // 全部失败才提示
             var allFailed = results.every(function(r) { return r.status === 'rejected' })
             if (allFailed) {
-              ReggieUI.error('获取数据失败，请检查网络或刷新重试')
+              XinfeiUI.error('获取数据失败，请检查网络或刷新重试')
             }
           } catch (err) {
             console.error('[cost] fetchData 异常:', err)
-            ReggieUI.error('获取数据失败')
+            XinfeiUI.error('获取数据失败')
           } finally {
             this.loading = false
           }

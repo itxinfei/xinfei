@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>会员管理 - 瑞吉外卖管理端</title>
+  <title>会员管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -356,15 +356,15 @@
           apiCall.then(function(res) {
             self.submitting = false
             if (String(res.code) === '1') {
-              ReggieUI.success(isEdit ? '修改成功' : '新增成功')
+              XinfeiUI.success(isEdit ? '修改成功' : '新增成功')
               self.editDialogVisible = false
               self.init(true)
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(e) {
             self.submitting = false
-            ReggieUI.error('请求失败：' + e)
+            XinfeiUI.error('请求失败：' + e)
           })
         },
         // 修改点：启用/禁用会员（二次确认）
@@ -372,32 +372,32 @@
           const self = this
           const newStatus = row.status === 1 ? 0 : 1
           try {
-            await ReggieUI.confirm('确认' + (newStatus === 1 ? '启用' : '禁用') + '会员「' + row.name + '」？', '提示', { type: 'warning' })
+            await XinfeiUI.confirm('确认' + (newStatus === 1 ? '启用' : '禁用') + '会员「' + row.name + '」？', '提示', { type: 'warning' })
             const res = await updateMember({ id: row.id, status: newStatus })
             if (String(res.code) === '1') {
-              ReggieUI.success(newStatus === 1 ? '已启用' : '已禁用')
+              XinfeiUI.success(newStatus === 1 ? '已启用' : '已禁用')
               self.init(false)
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (e) {
-            if (e !== 'cancel') ReggieUI.error('操作失败')
+            if (e !== 'cancel') XinfeiUI.error('操作失败')
           }
         },
         // 修改点：删除会员（逻辑删除，二次确认）
         async handleDelete(row) {
           const self = this
           try {
-            await ReggieUI.confirm('确认删除会员「' + row.name + '」？删除后不可恢复', '提示', { type: 'warning' })
+            await XinfeiUI.confirm('确认删除会员「' + row.name + '」？删除后不可恢复', '提示', { type: 'warning' })
             const res = await deleteMember(row.id)
             if (String(res.code) === '1') {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               self.init(true)
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (e) {
-            if (e !== 'cancel') ReggieUI.error('删除失败')
+            if (e !== 'cancel') XinfeiUI.error('删除失败')
           }
         },
         /* ── 数据加载 ── */
@@ -423,7 +423,7 @@
                 self.statsError = false
               } else {
                 // 接口失败（常见为数据库未连接）：标记失败态，仅在新出现失败时提示一次
-                if (!self.statsError) ReggieUI.warning('统计数据加载失败，请检查数据库连接后点击卡片重试')
+                if (!self.statsError) XinfeiUI.warning('统计数据加载失败，请检查数据库连接后点击卡片重试')
                 self.statsError = true
               }
             }
@@ -555,14 +555,14 @@
           const valid = await new Promise(function(resolve) {
             self.$refs.rechargeFormRef.validate(function(v) { resolve(v) })
           })
-          if (!valid) { ReggieUI.warning('请完善表单必填项'); return }
-          if (!self.rechargeForm.amount || self.rechargeForm.amount <= 0) { ReggieUI.error('请输入有效的充值金额'); return }
+          if (!valid) { XinfeiUI.warning('请完善表单必填项'); return }
+          if (!self.rechargeForm.amount || self.rechargeForm.amount <= 0) { XinfeiUI.error('请输入有效的充值金额'); return }
           self.submitting = true
           memberRecharge({ memberId: self.rechargeMember.id, amount: self.rechargeForm.amount, giftAmount: self.rechargeForm.giftAmount || 0, paymentMethod: self.rechargeForm.paymentMethod }).then(function(res) {
             self.submitting = false
-            if (res.code === 1) { ReggieUI.success('充值成功！'); self.rechargeDialogVisible = false; self.init(true) }
-            else { ReggieUI.error(res.msg || '操作失败') }
-          }).catch(function(e) { self.submitting = false; ReggieUI.error('请求失败：' + e) })
+            if (res.code === 1) { XinfeiUI.success('充值成功！'); self.rechargeDialogVisible = false; self.init(true) }
+            else { XinfeiUI.error(res.msg || '操作失败') }
+          }).catch(function(e) { self.submitting = false; XinfeiUI.error('请求失败：' + e) })
         }
       }
     })

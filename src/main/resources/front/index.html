@@ -6,7 +6,7 @@
     <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
     <!-- 修改点：添加 viewport-fit=cover，适配 iPhone 灵动岛 / 刘海屏安全区 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>瑞吉外卖 - 美味生活，即刻送达</title>
+    <title>心飞外卖 - 美味生活，即刻送达</title>
     <link rel="icon" href="images/favico.ico">
     <!--不同屏幕尺寸根字体设置-->
     <script src="./js/base.js?v=20260930"></script>
@@ -141,10 +141,10 @@
         <!-- 商家信息卡片 -->
         <div class="restaurant-card">
           <div class="rc-top">
-            <img src="./images/logo.png" class="rc-logo" alt="瑞吉外卖"/>
+            <img src="./images/logo.png" class="rc-logo" alt="心飞外卖"/>
             <div class="rc-info">
               <div class="rc-name-row">
-                <span class="rc-name">{{ restaurantInfo.name || '瑞吉外卖' }}</span>
+                <span class="rc-name">{{ restaurantInfo.name || '心飞外卖' }}</span>
               </div>
               <div class="rc-meta">
                 <span class="rc-stars" v-if="restaurantInfo.stars != null">★{{ restaurantInfo.stars }}</span>
@@ -868,7 +868,7 @@
             // 修改点：注册 ESC 键监听，支持关闭所有弹窗
             document.addEventListener('keydown', this._handleEscKey)
             // SSE 新消息到达时刷新顶部未读角标
-            window.addEventListener('reggie:new-message', this._onSseNewMessage)
+            window.addEventListener('xinfei:new-message', this._onSseNewMessage)
           },
           beforeDestroy(){
             const panel = this.$refs.dishPanel
@@ -878,7 +878,7 @@
             // 修改点：移除 ESC 键监听
             document.removeEventListener('keydown', this._handleEscKey)
             // 移除 SSE 新消息监听
-            window.removeEventListener('reggie:new-message', this._onSseNewMessage)
+            window.removeEventListener('xinfei:new-message', this._onSseNewMessage)
           },
           methods:{
             // SSE 推送到达：复用未读数拉取，更新顶部角标

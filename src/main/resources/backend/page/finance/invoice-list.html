@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>发票管理 - 瑞吉外卖管理端</title>
+  <title>发票管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -243,7 +243,7 @@
               self.tableData = []
               self.counts = 0
               // 不能只清空：否则接口故障显示为空表格，用户无法区分"无数据"与"加载失败"
-              ReggieUI.error('发票记录加载失败：' + (err.message || err))
+              XinfeiUI.error('发票记录加载失败：' + (err.message || err))
             }
           }).finally(function() {
             self.loading = false
@@ -335,12 +335,12 @@
               invoiceUrl: self.issueForm.invoiceUrl || ''
             }).then(function(res) {
               if (res && res.code === 1) {
-                ReggieUI.success('发票开具成功')
+                XinfeiUI.success('发票开具成功')
                 self.issueDialogVisible = false
                 self.loadData()
               }
             }).catch(function(err) {
-              if (err.message !== 'NOTLOGIN') ReggieUI.error('开具失败')
+              if (err.message !== 'NOTLOGIN') XinfeiUI.error('开具失败')
             }).finally(function() {
               self.submitting = false
             })
@@ -349,18 +349,18 @@
         // ========== 作废（高危操作二次确认） ==========
         voidHandle: function(row) {
           var self = this
-          ReggieUI.confirm('确定作废发票「' + (row.invoiceNo || row.orderNo) + '」吗？作废后不可恢复。', '作废确认', {
+          XinfeiUI.confirm('确定作废发票「' + (row.invoiceNo || row.orderNo) + '」吗？作废后不可恢复。', '作废确认', {
             confirmButtonText: '确定作废',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(function() {
             invoiceApi.voidRecord(row.id).then(function(res) {
               if (res && res.code === 1) {
-                ReggieUI.success('发票已作废')
+                XinfeiUI.success('发票已作废')
                 self.loadData()
               }
             }).catch(function(err) {
-              if (err.message !== 'NOTLOGIN') ReggieUI.error('作废失败')
+              if (err.message !== 'NOTLOGIN') XinfeiUI.error('作废失败')
             })
           }).catch(function(err) { console.warn('[invoice] 作废操作取消或失败:', err) })
         },
@@ -368,11 +368,11 @@
         beforePdfUpload: function(file) {
           var suffix = file.name.split('.').pop().toLowerCase()
           if (suffix !== 'pdf') {
-            ReggieUI.error('仅支持 PDF 格式')
+            XinfeiUI.error('仅支持 PDF 格式')
             return false
           }
           if (file.size > 5 * 1024 * 1024) {
-            ReggieUI.error('PDF 大小不能超过 5MB')
+            XinfeiUI.error('PDF 大小不能超过 5MB')
             return false
           }
           this.pdfUploading = true
@@ -382,9 +382,9 @@
           this.pdfUploading = false
           if (response && String(response.code) === '1' && response.data) {
             this.issueForm.invoiceUrl = response.data
-            ReggieUI.success('PDF 上传成功')
+            XinfeiUI.success('PDF 上传成功')
           } else {
-            ReggieUI.error((response && response.msg) || '上传失败，请重试')
+            XinfeiUI.error((response && response.msg) || '上传失败，请重试')
           }
         },
         removePdf: function() {
@@ -393,7 +393,7 @@
         // 查看发票 PDF：本系统上传为相对路径，经 /common/download 鉴权访问；历史外链直接打开
         openInvoiceUrl: function(url) {
           if (!url) {
-            ReggieUI.info('该发票暂未上传票面文件')
+            XinfeiUI.info('该发票暂未上传票面文件')
             return
           }
           if (/^https?:\/\//i.test(url)) {

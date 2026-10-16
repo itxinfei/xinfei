@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>商品平台映射 - 瑞吉外卖管理端</title>
+  <title>商品平台映射 - 心飞外卖管理端</title>
   <!-- 修改点：补入 main.css 统一样式入口（原缺失导致全局样式与响应式断点失效） -->
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -86,10 +86,10 @@
 <script>
   new Vue({
     el: '#dish-mapping-app',
-    mixins: [window.ReggieListMixin],
+    mixins: [window.XinfeiListMixin],
     data() {
       return {
-        // 修改点：补声明 tableData —— ReggieListMixin 只提供 page/pageSize/counts/loading，
+        // 修改点：补声明 tableData —— XinfeiListMixin 只提供 page/pageSize/counts/loading，
         // 不含 tableData；此前模板与 statsCards 计算属性直接访问 this.tableData.filter(...)，
         // 首次渲染时为 undefined 触发 TypeError，导致整页渲染失败（白屏）
         tableData: [],
@@ -157,7 +157,7 @@
             this.tableData = res.data.records || []
             this.counts = Number(res.data.total) || 0
           } else {
-            ReggieUI.error((res && res.msg) || '加载映射失败')
+            XinfeiUI.error((res && res.msg) || '加载映射失败')
           }
           if (reloadStats) {
             var statsRes = results[1]
@@ -167,7 +167,7 @@
           }
         } catch (err) {
           if (err.message !== 'NOTLOGIN') {
-            ReggieUI.error('加载映射失败，请刷新重试')
+            XinfeiUI.error('加载映射失败，请刷新重试')
           }
         } finally {
           this.loading = false
@@ -228,30 +228,30 @@
       syncDish(row, action) {
         const self = this
         const tip = action === 'on_shelf' ? '确认将该菜品上架到 ' + this.platformTypeText(row.platformType) + '？' : '确认将该菜品下架？'
-        ReggieUI.confirm(tip, '商品同步', { type: 'warning' }).then(async () => {
+        XinfeiUI.confirm(tip, '商品同步', { type: 'warning' }).then(async () => {
           try {
             const res = await window.platformApi.syncDish(row.platformType, row.dishId, action)
             if (res && String(res.code) === '1') {
-              ReggieUI.success(action === 'on_shelf' ? '已上架并回传平台' : '已下架并回传平台')
+              XinfeiUI.success(action === 'on_shelf' ? '已上架并回传平台' : '已下架并回传平台')
               row.status = action === 'on_shelf' ? 1 : 0
             } else {
-              ReggieUI.error((res && res.msg) || '同步失败')
+              XinfeiUI.error((res && res.msg) || '同步失败')
             }
           } catch (err) {
-            ReggieUI.error('同步失败，请检查网络或平台配置')
+            XinfeiUI.error('同步失败，请检查网络或平台配置')
           }
         }).catch((err) => { console.warn('[菜品映射] 菜品同步操作取消或失败:', err) })
       },
       // 修改点：同步营业状态到平台
       syncBusiness(open) {
         if (!this.businessPlatform) {
-          ReggieUI.warning('请先选择平台')
+          XinfeiUI.warning('请先选择平台')
           return
         }
         var self = this
         var actionText = open ? '营业' : '休息'
         // 一键全平台同步营业状态，误点「休息」会导致全平台停业，必须二次确认
-        ReggieUI.confirm(
+        XinfeiUI.confirm(
           '确认将所选平台设为「' + actionText + '」并立即同步？' + (open ? '' : '设为休息后，该平台门店将暂停接单。'),
           '营业状态同步',
           { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
@@ -259,13 +259,13 @@
           self.bizLoading = true
           window.platformApi.syncBusiness(self.businessPlatform, open).then(function(res) {
             if (res && String(res.code) === '1') {
-              ReggieUI.success(open ? '已设为营业并同步平台' : '已设为休息并同步平台')
+              XinfeiUI.success(open ? '已设为营业并同步平台' : '已设为休息并同步平台')
             } else {
-              ReggieUI.error((res && res.msg) || '同步失败')
+              XinfeiUI.error((res && res.msg) || '同步失败')
             }
           }).catch(function(err) {
             if (err && err.message === 'NOTLOGIN') return
-            ReggieUI.error('营业状态同步失败：' + (err && err.message ? err.message : err))
+            XinfeiUI.error('营业状态同步失败：' + (err && err.message ? err.message : err))
           }).finally(function() { self.bizLoading = false })
         }).catch(function() { /* 用户点取消，静默 */ })
       }

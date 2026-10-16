@@ -7,7 +7,7 @@ set -euo pipefail
 : "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}"
 
 MYSQL_CMD=(mysql -h mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" --default-character-set=utf8mb4)
-DB=reggie
+DB=xinfei
 
 echo "[db-init] waiting for mysql ..."
 for i in $(seq 1 60); do

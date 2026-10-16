@@ -1,5 +1,5 @@
 // 后厨出餐大屏 KDS API
-// 对应后端 com.reggie.module.kds.controller.KdsController（/api/kds，员工鉴权）
+// 对应后端 com.xinfei.module.kds.controller.KdsController（/api/kds，员工鉴权）
 window.kdsApi = {
   // 出餐大屏看板：autoPull=true 时先拉取已下单订单生成工单（仅手动「刷新拉单」传 true；
   // 10s 轮询传 false，避免 GET 重复触发 saveBatch 写库，与后端默认 autoPull=false 对齐）

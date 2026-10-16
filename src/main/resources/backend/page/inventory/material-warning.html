@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>库存预警 - 瑞吉外卖管理端</title>
+  <title>库存预警 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -483,7 +483,7 @@
             } else {
               this.tableData = []
               this.counts = 0
-              ReggieUI.error(res.msg || '加载失败')
+              XinfeiUI.error(res.msg || '加载失败')
             }
           } catch (e) {
             console.warn('加载预警明细失败:', e)
@@ -514,7 +514,7 @@
         },
         openRestockDialog() {
           if (this.selectedRows.length === 0) {
-            ReggieUI.warning('未勾选任何食材')
+            XinfeiUI.warning('未勾选任何食材')
             return
           }
           // 匹配补货建议，填充建议采购量
@@ -557,7 +557,7 @@
         async submitRestock() {
           if (this.restockLoading) { return } // 提交防重：请求期间锁定，防止连点重复提交
           if (this.restockForm.items.length === 0) {
-            ReggieUI.warning('无补货明细')
+            XinfeiUI.warning('无补货明细')
             return
           }
           var self = this
@@ -579,7 +579,7 @@
             })
             if (String(res.code) === '1') {
               var orderNos = Array.isArray(res.data) ? res.data : []
-              ReggieUI.success('补货成功：已按供应商生成 ' + orderNos.length + ' 张采购单（待收货），请在采购管理中确认收货')
+              XinfeiUI.success('补货成功：已按供应商生成 ' + orderNos.length + ' 张采购单（待收货），请在采购管理中确认收货')
               this.restockForm.dialogVisible = false
               this.selectedRows = []
               this.smartSelectedRows = []
@@ -589,11 +589,11 @@
               // 同步刷新智能补货 Tab：否则已补食材仍留在建议列表，停留该 Tab 可重复补货
               this.loadSmartTable()
             } else {
-              ReggieUI.error(res.msg || '补货失败')
+              XinfeiUI.error(res.msg || '补货失败')
             }
           } catch (e) {
             console.warn('批量补货失败:', e)
-            ReggieUI.error('操作失败，请重试')
+            XinfeiUI.error('操作失败，请重试')
           } finally {
             this.restockLoading = false
           }
@@ -620,7 +620,7 @@
             } else {
               this.smartTableData = []
               this.smartTotal = 0
-              ReggieUI.error(res.msg || '加载智能补货建议失败')
+              XinfeiUI.error(res.msg || '加载智能补货建议失败')
             }
           } catch (e) {
             console.warn('加载智能补货建议失败:', e)
@@ -635,7 +635,7 @@
         },
         openSmartRestock(rows) {
           if (!rows || rows.length === 0) {
-            ReggieUI.warning('未勾选任何食材')
+            XinfeiUI.warning('未勾选任何食材')
             return
           }
           var items = rows.map(function(r) {

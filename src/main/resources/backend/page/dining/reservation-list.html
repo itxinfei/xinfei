@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>预约管理 - 瑞吉外卖管理端</title>
+  <title>预约管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260916" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260916" />
@@ -319,7 +319,7 @@
               this.tableData = resvRes.data.records || []
               this.counts = resvRes.data.total
             } else {
-              ReggieUI.error(resvRes.msg || '操作失败')
+              XinfeiUI.error(resvRes.msg || '操作失败')
             }
             if (reloadStats && results[1]) {
               var statsRes = results[1]
@@ -329,7 +329,7 @@
             }
           } catch (err) {
             // 修改点(2026-09-22)：任一接口 reject 时给出提示，避免 loading 永久 true 卡死骨架屏
-            ReggieUI.error('加载预约数据失败，请稍后重试')
+            XinfeiUI.error('加载预约数据失败，请稍后重试')
           } finally {
             this.loading = false
           }
@@ -431,14 +431,14 @@
             if (!payload.tableId) { payload.tableId = null }
             action(payload).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success(self.dialog.isEdit ? '修改成功' : '新增成功')
+                XinfeiUI.success(self.dialog.isEdit ? '修改成功' : '新增成功')
                 self.dialog.visible = false
                 self.init(true)
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(function(err) {
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             }).finally(function() {
               self.submitting = false
             })
@@ -447,42 +447,42 @@
         /* ── 状态操作 ── */
         confirmHandle: function(id) {
           var self = this
-          ReggieUI.confirm('确认该预订?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认该预订?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               confirmReservation(id).then(function(res) {
-                if (String(res.code) === '1') { ReggieUI.success('已确认！'); self.init() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (String(res.code) === '1') { XinfeiUI.success('已确认！'); self.init() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
         },
         arriveHandle: function(id) {
           var self = this
-          ReggieUI.confirm('确认该客户已到店?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认该客户已到店?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               arriveReservation(id).then(function(res) {
-                if (String(res.code) === '1') { ReggieUI.success('已到店！'); self.init() }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (String(res.code) === '1') { XinfeiUI.success('已到店！'); self.init() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
         },
         cancelHandle: function(id) {
           var self = this
-          ReggieUI.confirm('确认取消该预订?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认取消该预订?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               cancelReservation(id).then(function(res) {
-                if (String(res.code) === '1') { ReggieUI.success('已取消！'); self.init(true) }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (String(res.code) === '1') { XinfeiUI.success('已取消！'); self.init(true) }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
         },
         deleteHandle: function(id) {
           var self = this
-          ReggieUI.confirm('确认删除该预订记录？删除后不可恢复。', '删除确认', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确认删除该预订记录？删除后不可恢复。', '删除确认', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               deleteReservation(id).then(function(res) {
-                if (String(res.code) === '1') { ReggieUI.success('已删除！'); self.init(true) }
-                else { ReggieUI.error(res.msg || '操作失败') }
-              }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+                if (String(res.code) === '1') { XinfeiUI.success('已删除！'); self.init(true) }
+                else { XinfeiUI.error(res.msg || '操作失败') }
+              }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
             })
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/dining/reservation/{id}；非已取消行可能被拒）

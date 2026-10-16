@@ -15,7 +15,7 @@
  *   done         {status, stopped, conversationId, messageId}
  *   error        {message}
  *
- * @author reggie
+ * @author xinfei
  * @since 2026-09-20
  */
 (function (window) {
@@ -26,13 +26,13 @@
     /* ============================== 工具函数 ============================== */
 
     /**
-     * 获取 CSRF Token：统一走跨端共享实现 /shared/js/request-core.js（window.ReggieCsrf.get），
+     * 获取 CSRF Token：统一走跨端共享实现 /shared/js/request-core.js（window.XinfeiCsrf.get），
      * 与 js/request.js 单一真源一致，避免重复实现且编解码错位。
-     * （assistant.html 中 request.js 先于本文件加载，其 document.write 已引入 request-core.js，ReggieCsrf 必然存在）
+     * （assistant.html 中 request.js 先于本文件加载，其 document.write 已引入 request-core.js，XinfeiCsrf 必然存在）
      */
     function getCsrfToken() {
-        return (window.ReggieCsrf && typeof window.ReggieCsrf.get === 'function')
-            ? window.ReggieCsrf.get()
+        return (window.XinfeiCsrf && typeof window.XinfeiCsrf.get === 'function')
+            ? window.XinfeiCsrf.get()
             : null;
     }
 
@@ -446,8 +446,8 @@
                     // 保存后自动用新 token 重试一次，避免用户陷入「重试→403」循环
                     if (res.status === 403 && !retried) {
                         var newToken = res.headers.get('x-csrf-token');
-                        if (newToken && window.ReggieCsrf && typeof window.ReggieCsrf.save === 'function') {
-                            window.ReggieCsrf.save(newToken);
+                        if (newToken && window.XinfeiCsrf && typeof window.XinfeiCsrf.save === 'function') {
+                            window.XinfeiCsrf.save(newToken);
                             retried = true;
                             send();
                             return;

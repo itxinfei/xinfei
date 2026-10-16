@@ -1,4 +1,4 @@
-# Reggie 外卖系统 — 多阶段构建
+# Xinfei 外卖系统 — 多阶段构建
 # 阶段一：JDK 8 + Maven 编译（enforcer 强制 [1.8,1.9)，必须用 JDK 8 镜像）
 # 阶段二：JRE 8 运行时
 FROM maven:3.8-openjdk-8 AS build
@@ -19,11 +19,11 @@ RUN apt-get update -qq \
 ENV TZ=Asia/Shanghai \
     JAVA_OPTS="-Xms512m -Xmx1024m -Duser.timezone=Asia/Shanghai"
 
-# 上传根目录（reggie.path 指向此卷，随容器卷持久化）
+# 上传根目录（xinfei.path 指向此卷，随容器卷持久化）
 RUN mkdir -p /data/uploads
 WORKDIR /app
 
-COPY --from=build /build/target/reggie_take_out-1.0-SNAPSHOT.jar app.jar
+COPY --from=build /build/target/xinfei_take_out-1.0-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=10 \

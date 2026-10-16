@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>员工管理 - 瑞吉外卖管理端</title>
+  <title>员工管理 - 心飞外卖管理端</title>
   <!-- 引入样式 -->
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -288,7 +288,7 @@
       new Vue({
         el: '#employee-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
         data() {
           return {
              input: '',
@@ -426,7 +426,7 @@
                 this.filterOptions.names = res.data.names || []
               } else {
                 this.optionsLoadError = true
-                ReggieUI.warning('加载员工选项失败：' + (res.msg || '接口返回异常'))
+                XinfeiUI.warning('加载员工选项失败：' + (res.msg || '接口返回异常'))
               }
             } catch (err) {
               // 修改点：NOTLOGIN 错误已在全局拦截器处理（跳转登录页），无需重复提示
@@ -434,7 +434,7 @@
                 return
               }
               this.optionsLoadError = true
-              ReggieUI.error('加载筛选选项失败，请刷新页面重试')
+              XinfeiUI.error('加载筛选选项失败，请刷新页面重试')
             } finally {
               this.optionsLoading = false
             }
@@ -560,11 +560,11 @@
               if (res.code === 1) {
                 self.badgeDialog.qrcode = res.data
               } else {
-                ReggieUI.error(res.msg || '二维码加载失败')
+                XinfeiUI.error(res.msg || '二维码加载失败')
               }
             }).catch(function (err) {
               self.badgeDialog.loading = false
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           },
           viewMemberHandle(id) {
@@ -606,10 +606,10 @@
                   avatar: data.avatar || ''
                 }
               } else {
-                ReggieUI.error(res.msg || '获取员工信息失败')
+                XinfeiUI.error(res.msg || '获取员工信息失败')
               }
             } catch (err) {
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             }
           },
           // 重置表单
@@ -649,7 +649,7 @@
                   addEmployee(params).then(res => {
                     this.submitting = false
                     if (res.code === 1) {
-                      ReggieUI.success('员工添加成功！')
+                      XinfeiUI.success('员工添加成功！')
                       this.memberDialog.visible = false
                       this.handleQuery()
                       if (st === 'continue') {
@@ -657,25 +657,25 @@
                         this.memberDialog.visible = true
                       }
                     } else {
-                      ReggieUI.error(res.msg || '操作失败')
+                      XinfeiUI.error(res.msg || '操作失败')
                     }
                   }).catch(err => {
                     this.submitting = false
-                    ReggieUI.error('请求失败：' + err)
+                    XinfeiUI.error('请求失败：' + err)
                   })
                 } else {
                   editEmployee(params).then(res => {
                     this.submitting = false
                     if (res.code === 1) {
-                      ReggieUI.success('员工信息修改成功！')
+                      XinfeiUI.success('员工信息修改成功！')
                       this.memberDialog.visible = false
                       this.handleQuery()
                     } else {
-                      ReggieUI.error(res.msg || '操作失败')
+                      XinfeiUI.error(res.msg || '操作失败')
                     }
                   }).catch(err => {
                     this.submitting = false
-                    ReggieUI.error('请求失败：' + err)
+                    XinfeiUI.error('请求失败：' + err)
                   })
                 }
               }
@@ -685,26 +685,26 @@
           statusHandle (row) {
             this.id = row.id
             this.status = row.status
-            ReggieUI.confirm('确认调整该账号的状态?', '提示', {
+            XinfeiUI.confirm('确认调整该账号的状态?', '提示', {
               'confirmButtonText': '确定',
               'cancelButtonText': '取消',
               'type': 'warning'
               }).then(() => {
               enableOrDisableEmployee({ 'id': this.id, 'status': String(this.status) === '1' ? 0 : 1 }).then(res => {
                 if (String(res.code) === '1') {
-                  ReggieUI.success('账号状态更改成功！')
+                  XinfeiUI.success('账号状态更改成功！')
                   this.handleQuery()
                 } else {
-                  ReggieUI.error(res.msg || '账号状态更改失败')
+                  XinfeiUI.error(res.msg || '账号状态更改失败')
                 }
               }).catch(err => {
-                ReggieUI.error('请求失败：' + err)
+                XinfeiUI.error('请求失败：' + err)
               })
             }).catch((e) => { console.warn('[member/list.html] 用户取消调整账号状态:', e) })
           },
           // 删除员工
           deleteHandle(row) {
-            ReggieUI.confirm('确认删除员工「' + row.name + '」吗？删除后不可恢复。', '提示', {
+            XinfeiUI.confirm('确认删除员工「' + row.name + '」吗？删除后不可恢复。', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -712,20 +712,20 @@
               try {
                 const res = await deleteEmployee(row.id)
                 if (String(res.code) === '1') {
-                  ReggieUI.success('删除成功')
+                  XinfeiUI.success('删除成功')
                   this.fetchData(true)
                 } else {
-                  ReggieUI.error(res.msg || '删除失败')
+                  XinfeiUI.error(res.msg || '删除失败')
                 }
               } catch (err) {
-                ReggieUI.error('请求失败：' + err)
+                XinfeiUI.error('请求失败：' + err)
               }
             }).catch((e) => { console.warn('[member/list.html] 用户取消删除操作:', e) })
           },
           // 导出员工数据：仅导出勾选行（未勾选时导出按钮已禁用）
           async exportEmployees(format) {
             if (this.selectedIds.length === 0) {
-              ReggieUI.warning('请先勾选要导出的员工')
+              XinfeiUI.warning('请先勾选要导出的员工')
               return
             }
             const params = { ids: this.selectedIds.join(',') }
@@ -735,9 +735,9 @@
                 ? exportApi.exportEmployeesExcel(params)
                 : exportApi.exportEmployeesPdf(params)
               await exportApi.downloadFile(apiCall, '员工数据.' + ext)
-              ReggieUI.success('已导出选中的 ' + this.selectedIds.length + ' 名员工')
+              XinfeiUI.success('已导出选中的 ' + this.selectedIds.length + ' 名员工')
             } catch (err) {
-              ReggieUI.error('导出失败：' + (err.message || err))
+              XinfeiUI.error('导出失败：' + (err.message || err))
             }
           },
 
@@ -751,11 +751,11 @@
           beforeImportUpload(file) {
             this.importResult = null
             if (!/\.xlsx$/i.test(file.name)) {
-              ReggieUI.error('仅支持 .xlsx 格式，请先下载导入模板填写')
+              XinfeiUI.error('仅支持 .xlsx 格式，请先下载导入模板填写')
               return false
             }
             if (file.size > 1 * 1024 * 1024) {
-              ReggieUI.error('文件不能超过 1MB')
+              XinfeiUI.error('文件不能超过 1MB')
               return false
             }
             this.importLoading = true
@@ -767,39 +767,39 @@
             if (!res || String(res.code) !== '1' || !res.data) {
               if (res && res.msg === 'NOTLOGIN') {
                 if (window.self !== window.top) {
-                  try { window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*') } catch (e) { /* 跨域兜底 */ }
+                  try { window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*') } catch (e) { /* 跨域兜底 */ }
                 } else {
                   window.location.href = '/backend/page/login/login.html'
                 }
                 return
               }
-              ReggieUI.error((res && res.msg) || '导入失败')
+              XinfeiUI.error((res && res.msg) || '导入失败')
               return
             }
             this.importResult = res.data
             if (res.data.successCount > 0) {
-              ReggieUI.success('成功导入 ' + res.data.successCount + ' 名员工')
+              XinfeiUI.success('成功导入 ' + res.data.successCount + ' 名员工')
               this.fetchData(true)
             } else {
-              ReggieUI.error('导入未成功，请查看下方失败明细')
+              XinfeiUI.error('导入未成功，请查看下方失败明细')
             }
           },
           onImportError(err) {
             this.importLoading = false
             // 如实展示失败原因，不再统一误报为"网络异常或登录已过期"
             if (err && err.status === 403) {
-              ReggieUI.error('导入被拒绝（403）：可能登录已过期或安全令牌失效，请刷新页面后重试')
+              XinfeiUI.error('导入被拒绝（403）：可能登录已过期或安全令牌失效，请刷新页面后重试')
               return
             }
             var msg = (err && err.message) ? err.message : ''
-            ReggieUI.error(msg ? ('导入失败：' + msg) : '导入失败，请重试')
+            XinfeiUI.error(msg ? ('导入失败：' + msg) : '导入失败，请重试')
           },
           onImportDialogClose() {
             this.importResult = null
             this.importLoading = false
           },
 
-          // 修改点：分页处理统一交由 ReggieListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
+          // 修改点：分页处理统一交由 XinfeiListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
         }
       })
     </script>

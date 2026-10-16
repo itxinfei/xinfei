@@ -1,5 +1,5 @@
 /**
- * 退款 / 售后状态单一真源（与后端 com.reggie.enums.RefundStatus 的 code 对齐）。
+ * 退款 / 售后状态单一真源（与后端 com.xinfei.enums.RefundStatus 的 code 对齐）。
  *
  * 背景（P0-5 三端语义落地）：后端枚举 code 大小写并不统一——
  * pending / processing / fail / rejected 为小写，而 SUCCESS 为大写。

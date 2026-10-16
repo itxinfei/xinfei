@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>新客优惠管理 - 瑞吉外卖管理端</title>
+  <title>新客优惠管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -251,7 +251,7 @@
               self.loadStats();
             }
           } catch (err) {
-            ReggieUI.error('获取新客优惠列表失败')
+            XinfeiUI.error('获取新客优惠列表失败')
           }
           self.loading = false
         },
@@ -331,42 +331,42 @@
           try {
             const newStatus = row.status === 1 ? 0 : 1
             // 启停直接影响线上活动可见性，二次确认防误触
-            await ReggieUI.confirm(
+            await XinfeiUI.confirm(
               '确认' + (newStatus === 1 ? '启用' : '禁用') + '该新客优惠？' + (newStatus === 0 ? '禁用后新客将无法领取该优惠。' : ''),
               '提示', { type: 'warning' }
             )
             var res = await updateNewCustomerDiscount(Object.assign({}, row, { status: newStatus }))
             if (res.code === 1) {
-              ReggieUI.success(newStatus === 1 ? '已启用' : '已禁用')
+              XinfeiUI.success(newStatus === 1 ? '已启用' : '已禁用')
               this.init()
               this.loadStats()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (err) {
             // 用户在确认框点取消/关闭时静默，不提示错误
-            if (err !== 'cancel' && err !== 'close') ReggieUI.error('操作失败')
+            if (err !== 'cancel' && err !== 'close') XinfeiUI.error('操作失败')
           }
         },
         async handleDelete(row) {
           try {
-            await ReggieUI.confirm('确定要删除该新客优惠吗？', '提示', {
+            await XinfeiUI.confirm('确定要删除该新客优惠吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
             })
             const res = await deleteNewCustomerDiscount(row.id)
             if (res.code === 1) {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               this.init()
               this.loadStats()
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[new-customer] 删除失败:', err)
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         },
         // 修改点：`async X: function(){}` 是非法语法（整页 JS 解析失败导致白屏），改为合法的 async 方法简写
@@ -379,22 +379,22 @@
           })
           if (!valid) return
           if (self.formData.discountType === 2 && (!self.formData.maxDiscountAmount || self.formData.maxDiscountAmount <= 0)) {
-            ReggieUI.error('按比例优惠必须填写最大优惠金额')
+            XinfeiUI.error('按比例优惠必须填写最大优惠金额')
             return
           }
           self.submitLoading = true
           const apiCall = self.formData.id ? updateNewCustomerDiscount(self.formData) : saveNewCustomerDiscount(self.formData)
           apiCall.then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success(self.formData.id ? '更新成功' : '新增成功')
+              XinfeiUI.success(self.formData.id ? '更新成功' : '新增成功')
               self.dialogVisible = false
               self.init()
               self.loadStats()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }).finally(function() {
             self.submitLoading = false
           })

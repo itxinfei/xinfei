@@ -49,7 +49,7 @@ var exportApi = (function() {
                         if (errData.code === 0 && errData.msg === 'NOTLOGIN') {
                             localStorage.removeItem('userInfo');
                             // 修正：iframe 内 window.top 会被 sandbox 拦截，改用 postMessage 通知顶层跳登录
-                            if (window.self !== window.top) { try { window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*'); } catch(e) {} }
+                            if (window.self !== window.top) { try { window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*'); } catch(e) {} }
                             else { window.location.href = '/backend/page/login/login.html'; }
                         }
                         reject(new Error(errData.msg || '导出失败'));

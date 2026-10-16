@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>外卖平台对接 - 瑞吉外卖管理端</title>
+  <title>外卖平台对接 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
@@ -148,10 +148,10 @@
   new Vue({
     el: '#platform-app',
     // 引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-    mixins: [window.ReggieListMixin],
+    mixins: [window.XinfeiListMixin],
     data() {
       return {
-        // 修改点：补声明 tableData —— ReggieListMixin 只提供 page/pageSize/counts/loading，
+        // 修改点：补声明 tableData —— XinfeiListMixin 只提供 page/pageSize/counts/loading，
         // 不含 tableData；此前模板与 statsCards 计算属性直接访问 this.tableData.filter(...)，
         // 首次渲染时为 undefined 触发 TypeError，导致整页渲染失败（白屏）
         tableData: [],
@@ -236,7 +236,7 @@
             this.tableData = res.data.records || []
             this.counts = Number(res.data.total) || 0
           } else {
-            ReggieUI.error((res && res.msg) || '加载平台配置失败')
+            XinfeiUI.error((res && res.msg) || '加载平台配置失败')
           }
           if (reloadStats) {
             var statsRes = results[1]
@@ -246,7 +246,7 @@
           }
         } catch (err) {
           if (err.message !== 'NOTLOGIN') {
-            ReggieUI.error('加载平台配置失败，请刷新重试')
+            XinfeiUI.error('加载平台配置失败，请刷新重试')
           }
         } finally {
           this.loading = false
@@ -339,14 +339,14 @@
             const api = this.action === 'edit' ? window.platformApi.update : window.platformApi.add
             const res = await api(payload)
             if (res && String(res.code) === '1') {
-              ReggieUI.success('保存成功')
+              XinfeiUI.success('保存成功')
               this.dialogVisible = false
               this.fetchData()
             } else {
-              ReggieUI.error((res && res.msg) || '保存失败')
+              XinfeiUI.error((res && res.msg) || '保存失败')
             }
           } catch (err) {
-            ReggieUI.error('保存失败，请重试')
+            XinfeiUI.error('保存失败，请重试')
           } finally {
             this.submitting = false
           }
@@ -356,32 +356,32 @@
       toggle(row) {
         const enabled = row.enabled === 1 ? 0 : 1
         const tip = enabled === 1 ? '确认启用该平台配置？' : '确认停用该平台配置？'
-        ReggieUI.confirm(tip, '提示', { type: 'warning' }).then(async () => {
+        XinfeiUI.confirm(tip, '提示', { type: 'warning' }).then(async () => {
           const res = await window.platformApi.toggle(row.id, enabled)
           if (res && String(res.code) === '1') {
-            ReggieUI.success(enabled === 1 ? '已启用' : '已停用')
+            XinfeiUI.success(enabled === 1 ? '已启用' : '已停用')
             this.fetchData()
           } else {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }
         }).catch((err) => {
           // 业务失败 reject(new Error) 需提示；用户点取消 reject('cancel') 静默
-          if (err instanceof Error) { ReggieUI.error(err.message || '操作失败') }
+          if (err instanceof Error) { XinfeiUI.error(err.message || '操作失败') }
         })
       },
       // 修改点：删除（高危二次确认）
       remove(row) {
-        ReggieUI.confirm('确认删除该平台配置？删除后不可恢复。', '提示', { type: 'warning' }).then(async () => {
+        XinfeiUI.confirm('确认删除该平台配置？删除后不可恢复。', '提示', { type: 'warning' }).then(async () => {
           const res = await window.platformApi.remove(row.id)
           if (res && String(res.code) === '1') {
-            ReggieUI.success('已删除')
+            XinfeiUI.success('已删除')
             this.fetchData()
           } else {
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         }).catch((err) => {
           // 业务失败 reject(new Error) 需提示；用户点取消 reject('cancel') 静默
-          if (err instanceof Error) { ReggieUI.error(err.message || '删除失败') }
+          if (err instanceof Error) { XinfeiUI.error(err.message || '删除失败') }
         })
       }
     }

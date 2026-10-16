@@ -48,15 +48,15 @@
 /* ============================================================
  * 品牌动态化（R-21-A 配套 · 店铺品牌化，2026-09-30）
  * 本文件被全端页面（/front/index.html 与 /front/page/*.html）加载，
- * 在此一处把写死的"瑞吉外卖"替换为真实店铺名（/restaurant/info 匿名可访问）。
+ * 在此一处把写死的"心飞外卖"替换为真实店铺名（/restaurant/info 匿名可访问）。
  * 策略：sessionStorage 缓存 60 秒 → 接口失败静默（保留写死文案兜底）。
  * 说明：TTL 曾为 10 分钟，商家在"店铺设置"改名后顾客端最长 10 分钟不更新，
  *       与"即时生效"冲突；缩短为 60 秒，兼顾接口请求量与改名时效。
  * ============================================================ */
 (function (doc, win) {
-    var BRAND_CACHE_KEY = 'reggieBrandInfo';
+    var BRAND_CACHE_KEY = 'xinfeiBrandInfo';
     var BRAND_CACHE_TTL = 60 * 1000;
-    var DEFAULT_BRAND = '瑞吉外卖';
+    var DEFAULT_BRAND = '心飞外卖';
 
     function readCache() {
         try {
@@ -83,7 +83,7 @@
 
     function applyBrand(info) {
         if (!info || !info.name || info.name === DEFAULT_BRAND) return;
-        // 1) 标题：各页 <title> 均含写死的"瑞吉外卖"，运行时替换，免逐页改文件
+        // 1) 标题：各页 <title> 均含写死的"心飞外卖"，运行时替换，免逐页改文件
         if (doc.title && doc.title.indexOf(DEFAULT_BRAND) !== -1) {
             doc.title = doc.title.split(DEFAULT_BRAND).join(info.name);
         }

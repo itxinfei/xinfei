@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>库存盘点 - 瑞吉外卖管理端</title>
+  <title>库存盘点 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -460,7 +460,7 @@
               self.tableData = res.data.records || [];
               self.counts = Number(res.data.total) || 0;
             }
-          }).catch(function(err) { ReggieUI.error('加载失败：' + err); })
+          }).catch(function(err) { XinfeiUI.error('加载失败：' + err); })
             .finally(function() { self.loading = false; });
           if (reloadStats) this.loadStats();
         },
@@ -540,13 +540,13 @@
             self.createSubmitting = true;
             addStockCheck(self.createForm).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('盘点单创建成功，请添加盘点项');
+                XinfeiUI.success('盘点单创建成功，请添加盘点项');
                 self.createDialogVisible = false;
                 self.init(true);
               } else {
-                ReggieUI.error(res.msg || '创建失败');
+                XinfeiUI.error(res.msg || '创建失败');
               }
-            }).catch(function(err) { ReggieUI.error('创建失败：' + err); })
+            }).catch(function(err) { XinfeiUI.error('创建失败：' + err); })
               .finally(function() { self.createSubmitting = false; });
           });
         },
@@ -596,7 +596,7 @@
         },
         submitItems: function() {
           if (this.pickedItems.length === 0) {
-            ReggieUI.warning('请至少选择一项食材');
+            XinfeiUI.warning('请至少选择一项食材');
             return;
           }
           var self = this;
@@ -604,13 +604,13 @@
           var items = this.pickedItems.map(function(p) { return { materialId: p.materialId }; });
           setStockCheckItems(self.itemsCheckId, items).then(function(res) {
             if (String(res.code) === '1') {
-              ReggieUI.success('盘点项设置成功');
+              XinfeiUI.success('盘点项设置成功');
               self.itemsDialogVisible = false;
               self.init(true);
             } else {
-              ReggieUI.error(res.msg || '设置失败');
+              XinfeiUI.error(res.msg || '设置失败');
             }
-          }).catch(function(err) { ReggieUI.error('设置失败：' + err); })
+          }).catch(function(err) { XinfeiUI.error('设置失败：' + err); })
             .finally(function() { self.itemsSubmitting = false; });
         },
 
@@ -673,25 +673,25 @@
             return { materialId: item.materialId, actualStock: Number(item.actualStock) };
           });
           if (items.length === 0) {
-            ReggieUI.warning('请至少填写一项实际库存');
+            XinfeiUI.warning('请至少填写一项实际库存');
             return;
           }
           // 兜底：负数会造成错误盘亏和负库存（el-input-number 失焦才纠正，防未失焦直接提交）
           var hasNegative = items.some(function(it) { return Number(it.actualStock) < 0; });
           if (hasNegative) {
-            ReggieUI.warning('实际库存不能为负数');
+            XinfeiUI.warning('实际库存不能为负数');
             return;
           }
           this.recordSubmitting = true;
           recordStockCheckQty(this.recordCheckId, items).then(function(res) {
             if (String(res.code) === '1') {
-              ReggieUI.success('实盘数量录入成功');
+              XinfeiUI.success('实盘数量录入成功');
               self.recordDialogVisible = false;
               self.init(true);
             } else {
-              ReggieUI.error(res.msg || '录入失败');
+              XinfeiUI.error(res.msg || '录入失败');
             }
-          }).catch(function(err) { ReggieUI.error('录入失败：' + err); })
+          }).catch(function(err) { XinfeiUI.error('录入失败：' + err); })
             .finally(function() { self.recordSubmitting = false; });
         },
 
@@ -704,51 +704,51 @@
             var items = details.filter(function(d) { return d.actualQty != null && d.actualQty !== ''; })
               .map(function(d) { return { materialId: d.materialId, actualStock: d.actualQty }; });
             if (items.length === 0) {
-              ReggieUI.warning('请先录入实盘数量再完成盘点');
+              XinfeiUI.warning('请先录入实盘数量再完成盘点');
               return;
             }
-            ReggieUI.confirm('确认完成盘点？完成后将自动调整库存并生成盈亏记录。', '提示', {
+            XinfeiUI.confirm('确认完成盘点？完成后将自动调整库存并生成盈亏记录。', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
             }).then(function() {
               completeStockCheck(row.id, { items: items }).then(function(res) {
                 if (String(res.code) === '1') {
-                  ReggieUI.success('盘点完成，库存已调整');
+                  XinfeiUI.success('盘点完成，库存已调整');
                   self.init(true);
                 } else {
-                  ReggieUI.error(res.msg || '完成失败');
+                  XinfeiUI.error(res.msg || '完成失败');
                 }
-              }).catch(function(err) { ReggieUI.error('完成失败：' + err); });
-            }).catch(function(e) { if (e === 'cancel' || e === 'close') return; ReggieUI.error('完成失败：' + e); });
+              }).catch(function(err) { XinfeiUI.error('完成失败：' + err); });
+            }).catch(function(e) { if (e === 'cancel' || e === 'close') return; XinfeiUI.error('完成失败：' + e); });
           };
           if (row.details && row.details.length) {
             doComplete(row.details);
           } else {
             stockCheckDetails(row.id).then(function(res) {
               if (String(res.code) === '1' && res.data) doComplete(res.data);
-              else ReggieUI.error('加载明细失败');
-            }).catch(function(err) { ReggieUI.error('加载明细失败：' + err); });
+              else XinfeiUI.error('加载明细失败');
+            }).catch(function(err) { XinfeiUI.error('加载明细失败：' + err); });
           }
         },
 
         /* ── 删除 ── */
         deleteHandle: function(row) {
           var self = this;
-          ReggieUI.confirm('确认删除盘点单 ' + row.checkNo + '？', '提示', {
+          XinfeiUI.confirm('确认删除盘点单 ' + row.checkNo + '？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(function() {
             deleteStockCheck(row.id).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('删除成功');
+                XinfeiUI.success('删除成功');
                 self.init(true);
               } else {
-                ReggieUI.error(res.msg || '删除失败');
+                XinfeiUI.error(res.msg || '删除失败');
               }
-            }).catch(function(err) { ReggieUI.error('删除失败：' + err); });
-          }).catch(function(e) { if (e === 'cancel' || e === 'close') return; ReggieUI.error('删除失败：' + e); });
+            }).catch(function(err) { XinfeiUI.error('删除失败：' + err); });
+          }).catch(function(e) { if (e === 'cancel' || e === 'close') return; XinfeiUI.error('删除失败：' + e); });
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/stock-check/{id}）
         doBatchDelete: function(payload) {
@@ -760,19 +760,19 @@
         /* 修改点：盘点冲正 — 已完成的盘点单回退到进行中，允许重新录入修正 */
         rollbackHandle: function(row) {
           var self = this;
-          ReggieUI.confirm('确认冲正盘点单 ' + row.checkNo + '？冲正后可重新录入实盘数量。', '盘点冲正', {
+          XinfeiUI.confirm('确认冲正盘点单 ' + row.checkNo + '？冲正后可重新录入实盘数量。', '盘点冲正', {
             confirmButtonText: '确认冲正',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(function() {
             rollbackStockCheck(row.id).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('已回退到进行中，请重新录入实盘数量');
+                XinfeiUI.success('已回退到进行中，请重新录入实盘数量');
                 self.init(true);
               } else {
-                ReggieUI.error(res.msg || '冲正失败');
+                XinfeiUI.error(res.msg || '冲正失败');
               }
-            }).catch(function(err) { ReggieUI.error('冲正失败：' + err); });
+            }).catch(function(err) { XinfeiUI.error('冲正失败：' + err); });
           }).catch(function() {});
         }
       }

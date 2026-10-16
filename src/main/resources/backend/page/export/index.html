@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数据导出 - 瑞吉外卖管理端</title>
+    <title>数据导出 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
     <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -427,7 +427,7 @@
                             delete self.blobCache[removed.id];
                         }
                         self.recordsExpanded = true;
-                        ReggieUI.notify({
+                        XinfeiUI.notify({
                             title: '导出成功',
                             dangerouslyUseHTMLString: true,
                             message: '<div style="line-height:1.8;">'
@@ -444,7 +444,7 @@
                             dateRange: dateRange || '全部', format: 'excel', fileSize: '--', status: 'failed'
                         });
                         self.recordsExpanded = true;
-                        ReggieUI.notify({
+                        XinfeiUI.notify({
                             title: '导出失败',
                             dangerouslyUseHTMLString: true,
                             message: '<div style="line-height:1.8;">'
@@ -489,7 +489,7 @@
                 reDownload: function(item) {
                     var cached = this.blobCache[item.id];
                     if (!cached || !cached.blob) {
-                        ReggieUI.warning('文件数据已过期，请重新导出');
+                        XinfeiUI.warning('文件数据已过期，请重新导出');
                         return;
                     }
                     try {
@@ -504,31 +504,31 @@
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }, 200);
-                        ReggieUI.success('正在下载：' + cached.fileName);
+                        XinfeiUI.success('正在下载：' + cached.fileName);
                     } catch (err) {
-                        ReggieUI.error('下载失败：' + err.message);
+                        XinfeiUI.error('下载失败：' + err.message);
                     }
                 },
                 deleteRecord: function(index) {
                     var self = this;
-                    ReggieUI.confirm('确认删除该导出记录？', '提示', {
+                    XinfeiUI.confirm('确认删除该导出记录？', '提示', {
                         confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning'
                     }).then(function() {
                         var item = self.history[index];
                         if (item && item.id) { delete self.blobCache[item.id]; }
                         self.history.splice(index, 1);
-                        ReggieUI.success('记录已删除');
+                        XinfeiUI.success('记录已删除');
                     }).catch(function() { /* 用户取消 */ });
                 },
                 clearHistory: function() {
                     if (!this.history || this.history.length === 0) return;
                     var self = this;
-                    ReggieUI.confirm('确定清空全部导出记录吗？', '清空导出记录', {
+                    XinfeiUI.confirm('确定清空全部导出记录吗？', '清空导出记录', {
                         confirmButtonText: '清空', type: 'warning'
                     }).then(function() {
                         self.history = [];
                         self.blobCache = {};
-                        ReggieUI.success('导出记录已清空');
+                        XinfeiUI.success('导出记录已清空');
                     }).catch(function() { /* 用户取消 */ });
                 }
             }

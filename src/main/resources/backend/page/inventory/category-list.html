@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>食材分类管理 - 瑞吉外卖管理端</title>
+  <title>食材分类管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -172,7 +172,7 @@
             this.tableData = pageRes.data.records || []
             this.counts = Number(pageRes.data.total) || 0
           } else {
-            ReggieUI.error(pageRes.msg || '操作失败')
+            XinfeiUI.error(pageRes.msg || '操作失败')
           }
 
           if (reloadStats) {
@@ -250,7 +250,7 @@
           const valid = await new Promise(function(resolve) {
             self.$refs.categoryForm.validate(function(v) { resolve(v) })
           })
-          if (!valid) { ReggieUI.warning('请完善表单必填项'); return }
+          if (!valid) { XinfeiUI.warning('请完善表单必填项'); return }
           self.submitting = true
           const fd = self.formData
           const action = fd.id ? updateMatCategory : addMatCategory
@@ -261,38 +261,38 @@
           action(params).then(res => {
             self.submitting = false
             if (res.code === 1) {
-              ReggieUI.success(this.formData.id ? '分类修改成功！' : '分类添加成功！')
+              XinfeiUI.success(this.formData.id ? '分类修改成功！' : '分类添加成功！')
               this.formData.dialogVisible = false
               this.fetchData(true)
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(err => {
             self.submitting = false
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           })
         },
         deleteHandle(id) {
-          ReggieUI.confirm('此操作将永久删除该分类, 是否继续?', '提示', {
+          XinfeiUI.confirm('此操作将永久删除该分类, 是否继续?', '提示', {
             confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
           }).then(() => {
             deleteMatCategory(id).then(res => {
               if (res.code === 1) {
-                ReggieUI.success('删除成功！')
+                XinfeiUI.success('删除成功！')
                 // 当前页删除后为空则回退
                 if (this.tableData.length === 1 && this.page > 1) {
                   this.page--
                 }
                 this.fetchData(true)
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(err => {
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           }).catch(e => {
             if (e === 'cancel' || e === 'close') return
-            ReggieUI.error('删除失败：' + e)
+            XinfeiUI.error('删除失败：' + e)
           })
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/material-category/{id}）

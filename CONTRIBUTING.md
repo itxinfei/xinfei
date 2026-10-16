@@ -1,6 +1,6 @@
 # 贡献指南 · Contributing
 
-首先，感谢你对瑞吉外卖（Reggie Takeout）的关注！欢迎通过各种方式参与贡献。本项目基于 **Apache License 2.0** 开源。
+首先，感谢你对心飞外卖（Xinfei Takeout）的关注！欢迎通过各种方式参与贡献。本项目基于 **Apache License 2.0** 开源。
 
 ## 一、你可以这样贡献
 
@@ -19,7 +19,7 @@
 
 1. **JDK 8 语法**：禁止 `var`、`String.isBlank()`、`List.of()/Map.of()`、`Stream.toList()`、`jakarta.*`、switch 表达式、record 等 JDK 9+ 特性（构建期 enforcer + animal-sniffer 会拦截）。
 2. **分层**：Controller → Service(Impl) → Mapper；统一返回 `R<T>`，业务异常抛 `CustomException`。
-3. **模块化**：新增业务放在 `com.reggie.module.{模块名}` 下，禁止在根包平铺。
+3. **模块化**：新增业务放在 `com.xinfei.module.{模块名}` 下，禁止在根包平铺。
 4. **多租户**：查询需按租户隔离；异步 / 定时任务手动管理 `BaseContext` 的 ThreadLocal。
 5. **前端后台**：Vue2 + Element-UI，默认极简、功能优先，不做视觉美化；弹窗样式用 `custom-class`。
 6. 禁止 `System.out.println`，使用 SLF4J；不提交密钥、密码等敏感信息。
@@ -52,6 +52,6 @@
 
 - QQ 交流群：**661543188**
 - 商务 / 技术支持 QQ：**747011882**
-- Issue：[gitee.com/itxinfei/reggie/issues](https://gitee.com/itxinfei/reggie/issues)
+- Issue：[gitee.com/itxinfei/xinfei/issues](https://gitee.com/itxinfei/xinfei/issues)
 
 再次感谢你的贡献，一起把项目做得更好！🎉

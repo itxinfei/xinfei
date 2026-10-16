@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>套餐管理 - 瑞吉外卖管理端</title>
+  <title>套餐管理 - 心飞外卖管理端</title>
   <!-- 引入样式 -->
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
@@ -423,7 +423,7 @@
 new Vue({
   el: '#combo-app',
   // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-  mixins: [window.ReggieListMixin],
+  mixins: [window.XinfeiListMixin],
   data() {
     return {
       input: '',
@@ -585,14 +585,14 @@ new Vue({
           this.filterOptions.names = res.data.names || []
         } else {
           this.optionsLoadError = true
-          ReggieUI.warning('加载套餐选项失败：' + (res.msg || '接口返回异常'))
+          XinfeiUI.warning('加载套餐选项失败：' + (res.msg || '接口返回异常'))
         }
       } catch (err) {
         if (err.message === 'NOTLOGIN') {
           return
         }
         this.optionsLoadError = true
-        ReggieUI.error('加载筛选选项失败，请刷新页面重试')
+        XinfeiUI.error('加载筛选选项失败，请刷新页面重试')
       } finally {
         this.optionsLoading = false
       }
@@ -679,7 +679,7 @@ new Vue({
     // filterBy 已迁移至 onCardClick
 
     // ========== 分页 ==========
-    // 修改点：分页处理统一交由 ReggieListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
+    // 修改点：分页处理统一交由 XinfeiListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
 
     // ========== 多选 ==========
     // 修改点：<crud-table> 多选事件 payload 为 { rows, ids, count }，直接取 ids
@@ -690,20 +690,20 @@ new Vue({
     // ========== 删除 ==========
     // 单行删除（确认文案含套餐名；批量删除由 crud-table 内建）
     deleteHandle(row) {
-      ReggieUI.confirm('确认删除套餐「' + row.name + '」？', '确定删除', {
+      XinfeiUI.confirm('确认删除套餐「' + row.name + '」？', '确定删除', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         deleteSetmeal(row.id).then(res => {
           if (res.code === 1) {
-            ReggieUI.success('删除成功！')
+            XinfeiUI.success('删除成功！')
             this.handleQuery()
           } else {
-            ReggieUI.error(res.msg || '操作失败')
+            XinfeiUI.error(res.msg || '操作失败')
           }
         }).catch(err => {
-          ReggieUI.error('请求失败：' + err)
+          XinfeiUI.error('请求失败：' + err)
         })
       })
     },
@@ -717,7 +717,7 @@ new Vue({
       const params = {}
       if (typeof row === 'string') {
         if (this.checkList.length === 0) {
-          ReggieUI.error('批量操作，请先勾选操作套餐！')
+          XinfeiUI.error('批量操作，请先勾选操作套餐！')
           return false
         }
         params.ids = this.checkList.join(',')
@@ -726,20 +726,20 @@ new Vue({
         params.ids = row.id
         params.status = row.status ? '0' : '1'
       }
-      ReggieUI.confirm('确认更改该套餐状态?', '提示', {
+      XinfeiUI.confirm('确认更改该套餐状态?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         setmealStatusByStatus(params).then(res => {
           if (res.code === 1) {
-            ReggieUI.success('套餐状态已经更改成功！')
+            XinfeiUI.success('套餐状态已经更改成功！')
             this.handleQuery()
           } else {
-            ReggieUI.error(res.msg || '操作失败')
+            XinfeiUI.error(res.msg || '操作失败')
           }
         }).catch(err => {
-          ReggieUI.error('请求失败：' + err)
+          XinfeiUI.error('请求失败：' + err)
         })
       })
     },
@@ -800,10 +800,10 @@ new Vue({
             }
           })
         } else {
-          ReggieUI.error(res.msg || '获取套餐信息失败')
+          XinfeiUI.error(res.msg || '获取套餐信息失败')
         }
       } catch (err) {
-        ReggieUI.error('请求失败：' + err)
+        XinfeiUI.error('请求失败：' + err)
       }
     },
 
@@ -832,12 +832,12 @@ new Vue({
 
           if (params.setmealDishes.length < 1) {
             self.submitting = false
-            ReggieUI.error('请选择菜品！')
+            XinfeiUI.error('请选择菜品！')
             return
           }
           if (!params.image) {
             self.submitting = false
-            ReggieUI.error('请上传套餐图片')
+            XinfeiUI.error('请上传套餐图片')
             return
           }
 
@@ -845,7 +845,7 @@ new Vue({
             addSetmeal(params).then(function (res) {
               self.submitting = false
               if (res.code === 1) {
-                ReggieUI.success('套餐添加成功！')
+                XinfeiUI.success('套餐添加成功！')
                 self.comboDialog.visible = false
                 self.handleQuery()
                 if (st === 'continue') {
@@ -853,25 +853,25 @@ new Vue({
                   self.comboDialog.visible = true
                 }
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(function (err) {
               self.submitting = false
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           } else {
             editSetmeal(params).then(function (res) {
               self.submitting = false
               if (res.code === 1) {
-                ReggieUI.success('套餐修改成功！')
+                XinfeiUI.success('套餐修改成功！')
                 self.comboDialog.visible = false
                 self.handleQuery()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(function (err) {
               self.submitting = false
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           }
         }
@@ -890,10 +890,10 @@ new Vue({
       if (!response || String(response.code) !== '1' || !response.data) {
         if (response && response.msg === 'NOTLOGIN') {
           // 修正：iframe 内 window.top 会被 sandbox 拦截，改用 postMessage 通知顶层跳登录
-          if (window.self !== window.top) { try { window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*'); } catch(e) {} }
+          if (window.self !== window.top) { try { window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*'); } catch(e) {} }
           else { window.location.href = '/backend/page/login/login.html' }
         } else {
-          ReggieUI.error((response && response.msg) || '图片上传失败，请重试')
+          XinfeiUI.error((response && response.msg) || '图片上传失败，请重试')
         }
         return
       }
@@ -905,12 +905,12 @@ new Vue({
       var status = err && err.status
       var msg = (err && err.message) || '图片上传失败，请重试'
       if (status === 401 || msg.indexOf('status code 401') >= 0) {
-        if (window.self !== window.top) { try { window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*'); } catch(e) {} }
+        if (window.self !== window.top) { try { window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*'); } catch(e) {} }
         else { window.location.href = '/backend/page/login/login.html' }
-        ReggieUI.error('登录已过期，请重新登录')
+        XinfeiUI.error('登录已过期，请重新登录')
         return
       }
-      ReggieUI.error(msg)
+      XinfeiUI.error(msg)
     },
 
     onChange(file) {
@@ -919,12 +919,12 @@ new Vue({
         const suffix = file.name.split('.').pop().toLowerCase()
         const size = file.size / 1024 / 1024 < 2
         if (['png', 'jpeg', 'jpg'].indexOf(suffix) < 0) {
-          ReggieUI.error('上传图片只支持 png、jpeg、jpg 格式！')
+          XinfeiUI.error('上传图片只支持 png、jpeg、jpg 格式！')
           this.$refs.comboUpload.clearFiles()
           return false
         }
         if (!size) {
-          ReggieUI.error('上传文件大小不能超过 2MB!')
+          XinfeiUI.error('上传文件大小不能超过 2MB!')
           this.$refs.comboUpload.clearFiles()
           return false
         }
@@ -953,10 +953,10 @@ new Vue({
         if (res.code === 1) {
           self.comboCategoryList = res.data
         } else {
-          ReggieUI.error(res.msg || '获取分类失败')
+          XinfeiUI.error(res.msg || '获取分类失败')
         }
       }).catch(function (err) {
-        ReggieUI.error('请求失败：' + err)
+        XinfeiUI.error('请求失败：' + err)
       })
     },
 
@@ -969,10 +969,10 @@ new Vue({
             self.getDishList(res.data[0].id)
           }
         } else {
-          ReggieUI.error(res.msg || '获取菜品分类失败')
+          XinfeiUI.error(res.msg || '获取菜品分类失败')
         }
       }).catch(function (err) {
-        ReggieUI.error('请求失败：' + err)
+        XinfeiUI.error('请求失败：' + err)
       })
     },
 
@@ -994,10 +994,10 @@ new Vue({
             }
           })
         } else {
-          ReggieUI.error(res.msg || '获取菜品列表失败')
+          XinfeiUI.error(res.msg || '获取菜品列表失败')
         }
       }).catch(function (err) {
-        ReggieUI.error('请求失败：' + err)
+        XinfeiUI.error('请求失败：' + err)
       })
     },
 
@@ -1034,10 +1034,10 @@ new Vue({
               }
             })
           } else {
-            ReggieUI.error(res.msg || '搜索失败')
+            XinfeiUI.error(res.msg || '搜索失败')
           }
         }).catch(function (err) {
-          ReggieUI.error('请求失败：' + err)
+          XinfeiUI.error('请求失败：' + err)
         })
       } else {
         if (self.dishTypeList.length > 0) {
@@ -1061,7 +1061,7 @@ new Vue({
 
     confirmDishSelection() {
       if (this.selectedDishList.length === 0) {
-        ReggieUI.warning('请至少选择一道菜品')
+        XinfeiUI.warning('请至少选择一道菜品')
         return
       }
       const existingIds = new Set(this.comboDishTable.map(function (item) { return item.dishId || item.id }))
@@ -1077,7 +1077,7 @@ new Vue({
         }
       })
       this.dishSelectDialog.visible = false
-      ReggieUI.success('添加成功！')
+      XinfeiUI.success('添加成功！')
     },
 
     removeComboDish(index) {

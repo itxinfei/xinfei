@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>优惠券管理 - 瑞吉外卖管理端</title>
+  <title>优惠券管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -770,7 +770,7 @@
               this.tableData = couponRes.data.records || []
               this.counts = couponRes.data.total
             } else {
-              ReggieUI.error(couponRes.msg || '操作失败')
+              XinfeiUI.error(couponRes.msg || '操作失败')
             }
             if (reloadStats) {
               var statsRes = results[1]
@@ -888,36 +888,36 @@
           self.$refs.couponForm.validate(function(valid) {
             if (!valid) {
               self.submitting = false
-              ReggieUI.warning('请完善表单必填项')
+              XinfeiUI.warning('请完善表单必填项')
               return
             }
             // 前端表单校验，与后端 validateCoupon 保持一致，拦截非法提交
             if (!self.formData.name || !self.formData.name.trim()) {
-              self.submitting = false; ReggieUI.error('请输入优惠券名称'); return
+              self.submitting = false; XinfeiUI.error('请输入优惠券名称'); return
             }
             if (!self.formData.type) {
-              self.submitting = false; ReggieUI.error('请选择优惠券类型'); return
+              self.submitting = false; XinfeiUI.error('请选择优惠券类型'); return
             }
             if (self.formData.type === 'FULL_REDUCTION') {
               if (!self.formData.conditionAmount || Number(self.formData.conditionAmount) <= 0) {
-                self.submitting = false; ReggieUI.error('请输入有效的条件金额'); return
+                self.submitting = false; XinfeiUI.error('请输入有效的条件金额'); return
               }
               if (!self.formData.discountAmount || Number(self.formData.discountAmount) <= 0) {
-                self.submitting = false; ReggieUI.error('请输入有效的优惠金额'); return
+                self.submitting = false; XinfeiUI.error('请输入有效的优惠金额'); return
               }
               if (Number(self.formData.discountAmount) >= Number(self.formData.conditionAmount)) {
-                self.submitting = false; ReggieUI.error('优惠金额必须小于条件金额'); return
+                self.submitting = false; XinfeiUI.error('优惠金额必须小于条件金额'); return
               }
             } else if (self.formData.type === 'DISCOUNT') {
               if (!self.formData.discountRate || Number(self.formData.discountRate) <= 0 || Number(self.formData.discountRate) >= 1) {
-                self.submitting = false; ReggieUI.error('折扣率必须在0~1之间（如0.85表示8.5折）'); return
+                self.submitting = false; XinfeiUI.error('折扣率必须在0~1之间（如0.85表示8.5折）'); return
               }
             }
             if (!self.formData.totalCount || Number(self.formData.totalCount) <= 0) {
-              self.submitting = false; ReggieUI.error('请输入发放总数'); return
+              self.submitting = false; XinfeiUI.error('请输入发放总数'); return
             }
             if (self.formData.validDays === '' || Number(self.formData.validDays) <= 0) {
-              self.submitting = false; ReggieUI.error('请输入有效天数'); return
+              self.submitting = false; XinfeiUI.error('请输入有效天数'); return
             }
             var data = {
               name: self.formData.name,
@@ -933,41 +933,41 @@
               addCouponTemplate(data).then(function(res) {
                 self.submitting = false
                 if (String(res.code) === '1') {
-                  ReggieUI.success('优惠券添加成功！')
+                  XinfeiUI.success('优惠券添加成功！')
                   self.formData.dialogVisible = false
                   self.init()
                 } else {
-                  ReggieUI.error(res.msg || '操作失败')
+                  XinfeiUI.error(res.msg || '操作失败')
                 }
-              }).catch(function(err) { self.submitting = false; ReggieUI.error('请求失败：' + err) })
+              }).catch(function(err) { self.submitting = false; XinfeiUI.error('请求失败：' + err) })
             } else {
               data.id = self.formData.id
               updateCouponTemplate(data).then(function(res) {
                 self.submitting = false
                 if (String(res.code) === '1') {
-                  ReggieUI.success('优惠券修改成功！')
+                  XinfeiUI.success('优惠券修改成功！')
                   self.formData.dialogVisible = false
                   self.init()
                 } else {
-                  ReggieUI.error(res.msg || '操作失败')
+                  XinfeiUI.error(res.msg || '操作失败')
                 }
-              }).catch(function(err) { self.submitting = false; ReggieUI.error('请求失败：' + err) })
+              }).catch(function(err) { self.submitting = false; XinfeiUI.error('请求失败：' + err) })
             }
           })
         },
         deleteHandle: function(id) {
           var self = this
-          ReggieUI.confirm('此操作将永久删除该优惠券, 是否继续?', '提示', {
+          XinfeiUI.confirm('此操作将永久删除该优惠券, 是否继续?', '提示', {
             confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
           }).then(function() {
             deleteCouponTemplate(id).then(function(res) {
               if (String(res.code) === '1') {
-                ReggieUI.success('删除成功！')
+                XinfeiUI.success('删除成功！')
                 self.init()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
-            }).catch(function(err) { ReggieUI.error('请求失败：' + err) })
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + err) })
           })
         },
         handleClose: function() {
@@ -1010,13 +1010,13 @@
           if (this.issueForm.mode === 'condition' && this.$refs.conditionForm) {
             this.$refs.conditionForm.validate(function(valid) {
               if (!valid) return
-              ReggieUI.confirm('确认发放优惠券到目标会员？发放后不可撤销。', '确认发放', {
+              XinfeiUI.confirm('确认发放优惠券到目标会员？发放后不可撤销。', '确认发放', {
                 confirmButtonText: '确认发放', cancelButtonText: '取消', type: 'warning'
               }).then(function() { self.issueCoupon() }).catch(function(err) { console.warn('[优惠券] 发放确认取消或失败:', err) })
             })
             return
           }
-          ReggieUI.confirm('确认发放优惠券到目标会员？发放后不可撤销。', '确认发放', {
+          XinfeiUI.confirm('确认发放优惠券到目标会员？发放后不可撤销。', '确认发放', {
             confirmButtonText: '确认发放', cancelButtonText: '取消', type: 'warning'
           }).then(function() { self.issueCoupon() }).catch(function(err) { console.warn('[优惠券] 发放确认取消或失败:', err) })
         },
@@ -1062,17 +1062,17 @@
                 time: timeStr
               }
               var msg = '发放完成：成功 ' + (data.successCount || 0) + '，已领过 ' + (data.alreadyIssuedCount || 0) + '，失败 ' + (data.failCount || 0)
-              ReggieUI.success(msg)
+              XinfeiUI.success(msg)
               // 刷新统计 + 模板剩余量 + 发放记录
               this.loadCouponStats().then(function(r) { if (r.code === 1) { self.stats = r.data } })
               this.init(false)
               if (this.issueTemplateId) { this.loadIssued(1) }
             } else {
-              ReggieUI.error(res.msg || '发放失败')
+              XinfeiUI.error(res.msg || '发放失败')
             }
           } catch (e) {
             console.error(e)
-            ReggieUI.error('发放请求失败：' + (e.message || '未知错误'))
+            XinfeiUI.error('发放请求失败：' + (e.message || '未知错误'))
           } finally {
             this.issuing = false
           }
@@ -1086,8 +1086,8 @@
           couponEffect(t.id).then(function(res) {
             self.effectLoading = false
             if (String(res.code) === '1') { self.effectData = res.data }
-            else { ReggieUI.error(res.msg || '加载失败') }
-          }).catch(function(e) { self.effectLoading = false; ReggieUI.error('请求失败：' + e) })
+            else { XinfeiUI.error(res.msg || '加载失败') }
+          }).catch(function(e) { self.effectLoading = false; XinfeiUI.error('请求失败：' + e) })
         },
         // ============ Tab2 发放记录 ============
         async loadAllTemplates() {
@@ -1110,7 +1110,7 @@
             } else {
               this.issueData = []
               this.issueCounts = 0
-              ReggieUI.error(res.msg || '加载失败')
+              XinfeiUI.error(res.msg || '加载失败')
             }
           } catch (e) {
             console.warn('加载发放记录失败:', e)
@@ -1223,7 +1223,7 @@
             } else {
               this.expiringData = []
               this.expiringCounts = 0
-              ReggieUI.error(res.msg || '加载失败')
+              XinfeiUI.error(res.msg || '加载失败')
             }
           } catch (e) {
             console.warn('加载明细失败:', e)
@@ -1251,7 +1251,7 @@
             ids.push(this.selectedRows[i].couponUserId)
           }
           if (ids.length === 0) {
-            ReggieUI.warning('未勾选任何优惠券')
+            XinfeiUI.warning('未勾选任何优惠券')
             return
           }
           this.extendLoading = true
@@ -1262,16 +1262,16 @@
             })
             if (String(res.code) === '1') {
               var d = res.data
-              ReggieUI.success('延期成功：' + d.successCount + '条优惠券延长' + this.extendForm.extendDays + '天')
+              XinfeiUI.success('延期成功：' + d.successCount + '条优惠券延长' + this.extendForm.extendDays + '天')
               this.extendForm.dialogVisible = false
               this.loadExpiringTable()
               this.loadExpiringStats()
             } else {
-              ReggieUI.error(res.msg || '延期失败')
+              XinfeiUI.error(res.msg || '延期失败')
             }
           } catch (e) {
             console.warn('批量延期失败:', e)
-            ReggieUI.error('操作失败，请重试')
+            XinfeiUI.error('操作失败，请重试')
           } finally {
             this.extendLoading = false
           }

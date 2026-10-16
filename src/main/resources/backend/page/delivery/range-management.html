@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>配送范围管理 - 瑞吉外卖管理端</title>
+  <title>配送范围管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
     <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
 <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
@@ -635,7 +635,7 @@
         },
         async handleRealign() {
           try {
-            await ReggieUI.confirm('将把当前门店的圆形配送范围圆心更新为门店坐标，是否继续？', '圆心对齐门店', {
+            await XinfeiUI.confirm('将把当前门店的圆形配送范围圆心更新为门店坐标，是否继续？', '圆心对齐门店', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -643,14 +643,14 @@
 
             const res = await realignRangeCenter()
             if (res.code === 1) {
-              ReggieUI.success(`已对齐 ${res.data} 条规则`)
+              XinfeiUI.success(`已对齐 ${res.data} 条规则`)
               this.fetchData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (err) {
             if (err === 'cancel') return
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }
         },
         async fetchData() {
@@ -661,7 +661,7 @@
               this.allData = res.data || []
             }
           } catch (err) {
-            ReggieUI.error('获取数据失败')
+            XinfeiUI.error('获取数据失败')
           } finally {
             this.loading = false
           }
@@ -702,7 +702,7 @@
         async handleToggleStatus(row) {
           // 修改点：启用/禁用属高危操作，补二次确认（对齐 handleDelete 确认模式）
           try {
-            await ReggieUI.confirm(row.status === 1 ? '确定要禁用该配送范围规则吗？' : '确定要启用该配送范围规则吗？', '提示', {
+            await XinfeiUI.confirm(row.status === 1 ? '确定要禁用该配送范围规则吗？' : '确定要启用该配送范围规则吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -714,13 +714,13 @@
             const newStatus = row.status === 1 ? 0 : 1
             const res = await updateRangeRule({ ...row, status: newStatus })
             if (res.code === 1) {
-              ReggieUI.success(newStatus === 1 ? '已启用' : '已禁用')
+              XinfeiUI.success(newStatus === 1 ? '已启用' : '已禁用')
               this.fetchData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }
         },
         // 批量删除：顺序循环单删接口，汇总成功/失败
@@ -729,7 +729,7 @@
         },
         async handleDelete(row) {
           try {
-            await ReggieUI.confirm('确定要删除该配送范围规则吗？', '提示', {
+            await XinfeiUI.confirm('确定要删除该配送范围规则吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -737,15 +737,15 @@
 
             const res = await deleteRangeRule(row.id)
             if (res.code === 1) {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               this.fetchData()
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[range-management] 删除失败:', err)
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         },
         async handleSubmit() {
@@ -753,20 +753,20 @@
           const valid = await new Promise(function(resolve) {
             self.$refs.ruleForm.validate(function(v) { resolve(v) })
           })
-          if (!valid) { ReggieUI.warning('请完善表单必填项'); return }
+          if (!valid) { XinfeiUI.warning('请完善表单必填项'); return }
 
           self.submitLoading = true
           const apiCall = self.formData.id ? updateRangeRule(self.formData) : saveRangeRule(self.formData)
           apiCall.then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success(self.formData.id ? '更新成功' : '新增成功')
+              XinfeiUI.success(self.formData.id ? '更新成功' : '新增成功')
               self.dialogVisible = false
               self.fetchData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }).finally(function() {
             self.submitLoading = false
           })
@@ -793,7 +793,7 @@
               this.feeSteps = res.data || []
             }
           } catch (err) {
-            ReggieUI.error('获取阶梯规则失败')
+            XinfeiUI.error('获取阶梯规则失败')
           }
         },
         handleAddFeeStep() {
@@ -822,7 +822,7 @@
         },
         async handleDeleteFeeStep(row) {
           try {
-            await ReggieUI.confirm('确定要删除该阶梯规则吗？', '提示', {
+            await XinfeiUI.confirm('确定要删除该阶梯规则吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -830,15 +830,15 @@
             
             const res = await deleteFeeStep(row.id)
             if (res.code === 1) {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               await this.fetchFeeSteps()
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[range-management] 删除阶梯规则失败:', err)
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         },
         async handleFeeStepSubmit() {
@@ -846,20 +846,20 @@
           const valid = await new Promise(function(resolve) {
             self.$refs.feeStepFormRef.validate(function(v) { resolve(v) })
           })
-          if (!valid) { ReggieUI.warning('请完善表单必填项'); return }
+          if (!valid) { XinfeiUI.warning('请完善表单必填项'); return }
 
           self.submitLoading = true
           const apiCall = self.feeStepForm.id ? updateFeeStep(self.feeStepForm) : saveFeeStep(self.feeStepForm)
           apiCall.then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success(self.feeStepForm.id ? '更新成功' : '新增成功')
+              XinfeiUI.success(self.feeStepForm.id ? '更新成功' : '新增成功')
               self.feeStepEditVisible = false
               self.fetchFeeSteps()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }).finally(function() {
             self.submitLoading = false
           })

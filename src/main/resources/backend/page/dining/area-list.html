@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>区域管理 - 瑞吉外卖管理端</title>
+  <title>区域管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -101,7 +101,7 @@
       new Vue({
         el: '#area-app',
         // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-        mixins: [window.ReggieListMixin],
+        mixins: [window.XinfeiListMixin],
       data() {
         return {
           loading: false,
@@ -184,7 +184,7 @@
               this.filterOptions.names = res.data.names || []
             } else {
               this.optionsLoadError = true
-              ReggieUI.warning('加载区域选项失败：' + (res.msg || '接口返回异常'))
+              XinfeiUI.warning('加载区域选项失败：' + (res.msg || '接口返回异常'))
             }
           } catch (err) {
             // 修改点：NOTLOGIN 错误已在全局拦截器处理（跳转登录页），无需重复提示
@@ -192,7 +192,7 @@
               return
             }
             this.optionsLoadError = true
-            ReggieUI.error('加载筛选选项失败，请刷新页面重试')
+            XinfeiUI.error('加载筛选选项失败，请刷新页面重试')
           } finally {
             this.optionsLoading = false
           }
@@ -215,7 +215,7 @@
             this.tableData = areaRes.data.records || []
             this.counts = areaRes.data.total
           } else {
-            ReggieUI.error(areaRes.msg || '操作失败')
+            XinfeiUI.error(areaRes.msg || '操作失败')
           }
 
           if (reloadStats) {
@@ -305,7 +305,7 @@
               self.$refs.form.validate(function(valid) { valid ? resolve() : reject() })
             })
           } catch (e) {
-            ReggieUI.warning('请完善表单必填项')
+            XinfeiUI.warning('请完善表单必填项')
             return
           }
           self.submitting = true
@@ -313,46 +313,46 @@
             addArea({ name: this.form.name, sort: this.form.sort }).then(res => {
               self.submitting = false
               if (res.code === 1) {
-                ReggieUI.success('区域添加成功！')
+                XinfeiUI.success('区域添加成功！')
                 this.dialog.visible = false
                 this.handleQuery()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(err => {
               self.submitting = false
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           } else {
             updateArea({ id: this.form.id, name: this.form.name, sort: this.form.sort }).then(res => {
               self.submitting = false
               if (res.code === 1) {
-                ReggieUI.success('区域修改成功！')
+                XinfeiUI.success('区域修改成功！')
                 this.dialog.visible = false
                 this.handleQuery()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(err => {
               self.submitting = false
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           }
         },
         deleteHandle(id) {
-          ReggieUI.confirm('确认删除该区域, 是否继续?', '确定删除', {
+          XinfeiUI.confirm('确认删除该区域, 是否继续?', '确定删除', {
             confirmButtonText: '确定',
             cancelButtonText: '取消'
           }).then(() => {
             deleteArea(id).then(res => {
               if (res.code === 1) {
-                ReggieUI.success('删除成功！')
+                XinfeiUI.success('删除成功！')
                 this.handleQuery()
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             }).catch(err => {
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             })
           }).catch(() => {})
         },
@@ -363,7 +363,7 @@
         onBatchDeleted() {
           this.fetchData(true)
         },
-        // 修改点：分页处理统一交由 ReggieListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
+        // 修改点：分页处理统一交由 XinfeiListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
       }
     })
   </script>

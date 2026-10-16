@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>未接单监控大屏 - 瑞吉外卖管理端</title>
+  <title>未接单监控大屏 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -262,32 +262,32 @@
           this.$set(o, '_confirming', true)
           confirmOrderApi({ id: o.id }).then(function (res) {
             if (res && res.code === 1) {
-              ReggieUI.success('接单成功')
+              XinfeiUI.success('接单成功')
               self.loadData()
             } else {
-              ReggieUI.error((res && res.msg) || '接单失败')
+              XinfeiUI.error((res && res.msg) || '接单失败')
             }
           }).catch(function (err) {
-            ReggieUI.error('接单请求失败')
+            XinfeiUI.error('接单请求失败')
             console.warn('[order-monitor] 接单失败:', err)
           }).finally(function () { self.$set(o, '_confirming', false) })
         },
         rejectOne: function (o) {
           if (o._rejecting) return
           var self = this
-          ReggieUI.confirm('确认拒绝订单 #' + this.tail(o.orderNo) + '？拒绝后不可恢复。', '拒绝确认', {
+          XinfeiUI.confirm('确认拒绝订单 #' + this.tail(o.orderNo) + '？拒绝后不可恢复。', '拒绝确认', {
             confirmButtonText: '确认拒绝', cancelButtonText: '取消', type: 'warning'
           }).then(function () {
             self.$set(o, '_rejecting', true)
             rejectOrderApi({ id: o.id }).then(function (res) {
               if (res && res.code === 1) {
-                ReggieUI.success('已拒绝')
+                XinfeiUI.success('已拒绝')
                 self.loadData()
               } else {
-                ReggieUI.error((res && res.msg) || '拒绝失败')
+                XinfeiUI.error((res && res.msg) || '拒绝失败')
               }
             }).catch(function (err) {
-              ReggieUI.error('拒绝请求失败')
+              XinfeiUI.error('拒绝请求失败')
               console.warn('[order-monitor] 拒绝失败:', err)
             }).finally(function () { self.$set(o, '_rejecting', false) })
           }).catch(function () { /* 用户取消 */ })

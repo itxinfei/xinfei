@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>打印记录 - 瑞吉外卖管理端</title>
+  <title>打印记录 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -166,7 +166,7 @@
   <script>
     new Vue({
       el: '#printer-task-app',
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data() {
         return {
           loading: false,
@@ -245,7 +245,7 @@
               this.tableData = res.data.records || []
               this.counts = res.data.total
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
             if (reloadStats) {
               const statsRes = results[1]
@@ -256,7 +256,7 @@
           } catch (err) {
             // NOTLOGIN 已由全局拦截器跳转登录页，不重复提示
             if (err && err.message === 'NOTLOGIN') return
-            ReggieUI.error('加载失败：' + (err.message || err))
+            XinfeiUI.error('加载失败：' + (err.message || err))
           } finally {
             this.loading = false
           }
@@ -323,7 +323,7 @@
             if (res && String(res.code) === '1' && res.data) {
               window.PrintUtil.printText(res.data, '补打小票 ' + row.orderId)
             } else {
-              ReggieUI.error((res && res.msg) || '补打失败')
+              XinfeiUI.error((res && res.msg) || '补打失败')
             }
           }).catch(function() {})
         },

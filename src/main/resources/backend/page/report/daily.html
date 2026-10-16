@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>营业日报 - 瑞吉外卖管理端</title>
+  <title>营业日报 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -558,7 +558,7 @@
         // 加载日报数据 + 趋势图
         async loadData() {
           if (!this.queryDate || this.queryDate.length < 2) {
-            ReggieUI.warning('请选择日期范围')
+            XinfeiUI.warning('请选择日期范围')
             return
           }
           const [startDate, endDate] = this.queryDate
@@ -569,7 +569,7 @@
             if (String(dailyRes.code) === '1') {
               this.dailyData = dailyRes.data || {}
             } else {
-              ReggieUI.notify({
+              XinfeiUI.notify({
                 title: '日报加载失败',
                 message: dailyRes.msg || '无法获取日报数据，请重试',
                 type: 'error',
@@ -625,7 +625,7 @@
               this.renderCategoryChart(null)
             }
           } catch (err) {
-            ReggieUI.notify({
+            XinfeiUI.notify({
               title: '请求失败',
               message: err.message || String(err),
               type: 'error',
@@ -816,7 +816,7 @@
           // 导出期间防重复点击
           if (this.exporting) return
           if (!this.queryDate || this.queryDate.length < 2) {
-            ReggieUI.warning('请先选择日期范围')
+            XinfeiUI.warning('请先选择日期范围')
             return
           }
           const [startDate, endDate] = this.queryDate
@@ -864,7 +864,7 @@
             this.recordsExpanded = true
 
             // 右上角富文本通知
-            ReggieUI.notify({
+            XinfeiUI.notify({
               title: '导出成功',
               dangerouslyUseHTMLString: true,
               message: '<div style="line-height:1.8;">'
@@ -894,7 +894,7 @@
             this.recordsExpanded = true
 
             // 右上角错误通知
-            ReggieUI.notify({
+            XinfeiUI.notify({
               title: '导出失败',
               dangerouslyUseHTMLString: true,
               message: '<div style="line-height:1.8;">'
@@ -918,7 +918,7 @@
         // 重新下载
         reDownload(record) {
           if (!record.blob) {
-            ReggieUI.warning('文件数据已过期，请重新导出')
+            XinfeiUI.warning('文件数据已过期，请重新导出')
             return
           }
           try {
@@ -933,15 +933,15 @@
               document.body.removeChild(a)
               window.URL.revokeObjectURL(url)
             }, 200)
-            ReggieUI.success('正在下载：' + record.fileName)
+            XinfeiUI.success('正在下载：' + record.fileName)
           } catch (err) {
-            ReggieUI.error('下载失败：' + err.message)
+            XinfeiUI.error('下载失败：' + err.message)
           }
         },
 
         // 删除导出记录
         deleteRecord(index) {
-          ReggieUI.confirm('确认删除该导出记录？', '提示', {
+          XinfeiUI.confirm('确认删除该导出记录？', '提示', {
             confirmButtonText: '删除',
             cancelButtonText: '取消',
             type: 'warning'
@@ -955,7 +955,7 @@
               } catch (e) { /* ignore */ }
             }
             this.exportRecords.splice(index, 1)
-            ReggieUI.success('记录已删除')
+            XinfeiUI.success('记录已删除')
           }).catch(() => {
             // 用户取消，不做处理
           })

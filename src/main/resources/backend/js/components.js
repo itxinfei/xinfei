@@ -24,7 +24,7 @@ document.write('<script src="/shared/js/img-path.js?v=20260924"><\/script>');
  *   - 保留 window.renderStatCards() / window.renderTableBar() 旧版函数
  *   - 所有新组件通过 Vue.component() 注册，不影响已有页面
  *
- * @author Reggie Team
+ * @author Xinfei Team
  * @since 2025-07-11
  */
 
@@ -229,7 +229,7 @@ Vue.component('stat-cards', {
 // ============================================================
 Vue.component('table-bar', {
   // 组件标志：供 crud-table 自动查找“与我配对”的操作条（经 $options 读取）
-  _reggieBar: true,
+  _xinfeiBar: true,
   props: {
     /**
      * 搜索项配置数组
@@ -895,14 +895,14 @@ Vue.component('crud-table', {
     // 监听请求层发出的列表状态事件：失败时改显失败态，避免"本来就没数据"的误导
     this._onListFail = function () { self.listFailed = true }
     this._onListOk = function () { self.listFailed = false }
-    window.addEventListener('reggie:list-fail', this._onListFail)
-    window.addEventListener('reggie:list-ok', this._onListOk)
+    window.addEventListener('xinfei:list-fail', this._onListFail)
+    window.addEventListener('xinfei:list-ok', this._onListOk)
     // 把批量删除按钮注入配对 table-bar 的操作按钮组
     this.connectBatchBar()
   },
   beforeDestroy: function () {
-    window.removeEventListener('reggie:list-fail', this._onListFail)
-    window.removeEventListener('reggie:list-ok', this._onListOk)
+    window.removeEventListener('xinfei:list-fail', this._onListFail)
+    window.removeEventListener('xinfei:list-ok', this._onListOk)
     // 销毁前从操作条移除注入按钮，避免残留（如页面被反复重建）
     if (this.partnerBar && this._batchBtn) {
       this.partnerBar.removeAction(this._batchBtn.key)
@@ -1001,7 +1001,7 @@ Vue.component('crud-table', {
         var start = myIdx >= 0 ? myIdx - 1 : kids.length - 1
         for (var j = start; j >= 0; j--) {
           var c = kids[j]
-          if (c && c.$options && c.$options._reggieBar === true) return c
+          if (c && c.$options && c.$options._xinfeiBar === true) return c
         }
         ancestor = ancestor.$parent
       }
@@ -1039,7 +1039,7 @@ Vue.component('crud-table', {
       var self = this
       var rows = self.selectedRows
       if (!rows || rows.length === 0) {
-        ReggieUI.warning('请先勾选要删除的记录')
+        XinfeiUI.warning('请先勾选要删除的记录')
         return
       }
       var idKey = self.rowIdKey || 'id'
@@ -1048,7 +1048,7 @@ Vue.component('crud-table', {
       var msg = typeof self.batchDeleteConfirm === 'function'
         ? self.batchDeleteConfirm(count, rows)
         : (self.batchDeleteConfirm || ('确认删除选中的 ' + count + ' 条记录？此操作不可恢复。'))
-      ReggieUI.confirm(msg, self.batchDeleteTitle, { type: 'warning' })
+      XinfeiUI.confirm(msg, self.batchDeleteTitle, { type: 'warning' })
         .then(function () {
           self.batchDeleting = true
           self.syncBatchBtn()
@@ -1059,16 +1059,16 @@ Vue.component('crud-table', {
           // ① 循环单删 helper 的汇总结果：全失败保留勾选不刷新，部分失败仍刷新已删行
           if (res && res.__batch) {
             if (res.succeedCount === 0) {
-              ReggieUI.error(res.message)
+              XinfeiUI.error(res.message)
               return
             }
-            ReggieUI[res.failedCount > 0 ? 'warning' : 'success'](res.message)
+            XinfeiUI[res.failedCount > 0 ? 'warning' : 'success'](res.message)
           } else if (res && res.code != null && String(res.code) !== '1') {
             // ② 页面直接返回后端 R 对象：code 非 1 视为失败
-            ReggieUI.error(res.msg || res.message || '删除失败')
+            XinfeiUI.error(res.msg || res.message || '删除失败')
             return
           } else {
-            ReggieUI.success('删除成功')
+            XinfeiUI.success('删除成功')
           }
           self.clearSelection()
           self.$emit('batch-deleted', { count: count })
@@ -1077,7 +1077,7 @@ Vue.component('crud-table', {
           // 用户点取消/关闭遮罩：静默
           if (err === 'cancel' || err === 'close') return
           var m = (err && err.message) ? err.message : (err || '请稍后重试')
-          ReggieUI.error('删除失败：' + m)
+          XinfeiUI.error('删除失败：' + m)
         })
         .finally(function () { self.batchDeleting = false; self.syncBatchBtn() })
     },
@@ -1552,13 +1552,13 @@ window.RgFormat = {
   formatDateTime: function (val) {
     return val ? String(val) : '-'
   },
-  /** 状态中文：mapName 对应 ReggieStatus.register 注册的名称 */
+  /** 状态中文：mapName 对应 XinfeiStatus.register 注册的名称 */
   rgStatusText: function (mapName, status) {
-    return window.ReggieStatus ? window.ReggieStatus.text(mapName, status) : ''
+    return window.XinfeiStatus ? window.XinfeiStatus.text(mapName, status) : ''
   },
   /** 状态标签类型：返回 Element tag type（warning/primary/...） */
   rgStatusTag: function (mapName, status) {
-    return window.ReggieStatus ? window.ReggieStatus.tag(mapName, status) : 'info'
+    return window.XinfeiStatus ? window.XinfeiStatus.tag(mapName, status) : 'info'
   },
   /** 构造 el-image 的 preview-src-list（避免各页重复拼接数组） */
   rgPreview: function (url) {
@@ -1584,10 +1584,10 @@ Vue.mixin({
 // ============================================================
 // 状态枚举注册中心：消除各页重复定义 statusMap / typeMap 的问题
 // 用法（页面内）：
-//   window.ReggieStatus.register('order', textMap, tagMap)
+//   window.XinfeiStatus.register('order', textMap, tagMap)
 //   <el-tag :type="rgStatusTag('order', row.status)">{{ rgStatusText('order', row.status) }}</el-tag>
 // ============================================================
-window.ReggieStatus = {
+window.XinfeiStatus = {
   _maps: {},
   /** 注册某业务的状态映射，textMap: {status: 中文}, tagMap: {status: tagType} */
   register: function (name, textMap, tagMap) {
@@ -1605,7 +1605,7 @@ window.ReggieStatus = {
   }
 }
 // 预置：订单状态（与 order/list.html 既有映射一致，供订单/支付/配送页复用）
-window.ReggieStatus.register('order',
+window.XinfeiStatus.register('order',
   { 1: '待付款', 2: '待接单', 3: '配送中', 4: '已完成', 5: '已取消', 6: '已退款' },
   { 1: 'warning', 2: 'warning', 3: 'primary', 4: 'success', 5: 'info', 6: 'danger' }
 )
@@ -1614,10 +1614,10 @@ window.ReggieStatus.register('order',
 // ============================================================
 // 列表页通用 Mixin：消除分页样板（page/pageSize/counts + 翻页/改大小处理）
 // 用法（页面内）：
-//   new Vue({ mixins: [window.ReggieListMixin], methods: { fetchData() { /* 读 this.page/this.pageSize 请求 */ } } })
+//   new Vue({ mixins: [window.XinfeiListMixin], methods: { fetchData() { /* 读 this.page/this.pageSize 请求 */ } } })
 //   <crud-table ... @page-change="onPageChange" @size-change="onSizeChange" />
 // ============================================================
-window.ReggieListMixin = {
+window.XinfeiListMixin = {
   data: function () {
     return {
       page: 1,
@@ -1807,7 +1807,7 @@ Vue.component('rg-image-uploader', {
     },
     notifyNotLogin: function () {
       if (window.self !== window.top) {
-        try { window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*') } catch (e) {}
+        try { window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*') } catch (e) {}
       } else {
         window.location.href = '/backend/page/login/login.html'
       }

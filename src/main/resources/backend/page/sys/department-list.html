@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>部门管理 - 瑞吉外卖管理端</title>
+  <title>部门管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -171,11 +171,11 @@
               this.tableData = res.data.records || []
               this.counts = res.data.total || 0
             } else {
-              ReggieUI.error((res && res.msg) || '加载部门列表失败')
+              XinfeiUI.error((res && res.msg) || '加载部门列表失败')
             }
           } catch (err) {
             if (err.message !== 'NOTLOGIN') {
-              ReggieUI.error('加载部门列表失败，请刷新重试')
+              XinfeiUI.error('加载部门列表失败，请刷新重试')
             }
           } finally {
             this.loading = false
@@ -244,15 +244,15 @@
                 : sysApi.departmentAdd(payload)
               const res = await api
               if (res && res.code === 1) {
-                ReggieUI.success(res.data || (self.formData.id ? '部门更新成功' : '部门创建成功'))
+                XinfeiUI.success(res.data || (self.formData.id ? '部门更新成功' : '部门创建成功'))
                 self.formData.dialogVisible = false
                 self.loadData()
               } else {
-                ReggieUI.error((res && res.msg) || '保存失败')
+                XinfeiUI.error((res && res.msg) || '保存失败')
               }
             } catch (err) {
               // request.js 对业务失败 reject(new Error(msg))；NOTLOGIN 由拦截器处理
-              if (err.message !== 'NOTLOGIN') { ReggieUI.error(err.message || '保存失败，请重试') }
+              if (err.message !== 'NOTLOGIN') { XinfeiUI.error(err.message || '保存失败，请重试') }
             } finally {
               self.submitting = false
             }
@@ -260,17 +260,17 @@
         },
         deleteHandle(id) {
           const self = this
-          ReggieUI.confirm('确定删除该部门吗？部门下仍有员工时将无法删除。', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确定删除该部门吗？部门下仍有员工时将无法删除。', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               sysApi.departmentDelete(id).then(function(res) {
                 if (res && res.code === 1) {
-                  ReggieUI.success('删除成功')
+                  XinfeiUI.success('删除成功')
                   self.loadData()
                 }
               })
             }).catch(function(err) {
               // request.js 对业务失败 reject(new Error(msg))，需明确提示；用户点取消 reject('cancel')，静默
-              if (err instanceof Error) { ReggieUI.error(err.message || '删除失败') }
+              if (err instanceof Error) { XinfeiUI.error(err.message || '删除失败') }
             })
         }
       }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支付管理 - 瑞吉外卖管理端</title>
+  <title>支付管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -388,16 +388,16 @@
           const self = this
           this.$refs.refundFormRef.validate(function(valid) {
             if (!valid) { return }
-            if (self.refundForm.amount > self.refundForm.maxAmount) { ReggieUI.error('退款金额不能超过支付金额'); return }
-            ReggieUI.confirm('确认退款 ¥' + self.refundForm.amount + '?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+            if (self.refundForm.amount > self.refundForm.maxAmount) { XinfeiUI.error('退款金额不能超过支付金额'); return }
+            XinfeiUI.confirm('确认退款 ¥' + self.refundForm.amount + '?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
               .then(function() {
                 self.submitting = true
                 // 修改点：id → paymentOrderId，与后端 RefundRequestDTO 字段对齐
                 paymentRefund({ paymentOrderId: self.refundForm.id, amount: self.refundForm.amount, reason: self.refundForm.reason }).then(function(res) {
                   self.submitting = false
-                  if (res && res.code === 1) { ReggieUI.success('退款成功！'); self.refundVisible = false; self.init() }
-                  else { ReggieUI.error(res ? res.msg : '退款失败') }
-                }).catch(function(err) { self.submitting = false; ReggieUI.error('请求失败：' + (err.message || err)) })
+                  if (res && res.code === 1) { XinfeiUI.success('退款成功！'); self.refundVisible = false; self.init() }
+                  else { XinfeiUI.error(res ? res.msg : '退款失败') }
+                }).catch(function(err) { self.submitting = false; XinfeiUI.error('请求失败：' + (err.message || err)) })
               }).catch(function() { /* user cancelled */ })
           })
         }

@@ -21,10 +21,10 @@ function goLogin(){
 // 已评价商品集合（供订单列表/详情判断「去评价」入口是否还应显示）。
 // key 规则与 my-evaluations.html 一致：orderId_dishId（菜品）、orderId_s_setmealId（套餐）。
 // 一次拉取后在本页缓存；评价提交后其他页面重新加载时自然取到最新集合。
-var reggieEvalKeysPromise = null;
+var xinfeiEvalKeysPromise = null;
 function loadEvalKeys(force) {
-    if (!force && reggieEvalKeysPromise) return reggieEvalKeysPromise;
-    reggieEvalKeysPromise = new Promise(function (resolve) {
+    if (!force && xinfeiEvalKeysPromise) return xinfeiEvalKeysPromise;
+    xinfeiEvalKeysPromise = new Promise(function (resolve) {
         if (typeof $axios !== 'function') { resolve(new Set()); return; }
         // 后端 /api/dish-evaluation/user/my 的 pageSize 有 @Max(50) 校验，超了会 400 → 兜底空集合，
         // 「已评价」标记恒为空。取上限 50（最近 50 条评价足以覆盖列表页标记需求）。
@@ -45,7 +45,7 @@ function loadEvalKeys(force) {
             })
             .catch(function () { resolve(new Set()); });
     });
-    return reggieEvalKeysPromise;
+    return xinfeiEvalKeysPromise;
 }
 
 // 图片加载失败统一兜底：dataset 标记保证只兜底一次，
@@ -111,8 +111,8 @@ function restoreUserSession() {
         .catch(function () { return false; });
 }
 
-function installReggieVueHelpers(){
-    if (!window.Vue || window.Vue.__reggieHelpersInstalled) return;
+function installXinfeiVueHelpers(){
+    if (!window.Vue || window.Vue.__xinfeiHelpersInstalled) return;
     window.Vue.mixin({ methods: {
         imgPath: function (p) { return imgPath(p); },
         imgFallback: imgFallback,
@@ -130,10 +130,10 @@ function installReggieVueHelpers(){
             });
         }
     } });
-    window.Vue.__reggieHelpersInstalled = true;
+    window.Vue.__xinfeiHelpersInstalled = true;
 }
 // common.js 在 vue.js 之后加载的页面：到此 Vue 已就绪，立即安装
-installReggieVueHelpers();
+installXinfeiVueHelpers();
 
 // 将url传参转换为对象（支持中文参数自动解码）
 function parseUrl(url) {
@@ -178,7 +178,7 @@ function getFinishTime() {
 // 现统一由后端 /api/meta/enums 下发；接口不可用时回退到下方兜底常量（值与后端一致）。
 var ENUM_DICT = {};
 
-// 订单状态兜底（严格对齐 com.reggie.enums.OrderStatus：1 基）
+// 订单状态兜底（严格对齐 com.xinfei.enums.OrderStatus：1 基）
 var ORDER_STATUS_FALLBACK = {
     '1': '待付款', '2': '待接单', '3': '配送中',
     '4': '已完成', '5': '已取消', '6': '已退款', '7': '已分账'

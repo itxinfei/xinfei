@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>行政区划管理 - 瑞吉外卖管理端</title>
+  <title>行政区划管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
     <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -123,7 +123,7 @@
     new Vue({
       el: '#region-app',
       // 修改点：引入列表页通用 Mixin，自动获得 page/pageSize/counts/loading 与翻页处理
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data() {
         return {
           input: { name: '', level: null },
@@ -142,7 +142,7 @@
           optionsLoadError: false,
           tableData: [],
           parentOptions: [],
-          // 修改点：分页相关字段已改由 ReggieListMixin 提供，此处仅保留业务状态
+          // 修改点：分页相关字段已改由 XinfeiListMixin 提供，此处仅保留业务状态
           submitLoading: false,
           formData: {
             title: '', id: undefined, name: '', code: '', level: 1,
@@ -213,7 +213,7 @@
               this.filterOptions.names = res.data.names || []
             } else {
               this.optionsLoadError = true
-              ReggieUI.warning('加载地区选项失败：' + (res.msg || '接口返回异常'))
+              XinfeiUI.warning('加载地区选项失败：' + (res.msg || '接口返回异常'))
             }
           } catch (err) {
             // 修改点：NOTLOGIN 错误已在全局拦截器处理（跳转登录页），无需重复提示
@@ -221,7 +221,7 @@
               return
             }
             this.optionsLoadError = true
-            ReggieUI.error('加载筛选选项失败，请刷新页面重试')
+            XinfeiUI.error('加载筛选选项失败，请刷新页面重试')
           } finally {
             this.optionsLoading = false
           }
@@ -232,7 +232,7 @@
                 this.loadFilterOptions()
             }
         },
-        // 修改点：原 init() 重命名为 fetchData()，由 ReggieListMixin 的翻页/改大小自动调用
+        // 修改点：原 init() 重命名为 fetchData()，由 XinfeiListMixin 的翻页/改大小自动调用
         // reloadStats=true 时并行重载统计卡片（初始进入/增删改后）；搜索/卡片筛选时传 false 不重算
         doBatchDelete(payload) {
           return RgBatchDeleteByOne({ ids: payload.ids, label: '地区', request: deleteRegion })
@@ -253,7 +253,7 @@
               this.counts = res.data.total || 0
             } else {
               // 修改点：此前 else 静默，列表加载失败无任何反馈
-              ReggieUI.error((res && res.msg) || '获取地区列表失败')
+              XinfeiUI.error((res && res.msg) || '获取地区列表失败')
             }
             if (reloadStats) {
               var statsRes = results[1]
@@ -261,12 +261,12 @@
                 this.stats = statsRes.data
               } else if (statsRes) {
                 // 修改点：统计加载失败给轻提示（列表仍可用）
-                ReggieUI.warning((statsRes.msg) || '获取地区统计失败')
+                XinfeiUI.warning((statsRes.msg) || '获取地区统计失败')
               }
             }
           } catch (err) {
             // 修改点：此前仅 console.warn，无任何用户提示
-            ReggieUI.error('获取地区列表失败：' + (err || '网络异常'))
+            XinfeiUI.error('获取地区列表失败：' + (err || '网络异常'))
           } finally {
             this.loading = false
           }
@@ -348,7 +348,7 @@
             self.$refs.regionForm.validate(function(valid) { resolve(valid) })
           })
           if (!passed) {
-            ReggieUI.warning('请完善表单必填项')
+            XinfeiUI.warning('请完善表单必填项')
             return
           }
           const data = {
@@ -368,11 +368,11 @@
               res = await addRegion(data)
             }
             if (res.code === 1) {
-              ReggieUI.success(self.formData.id ? '修改成功' : '新增成功')
+              XinfeiUI.success(self.formData.id ? '修改成功' : '新增成功')
               self.formData.dialogVisible = false
               self.fetchData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } finally {
             self.submitLoading = false
@@ -380,23 +380,23 @@
         },
 
         deleteHandle(id) {
-          ReggieUI.confirm('确认删除该地区吗？如有子级则无法删除。', '提示', { type: 'warning' }).then(async () => {
+          XinfeiUI.confirm('确认删除该地区吗？如有子级则无法删除。', '提示', { type: 'warning' }).then(async () => {
             try {
               const res = await deleteRegion(id)
               if (res.code === 1) {
-                ReggieUI.success('删除成功')
+                XinfeiUI.success('删除成功')
                 this.fetchData()
               } else {
-                ReggieUI.error(res.msg || '删除失败')
+                XinfeiUI.error(res.msg || '删除失败')
               }
             } catch (err) {
               // code!=1 时 request 拦截器会 reject，需在此单独提示，否则落入外层仅 console.warn
-              ReggieUI.error((err && err.message) || '删除失败')
+              XinfeiUI.error((err && err.message) || '删除失败')
             }
           }).catch((e) => {
             // 外层仅处理用户取消/关闭，其余异常兜底提示
             if (e === 'cancel' || e === 'close') return
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           })
         }
       }

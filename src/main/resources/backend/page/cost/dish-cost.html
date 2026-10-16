@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>菜品成本管理 - 瑞吉外卖管理端</title>
+  <title>菜品成本管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -244,7 +244,7 @@
               this.tableData = res.data || []
             }
           } catch (err) {
-            ReggieUI.error('获取数据失败')
+            XinfeiUI.error('获取数据失败')
           } finally {
             this.loading = false
           }
@@ -291,12 +291,12 @@
         },
         async submitImport() {
           if (!this.importCsvText.trim()) {
-            ReggieUI.warning('请粘贴 CSV 数据');
+            XinfeiUI.warning('请粘贴 CSV 数据');
             return;
           }
           var parsed = this.parseCsvToRows(this.importCsvText);
           if (parsed.length === 0) {
-            ReggieUI.warning('未解析到有效数据行');
+            XinfeiUI.warning('未解析到有效数据行');
             return;
           }
           // 将 CSV 字段映射到 DishCost 对象
@@ -312,21 +312,21 @@
           }).filter(function(d) { return !!d.dishName; });
 
           if (dishCosts.length === 0) {
-            ReggieUI.warning('未解析到有效菜品数据，请检查 CSV 格式');
+            XinfeiUI.warning('未解析到有效菜品数据，请检查 CSV 格式');
             return;
           }
           this.importLoading = true;
           try {
             var res = await batchUpdateDishCost(dishCosts);
             if (String(res.code) === '1') {
-              ReggieUI.success('批量导入成功，共 ' + dishCosts.length + ' 条');
+              XinfeiUI.success('批量导入成功，共 ' + dishCosts.length + ' 条');
               this.importDialogVisible = false;
               this.fetchData();
             } else {
-              ReggieUI.error(res.msg || '导入失败');
+              XinfeiUI.error(res.msg || '导入失败');
             }
           } catch (e) {
-            ReggieUI.error('导入请求失败：' + (e.message || e));
+            XinfeiUI.error('导入请求失败：' + (e.message || e));
           } finally {
             this.importLoading = false;
           }
@@ -341,7 +341,7 @@
                 this.dishOptions = res.data || []
               }
             } catch (err) {
-              ReggieUI.error('搜索菜品失败')
+              XinfeiUI.error('搜索菜品失败')
             } finally {
               this.dishLoading = false
             }
@@ -399,7 +399,7 @@
         // ========== 删除 ==========
         async handleDelete(row) {
           try {
-            await ReggieUI.confirm('确定要删除该菜品成本吗？', '提示', {
+            await XinfeiUI.confirm('确定要删除该菜品成本吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
@@ -407,15 +407,15 @@
             
             const res = await deleteDishCost(row.id)
             if (res.code === 1) {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               this.fetchData()
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[dish-cost] 删除失败:', err)
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         },
         async handleSubmit() {
@@ -424,20 +424,20 @@
           const valid = await new Promise(function(resolve) {
             self.$refs.costForm.validate(function(v) { resolve(v) })
           })
-          if (!valid) { ReggieUI.warning('请完善表单必填项'); return }
+          if (!valid) { XinfeiUI.warning('请完善表单必填项'); return }
 
           self.submitLoading = true
           const apiCall = self.formData.id ? updateDishCost(self.formData) : saveDishCost(self.formData)
           apiCall.then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success(self.formData.id ? '更新成功' : '新增成功')
+              XinfeiUI.success(self.formData.id ? '更新成功' : '新增成功')
               self.dialogVisible = false
               self.fetchData()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }).finally(function() {
             self.submitLoading = false
           })
@@ -445,18 +445,18 @@
         // ========== 采购价同步 ==========
         handleSyncFromPurchase() {
           var self = this
-          ReggieUI.confirm('确认根据菜品BOM配方和原料采购价，重新计算所有菜品的食材成本？', '同步确认', { type: 'warning' }).then(function() {
+          XinfeiUI.confirm('确认根据菜品BOM配方和原料采购价，重新计算所有菜品的食材成本？', '同步确认', { type: 'warning' }).then(function() {
             self.syncLoading = true
             syncMaterialCostFromPurchase().then(function(res) {
               if (String(res.code) === '1') {
                 var count = res.data || 0
-                ReggieUI.success('同步完成，更新了 ' + count + ' 个菜品的食材成本')
+                XinfeiUI.success('同步完成，更新了 ' + count + ' 个菜品的食材成本')
                 self.fetchData()
               } else {
-                ReggieUI.error(res.msg || '同步失败')
+                XinfeiUI.error(res.msg || '同步失败')
               }
             }).catch(function() {
-              ReggieUI.error('同步失败，请重试')
+              XinfeiUI.error('同步失败，请重试')
             }).finally(function() {
               self.syncLoading = false
             })

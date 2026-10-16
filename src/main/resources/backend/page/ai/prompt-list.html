@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>提示词模板 - 瑞吉外卖管理端</title>
+  <title>提示词模板 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -215,7 +215,7 @@
   <script>
     new Vue({
       el: '#prompt-app',
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data() {
         return {
           // 字典接口失败时的本地兜底
@@ -318,7 +318,7 @@
               this.tableData = res.data.records || [];
               this.counts = Number(res.data.total) || 0;
             } else {
-              ReggieUI.error(res.msg || '加载失败');
+              XinfeiUI.error(res.msg || '加载失败');
             }
           } catch (err) {
             if (err && err.message === 'NOTLOGIN') return;
@@ -484,15 +484,15 @@
               ? await aiBackendApi.promptUpdate(payload)
               : await aiBackendApi.promptAdd(payload);
             if (String(res.code) === '1') {
-              ReggieUI.success(isEdit ? '模板修改成功' : '模板新增成功');
+              XinfeiUI.success(isEdit ? '模板修改成功' : '模板新增成功');
               this.dialogVisible = false;
               this.fetchData();
             } else {
-              ReggieUI.error(res.msg || '操作失败');
+              XinfeiUI.error(res.msg || '操作失败');
             }
           } catch (err) {
             if (err && err.message === 'NOTLOGIN') return;
-            ReggieUI.error('请求失败：' + (err && err.message ? err.message : err));
+            XinfeiUI.error('请求失败：' + (err && err.message ? err.message : err));
           } finally {
             this.submitting = false;
           }
@@ -517,29 +517,29 @@
           aiBackendApi.promptUpdate(payload).then((res) => {
             if (String(res.code) === '1') {
               this.$set(row, 'enabled', next);
-              ReggieUI.success(next ? '已启用' : '已停用');
+              XinfeiUI.success(next ? '已启用' : '已停用');
             } else {
-              ReggieUI.error(res.msg || '操作失败');
+              XinfeiUI.error(res.msg || '操作失败');
             }
           }).catch((err) => {
             if (err && err.message === 'NOTLOGIN') return;
-            ReggieUI.error('请求失败：' + (err && err.message ? err.message : err));
+            XinfeiUI.error('请求失败：' + (err && err.message ? err.message : err));
           });
         },
 
         /* ========== 重置默认 / 删除 ========== */
         onReset(row) {
-          ReggieUI.confirm('确认将「' + row.title + '」恢复为系统默认内容？当前修改会被覆盖。', '重置确认', {
+          XinfeiUI.confirm('确认将「' + row.title + '」恢复为系统默认内容？当前修改会被覆盖。', '重置确认', {
             confirmButtonText: '确定重置',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
             aiBackendApi.promptReset(row.id).then((res) => {
               if (String(res.code) === '1') {
-                ReggieUI.success('已重置为默认内容');
+                XinfeiUI.success('已重置为默认内容');
                 this.fetchData();
               } else {
-                ReggieUI.error(res.msg || '操作失败');
+                XinfeiUI.error(res.msg || '操作失败');
               }
             }).catch(this.handleRequestError);
           }).catch(() => {});
@@ -553,28 +553,28 @@
           })
         },
         onDelete(row) {
-          ReggieUI.confirm('确认删除自定义模板「' + row.title + '」？删除后该场景将回落到内置默认模板。', '删除确认', {
+          XinfeiUI.confirm('确认删除自定义模板「' + row.title + '」？删除后该场景将回落到内置默认模板。', '删除确认', {
             confirmButtonText: '确定删除',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
             aiBackendApi.promptDelete(row.id).then((res) => {
               if (String(res.code) === '1') {
-                ReggieUI.success('删除成功');
+                XinfeiUI.success('删除成功');
                 // 删空当前页时回退一页
                 if (this.tableData.length === 1 && this.page > 1) {
                   this.page = this.page - 1;
                 }
                 this.fetchData();
               } else {
-                ReggieUI.error(res.msg || '操作失败');
+                XinfeiUI.error(res.msg || '操作失败');
               }
             }).catch(this.handleRequestError);
           }).catch(() => {});
         },
         handleRequestError(err) {
           if (err && err.message === 'NOTLOGIN') return;
-          ReggieUI.error('请求失败：' + (err && err.message ? err.message : err));
+          XinfeiUI.error('请求失败：' + (err && err.message ? err.message : err));
         },
 
         /* ========== 历史版本 / 回滚（P5 运营闭环） ========== */
@@ -587,10 +587,10 @@
             if (String(res.code) === '1') {
               this.historyList = res.data || [];
               if (!this.historyList.length) {
-                ReggieUI.info('该模板暂无历史版本（每次修改/重置前会自动保存快照）');
+                XinfeiUI.info('该模板暂无历史版本（每次修改/重置前会自动保存快照）');
               }
             } else {
-              ReggieUI.error(res.msg || '加载历史失败');
+              XinfeiUI.error(res.msg || '加载历史失败');
             }
           }).catch(this.handleRequestError).finally(() => {
             this.historyLoading = false;
@@ -598,7 +598,7 @@
         },
         onRollback(h) {
           if (!this.historyRow) return;
-          ReggieUI.confirm(
+          XinfeiUI.confirm(
             '确认将「' + this.historyRow.title + '」回滚到版本 v' + h.version + '？当前内容会先自动保存为快照。',
             '回滚确认', {
               confirmButtonText: '确定回滚',
@@ -607,11 +607,11 @@
             }).then(() => {
             aiBackendApi.promptRollback(this.historyRow.id, h.id).then((res) => {
               if (String(res.code) === '1') {
-                ReggieUI.success('回滚成功');
+                XinfeiUI.success('回滚成功');
                 this.historyVisible = false;
                 this.fetchData();
               } else {
-                ReggieUI.error(res.msg || '回滚失败');
+                XinfeiUI.error(res.msg || '回滚失败');
               }
             }).catch(this.handleRequestError);
           }).catch(() => {});

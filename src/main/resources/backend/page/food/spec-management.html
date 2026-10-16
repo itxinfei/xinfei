@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>规格管理 - 瑞吉外卖</title>
+  <title>规格管理 - 心飞外卖</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926">
   <link rel="stylesheet" href="../../styles/main.css?v=20260926">
@@ -753,15 +753,15 @@
             if (isCreate) {
               saveSpecGroup(payload).then(function (res) {
                 if (res.code === 1) {
-                  ReggieUI.success('规格组已创建，可继续添加选项')
+                  XinfeiUI.success('规格组已创建，可继续添加选项')
                   done()
-                } else { ReggieUI.error(res.msg || '创建失败') }
-              }).catch(function () { ReggieUI.error('创建失败，请重试') }).finally(finish)
+                } else { XinfeiUI.error(res.msg || '创建失败') }
+              }).catch(function () { XinfeiUI.error('创建失败，请重试') }).finally(finish)
             } else {
               updateSpecGroup(payload).then(function (res) {
-                if (res.code === 1) { ReggieUI.success('规格组已更新'); done() }
-                else { ReggieUI.error(res.msg || '更新失败') }
-              }).catch(function () { ReggieUI.error('更新失败，请重试') }).finally(finish)
+                if (res.code === 1) { XinfeiUI.success('规格组已更新'); done() }
+                else { XinfeiUI.error(res.msg || '更新失败') }
+              }).catch(function () { XinfeiUI.error('更新失败，请重试') }).finally(finish)
             }
           }.bind(this))
         },
@@ -769,35 +769,35 @@
           var target = row.status
           updateSpecGroup(Object.assign({}, row, { status: target })).then(function (res) {
             if (res.code === 1) {
-              ReggieUI.success(target === 1 ? '已启用' : '已禁用')
+              XinfeiUI.success(target === 1 ? '已启用' : '已禁用')
               this.fetchGroups()
               this.fetchStatistics()
             } else {
               row.status = target === 1 ? 0 : 1
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }.bind(this)).catch(function () {
             row.status = target === 1 ? 0 : 1
-            ReggieUI.error('操作失败，请重试')
+            XinfeiUI.error('操作失败，请重试')
           })
         },
         handleDeleteGroup: function (group) {
-          ReggieUI.confirm(
+          XinfeiUI.confirm(
             '确定删除规格组「' + group.name + '」吗？该组下的所有规格选项与菜品关联将一并删除。',
             '删除规格组',
             { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' }
           ).then(function () {
             deleteSpecGroup(group.id).then(function (res) {
               if (res.code === 1) {
-                ReggieUI.success('已删除')
+                XinfeiUI.success('已删除')
                 if (this.currentGroup && this.currentGroup.id === group.id) {
                   this.currentGroup = null
                   this.optionList = []
                 }
                 this.fetchGroups()
                 this.fetchStatistics()
-              } else { ReggieUI.error(res.msg || '删除失败') }
-            }.bind(this)).catch(function () { ReggieUI.error('删除失败，请重试') })
+              } else { XinfeiUI.error(res.msg || '删除失败') }
+            }.bind(this)).catch(function () { XinfeiUI.error('删除失败，请重试') })
           }.bind(this)).catch(function (err) { console.warn('[spec-management] 删除规格组操作取消或失败:', err) })
         },
         validateGroupNameUnique: function (rule, value, callback) {
@@ -811,7 +811,7 @@
         // ===== 规格选项 CRUD =====
         openOptionDialog: function (option) {
           if (!this.currentGroup) {
-            ReggieUI.warning('请先选择左侧规格组')
+            XinfeiUI.warning('请先选择左侧规格组')
             return
           }
           this.optionDialogTitle = option ? '编辑规格选项' : '新增规格选项'
@@ -844,14 +844,14 @@
             this.submitting = true
             if (payload.id) {
               updateSpecOption(payload).then(function (res) {
-                if (res.code === 1) { ReggieUI.success('选项已更新'); done() }
-                else { ReggieUI.error(res.msg || '更新失败') }
-              }).catch(function () { ReggieUI.error('更新失败，请重试') }).finally(finish)
+                if (res.code === 1) { XinfeiUI.success('选项已更新'); done() }
+                else { XinfeiUI.error(res.msg || '更新失败') }
+              }).catch(function () { XinfeiUI.error('更新失败，请重试') }).finally(finish)
             } else {
               saveSpecOption(payload).then(function (res) {
-                if (res.code === 1) { ReggieUI.success('选项已创建'); done() }
-                else { ReggieUI.error(res.msg || '创建失败') }
-              }).catch(function () { ReggieUI.error('创建失败，请重试') }).finally(finish)
+                if (res.code === 1) { XinfeiUI.success('选项已创建'); done() }
+                else { XinfeiUI.error(res.msg || '创建失败') }
+              }).catch(function () { XinfeiUI.error('创建失败，请重试') }).finally(finish)
             }
           }.bind(this))
         },
@@ -859,31 +859,31 @@
           var target = row.status
           updateSpecOption(Object.assign({}, row, { status: target })).then(function (res) {
             if (res.code === 1) {
-              ReggieUI.success(target === 1 ? '已启用' : '已禁用')
+              XinfeiUI.success(target === 1 ? '已启用' : '已禁用')
               this.fetchOptions()
               this.fetchStatistics()
             } else {
               row.status = target === 1 ? 0 : 1
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }.bind(this)).catch(function () {
             row.status = target === 1 ? 0 : 1
-            ReggieUI.error('操作失败，请重试')
+            XinfeiUI.error('操作失败，请重试')
           })
         },
         handleDeleteOption: function (option) {
-          ReggieUI.confirm(
+          XinfeiUI.confirm(
             '确定删除选项「' + option.name + '」吗？',
             '删除选项',
             { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' }
           ).then(function () {
             deleteSpecOption(option.id).then(function (res) {
               if (res.code === 1) {
-                ReggieUI.success('已删除')
+                XinfeiUI.success('已删除')
                 this.fetchOptions()
                 this.fetchStatistics()
-              } else { ReggieUI.error(res.msg || '删除失败') }
-            }.bind(this)).catch(function () { ReggieUI.error('删除失败，请重试') })
+              } else { XinfeiUI.error(res.msg || '删除失败') }
+            }.bind(this)).catch(function () { XinfeiUI.error('删除失败，请重试') })
           }.bind(this)).catch(function (err) { console.warn('[spec-management] 删除规格选项操作取消或失败:', err) })
         },
         validateOptionNameUnique: function (rule, value, callback) {

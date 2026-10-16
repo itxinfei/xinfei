@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>平台订单 - 瑞吉外卖管理端</title>
+  <title>平台订单 - 心飞外卖管理端</title>
   <!-- 修改点：补入 main.css 统一样式入口（原缺失导致全局样式与响应式断点失效） -->
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -173,10 +173,10 @@
 <script>
   new Vue({
     el: '#platform-order-app',
-    mixins: [window.ReggieListMixin],
+    mixins: [window.XinfeiListMixin],
     data() {
       return {
-        // 修改点：补声明 tableData —— ReggieListMixin 只提供 page/pageSize/counts/loading，
+        // 修改点：补声明 tableData —— XinfeiListMixin 只提供 page/pageSize/counts/loading，
         // 不含 tableData；此前模板与 statsCards 计算属性直接访问 this.tableData.filter(...)，
         // 首次渲染时为 undefined 触发 TypeError，导致整页渲染失败（白屏）
         tableData: [],
@@ -262,7 +262,7 @@
             this.tableData = res.data.records || []
             this.counts = Number(res.data.total) || 0
           } else {
-            ReggieUI.error((res && res.msg) || '加载平台订单失败')
+            XinfeiUI.error((res && res.msg) || '加载平台订单失败')
           }
           if (reloadStats && results[1]) {
             const statsRes = results[1]
@@ -272,7 +272,7 @@
           }
         } catch (err) {
           if (err.message !== 'NOTLOGIN') {
-            ReggieUI.error('加载平台订单失败，请刷新重试')
+            XinfeiUI.error('加载平台订单失败，请刷新重试')
           }
         } finally {
           this.loading = false
@@ -345,14 +345,14 @@
           const res = await window.platformApi.pull(this.pullForm.platformType, this.pullForm.minutes)
           if (res && String(res.code) === '1' && res.data) {
             const d = res.data
-            ReggieUI.success('拉取 ' + (d.pulled || 0) + ' 单，新增 ' + (d.inserted || 0) + ' 单')
+            XinfeiUI.success('拉取 ' + (d.pulled || 0) + ' 单，新增 ' + (d.inserted || 0) + ' 单')
             this.pullVisible = false
             this.fetchData(true)
           } else {
-            ReggieUI.error((res && res.msg) || '拉单失败')
+            XinfeiUI.error((res && res.msg) || '拉单失败')
           }
         } catch (err) {
-          ReggieUI.error('拉单失败，请检查平台配置或网络')
+          XinfeiUI.error('拉单失败，请检查平台配置或网络')
         } finally {
           this.pulling = false
         }
@@ -376,23 +376,23 @@
         if (action === 'complete' || action === 'cancel') {
           confirmTip = '确认「' + meta.text + '」该订单并回传平台？'
         }
-        ReggieUI.confirm(confirmTip, '状态回传', { type: 'warning' }).then(async () => {
+        XinfeiUI.confirm(confirmTip, '状态回传', { type: 'warning' }).then(async () => {
           // 拒单/取消/完成需同步本地订单状态（接单/出餐保持本地流转一致由后端返回驱动，这里乐观更新）
           const localStatus = meta.status
           try {
             const res = await window.platformApi.pushStatus(row.platformType, row.platformOrderId, action)
             if (res && String(res.code) === '1') {
-              ReggieUI.success(meta.text + '成功，已回传平台')
+              XinfeiUI.success(meta.text + '成功，已回传平台')
               // 同步本地订单状态（拒单=5、完成=4、取消=5）
               if (localStatus !== null && localStatus !== 3) {
                 try { await editOrderDetail({ id: row.id, status: localStatus }) } catch (e) { /* 本地流转失败不影响回传结果 */ }
               }
               self.fetchData(true)
             } else {
-              ReggieUI.error((res && res.msg) || (meta.text + '失败'))
+              XinfeiUI.error((res && res.msg) || (meta.text + '失败'))
             }
           } catch (err) {
-            ReggieUI.error(meta.text + '失败，请检查网络或平台配置')
+            XinfeiUI.error(meta.text + '失败，请检查网络或平台配置')
           }
         }).catch((err) => { console.warn('[平台订单] 状态回传操作取消或失败:', err) })
       }

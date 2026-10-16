@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 经营分析助手 - 瑞吉外卖管理端</title>
+    <title>AI 经营分析助手 - 心飞外卖管理端</title>
     <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
     <link rel="stylesheet" href="../../plugins/element-ui/index.css?v=20260915" />
     <link rel="stylesheet" href="../../styles/tokens.css?v=20260920a" />
@@ -400,7 +400,7 @@
         function notifyNotLogin() {
             try { localStorage.removeItem('userInfo'); } catch (e) { /* noop */ }
             if (window.self !== window.top) {
-                try { window.parent.postMessage({ type: 'REGGIE_NOTLOGIN' }, '*'); } catch (e) { /* noop */ }
+                try { window.parent.postMessage({ type: 'XINFEI_NOTLOGIN' }, '*'); } catch (e) { /* noop */ }
             } else {
                 window.location.href = '/backend/page/login/login.html';
             }
@@ -610,7 +610,7 @@
                             self.selectConversation(self.conversations[0]);
                         }
                     }).catch(function() {
-                        if (window.ReggieUI) ReggieUI.error('加载对话列表失败');
+                        if (window.XinfeiUI) XinfeiUI.error('加载对话列表失败');
                         self.conversations = [];
                     }).finally(function() {
                         self.sidebarLoading = false;
@@ -620,7 +620,7 @@
                 selectConversation: function(conv) {
                     if (!conv || !conv.conversationId) return;
                     if (this.loading) {
-                        if (window.ReggieUI) ReggieUI.warning('AI 正在回复，请先停止当前生成');
+                        if (window.XinfeiUI) XinfeiUI.warning('AI 正在回复，请先停止当前生成');
                         return;
                     }
                     this.hideSuggestions();
@@ -648,7 +648,7 @@
                         });
                     }).catch(function() {
                         if (conversationId !== self.currentConversationId) return;
-                        if (window.ReggieUI) ReggieUI.error('加载消息历史失败');
+                        if (window.XinfeiUI) XinfeiUI.error('加载消息历史失败');
                         self.messages = [];
                     }).finally(function() {
                         if (conversationId !== self.currentConversationId) return;
@@ -659,7 +659,7 @@
 
                 createNewConversation: function() {
                     if (this.loading) {
-                        if (window.ReggieUI) ReggieUI.warning('AI 正在回复，请先停止当前生成');
+                        if (window.XinfeiUI) XinfeiUI.warning('AI 正在回复，请先停止当前生成');
                         return;
                     }
                     this.currentConversationId = null;
@@ -677,17 +677,17 @@
                     // 与 selectConversation/createNewConversation 一致：流式生成中不允许删会话，
                     // 否则流继续写入已删除会话，完成后列表无此会话且后续消息触发归属校验失败
                     if (self.loading) {
-                        if (window.ReggieUI) ReggieUI.warning('AI 正在回复，请先停止当前生成');
+                        if (window.XinfeiUI) XinfeiUI.warning('AI 正在回复，请先停止当前生成');
                         return;
                     }
-                    ReggieUI.confirm('确定要删除对话“' + (conv.title || '新对话') + '”吗？删除后不可恢复。', '提示', {
+                    XinfeiUI.confirm('确定要删除对话“' + (conv.title || '新对话') + '”吗？删除后不可恢复。', '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'warning'
                     }).then(function() {
                         aiBackendApi.deleteConversation(conv.conversationId).then(function(res) {
                             if (!res || res.code !== 1) {
-                                ReggieUI.error((res && res.msg) || '删除失败，请重试');
+                                XinfeiUI.error((res && res.msg) || '删除失败，请重试');
                                 return;
                             }
                             self.conversations = self.conversations.filter(function(c) {
@@ -701,7 +701,7 @@
                                 }
                             }
                         }).catch(function() {
-                            ReggieUI.error('删除失败，请重试');
+                            XinfeiUI.error('删除失败，请重试');
                         });
                     }).catch(function() { /* 用户取消 */ });
                 },
@@ -730,10 +730,10 @@
                         if (res && res.code === 1) {
                             conv.title = title;
                         } else {
-                            ReggieUI.error((res && res.msg) || '重命名失败');
+                            XinfeiUI.error((res && res.msg) || '重命名失败');
                         }
                     }).catch(function() {
-                        ReggieUI.error('重命名失败');
+                        XinfeiUI.error('重命名失败');
                     }).finally(function() {
                         self.renameSaving = false;
                         self.renamingId = null;
@@ -763,7 +763,7 @@
                     } else {
                         text = this.inputText.trim();
                         if (this.uploadingCount) {
-                            if (window.ReggieUI) ReggieUI.warning('图片正在上传，请稍候');
+                            if (window.XinfeiUI) XinfeiUI.warning('图片正在上传，请稍候');
                             return;
                         }
                         views = this.readyAttachments.slice();
@@ -1027,9 +1027,9 @@
 
                 copyMessage: function(msg) {
                     window.AiChatCore.copyText(msg.content).then(function() {
-                        if (window.ReggieUI && ReggieUI.success) ReggieUI.success('已复制到剪贴板');
+                        if (window.XinfeiUI && XinfeiUI.success) XinfeiUI.success('已复制到剪贴板');
                     }).catch(function() {
-                        if (window.ReggieUI) ReggieUI.error('复制失败，请手动选择文本复制');
+                        if (window.XinfeiUI) XinfeiUI.error('复制失败，请手动选择文本复制');
                     });
                 },
 
@@ -1050,7 +1050,7 @@
                     }).catch(function() {
                         // 乐观更新失败回滚，避免本地状态与后端永久不一致
                         msg.feedback = prev;
-                        if (window.ReggieUI) ReggieUI.error('反馈提交失败');
+                        if (window.XinfeiUI) XinfeiUI.error('反馈提交失败');
                     });
                 },
 
@@ -1059,7 +1059,7 @@
                 switchScene: function(scene) {
                     if (this.currentScene === scene) return;
                     if (this.loading) {
-                        if (window.ReggieUI) ReggieUI.warning('AI 正在回复，请先停止当前生成');
+                        if (window.XinfeiUI) XinfeiUI.warning('AI 正在回复，请先停止当前生成');
                         return;
                     }
                     // 场景切换后候选集不同：关闭面板，重新聚焦输入框时按新场景拉取
@@ -1074,13 +1074,13 @@
                 pickImage: function() {
                     if (this.loading) return;
                     if (!this.visionEnabled) {
-                        if (window.ReggieUI) {
-                            ReggieUI.warning('当前 AI 模型不支持图片，可在「AI 配置」中勾选视觉能力');
+                        if (window.XinfeiUI) {
+                            XinfeiUI.warning('当前 AI 模型不支持图片，可在「AI 配置」中勾选视觉能力');
                         }
                         return;
                     }
                     if (this.pendingAttachments.length >= 3) {
-                        if (window.ReggieUI) ReggieUI.warning('每条消息最多发送 3 张图片');
+                        if (window.XinfeiUI) XinfeiUI.warning('每条消息最多发送 3 张图片');
                         return;
                     }
                     var input = this.$refs.imageInput;
@@ -1121,12 +1121,12 @@
                     var files = Array.prototype.slice.call(fileList);
                     files.forEach(function(file) {
                         if (self.pendingAttachments.length >= uploader.MAX_IMAGES) {
-                            if (window.ReggieUI) ReggieUI.warning('每条消息最多发送 ' + uploader.MAX_IMAGES + ' 张图片');
+                            if (window.XinfeiUI) XinfeiUI.warning('每条消息最多发送 ' + uploader.MAX_IMAGES + ' 张图片');
                             return;
                         }
                         var check = uploader.validateFile(file);
                         if (!check.ok) {
-                            if (window.ReggieUI) ReggieUI.warning(check.message);
+                            if (window.XinfeiUI) XinfeiUI.warning(check.message);
                             return;
                         }
                         var item = {
@@ -1147,7 +1147,7 @@
                                 notifyNotLogin();
                                 return;
                             }
-                            if (window.ReggieUI) ReggieUI.error((err && err.message) || '图片上传失败');
+                            if (window.XinfeiUI) XinfeiUI.error((err && err.message) || '图片上传失败');
                             self.removePendingItem(item);
                         });
                     });

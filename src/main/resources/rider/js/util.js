@@ -36,7 +36,7 @@ document.write('<script src="/shared/js/order-status.js?v=20260928"><\/script>')
     if (lng == null || lat == null) return '';
     var n = encodeURIComponent(name || '目的地');
     return 'https://uri.amap.com/navigation?to=' + lng + ',' + lat + ',' + n +
-      '&mode=car&src=reggie&coordinate=gaode&callnative=1';
+      '&mode=car&src=xinfei&coordinate=gaode&callnative=1';
   }
 
   /** 手机号脱敏：138****1234；非 11 位原样返回（tel: 链接仍使用真实号码）。 */

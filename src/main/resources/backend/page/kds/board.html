@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>后厨出餐大屏 - 瑞吉外卖管理端</title>
+  <title>后厨出餐大屏 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -311,17 +311,17 @@
           var clear = function () { self.$set(t, '_acting', false) }
           p.then(function (res) {
             if (res && String(res.code) === '1') {
-              if (action === 'ready') { ReggieUI.success('已叫号：' + self.tail(t.orderNo)); self.speak('请' + self.tail(t.orderNo) + '号取餐') }
-              else if (action === 'finish') ReggieUI.success('已出餐完成')
+              if (action === 'ready') { XinfeiUI.success('已叫号：' + self.tail(t.orderNo)); self.speak('请' + self.tail(t.orderNo) + '号取餐') }
+              else if (action === 'finish') XinfeiUI.success('已出餐完成')
               self.loadData(false)
             } else {
-              ReggieUI.error((res && res.msg) || '操作失败')
+              XinfeiUI.error((res && res.msg) || '操作失败')
             }
             clear()
-          }).catch(function () { ReggieUI.error('操作失败，请重试'); clear() })
+          }).catch(function () { XinfeiUI.error('操作失败，请重试'); clear() })
         }
         if (confirmMap[action]) {
-          ReggieUI.confirm(confirmMap[action], '提示', { type: 'warning' }).then(run).catch(function () {})
+          XinfeiUI.confirm(confirmMap[action], '提示', { type: 'warning' }).then(run).catch(function () {})
         } else { run() }
       },
       // ========== 辅助方法 ==========

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>满减活动管理 - 瑞吉外卖管理端</title>
+  <title>满减活动管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -330,7 +330,7 @@
             self.applyFilter()
             self.loadStats()
           } catch (err) {
-            ReggieUI.error('获取满减规则列表失败')
+            XinfeiUI.error('获取满减规则列表失败')
           }
           self.loading = false
         },
@@ -430,44 +430,44 @@
           // 修改点：补二次确认，防止误点状态切换（原直接调用接口无确认）
           try {
             const newStatus = row.status === 1 ? 0 : 1
-            await ReggieUI.confirm('确定要' + (newStatus === 1 ? '启用' : '禁用') + '该满减规则吗？', '提示', {
+            await XinfeiUI.confirm('确定要' + (newStatus === 1 ? '启用' : '禁用') + '该满减规则吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
             })
             var res = await updateFullReductionRule(Object.assign({}, row, { status: newStatus }))
             if (res.code === 1) {
-              ReggieUI.success(newStatus === 1 ? '已启用' : '已禁用')
+              XinfeiUI.success(newStatus === 1 ? '已启用' : '已禁用')
               this.init()
               this.loadStats()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[full-reduction] 启用/禁用失败:', err)
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }
         },
         async handleDelete(row) {
           try {
-            await ReggieUI.confirm('确定要删除该满减规则吗？', '提示', {
+            await XinfeiUI.confirm('确定要删除该满减规则吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
             })
             const res = await deleteFullReductionRule(row.id)
             if (res.code === 1) {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               this.init()
               this.loadStats()
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[full-reduction] 删除失败:', err)
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         },
         // 切换优惠类型：动态校验规则变化，清除优惠值旧错误
@@ -480,29 +480,29 @@
           const valid = await new Promise(function(resolve) {
             self.$refs.ruleForm.validate(function(v) { resolve(v) })
           })
-          if (!valid) { ReggieUI.warning('请完善表单必填项'); return }
+          if (!valid) { XinfeiUI.warning('请完善表单必填项'); return }
           // 条件字段兜底校验：discountType=2（打折）时最大优惠金额必填
           if (self.formData.discountType === 2 && (self.formData.maxDiscountAmount === null || self.formData.maxDiscountAmount === undefined)) {
-            ReggieUI.warning('请填写最大优惠金额'); return
+            XinfeiUI.warning('请填写最大优惠金额'); return
           }
           // 赠品类型兜底：必选赠品菜品、数量≥1
           if (self.formData.discountType === 3) {
-            if (self.formData.giftDishId == null) { ReggieUI.warning('请选择赠品菜品'); return }
-            if (Number(self.formData.giftQuantity) < 1) { ReggieUI.warning('赠品数量至少为1'); return }
+            if (self.formData.giftDishId == null) { XinfeiUI.warning('请选择赠品菜品'); return }
+            if (Number(self.formData.giftQuantity) < 1) { XinfeiUI.warning('赠品数量至少为1'); return }
           }
           self.submitLoading = true
           const apiCall = self.formData.id ? updateFullReductionRule(self.formData) : saveFullReductionRule(self.formData)
           apiCall.then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success(self.formData.id ? '更新成功' : '新增成功')
+              XinfeiUI.success(self.formData.id ? '更新成功' : '新增成功')
               self.dialogVisible = false
               self.init()
               self.loadStats()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }).finally(function() {
             self.submitLoading = false
           })

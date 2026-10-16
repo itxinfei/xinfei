@@ -1,5 +1,5 @@
 /* =========================================================
-   瑞吉外卖 · 文档 / API 查看器（原生 JS，零依赖）
+   心飞外卖 · 文档 / API 查看器（原生 JS，零依赖）
    - 自研轻量 GFM 渲染：标题/表格/列表/引用/围栏代码/代码/粗体/链接
    - API 模式：模块目录 + 实时搜索 + HTTP 方法徽章 + 路径点击复制
    ========================================================= */
@@ -296,13 +296,13 @@
   function initTheme() {
     var root = document.documentElement, btn = document.getElementById('themeToggle');
     var saved = null;
-    try { saved = localStorage.getItem('reggie-theme'); } catch (e) {}
+    try { saved = localStorage.getItem('xinfei-theme'); } catch (e) {}
     var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setTheme(saved || (dark ? 'dark' : 'light'));
     function setTheme(t) {
       root.setAttribute('data-theme', t);
       if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
-      try { localStorage.setItem('reggie-theme', t); } catch (e) {}
+      try { localStorage.setItem('xinfei-theme', t); } catch (e) {}
     }
     if (btn) btn.addEventListener('click', function () {
       setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
@@ -408,7 +408,7 @@
     } else {
       var file = getParam('p') || 'README.md';
       if (!DOCS[file]) file = 'README.md';
-      document.title = DOCS[file] + ' · 瑞吉外卖文档';
+      document.title = DOCS[file] + ' · 心飞外卖文档';
       showDoc(content, file, closeSidebar);
     }
   }

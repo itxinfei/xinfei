@@ -13,7 +13,7 @@ var D = sandbox.window.RefundStatusDict;
 
 assert.ok(D, 'RefundStatusDict 应已挂载到 window');
 
-// 1. 与后端 com.reggie.enums.RefundStatus 的 code 对齐
+// 1. 与后端 com.xinfei.enums.RefundStatus 的 code 对齐
 assert.strictEqual(D.refundText('pending'), '退款申请中');
 assert.strictEqual(D.refundText('processing'), '退款处理中');
 assert.strictEqual(D.refundText('SUCCESS'), '退款成功');

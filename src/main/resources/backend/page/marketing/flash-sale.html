@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>秒杀活动管理 - 瑞吉外卖管理端</title>
+  <title>秒杀活动管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -313,7 +313,7 @@
               self.counts = 0
             }
           } catch (err) {
-            ReggieUI.error('获取秒杀活动列表失败')
+            XinfeiUI.error('获取秒杀活动列表失败')
           }
           self.loading = false
         },
@@ -415,41 +415,41 @@
         async handleToggleStatus(row) {
           try {
             if (row.status === 0 || row.status === 3) {
-              ReggieUI.warning('草稿或已结束状态不可切换')
+              XinfeiUI.warning('草稿或已结束状态不可切换')
               return
             }
             const newStatus = row.status === 1 ? 2 : 1
             var res = await updateFlashSale(Object.assign({}, row, { status: newStatus }))
             if (res.code === 1) {
-              ReggieUI.success(newStatus === 1 ? '已启用' : '已暂停')
+              XinfeiUI.success(newStatus === 1 ? '已启用' : '已暂停')
               this.init()
               this.loadStats()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }
         },
         async handleDelete(row) {
           try {
-            await ReggieUI.confirm('确定要删除该秒杀活动吗？', '提示', {
+            await XinfeiUI.confirm('确定要删除该秒杀活动吗？', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'warning'
             })
             const res = await deleteFlashSale(row.id)
             if (res.code === 1) {
-              ReggieUI.success('删除成功')
+              XinfeiUI.success('删除成功')
               this.init()
               this.loadStats()
             } else {
-              ReggieUI.error(res.msg || '删除失败')
+              XinfeiUI.error(res.msg || '删除失败')
             }
           } catch (err) {
             if (err === 'cancel') return
             console.warn('[flash-sale] 删除失败:', err)
-            ReggieUI.error('删除失败')
+            XinfeiUI.error('删除失败')
           }
         },
         // 修改点：`async X: function(){}` 是非法语法（整页 JS 解析失败导致白屏），改为合法的 async 方法简写
@@ -469,20 +469,20 @@
           // 编辑时总数量不能改到小于已售数量，否则已下单部分将无库存对应
           var sold = Number(self.formData.soldQuantity) || 0
           if (Number(self.formData.totalQuantity) < sold) {
-            ReggieUI.error('总数量不能小于已售数量（已售 ' + sold + ' 件）')
+            XinfeiUI.error('总数量不能小于已售数量（已售 ' + sold + ' 件）')
             return
           }
           // 非空判断而非真值判断：秒杀价为 0 时旧条件被短路，0 元秒杀可绕过
           if (self.formData.flashPrice == null || self.formData.flashPrice === '') {
-            ReggieUI.error('请输入秒杀价')
+            XinfeiUI.error('请输入秒杀价')
             return
           }
           if (Number(self.formData.flashPrice) <= 0) {
-            ReggieUI.error('秒杀价必须大于0')
+            XinfeiUI.error('秒杀价必须大于0')
             return
           }
           if (self.formData.originalPrice != null && self.formData.flashPrice >= self.formData.originalPrice) {
-            ReggieUI.error('秒杀价必须低于原价')
+            XinfeiUI.error('秒杀价必须低于原价')
             return
           }
           if (self.formData.timeRange && self.formData.timeRange.length === 2) {
@@ -494,15 +494,15 @@
           const apiCall = self.formData.id ? updateFlashSale(submitData) : saveFlashSale(submitData)
           apiCall.then(function(res) {
             if (res.code === 1) {
-              ReggieUI.success(self.formData.id ? '更新成功' : '新增成功')
+              XinfeiUI.success(self.formData.id ? '更新成功' : '新增成功')
               self.dialogVisible = false
               self.init()
               self.loadStats()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function(err) {
-            ReggieUI.error('操作失败')
+            XinfeiUI.error('操作失败')
           }).finally(function() {
             self.submitLoading = false
           })

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🍜 瑞吉外卖 · Reggie Takeout
+# 🍜 心飞外卖 · Xinfei Takeout
 
 ### 一套搭载 AI 大模型、覆盖「堂食 + 外卖 + 进销存 + 配送」的餐饮全栈管理系统
 
@@ -71,8 +71,8 @@
 <br>
 <br>
 
-<a href="https://itxinfei.github.io/reggie/"><img src="docs/badges/shield-39.svg" alt="项目官网"></a>
-<a href="https://gitee.com/itxinfei/reggie"><img src="docs/badges/shield-40.svg" alt="Gitee"></a>
+<a href="https://itxinfei.github.io/xinfei/"><img src="docs/badges/shield-39.svg" alt="项目官网"></a>
+<a href="https://gitee.com/itxinfei/xinfei"><img src="docs/badges/shield-40.svg" alt="Gitee"></a>
 
 </div>
 
@@ -91,7 +91,7 @@
 
 ## 📖 项目介绍
 
-**瑞吉外卖**是一套在真实餐饮业务上反复打磨的全栈管理系统，基于 **Spring Boot + Vue 单体架构**，一套实例、一个 Jar 即可同时驱动「管理后台 / 用户点餐 / 骑手配送」三端，覆盖**堂食、外卖、进销存、会员营销、多渠道支付、票据打印、经营报表**等餐饮经营全场景。
+**心飞外卖**是一套在真实餐饮业务上反复打磨的全栈管理系统，基于 **Spring Boot + Vue 单体架构**，一套实例、一个 Jar 即可同时驱动「管理后台 / 用户点餐 / 骑手配送」三端，覆盖**堂食、外卖、进销存、会员营销、多渠道支付、票据打印、经营报表**等餐饮经营全场景。
 
 - 🖥️ **管理后台**：Vue2 + Element-UI，**78 个功能页**，员工日常经营的生产力工具
 - 📱 **用户点餐 H5**：Vue2 + Vant，**25 个页面**，扫码点餐 / 外卖到家 / 会员中心
@@ -229,7 +229,7 @@ Session + HttpOnly Cookie 鉴权 · **MyBatis-Plus 行级租户隔离（上下�
 
 ## 🎯 适用人群
 
-| 你是… | 瑞吉能给你 |
+| 你是… | 心飞能给你 |
 |---|---|
 | 🎓 计算机专业学生 | 罕见「大而全」的全栈实战项目：三端 + AI + 多租户 + 真实支付，简历 / 毕设硬核加分项 |
 | 🍜 餐饮商家 / 创业者 | 自助部署、数据完全自持，一套系统管门店，**无需为 SaaS 持续付费** |
@@ -291,22 +291,22 @@ Session + HttpOnly Cookie 鉴权 · **MyBatis-Plus 行级租户隔离（上下�
 
 ```bash
 # 1. 克隆项目
-git clone https://gitee.com/itxinfei/reggie.git
-cd reggie
+git clone https://gitee.com/itxinfei/xinfei.git
+cd xinfei
 
 # 2. 创建数据库（务必指定 utf8mb4，否则中文数据乱码）
-mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS reggie CHARACTER SET utf8mb4;"
+mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS xinfei CHARACTER SET utf8mb4;"
 
 # 3. 建表：导入仓库内建表脚本（18 个文件，覆盖 122 张表）
 #    注意 --default-character-set=utf8mb4 不可省略
 for f in src/test/resources/schema*.sql; do
-  mysql -uroot -p --default-character-set=utf8mb4 reggie < "$f"
+  mysql -uroot -p --default-character-set=utf8mb4 xinfei < "$f"
 done
 
 # 4. 插入最小初始化数据（租户 / 门店 / 超管账号，脚本可重复执行）
-mysql -uroot -p --default-character-set=utf8mb4 reggie < db/seed-minimal.sql
+mysql -uroot -p --default-character-set=utf8mb4 xinfei < db/seed-minimal.sql
 
-# 5. 启动（application-dev.yml 默认连 localhost:3306/reggie 与 localhost:6379）
+# 5. 启动（application-dev.yml 默认连 localhost:3306/xinfei 与 localhost:6379）
 mvn spring-boot:run
 ```
 
@@ -341,7 +341,7 @@ bash docker/up.sh   # 构建镜像 + 拉起 MySQL 8 / Redis 7 / 应用 + 自动�
 
 ```bash
 bash docker/backup.sh                                     # 备份全库到 backups/
-bash docker/restore.sh backups/reggie-xxx.sql.gz          # 恢复（会覆盖现有数据，有确认）
+bash docker/restore.sh backups/xinfei-xxx.sql.gz          # 恢复（会覆盖现有数据，有确认）
 docker compose logs -f app                                        # 看日志
 docker compose down                                               # 停止（保留数据卷）
 ```
@@ -360,7 +360,7 @@ mvn process-resources
 
 ```bash
 mvn clean package -DskipTests
-java -jar target/reggie_take_out-1.0-SNAPSHOT.jar --spring.profiles.active=prod
+java -jar target/xinfei_take_out-1.0-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
 生产参数走 `application-prod.yml`（环境变量注入，敏感值支持 Jasypt `ENC(...)` 加密）。
@@ -378,7 +378,7 @@ java -jar target/reggie_take_out-1.0-SNAPSHOT.jar --spring.profiles.active=prod
 
 ## 🧪 测试
 
-> ⚠️ **测试与开发共用本地 `reggie` 单库**，靠「租户 + 命名空间」隔离：演示数据挂租户 1，自动化测试数据挂租户 999（高 ID 防冲突）。
+> ⚠️ **测试与开发共用本地 `xinfei` 单库**，靠「租户 + 命名空间」隔离：演示数据挂租户 1，自动化测试数据挂租户 999（高 ID 防冲突）。
 > **红线：严禁把测试指向公网 / 生产库。** 测试清理（`TestDatabaseCleaner` 与 `@Sql`）只会删除**租户 999 的数据或 `test:` 命名空间**，不影响租户 1 演示数据；新增测试的显式主键请选用 **990000+ 高位段**（`TestIdGuard` 会在撞库时 fail-fast）。
 
 ```bash
@@ -399,9 +399,9 @@ mvn animal-sniffer:check
 ## 📁 项目结构
 
 ```
-reggie/
-├── src/main/java/com/reggie/
-│   ├── ReggieApplication.java     # 启动类
+xinfei/
+├── src/main/java/com/xinfei/
+│   ├── XinfeiApplication.java     # 启动类
 │   ├── common/                    # 公共组件
 │   │   ├── R.java                 #   统一响应结构
 │   │   ├── BaseContext.java       #   ThreadLocal 用户/租户上下文
@@ -506,8 +506,8 @@ reggie/
 <summary><b>导入 SQL 时中文乱码 / 建表报错？</b></summary>
 
 1. 漏了 `--default-character-set=utf8mb4`（最常见）——不指定时 MySQL 客户端会按 GBK 解释脚本；
-2. 建库没指定字符集：`CREATE DATABASE reggie CHARACTER SET utf8mb4;`（已有库可 `ALTER DATABASE reggie CHARACTER SET utf8mb4;`）；
-3. `schema*.sql` 可重复执行，报「表已存在」属正常；如需重来，`DROP DATABASE reggie;` 后重建即可。
+2. 建库没指定字符集：`CREATE DATABASE xinfei CHARACTER SET utf8mb4;`（已有库可 `ALTER DATABASE xinfei CHARACTER SET utf8mb4;`）；
+3. `schema*.sql` 可重复执行，报「表已存在」属正常；如需重来，`DROP DATABASE xinfei;` 后重建即可。
 </details>
 
 <details>
@@ -546,7 +546,7 @@ curl -b c.txt -X PUT http://localhost:8080/employee/password \
 <details>
 <summary><b>平台外卖定时任务报 UnknownHostException？</b></summary>
 
-多平台对接当前为占位骨架，默认受 `reggie.platform.sync-enabled=false` 控制不外呼。出现该日志说明开关被打开；未按官方文档实现协议层前保持 `false` 即可。
+多平台对接当前为占位骨架，默认受 `xinfei.platform.sync-enabled=false` 控制不外呼。出现该日志说明开关被打开；未按官方文档实现协议层前保持 `false` 即可。
 </details>
 
 <details>
@@ -600,8 +600,8 @@ curl -b c.txt -X PUT http://localhost:8080/employee/password \
 
 <br>
 
-🔗 仓库：[gitee.com/itxinfei/reggie](https://gitee.com/itxinfei/reggie)
-🏠 官网：[itxinfei.github.io/reggie](https://itxinfei.github.io/reggie/)
+🔗 仓库：[gitee.com/itxinfei/xinfei](https://gitee.com/itxinfei/xinfei)
+🏠 官网：[itxinfei.github.io/xinfei](https://itxinfei.github.io/xinfei/)
 👥 QQ 交流群：**[661543188](https://qm.qq.com/cgi-bin/qm/qr?k=gNgch-wCkfUu-QbI7DZSudrax2BN7vY0)**
 
 </td>
@@ -612,6 +612,6 @@ curl -b c.txt -X PUT http://localhost:8080/employee/password \
 
 ### ⭐ 如果这个项目对你有帮助，欢迎点个 Star 支持，这是对我最大的鼓励！
 
-<a href="https://gitee.com/itxinfei/reggie"><img src="docs/badges/shield-41.svg" alt="Star"></a>
+<a href="https://gitee.com/itxinfei/xinfei"><img src="docs/badges/shield-41.svg" alt="Star"></a>
 
 </div>

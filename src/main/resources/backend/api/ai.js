@@ -2,7 +2,7 @@
  * AI智能助手 - 管理端API
  * 修改点：使用IIFE模块模式，避免全局变量污染，挂载到 window 以兼容 iframe 架构
  * 修改点：chat() 支持 conversationId，实现多轮对话持久化
- * @author reggie
+ * @author xinfei
  * @since 2026-07-10
  */
 (function() {

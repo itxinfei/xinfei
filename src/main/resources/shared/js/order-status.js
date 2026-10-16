@@ -8,7 +8,7 @@
 (function (win) {
   'use strict';
 
-  // 主单状态：严格对齐 com.reggie.enums.OrderStatus
+  // 主单状态：严格对齐 com.xinfei.enums.OrderStatus
   var ORDER = {
     1: { text: '待付款', cls: 'status-pending' },
     2: { text: '待接单', cls: 'status-accepted' },

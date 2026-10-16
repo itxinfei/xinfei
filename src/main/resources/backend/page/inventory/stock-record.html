@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>库存记录 - 瑞吉外卖管理端</title>
+  <title>库存记录 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -209,7 +209,7 @@
             this.tableData = pageRes.data.records || []
             this.counts = Number(pageRes.data.total) || 0
           } else {
-            ReggieUI.error(pageRes.msg || '操作失败')
+            XinfeiUI.error(pageRes.msg || '操作失败')
           }
 
           if (reloadStats) {
@@ -317,7 +317,7 @@
           if (this.flowSubmitting) return
           const self = this
           this.$refs.flowForm.validate(async (valid) => {
-            if (!valid) { ReggieUI.warning('请完善必填项'); return }
+            if (!valid) { XinfeiUI.warning('请完善必填项'); return }
             self.flowSubmitting = true
             try {
               const params = {
@@ -331,15 +331,15 @@
               }
               const res = self.flowDialog.mode === 'in' ? await stockIn(params) : await stockOut(params)
               if (res.code === 1) {
-                ReggieUI.success(self.flowDialog.mode === 'in' ? '入库成功' : '出库成功')
+                XinfeiUI.success(self.flowDialog.mode === 'in' ? '入库成功' : '出库成功')
                 self.flowDialog.visible = false
                 self.page = 1
                 self.fetchData(true)
               } else {
-                ReggieUI.error(res.msg || '操作失败')
+                XinfeiUI.error(res.msg || '操作失败')
               }
             } catch (e) {
-              ReggieUI.error(self.flowDialog.mode === 'in' ? '入库失败，请重试' : '出库失败，请重试')
+              XinfeiUI.error(self.flowDialog.mode === 'in' ? '入库失败，请重试' : '出库失败，请重试')
             } finally {
               self.flowSubmitting = false
             }

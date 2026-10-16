@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>客服管理 - 瑞吉外卖管理端</title>
+  <title>客服管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -500,7 +500,7 @@
               if (resp && resp.code === 1) self.sessionMessages = resp.data || []
             }).catch(function(e) {
               console.error('发送消息失败', e)
-              ReggieUI.error('发送失败，请重试')
+              XinfeiUI.error('发送失败，请重试')
             }).finally(function() {
               self.sending = false
             })
@@ -524,25 +524,25 @@
               agentName: agentName
             }).then(function() {
               self.assignForm.visible = false
-              ReggieUI.success('分配成功')
+              XinfeiUI.success('分配成功')
               self.fetchSessionList()
             }).catch(function(e) {
               console.error('分配失败', e)
-              ReggieUI.error('分配失败，请稍后重试')
+              XinfeiUI.error('分配失败，请稍后重试')
             }).finally(function() {
               self.dialogSubmitting = false
             })
           })
         },
         onCloseSession(row) {
-          ReggieUI.confirm('确认结束该会话？', '提示', { type: 'warning' }).then(async () => {
+          XinfeiUI.confirm('确认结束该会话？', '提示', { type: 'warning' }).then(async () => {
             try {
               await closeSession(row.id, {})
-              ReggieUI.success('会话已结束')
+              XinfeiUI.success('会话已结束')
               this.fetchSessionList()
             } catch(e) {
               console.error('结束会话失败', e)
-              ReggieUI.error('结束会话失败，请稍后重试')
+              XinfeiUI.error('结束会话失败，请稍后重试')
             }
           }).catch(function(err) { console.warn('[customer-service] 结束会话操作失败:', err) })
         },
@@ -614,25 +614,25 @@
             }
             handleComplaint(self.handleForm.id, params).then(function() {
               self.handleForm.visible = false
-              ReggieUI.success('处理成功')
+              XinfeiUI.success('处理成功')
               self.fetchComplaintList()
             }).catch(function(e) {
               console.error('处理投诉失败', e)
-              ReggieUI.error('处理投诉失败，请稍后重试')
+              XinfeiUI.error('处理投诉失败，请稍后重试')
             }).finally(function() {
               self.dialogSubmitting = false
             })
           })
         },
         onCloseComplaint(id) {
-          ReggieUI.confirm('确认关闭该投诉？', '提示', { type: 'warning' }).then(async () => {
+          XinfeiUI.confirm('确认关闭该投诉？', '提示', { type: 'warning' }).then(async () => {
             try {
               await closeComplaint(id)
-              ReggieUI.success('投诉已关闭')
+              XinfeiUI.success('投诉已关闭')
               this.fetchComplaintList()
             } catch(e) {
               console.error('关闭投诉失败', e)
-              ReggieUI.error('关闭投诉失败，请稍后重试')
+              XinfeiUI.error('关闭投诉失败，请稍后重试')
             }
           }).catch(function(err) { console.warn('[customer-service] 关闭投诉操作失败:', err) })
         }

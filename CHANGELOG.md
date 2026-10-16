@@ -14,7 +14,7 @@
 ## 2026-09-28 | 跨端 / 订单 | 修复计划 P0-5：三端语义落地与取消/退款回执
 - 缺陷修复：`cancelOrder` 此前把取消原因写进 `orders.remark`，**覆盖顾客下单备注**；现新增独立字段 `cancel_reason`（`schema.sql` + 迁移参考 `db/migration/V20260928__add_order_cancel_reason.sql`），取消/拒单均写入该字段（拒单固定为"商家拒单"），已支付取消分支也补写原因用于回执。
 - 回执落地：顾客端 `order-detail.html` 在已取消(5)/已退款(6) 展示「取消原因」区块；后台 `order/list.html` 详情弹窗同步展示同一字段，两端同源可核对。
-- 三端语义：新增 `shared/js/refund-status.js` 作为退款状态单一真源（对齐后端 `com.reggie.enums.RefundStatus`；因后端 code 大小写不统一——`SUCCESS` 大写、其余小写——字典按大写归一化查表，大小写作不敏感）。顾客端移除内联映射改引用该字典；配套 `refund-status.test.js`（node 直接运行）锁定文案与大小写兼容。
+- 三端语义：新增 `shared/js/refund-status.js` 作为退款状态单一真源（对齐后端 `com.xinfei.enums.RefundStatus`；因后端 code 大小写不统一——`SUCCESS` 大写、其余小写——字典按大写归一化查表，大小写作不敏感）。顾客端移除内联映射改引用该字典；配套 `refund-status.test.js`（node 直接运行）锁定文案与大小写兼容。
 - 测试：`OrderCancelReasonTest`（3 例）覆盖取消写原因且备注不丢、拒单写"商家拒单"、无原因时留空；受影响回归 44 例（订单 7 + 配送 37）全绿；`order-status.test.js` 未回归。
 - 已知环境项：取消/更新类写接口偶发 MySQL 死锁——后台定时任务（`OrderTimeoutTask` 等）在测试期间并发更新 `orders`，与本类行级更新争锁（`DeadlockLoserDataAccessException`）。该测试已对写接口做 3 次有界重试；项目尚无测试期关闭定时任务的开关。
 - 开发者：AI

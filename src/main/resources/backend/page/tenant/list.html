@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>租户管理 - 瑞吉外卖管理端</title>
+  <title>租户管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -215,11 +215,11 @@
             self.tableData = res.data.records || []
             self.counts = res.data.total || 0
           } else {
-            ReggieUI.error(res.msg || '租户列表加载失败')
+            XinfeiUI.error(res.msg || '租户列表加载失败')
           }
         }).catch(function (err) {
           self.loading = false
-          ReggieUI.error('请求失败：' + err)
+          XinfeiUI.error('请求失败：' + err)
         })
       },
       onSearch(params) {
@@ -266,42 +266,42 @@
         if (self.submitting) return
         self.$refs.tenantForm.validate(function (valid) {
           if (!valid) {
-            ReggieUI.warning('请完善表单必填项')
+            XinfeiUI.warning('请完善表单必填项')
             return
           }
           self.submitting = true
           updateTenant(self.formData).then(function (res) {
             self.submitting = false
             if (res.code === 1) {
-              ReggieUI.success('保存成功')
+              XinfeiUI.success('保存成功')
               self.dialogVisible = false
               self.loadList()
             } else {
-              ReggieUI.error(res.msg || '保存失败')
+              XinfeiUI.error(res.msg || '保存失败')
             }
           }).catch(function (err) {
             self.submitting = false
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           })
         })
       },
       toggleStatus(row, target) {
         const self = this
         const action = target === 1 ? '启用' : '禁用'
-        ReggieUI.confirm('确认' + action + '租户【' + row.name + '】？', '提示', {
+        XinfeiUI.confirm('确认' + action + '租户【' + row.name + '】？', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: target === 1 ? 'info' : 'warning'
         }).then(function () {
           updateTenantStatus(row.id, target).then(function (res) {
             if (res.code === 1) {
-              ReggieUI.success(action + '成功')
+              XinfeiUI.success(action + '成功')
               self.loadList()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           }).catch(function (err) {
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           })
         }).catch(function (err) {
           console.warn('[tenant-list] 状态切换取消或失败:', err)

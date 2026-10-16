@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>用户管理 - 瑞吉外卖管理端</title>
+  <title>用户管理 - 心飞外卖管理端</title>
   <!-- 引入样式 -->
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
@@ -181,7 +181,7 @@
     new Vue({
       el: '#user-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data() {
         return {
           submitting: false, // 提交防重：请求期间锁定弹窗确认按钮
@@ -323,7 +323,7 @@
               this.filterOptions.phones = res.data.phones || []
             } else {
               this.optionsLoadError = true
-              ReggieUI.warning('加载用户选项失败：' + (res.msg || '接口返回异常'))
+              XinfeiUI.warning('加载用户选项失败：' + (res.msg || '接口返回异常'))
             }
           } catch (err) {
             // 修改点：NOTLOGIN 错误已在全局拦截器处理（跳转登录页），无需重复提示
@@ -331,7 +331,7 @@
               return
             }
             this.optionsLoadError = true
-            ReggieUI.error('加载筛选选项失败，请刷新页面重试')
+            XinfeiUI.error('加载筛选选项失败，请刷新页面重试')
           } finally {
             this.optionsLoading = false
           }
@@ -352,10 +352,10 @@
               this.tableData = userRes.data.records || []
               this.counts = userRes.data.total
             } else {
-              ReggieUI.error(userRes.msg || '查询失败')
+              XinfeiUI.error(userRes.msg || '查询失败')
             }
           } catch (err) {
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           } finally {
             this.loading = false
           }
@@ -452,15 +452,15 @@
             })
             this.submitting = false
             if (String(res.code) === '1') {
-              ReggieUI.success(res.msg || '操作成功')
+              XinfeiUI.success(res.msg || '操作成功')
               this.handleStatusClose()
               this.refreshAll()
             } else {
-              ReggieUI.error(res.msg || '操作失败')
+              XinfeiUI.error(res.msg || '操作失败')
             }
           } catch (err) {
             this.submitting = false
-            ReggieUI.error('请求失败：' + err)
+            XinfeiUI.error('请求失败：' + err)
           }
         },
 
@@ -473,7 +473,7 @@
 
         // 删除用户
         deleteHandle(id) {
-          ReggieUI.confirm('确认删除该用户吗？', '提示', {
+          XinfeiUI.confirm('确认删除该用户吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
@@ -481,18 +481,18 @@
             try {
               const res = await userDelete(id)
               if (String(res.code) === '1') {
-                ReggieUI.success('删除成功')
+                XinfeiUI.success('删除成功')
                 this.refreshAll()
               } else {
-                ReggieUI.error(res.msg || '删除失败')
+                XinfeiUI.error(res.msg || '删除失败')
               }
             } catch (err) {
-              ReggieUI.error('请求失败：' + err)
+              XinfeiUI.error('请求失败：' + err)
             }
           }).catch((err) => { console.warn('[user] 删除用户操作取消或失败:', err) })
         },
 
-        // 修改点：分页处理统一交由 ReggieListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
+        // 修改点：分页处理统一交由 XinfeiListMixin 的 onPageChange / onSizeChange 处理，手写分页方法已移除
 
         /* ========== 导出功能 ========== */
         // 列表操作区按钮分发（导出Excel/PDF）
@@ -503,7 +503,7 @@
         // 导出C端用户数据（Excel/PDF）：仅导出勾选行（未勾选时导出按钮已禁用）
         exportUsers: async function(format) {
           if (this.selectedIds.length === 0) {
-            ReggieUI.warning('请先勾选要导出的用户')
+            XinfeiUI.warning('请先勾选要导出的用户')
             return
           }
           const params = { ids: this.selectedIds.join(',') }
@@ -511,9 +511,9 @@
             const ext = format === 'excel' ? 'xlsx' : 'pdf'
             const apiCall = format === 'excel' ? exportApi.exportUsersExcel(params) : exportApi.exportUsersPdf(params)
             await exportApi.downloadFile(apiCall, '用户数据.' + ext)
-            ReggieUI.success('已导出选中的 ' + this.selectedIds.length + ' 个用户')
+            XinfeiUI.success('已导出选中的 ' + this.selectedIds.length + ' 个用户')
           } catch (err) {
-            ReggieUI.error('导出失败：' + (err.message || err))
+            XinfeiUI.error('导出失败：' + (err.message || err))
           }
         }
       }

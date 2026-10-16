@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>餐补管理 - 瑞吉外卖管理端</title>
+  <title>餐补管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -272,10 +272,10 @@
               this.tableData = (res.data.records || [])
               this.counts = res.data.total || 0
             } else {
-              ReggieUI.error((res && res.msg) || '加载餐补账户失败')
+              XinfeiUI.error((res && res.msg) || '加载餐补账户失败')
             }
           }).catch((err) => {
-            if (err.message !== 'NOTLOGIN') ReggieUI.error('加载餐补账户失败，请刷新重试')
+            if (err.message !== 'NOTLOGIN') XinfeiUI.error('加载餐补账户失败，请刷新重试')
           }).finally(() => { this.loading = false })
         },
         loadStats() {
@@ -344,7 +344,7 @@
             if (self.grantForm.mode === 'department') {
               if (!self.grantForm.departmentId) {
                 self.grantSubmitting = false
-                ReggieUI.error('请选择部门')
+                XinfeiUI.error('请选择部门')
                 return
               }
               payload.departmentId = self.grantForm.departmentId
@@ -354,16 +354,16 @@
             subsidyApi.grant(payload).then((res) => {
               self.grantSubmitting = false
               if (res && res.code === 1) {
-                ReggieUI.success(res.data || '发放成功')
+                XinfeiUI.success(res.data || '发放成功')
                 self.grantForm.visible = false
                 self.loadData()
                 self.loadStats()
               } else {
-                ReggieUI.error((res && res.msg) || '发放失败')
+                XinfeiUI.error((res && res.msg) || '发放失败')
               }
             }).catch((err) => {
               self.grantSubmitting = false
-              if (err.message !== 'NOTLOGIN') ReggieUI.error(err.message || '发放失败，请重试')
+              if (err.message !== 'NOTLOGIN') XinfeiUI.error(err.message || '发放失败，请重试')
             })
           })
         },
@@ -389,7 +389,7 @@
         },
         loadRecon() {
           if (!this.reconDialog.range || this.reconDialog.range.length !== 2) {
-            ReggieUI.error('请选择日期范围')
+            XinfeiUI.error('请选择日期范围')
             return
           }
           this.reconDialog.loading = true
@@ -402,11 +402,11 @@
             if (res && res.code === 1) {
               this.reconDialog.rows = res.data || []
             } else {
-              ReggieUI.error((res && res.msg) || '对账数据加载失败')
+              XinfeiUI.error((res && res.msg) || '对账数据加载失败')
             }
           }).catch((err) => {
             this.reconDialog.loading = false
-            if (err.message !== 'NOTLOGIN') ReggieUI.error(err.message || '对账数据加载失败')
+            if (err.message !== 'NOTLOGIN') XinfeiUI.error(err.message || '对账数据加载失败')
           })
         },
         exportRecon() {

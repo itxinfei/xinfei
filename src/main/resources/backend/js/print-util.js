@@ -60,8 +60,8 @@
         win.print()
       } catch (e) {
         cleanup()
-        if (global.ReggieUI && global.ReggieUI.error) {
-          global.ReggieUI.error('调起打印失败，请改用浏览器打印')
+        if (global.XinfeiUI && global.XinfeiUI.error) {
+          global.XinfeiUI.error('调起打印失败，请改用浏览器打印')
         }
       }
     }

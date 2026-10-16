@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>团餐预订 - 瑞吉外卖管理端</title>
+  <title>团餐预订 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -245,10 +245,10 @@
               this.tableData = (res.data.records || [])
               this.counts = res.data.total || 0
             } else {
-              ReggieUI.error((res && res.msg) || '加载团餐预订失败')
+              XinfeiUI.error((res && res.msg) || '加载团餐预订失败')
             }
           }).catch((err) => {
-            if (err.message !== 'NOTLOGIN') ReggieUI.error('加载团餐预订失败，请刷新重试')
+            if (err.message !== 'NOTLOGIN') XinfeiUI.error('加载团餐预订失败，请刷新重试')
           }).finally(() => { this.loading = false })
         },
         loadDepartments() {
@@ -306,7 +306,7 @@
             if (!valid) return
             const items = (self.form.items || []).filter(function (it) { return it.itemId })
             if (!items.length) {
-              ReggieUI.error('请至少选择一个菜品或套餐')
+              XinfeiUI.error('请至少选择一个菜品或套餐')
               return
             }
             self.submitting = true
@@ -321,15 +321,15 @@
             }).then((res) => {
               self.submitting = false
               if (res && res.code === 1) {
-                ReggieUI.success('团餐预订已创建')
+                XinfeiUI.success('团餐预订已创建')
                 self.form.visible = false
                 self.loadData()
               } else {
-                ReggieUI.error((res && res.msg) || '创建失败')
+                XinfeiUI.error((res && res.msg) || '创建失败')
               }
             }).catch((err) => {
               self.submitting = false
-              if (err.message !== 'NOTLOGIN') ReggieUI.error(err.message || '创建失败，请重试')
+              if (err.message !== 'NOTLOGIN') XinfeiUI.error(err.message || '创建失败，请重试')
             })
           })
         },
@@ -344,24 +344,24 @@
               this.detailDialog.booking = res.data.booking
               this.detailDialog.items = res.data.items || []
             } else {
-              ReggieUI.error((res && res.msg) || '明细加载失败')
+              XinfeiUI.error((res && res.msg) || '明细加载失败')
             }
           }).catch(() => { this.detailDialog.loading = false })
         },
         doStatus(row, action) {
           const tips = { confirm: '确认该团餐预订？', complete: '标记该预订为已完成？', cancel: '取消该团餐预订？' }
-          ReggieUI.confirm(tips[action], '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm(tips[action], '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(() => {
               groupMealApi[action](row.id).then((res) => {
                 if (res && res.code === 1) {
-                  ReggieUI.success(res.data || '操作成功')
+                  XinfeiUI.success(res.data || '操作成功')
                   this.loadData()
                 } else {
-                  ReggieUI.error((res && res.msg) || '操作失败')
+                  XinfeiUI.error((res && res.msg) || '操作失败')
                 }
               })
             }).catch(function (err) {
-              if (err instanceof Error) ReggieUI.error(err.message || '操作失败')
+              if (err instanceof Error) XinfeiUI.error(err.message || '操作失败')
             })
         },
         statusLabel(s) {

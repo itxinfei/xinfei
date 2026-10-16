@@ -27,9 +27,9 @@
        - size 支持 sm/md/lg/xl/fullscreen（fullscreen 宽度 92%，适合 iframe 嵌入）
        - #header 插槽：自定义弹窗头部（如标签页切换）
        - #footer 插槽：自定义底部按钮
-    5. 分页逻辑 → mixins:[window.ReggieListMixin]，实现 fetchData()
+    5. 分页逻辑 → mixins:[window.XinfeiListMixin]，实现 fetchData()
     6. 通用方法 → formatMoney/formatDate/rgStatusText/rgStatusTag/rgPreview
-    7. 状态枚举 → window.ReggieStatus.register('模块', textMap, tagMap)
+    7. 状态枚举 → window.XinfeiStatus.register('模块', textMap, tagMap)
     8. 操作列 → #actions 插槽契约：常显主操作 ≤3 个，超出收「更多」el-dropdown；
        宽度档 2 元素 120 / 3 元素 180 / 4 元素 240（更多触发器算 1 个元素）；
        语义类 查看/编辑 btn-view、启用 btn-success、停用/暂停 btn-warning、删除/取消 btn-delete
@@ -46,7 +46,7 @@
   <meta charset="UTF-8">
   <meta name="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>列表页模板 - 瑞吉外卖管理端</title>
+  <title>列表页模板 - 心飞外卖管理端</title>
 
     <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
     <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
@@ -143,7 +143,7 @@
   <script src="../../js/components.js?v=20261002"></script>
 <script>
     // ⑤ 状态枚举注册（消除各页重复定义 statusMap/typeMap）
-    window.ReggieStatus.register('demo',
+    window.XinfeiStatus.register('demo',
       { 1: '启用', 0: '禁用' },
       { 1: 'success', 0: 'info' }
     )
@@ -151,7 +151,7 @@
     new Vue({
       el: '#template-app',
       // ⑥ 列表页通用 Mixin：自动提供 page/pageSize/counts/loading 与翻页处理
-      mixins: [window.ReggieListMixin],
+      mixins: [window.XinfeiListMixin],
       data() {
         return {
           // 搜索项配置（详见 components.js 的 table-bar）
@@ -245,7 +245,7 @@
           this.submitLoading = true
           try {
             // await saveXxx(this.form)
-            ReggieUI.success('保存成功')
+            XinfeiUI.success('保存成功')
             this.form.visible = false
             this.fetchData()
           } finally {
@@ -253,9 +253,9 @@
           }
         },
         onDelete(id) {
-          ReggieUI.confirm('确认删除？', '提示', { type: 'warning' }).then(async () => {
+          XinfeiUI.confirm('确认删除？', '提示', { type: 'warning' }).then(async () => {
             // await deleteXxx(id)
-            ReggieUI.success('删除成功')
+            XinfeiUI.success('删除成功')
             this.fetchData()
           }).catch(function (err) { console.warn('[列表模板] 删除操作取消或失败:', err) })
         }

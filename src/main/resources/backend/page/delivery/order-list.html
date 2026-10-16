@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>外卖平台订单 - 瑞吉外卖管理端</title>
+  <title>外卖平台订单 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
@@ -289,7 +289,7 @@
           } catch (err) {
             if (err.message === 'NOTLOGIN') return
             this.optionsLoadError = true
-            ReggieUI.error('加载筛选选项失败，请刷新页面重试')
+            XinfeiUI.error('加载筛选选项失败，请刷新页面重试')
           } finally {
             this.optionsLoading = false
           }
@@ -309,7 +309,7 @@
               this.tableData = orderRes.data.records || []
               this.counts = orderRes.data.total
             } else {
-              ReggieUI.error(orderRes.msg || '加载订单列表失败')
+              XinfeiUI.error(orderRes.msg || '加载订单列表失败')
             }
             if (reloadStats) {
               const statsRes = results[1]
@@ -319,7 +319,7 @@
             }
           } catch (err) {
             if (err.message === 'NOTLOGIN') return
-            ReggieUI.error('加载订单列表失败，请刷新页面重试')
+            XinfeiUI.error('加载订单列表失败，请刷新页面重试')
           } finally {
             this.loading = false
           }
@@ -372,7 +372,7 @@
         },
         async confirmSync() {
           if (!this.syncForm.platform) {
-            ReggieUI.warning('请选择同步平台')
+            XinfeiUI.warning('请选择同步平台')
             return
           }
           if (this.syncLoading) return
@@ -387,13 +387,13 @@
               res = await deliverySyncStock({ platform: platform })
             }
             if (String(res.code) === '1') {
-              ReggieUI.success(this.syncType === 'menu' ? '同步菜品成功' : '同步库存成功')
+              XinfeiUI.success(this.syncType === 'menu' ? '同步菜品成功' : '同步库存成功')
             } else {
-              ReggieUI.warning(res.msg || '同步失败，请稍后重试')
+              XinfeiUI.warning(res.msg || '同步失败，请稍后重试')
             }
           } catch (err) {
             if (err.message === 'NOTLOGIN') return
-            ReggieUI.error('请求失败：' + (err.message || err))
+            XinfeiUI.error('请求失败：' + (err.message || err))
           } finally {
             this.syncLoading = false
             this.syncType = ''
@@ -406,17 +406,17 @@
           if (row._acting) return
           self.$set(row, '_acting', true)
           var clear = function () { self.$set(row, '_acting', false) }
-          ReggieUI.confirm(
+          XinfeiUI.confirm(
             '确认接单【' + row.platformOrderId + '】？接单后将通知平台。',
             '确认接单',
             { confirmButtonText: '确定', cancelButtonText: '取消', type: 'success' }
           ).then(function() {
             return deliveryAccept({ platform: row.platform, platformOrderId: row.platformOrderId })
               .then(function(res) {
-                if (String(res.code) === '1') { ReggieUI.success('接单成功'); self.search() }
-                else { ReggieUI.error(res.msg || '操作失败') }
+                if (String(res.code) === '1') { XinfeiUI.success('接单成功'); self.search() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
               })
-              .catch(function(err) { ReggieUI.error('请求失败：' + err) })
+              .catch(function(err) { XinfeiUI.error('请求失败：' + err) })
           }).then(clear, function (err) { console.warn('[delivery-order] 派单操作取消或失败:', err); clear() })
         },
         // 修改点：完整的状态流转操作
@@ -428,15 +428,15 @@
           var clear = function () { self.$set(row, '_acting', false) }
           const label = this.statusLabelMap[targetStatus] || targetStatus
           const confirmText = '确认将【' + row.platformOrderId + '】状态更新为"' + label + '"？'
-          ReggieUI.confirm(confirmText, '状态更新', {
+          XinfeiUI.confirm(confirmText, '状态更新', {
             confirmButtonText: '确定', cancelButtonText: '取消', type: 'info'
           }).then(function() {
             return deliveryUpdateStatus({ id: row.id, status: targetStatus })
               .then(function(res) {
-                if (String(res.code) === '1') { ReggieUI.success('状态更新成功'); self.search() }
-                else { ReggieUI.error(res.msg || '操作失败') }
+                if (String(res.code) === '1') { XinfeiUI.success('状态更新成功'); self.search() }
+                else { XinfeiUI.error(res.msg || '操作失败') }
               })
-              .catch(function(err) { ReggieUI.error('请求失败：' + err) })
+              .catch(function(err) { XinfeiUI.error('请求失败：' + err) })
           }).then(clear, function (err) { console.warn('[delivery-order] 状态流转操作取消或失败:', err); clear() })
         },
         cancelOrder: function(row) {
@@ -455,14 +455,14 @@
             deliveryUpdateStatus({ id: self.cancelForm.id, status: 'CANCELLED', remark: self.cancelForm.reason })
               .then(function(res) {
                 if (String(res.code) === '1') {
-                  ReggieUI.success('订单已取消')
+                  XinfeiUI.success('订单已取消')
                   self.cancelVisible = false
                   self.search()
                 } else {
-                  ReggieUI.error(res.msg || '操作失败')
+                  XinfeiUI.error(res.msg || '操作失败')
                 }
               })
-              .catch(function(err) { ReggieUI.error('请求失败：' + err) })
+              .catch(function(err) { XinfeiUI.error('请求失败：' + err) })
               .finally(function() { self.cancelLoading = false })
           })
         },
@@ -475,11 +475,11 @@
               this.detailOrder = res.data
             } else {
               this.detailOrder = Object.assign({}, row)
-              ReggieUI.warning(res.msg || '详情数据不完整，显示列表数据')
+              XinfeiUI.warning(res.msg || '详情数据不完整，显示列表数据')
             }
           } catch (err) {
             this.detailOrder = Object.assign({}, row)
-            ReggieUI.error('加载详情失败：' + err)
+            XinfeiUI.error('加载详情失败：' + err)
           } finally {
             this.loadingDetail = false
             this.detailVisible = true

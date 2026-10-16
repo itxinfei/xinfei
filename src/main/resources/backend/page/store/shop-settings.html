@@ -14,7 +14,7 @@
   <meta charset="UTF-8">
   <meta name="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店铺设置 - 瑞吉外卖管理端</title>
+  <title>店铺设置 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
   <style>
@@ -130,7 +130,7 @@
               this.form.notice = res.data.notice || ''
               this.form.businessHours = res.data.businessHours || ''
             } else if (res && res.code !== 1) {
-              ReggieUI.error(res.msg || '读取店铺信息失败')
+              XinfeiUI.error(res.msg || '读取店铺信息失败')
             }
           } catch (e) {
             console.warn('[店铺设置] 读取失败:', e)
@@ -142,14 +142,14 @@
           // /common/upload 成功返回 { code:1, data:'图片相对路径' }
           if (res && res.code === 1 && res.data) {
             this.form.logo = res.data
-            ReggieUI.success('Logo 上传成功，点击「保存设置」生效')
+            XinfeiUI.success('Logo 上传成功，点击「保存设置」生效')
           } else {
-            ReggieUI.error((res && res.msg) || 'Logo 上传失败')
+            XinfeiUI.error((res && res.msg) || 'Logo 上传失败')
           }
         },
         onLogoError(err) {
           // 未登录时后端返回 401 NOTLOGIN，由 request.js 统一跳转
-          ReggieUI.error('Logo 上传失败' + (err && err.message ? '：' + err.message : ''))
+          XinfeiUI.error('Logo 上传失败' + (err && err.message ? '：' + err.message : ''))
         },
         async onSave() {
           try {
@@ -170,7 +170,7 @@
               businessHours: this.form.businessHours || null
             })
             if (res && res.code === 1) {
-              ReggieUI.success('店铺设置已保存，C 端首页已生效')
+              XinfeiUI.success('店铺设置已保存，C 端首页已生效')
               // 通知后台外壳立即刷新侧边栏品牌（iframe 同域可访问 parent）
               try {
                 var parentWin = window.parent
@@ -181,11 +181,11 @@
               // 刷新缓存值（下次回填取到最新）
               this.fetchSettings()
             } else {
-              ReggieUI.error((res && res.msg) || '保存失败')
+              XinfeiUI.error((res && res.msg) || '保存失败')
             }
           } catch (e) {
             console.warn('[店铺设置] 保存失败:', e)
-            ReggieUI.error('保存失败，请稍后重试')
+            XinfeiUI.error('保存失败，请稍后重试')
           } finally {
             this.submitLoading = false
           }

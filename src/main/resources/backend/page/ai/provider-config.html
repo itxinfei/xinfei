@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI模型配置 - 瑞吉外卖管理端</title>
+    <title>AI模型配置 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -419,7 +419,7 @@
                         self.activeProvider = results[1].data || null;
                     }
                 }).catch(function(err) {
-                    ReggieUI.error('加载失败：' + (err.message || err));
+                    XinfeiUI.error('加载失败：' + (err.message || err));
                 });
             },
 
@@ -467,20 +467,20 @@
             /* ── 供应商操作（激活/测试/删除） ── */
             activateProvider: function(id) {
                 const self = this;
-                ReggieUI.confirm('设为首选后，新的对话请求优先使用该供应商；当其故障（限流/额度不足/超时/密钥失效/5xx）时自动切换到其他已启用供应商，恢复后自动回切。确定继续吗？', '设为首选确认', {
+                XinfeiUI.confirm('设为首选后，新的对话请求优先使用该供应商；当其故障（限流/额度不足/超时/密钥失效/5xx）时自动切换到其他已启用供应商，恢复后自动回切。确定继续吗？', '设为首选确认', {
                     confirmButtonText: '确定',
                     type: 'warning'
                 }).then(function() {
                     window.aiBackendApi.providerActivate(id).then(function(res) {
                         if (res.code === 1) {
-                            ReggieUI.success('已设为首选');
+                            XinfeiUI.success('已设为首选');
                             self.loadData();
                             self.loadStatus();
                         } else {
-                            ReggieUI.error(res.msg || '设置失败');
+                            XinfeiUI.error(res.msg || '设置失败');
                         }
                     }).catch(function(err) {
-                        ReggieUI.error('设置失败：' + (err.message || err));
+                        XinfeiUI.error('设置失败：' + (err.message || err));
                     });
                 }).catch(function(err) { console.warn('[provider-config] 设为首选操作取消或失败:', err) });
             },
@@ -490,7 +490,7 @@
                 var provider = this.providers.find(function(p) { return p.id === id; });
                 if (!provider) return;
 
-                var loadingMsg = ReggieUI.message({
+                var loadingMsg = XinfeiUI.message({
                     type: 'info',
                     message: '正在测试 ' + provider.providerName + ' 连接...',
                     duration: 0,
@@ -504,7 +504,7 @@
                     if (res.code === 1) {
                         const result = res.data.result || '';
                         const isSuccess = result.indexOf('SUCCESS') === 0;
-                        ReggieUI.message({
+                        XinfeiUI.message({
                             type: isSuccess ? 'success' : 'error',
                             message: provider.providerName + ' (' + elapsed + 's)：' + result,
                             duration: 6000,
@@ -512,11 +512,11 @@
                         });
                         self.loadData();
                     } else {
-                        ReggieUI.error('测试失败：' + (res.msg || '服务器返回异常'));
+                        XinfeiUI.error('测试失败：' + (res.msg || '服务器返回异常'));
                     }
                 }).catch(function(err) {
                     loadingMsg.close();
-                    ReggieUI.message({
+                    XinfeiUI.message({
                         type: 'error',
                         message: '测试失败：' + (err.message || err),
                         duration: 5000,
@@ -527,16 +527,16 @@
 
             deleteProvider: function(id) {
                 const self = this;
-                ReggieUI.confirm('确定删除此模型配置吗？此操作不可恢复。', '删除确认', {
+                XinfeiUI.confirm('确定删除此模型配置吗？此操作不可恢复。', '删除确认', {
                     confirmButtonText: '确定删除',
                     type: 'warning'
                 }).then(function() {
                     window.aiBackendApi.providerDelete(id).then(function(res) {
                         if (res.code === 1) {
-                            ReggieUI.success('删除成功');
+                            XinfeiUI.success('删除成功');
                             self.loadData();
                         } else {
-                            ReggieUI.error(res.msg || '删除失败');
+                            XinfeiUI.error(res.msg || '删除失败');
                         }
                     });
                 }).catch(function(err) { console.warn('[provider-config] 删除供应商操作取消或失败:', err) });
@@ -639,7 +639,7 @@
                 // slot 内容的 $refs 注册在页面实例上（append-to-body 只移 DOM 不移 Vue 组件树）
                 const formRef = this.$refs.providerForm;
                 if (!formRef) {
-                    ReggieUI.error('表单未就绪，请重试');
+                    XinfeiUI.error('表单未就绪，请重试');
                     return;
                 }
                 formRef.validate(function(valid) {
@@ -673,16 +673,16 @@
                             if (res.data && res.data.msg) {
                                 msg = res.data.msg;
                             }
-                            ReggieUI.success(msg || (self.form.id ? '更新成功' : '添加成功'));
+                            XinfeiUI.success(msg || (self.form.id ? '更新成功' : '添加成功'));
                             self.dialogVisible = false;
                             self.modelList = [];
                             self.modelFetchError = '';
                             self.loadData();
                         } else {
-                            ReggieUI.error(res.msg || '操作失败');
+                            XinfeiUI.error(res.msg || '操作失败');
                         }
                     }).catch(function(err) {
-                        ReggieUI.error('操作失败：' + (err.message || err));
+                        XinfeiUI.error('操作失败：' + (err.message || err));
                     }).finally(function() {
                         self.submitting = false;
                     });
@@ -692,20 +692,20 @@
             /* ── 预设初始化与模型列表 ── */
             initPresets: function() {
                 const self = this;
-                ReggieUI.confirm(
+                XinfeiUI.confirm(
                     '将自动添加 DeepSeek、通义千问、智谱AI、文心一言、百川、月之暗面、MiniMax、360 等 8 个预设模型配置。继续吗？',
                     '初始化预设',
                     { confirmButtonText: '确定初始化', type: 'info' }
                 ).then(function() {
                     window.aiBackendApi.providerInitPresets().then(function(res) {
                         if (res.code === 1) {
-                            ReggieUI.success(res.msg || '初始化成功');
+                            XinfeiUI.success(res.msg || '初始化成功');
                             self.loadData();
                         } else {
-                            ReggieUI.error(res.msg || '初始化失败');
+                            XinfeiUI.error(res.msg || '初始化失败');
                         }
                     }).catch(function(err) {
-                        ReggieUI.error('初始化失败：' + (err.message || err));
+                        XinfeiUI.error('初始化失败：' + (err.message || err));
                     });
                 }).catch(function(err) { console.warn('[provider-config] 初始化供应商操作取消或失败:', err) });
             },
@@ -714,7 +714,7 @@
             fetchModelList: function() {
                 const self = this;
                 if (!this.form.baseUrl || !this.form.apiKey) {
-                    ReggieUI.warning('请先填写 API 地址和 API 密钥');
+                    XinfeiUI.warning('请先填写 API 地址和 API 密钥');
                     return;
                 }
                 this.fetchingModels = true;
@@ -730,7 +730,7 @@
                         if (self.modelList.length === 0) {
                             self.modelFetchError = '该供应商未返回任何模型，请手动输入模型名称';
                         } else {
-                            ReggieUI.success('成功获取 ' + self.modelList.length + ' 个模型');
+                            XinfeiUI.success('成功获取 ' + self.modelList.length + ' 个模型');
                         }
                     } else {
                         self.modelFetchError = res.msg || '获取失败';

@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!-- 修改点(2026-09-17 UX)：移除 maximum-scale/user-scalable，恢复双指缩放（可访问性基本要求，全站其余页面均允许缩放） -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>扫码点餐 - 瑞吉外卖</title>
+  <title>扫码点餐 - 心飞外卖</title>
 
   <!-- 修改点(2026-09-17)：移除后端 Token 引用，改用前端 index.css 标准 Token -->
   <link rel="stylesheet" href="../../backend/plugins/remixicon/remixicon.css" />
@@ -21,7 +21,7 @@
 </head>
 <body>
   <div id="dine-app">
-    <cend-shell :title="storeInfo.name || '瑞吉外卖'" light :show-back="false" show-home>
+    <cend-shell :title="storeInfo.name || '心飞外卖'" light :show-back="false" show-home>
     <!-- 2026-09-26 头部收敛到 cend-shell，旧 .divHead 已移除 -->
 
     <!-- 桌台凭据条：让顾客确认在哪个区域/哪桌下单；桌台信息弱网拉取失败时兜底桌台ID -->
@@ -195,7 +195,7 @@
 
   <script src="../../backend/plugins/vue/vue.js"></script>
   <!-- 本页 common.js 在 <head> 先于 vue.js 加载，故 Vue 就绪后在此补装模板辅助方法 -->
-  <script>installReggieVueHelpers();</script>
+  <script>installXinfeiVueHelpers();</script>
   <script src="../js/vant.min.js"></script>
   <script src="../../backend/plugins/axios/axios.min.js"></script>
   <script src="../js/request.js?v=20260930"></script>

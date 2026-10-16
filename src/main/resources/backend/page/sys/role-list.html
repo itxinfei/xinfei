@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>角色管理 - 瑞吉外卖管理端</title>
+  <title>角色管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -368,7 +368,7 @@
               this.counts = roleRes.data.total || 0
             } else {
               // 修改点：接口失败兜底提示（原无 else 分支静默）
-              ReggieUI.error((roleRes && roleRes.msg) || '加载角色列表失败')
+              XinfeiUI.error((roleRes && roleRes.msg) || '加载角色列表失败')
             }
             if (reloadStats) {
               const statsRes = results[1]
@@ -378,7 +378,7 @@
             }
           } catch (err) {
             if (err.message !== 'NOTLOGIN') {
-              ReggieUI.error('加载角色列表失败，请刷新重试')
+              XinfeiUI.error('加载角色列表失败，请刷新重试')
             }
           } finally {
             this.loading = false
@@ -416,7 +416,7 @@
               if (searchItem) searchItem.options = options
             }
           } catch (err) {
-            if (err.message !== 'NOTLOGIN') ReggieUI.error('加载角色选项失败')
+            if (err.message !== 'NOTLOGIN') XinfeiUI.error('加载角色选项失败')
           } finally {
             if (searchItem) searchItem.loading = false
           }
@@ -480,36 +480,36 @@
           const self = this
           self.$refs.roleForm.validate(function(valid) {
             if (!valid) {
-              ReggieUI.warning('请填写角色名称和标识')
+              XinfeiUI.warning('请填写角色名称和标识')
               return
             }
             self.submitting = true
             const api = self.formData.id ? sysApi.roleUpdate(self.formData) : sysApi.roleAdd(self.formData)
             api.then(function(res) {
               if (res && res.code === 1) {
-                ReggieUI.success(res.msg || '操作成功')
+                XinfeiUI.success(res.msg || '操作成功')
                 self.formData.dialogVisible = false
                 self.init()
               } else {
-                ReggieUI.error(res ? res.msg : '操作失败')
+                XinfeiUI.error(res ? res.msg : '操作失败')
               }
-            }).catch(function() { ReggieUI.error('操作失败') })
+            }).catch(function() { XinfeiUI.error('操作失败') })
               .finally(function() { self.submitting = false })
           })
         },
         deleteHandle(id) {
           const self = this
-          ReggieUI.confirm('确定删除该角色吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          XinfeiUI.confirm('确定删除该角色吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
             .then(function() {
               sysApi.roleDelete(id).then(function(res) {
                 if (res && res.code === 1) {
-                  ReggieUI.success('删除成功')
+                  XinfeiUI.success('删除成功')
                   self.init()
                 }
               })
             }).catch(function(err) {
               // request.js 对业务失败 reject(new Error(msg))，需明确提示；用户点取消 reject('cancel')，静默
-              if (err instanceof Error) { ReggieUI.error(err.message || '删除失败') }
+              if (err instanceof Error) { XinfeiUI.error(err.message || '删除失败') }
             })
         },
         // ========== 权限分配（权限树） ==========
@@ -557,10 +557,10 @@
               self.permTreeData = self.buildTree(res.data || [])
               self.permTreeLoaded = true
             } else {
-              ReggieUI.error((res && res.msg) || '加载权限树失败')
+              XinfeiUI.error((res && res.msg) || '加载权限树失败')
             }
           }).catch(function() {
-            ReggieUI.error('加载权限树失败')
+            XinfeiUI.error('加载权限树失败')
           })
         },
         buildTree(flatList) {
@@ -595,10 +595,10 @@
                 }
               })
             } else {
-              ReggieUI.error((res && res.msg) || '加载角色权限失败')
+              XinfeiUI.error((res && res.msg) || '加载角色权限失败')
             }
           }).catch(function() {
-            ReggieUI.error('加载角色权限失败')
+            XinfeiUI.error('加载角色权限失败')
           })
         },
         loadRoleUsers(roleId) {
@@ -615,10 +615,10 @@
               self.checkedUserIds = (data.assignedUserIds || []).slice()
               self.usersLoaded = true
             } else {
-              ReggieUI.error((res && res.msg) || '加载角色成员失败')
+              XinfeiUI.error((res && res.msg) || '加载角色成员失败')
             }
           }).catch(function() {
-            ReggieUI.error('加载角色成员失败')
+            XinfeiUI.error('加载角色成员失败')
           })
         },
         filterEmployee(query, item) {
@@ -730,35 +730,35 @@
           this.checkedBtnCount = btn
         },
         submitPerms() {
-          if (!this.permsReady) { ReggieUI.error('权限数据尚未加载完成，请稍后重试') ; return }
+          if (!this.permsReady) { XinfeiUI.error('权限数据尚未加载完成，请稍后重试') ; return }
           const keys = this.$refs.permTree ? this.$refs.permTree.getCheckedKeys() : this.checkedPerms
           this.permSubmitting = true
           const self = this
           sysApi.assignPermissions(this.currentRole.id, keys).then(function(res) {
             if (res && res.code === 1) {
-              ReggieUI.success('权限分配成功')
+              XinfeiUI.success('权限分配成功')
               self.permDialogVisible = false
               self.permFilterText = ''
             } else {
-              ReggieUI.error(res ? res.msg : '操作失败')
+              XinfeiUI.error(res ? res.msg : '操作失败')
             }
-          }).catch(function() { ReggieUI.error('操作失败') })
+          }).catch(function() { XinfeiUI.error('操作失败') })
             .finally(function() { self.permSubmitting = false })
         },
         // 用户分配提交
         submitUsers() {
           if (!this.currentRole) { return }
-          if (!this.usersLoaded) { ReggieUI.error('成员数据尚未加载完成，请稍后重试') ; return }
+          if (!this.usersLoaded) { XinfeiUI.error('成员数据尚未加载完成，请稍后重试') ; return }
           this.userSubmitting = true
           const self = this
           sysApi.assignRoleUsers(this.currentRole.id, this.checkedUserIds.slice()).then(function(res) {
             if (res && res.code === 1) {
-              ReggieUI.success('用户分配成功')
+              XinfeiUI.success('用户分配成功')
               self.userDialogVisible = false
             } else {
-              ReggieUI.error(res ? res.msg : '操作失败')
+              XinfeiUI.error(res ? res.msg : '操作失败')
             }
-          }).catch(function() { ReggieUI.error('操作失败') })
+          }).catch(function() { XinfeiUI.error('操作失败') })
             .finally(function() { self.userSubmitting = false })
         }
       }

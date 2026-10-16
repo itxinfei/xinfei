@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>数据概览 - 瑞吉外卖管理端</title>
+  <title>数据概览 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
@@ -823,10 +823,10 @@
                 this.echartsLoadFailed = true;
               }
             } else {
-              ReggieUI.error(res.msg || '数据加载失败');
+              XinfeiUI.error(res.msg || '数据加载失败');
             }
           } catch (err) {
-            ReggieUI.error('请求失败：' + (err.message || err));
+            XinfeiUI.error('请求失败：' + (err.message || err));
           } finally {
             this.loading = false;
           }
@@ -845,7 +845,7 @@
               this.trend = res.data || [];
               this.$nextTick(() => this.renderTrendChart());
             } else {
-              ReggieUI.error(res.msg || '趋势数据加载失败');
+              XinfeiUI.error(res.msg || '趋势数据加载失败');
             }
           } catch (e) {
             console.warn('切换趋势图天数失败:', e);
@@ -868,7 +868,7 @@
             localStorage.setItem('rg_dashboard_monthlyTarget', String(this.monthlyTarget));
           } catch (e) { /* 静默 */ }
           this.targetDialogVisible = false;
-          ReggieUI.success('营收目标已保存');
+          XinfeiUI.success('营收目标已保存');
         },
 
         // 修改点：从趋势数据计算昨日对比
