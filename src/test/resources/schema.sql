@@ -1335,7 +1335,7 @@ CREATE TABLE IF NOT EXISTS notification_template (
   channel tinyint NOT NULL DEFAULT 1,
   biz_type varchar(50) NOT NULL,
   title varchar(200) DEFAULT NULL,
-  content text NULL,
+  content text COLLATE utf8mb4_bin NULL,
   param_list varchar(500) DEFAULT NULL,
   sign_name varchar(50) DEFAULT NULL,
   status tinyint NOT NULL DEFAULT 1,
