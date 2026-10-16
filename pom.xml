@@ -103,6 +103,14 @@
             <version>1.2.21</version>
         </dependency>
 
+        <!-- 数据库迁移：Flyway（版本由 Spring Boot 2.4.5 BOM 管理=7.1.1，兼容 JDK 1.8 与 MySQL 8；
+             MySQL 支持在 7.x 内置于 flyway-core，无需额外 flyway-mysql 构件）。
+             基线语义见 src/main/resources/application.yml 的 spring.flyway 与 docs/FLYWAY_MIGRATION.md -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>

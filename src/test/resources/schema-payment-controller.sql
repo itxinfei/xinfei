@@ -45,7 +45,12 @@ CREATE TABLE IF NOT EXISTS orders (
   version int NOT NULL DEFAULT 0 COMMENT '乐锁版朏',
   master_order_id bigint NULL DEFAULT NULL COMMENT '父订单ID（AA分账时指向主订单）',
   split_count int NULL DEFAULT NULL COMMENT '分账份数（AA分账记录拆分数量）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_orders_platform (tenant_id,platform_type,platform_order_id),
+  KEY idx_order_user (user_id,order_time),
+  KEY idx_order_number (number),
+  KEY idx_order_status (status),
+  KEY idx_order_tenant (tenant_id)
 );
 
 -- ==================== 订单明细表 ====================
@@ -66,7 +71,8 @@ CREATE TABLE IF NOT EXISTS order_detail (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_order_detail_order (order_id)
 );
 
 -- ==================== 支付订单表 ====================
@@ -88,7 +94,11 @@ CREATE TABLE IF NOT EXISTS payment_order (
   version int NOT NULL DEFAULT 1 COMMENT '版本号',
   create_user bigint DEFAULT NULL COMMENT '创建人ID',
   update_user bigint DEFAULT NULL COMMENT '修改人ID',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  UNIQUE KEY uk_trade_no (trade_no) USING BTREE,
+  KEY idx_order (order_id) USING BTREE,
+  KEY idx_tenant (tenant_id) USING BTREE,
+  KEY idx_channel_trade (channel_trade_no) USING BTREE
 );
 
 -- ==================== 退款记录表 ====================
@@ -111,9 +121,12 @@ CREATE TABLE IF NOT EXISTS refund_record (
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除 0=未删除 1=已删除',
   version int NOT NULL DEFAULT 1 COMMENT '版本号',
   create_user bigint DEFAULT NULL COMMENT '创建人ID',
-  update_time datetime NOT NULL COMMENT '更新时间',
+  update_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   update_user bigint DEFAULT NULL COMMENT '修改人ID',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  UNIQUE KEY uk_refund_no (refund_no) USING BTREE,
+  KEY idx_payment (payment_order_id) USING BTREE,
+  KEY idx_tenant_id (tenant_id)
 );
 
 -- ==================== 支付渠道配置表 ====================
@@ -135,15 +148,17 @@ CREATE TABLE IF NOT EXISTS payment_channel_config (
   refund_notify_url varchar(500) DEFAULT NULL COMMENT '退款回调地址',
   enabled int NOT NULL DEFAULT 1 COMMENT '启用 0停 1启',
   remark varchar(500) DEFAULT NULL COMMENT '备注',
-  tenant_id bigint NOT NULL DEFAULT 0 COMMENT '租户ID',
+  tenant_id bigint NOT NULL COMMENT '租户ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   version int NOT NULL DEFAULT 0 COMMENT '乐观锁',
   create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  update_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   create_user bigint DEFAULT NULL COMMENT '创建人',
   update_user bigint DEFAULT NULL COMMENT '修改人',
-  PRIMARY KEY (id)
-);
+  PRIMARY KEY (id) USING BTREE,
+  KEY idx_tenant_channel (tenant_id,channel,is_deleted) USING BTREE,
+  KEY idx_pcc_tenant (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- 清理测试残留数据
 -- 单库隔离（2026-10-06）：仅清理测试租户 999 的残留，禁止无条件全表 DELETE（会清掉租户 1 演示数据）

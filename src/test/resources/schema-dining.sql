@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS dining_queue (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_queue_tenant_no (tenant_id,queue_no)
 );
 
 -- Reservation entity (@TableName("dining_reservation"))
@@ -104,7 +105,7 @@ CREATE TABLE IF NOT EXISTS group_meal_booking (
   update_user bigint NULL DEFAULT NULL COMMENT '修改人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
   PRIMARY KEY (id),
-  KEY idx_gmb_tenant_date (tenant_id, meal_date)
+  KEY idx_gmb_tenant_date (tenant_id,meal_date)
 );
 
 -- ==================== 团餐预订明细表 ====================

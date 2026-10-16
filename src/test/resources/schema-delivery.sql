@@ -26,7 +26,10 @@ CREATE TABLE IF NOT EXISTS delivery_order (
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   version int NULL DEFAULT NULL COMMENT '乐锁版朏',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_delivery_order_tenant_id (tenant_id),
+  KEY idx_delivery_order_platform_order_id (platform_order_id),
+  KEY idx_delivery_order_order_id (order_id)
 );
 
 
@@ -49,7 +52,7 @@ CREATE TABLE IF NOT EXISTS rider_account (
   create_time datetime NULL DEFAULT NULL,
   update_time datetime NULL DEFAULT NULL,
   PRIMARY KEY (id),
-  UNIQUE (rider_id, tenant_id)
+  UNIQUE KEY uk_rider_tenant (rider_id,tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS rider_income_ledger (
@@ -61,7 +64,7 @@ CREATE TABLE IF NOT EXISTS rider_income_ledger (
   status int NULL DEFAULT 1 COMMENT '状态',
   create_time datetime NULL DEFAULT NULL,
   PRIMARY KEY (id),
-  UNIQUE (order_id)
+  UNIQUE KEY uk_order (order_id)
 );
 
 CREATE TABLE IF NOT EXISTS rider_withdrawal (
@@ -108,7 +111,7 @@ CREATE TABLE IF NOT EXISTS rider_evaluation (
   update_user bigint NULL DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (id),
-  UNIQUE (order_id, rider_id, is_deleted)
+  UNIQUE KEY uk_order_rider_del (order_id,rider_id,is_deleted)
 );
 
 DELETE FROM rider_evaluation WHERE tenant_id = 999;
@@ -134,7 +137,7 @@ CREATE TABLE IF NOT EXISTS rider_exception_order (
   update_user bigint NULL DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (id),
-  KEY idx_tenant_status (tenant_id, status),
+  KEY idx_tenant_status (tenant_id,status),
   KEY idx_order (order_id)
 );
 
@@ -158,7 +161,7 @@ CREATE TABLE IF NOT EXISTS rider_message (
   update_user bigint NULL DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (id),
-  KEY idx_rider_read (rider_id, is_read),
+  KEY idx_rider_read (rider_id,is_read),
   KEY idx_tenant (tenant_id)
 );
 

@@ -7,6 +7,12 @@
 server:
   port: 8080
 spring:
+  # 测试环境关闭 Flyway：建表仍由各测试类的 @Sql + src/test/resources/schema*.sql 负责，
+  # 启动期不做 DDL，避免与「租户 999 + test 命名空间」的 TestDatabaseCleaner 隔离机制相互干扰。
+  # 夹具与 db/migration/V1 基线已核验结构一致（2026-10-16：129/129 表，列/索引/排序规则零漂移），
+  # 改夹具后按 docs/FLYWAY_MIGRATION.md 第 7 节的配方重跑核验。
+  flyway:
+    enabled: false
   datasource:
     druid:
       url: jdbc:mysql://localhost:3306/xinfei?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true

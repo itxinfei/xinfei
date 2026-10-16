@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS coupon_user (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_member_template (member_id,template_id)
 );
 -- 修改点：防重复领取唯一索引（与 xinfei.sql uk_member_template 对齐）
 
@@ -94,7 +95,7 @@ CREATE TABLE IF NOT EXISTS points_record (
   update_user bigint NULL DEFAULT NULL COMMENT '修改人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (id),
-  UNIQUE KEY uq_points_biz (tenant_id, biz_type, biz_id, type)
+  UNIQUE KEY uq_points_biz (tenant_id,biz_type,biz_id,type)
 );
 
 CREATE TABLE IF NOT EXISTS recharge_record (
@@ -115,7 +116,9 @@ CREATE TABLE IF NOT EXISTS recharge_record (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_recharge_no (recharge_no),
+  KEY idx_rr_member_status (member_id,status)
 );
 -- 充值单号唯一索引（NULL 不冲突，兼容历史无单号数据）
 

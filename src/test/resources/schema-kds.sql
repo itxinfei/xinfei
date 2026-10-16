@@ -26,7 +26,11 @@ CREATE TABLE IF NOT EXISTS kitchen_ticket (
   create_user bigint DEFAULT NULL COMMENT '创建人',
   update_user bigint DEFAULT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_kitchen_order (order_id),
+  KEY idx_kitchen_tenant_status (tenant_id,status),
+  KEY idx_kitchen_finish (finish_time),
+  KEY idx_kitchen_station (tenant_id,station_code)
 );
 
 -- 清理测试残留数据

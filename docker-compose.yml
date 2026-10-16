@@ -1,7 +1,8 @@
 # Xinfei 外卖系统 — 一键部署（MySQL 8 + Redis 7 + 应用）
-# 首次启动：db-init 容器自动建表 + 导入最小种子数据（admin / 123456）
+# 首次启动：db-init 只确保 xinfei 库存在，建表与最小种子数据（admin / 123456）由应用
+#           启动期的 Flyway 完成（V1 全量表结构 + V2 最小种子，见 src/main/resources/db/migration/）。
 # 可调参数：MYSQL_ROOT_PASSWORD（必填，须在 .env 设置，缺值 compose 直接报错，不再用仓库默认口令）
-#            可选：APP_PORT / XINFEI_SERVER_URL / XINFEI_*_MOCKMODE / ALLOW_MOCK_IN_PROD
+#            可选：APP_PORT / XINFEI_SERVER_URL / XINFEI_*_MOCK_MODE / ALLOW_MOCK_IN_PROD / FLYWAY_ENABLED
 services:
   mysql:
     image: mysql:8.0
@@ -36,7 +37,8 @@ services:
       timeout: 5s
       retries: 30
 
-  # 一次性建库 + 导入 schema（幂等，每次 up 都会跑一遍，不丢数据）
+  # 一次性确保库存在（幂等，每次 up 都会跑一遍，不丢数据）。
+  # 建表/种子已移交应用启动期的 Flyway，此处不再挂载 schema 与 seed 脚本。
   db-init:
     image: mysql:8.0
     container_name: xinfei-db-init
@@ -48,8 +50,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD（勿用仓库默认口令）}
     volumes:
       - ./docker/db-init.sh:/db-init.sh:ro
-      - ./src/test/resources:/schemas:ro
-      - ./db:/seed:ro
     entrypoint: ["bash", "/db-init.sh"]
 
   app:
@@ -78,16 +78,21 @@ services:
       # 上传根目录（图片/发票等落盘到持久卷）
       XINFEI_PATH: /data/uploads
       # 堂食二维码等对外链接：手机访问请改成宿主机局域网 IP，如 http://192.168.1.10:8080
-      XINFEI_SERVERURL: ${XINFEI_SERVER_URL:-http://localhost:8080}
+      # 变量名必须用「连字符换成下划线」的规范形：Spring 只把 '.' 与 '-' 映射成 '_'，
+      # 写成 XINFEI_SERVERURL 这种丢掉连字符的名字，@Value 与 @ConfigurationProperties 两条路径都解析不到。
+      XINFEI_SERVER_URL: ${XINFEI_SERVER_URL:-http://localhost:8080}
       # 首启无商户密钥，默认 mock 保证可用；接真实微信/支付宝后再关（false 走真实验签，fail-closed）
-      XINFEI_PAYMENT_MOCKMODE: ${XINFEI_PAYMENT_MOCKMODE:-true}
+      XINFEI_PAYMENT_MOCK_MODE: ${XINFEI_PAYMENT_MOCK_MODE:-true}
       # 显式豁免「prod 与支付 mock 互斥」校验，仅限隔离演示 / 单机自部署；
-      # 对公网提供服务的真实生产环境务必在 .env 设为 false（同时把 XINFEI_PAYMENT_MOCKMODE 设为 false）
+      # 对公网提供服务的真实生产环境务必在 .env 设为 false（同时把 XINFEI_PAYMENT_MOCK_MODE 设为 false）
       ALLOW_MOCK_IN_PROD: ${ALLOW_MOCK_IN_PROD:-true}
       # 无短信模板配置，mock 模式验证码只打日志，保证顾客端可登录
-      XINFEI_SMS_MOCKMODE: ${XINFEI_SMS_MOCKMODE:-true}
-      XINFEI_PUSH_MOCKMODE: ${XINFEI_PUSH_MOCKMODE:-true}
-      XINFEI_DELIVERY_MOCKMODE: ${XINFEI_DELIVERY_MOCKMODE:-true}
+      XINFEI_SMS_MOCK_MODE: ${XINFEI_SMS_MOCK_MODE:-true}
+      XINFEI_PUSH_MOCK_MODE: ${XINFEI_PUSH_MOCK_MODE:-true}
+      XINFEI_DELIVERY_MOCK_MODE: ${XINFEI_DELIVERY_MOCK_MODE:-true}
+      # Flyway：单机自部署首次 up 是空库，需要应用建表，故默认开（已有库只记基线、不重放 V1/V2，
+      # 也不会覆盖已有数据）。对公网提供服务的部署请改为 false，结构变更走人工评审 + 手动执行。
+      FLYWAY_ENABLED: ${FLYWAY_ENABLED:-true}
       JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m -Duser.timezone=Asia/Shanghai}
     volumes:
       - app-uploads:/data/uploads

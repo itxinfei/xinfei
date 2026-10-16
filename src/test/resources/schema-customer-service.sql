@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS cs_session (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_css_user (user_id),
+  KEY idx_css_tenant (tenant_id)
 );
 
 -- CsMessage entity (@TableName("cs_message"))
@@ -36,7 +38,9 @@ CREATE TABLE IF NOT EXISTS cs_message (
   is_read int NULL DEFAULT 0 COMMENT '昐已 0- 1-已',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_csm_session (session_id),
+  KEY idx_csm_tenant (tenant_id)
 );
 
 -- Complaint entity (@TableName("complaint"))
@@ -63,7 +67,9 @@ CREATE TABLE IF NOT EXISTS complaint (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_cp_user (user_id),
+  KEY idx_cp_tenant (tenant_id)
 );
 -- 修改点(2026-09-26)：每方法执行前清空模块表，消除跨方法残留导致的计数/主键冲突
 -- 单库隔离（2026-10-06）：仅清理测试租户 999 的残留，禁止无条件全表 DELETE（会清掉租户 1 演示数据）

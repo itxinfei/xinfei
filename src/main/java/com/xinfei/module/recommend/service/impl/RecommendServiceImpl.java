@@ -27,11 +27,11 @@ import com.xinfei.module.recommend.service.analytics.RecommendationAnalyticsServ
 import com.xinfei.module.setmeal.model.Setmeal;
 import com.xinfei.module.setmeal.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -66,7 +66,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  */
 @Slf4j
 @Service
-public class RecommendServiceImpl implements RecommendService {
+public class RecommendServiceImpl implements RecommendService, SmartInitializingSingleton {
 
     /** 推荐缓存过期时间(小时) */
     private static final int CACHE_EXPIRE_HOURS = 6;
@@ -150,9 +150,19 @@ public class RecommendServiceImpl implements RecommendService {
     private RecommendationAnalyticsService analyticsService;
 
     /**
+     * 全部单例实例化完成后再清理过期缓存，而不是 @PostConstruct。
+     * <p>启动期 Flyway 迁移由 flywayInitializer 单例执行，@PostConstruct 可能排在它之前；
+     * 空库首次部署时 recommendation_cache 还没建表，过早执行会被下面的 catch 吞掉，
+     * 本次启动就不再清理过期缓存。此回调保证晚于迁移。</p>
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        init();
+    }
+
+    /**
      * 应用启动时清理过期缓存
      */
-    @PostConstruct
     public void init() {
         try {
             int deleted = cacheMapper.deleteExpired();

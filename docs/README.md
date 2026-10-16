@@ -32,5 +32,5 @@
 - **性质**: 多租户餐饮全栈系统（开源自托管，面向商家自行部署与二开）
 - **后端**: Spring Boot 2.4.5 + MyBatis-Plus 3.5.3.1 + JDK 1.8
 - **前端**: 三端免构建静态资源 —— 管理后台 Vue2 + Element-UI、用户点餐端 Vue2 + Vant、骑手端 Vant（均为原生 JS，无编译步骤）
-- **规模**: 39 个业务模块 / 105 个 Controller / 124 张表 / 78 个后台页面 / 38 个 API 模块
-- **测试**: 123 个测试类、955 个测试用例（`mvn test`，0 失败，含 JaCoCo 覆盖率报告）
+- **规模**: 40 个业务模块 / 109 个 Controller / 874 个 API 端点 / 129 张业务数据表（Flyway V1 基线，另有 1 张 `flyway_schema_history`）/ 80 个后台功能页（`backend/page/**/*.html`，不含 `_templates`）/ 39 个后台 API 封装（`backend/api/*.js`）
+- **测试**: 131 个可执行测试类（另有 1 个抽象基类 `BaseControllerTest`）、1019 个测试用例（`mvn test`，0 失败 0 跳过，含 JaCoCo 覆盖率报告）

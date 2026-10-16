@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS meal_subsidy_account (
   update_time datetime NOT NULL COMMENT '更新时间',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
   PRIMARY KEY (id),
-  UNIQUE KEY uk_subsidy_tenant_user (tenant_id, user_id)
+  UNIQUE KEY uk_subsidy_tenant_user (tenant_id,user_id)
 );
 
 -- ==================== 餐补流水表 ====================
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS meal_subsidy_record (
   remark varchar(200) NULL DEFAULT NULL COMMENT '备注',
   create_time datetime NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id),
-  UNIQUE KEY uk_subsidy_record_trade (trade_no, record_type),
-  KEY idx_subsidy_record_user (tenant_id, user_id, create_time),
+  UNIQUE KEY uk_subsidy_record_trade (trade_no,record_type),
+  KEY idx_subsidy_record_user (tenant_id,user_id,create_time),
   KEY idx_subsidy_record_order (order_id)
 );

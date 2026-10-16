@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS user (
   update_time datetime NULL DEFAULT NULL COMMENT '用户信息',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
   department_id bigint NULL DEFAULT NULL COMMENT '部门ID（企业组织架构，2026-10-06）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_user_phone (phone),
+  KEY idx_user_tenant (tenant_id)
 );
 
 -- ==================== 地址簿 ====================
@@ -63,7 +65,9 @@ CREATE TABLE IF NOT EXISTS address_book (
   update_user bigint NOT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_address_user (user_id),
+  KEY idx_address_tenant (tenant_id)
 );
 
 -- ==================== 分类表 ====================
@@ -78,7 +82,9 @@ CREATE TABLE IF NOT EXISTS category (
   update_user bigint NOT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_category_type (type),
+  KEY idx_category_tenant (tenant_id)
 );
 
 -- ==================== 菜品表 ====================
@@ -100,7 +106,9 @@ CREATE TABLE IF NOT EXISTS dish (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
   stock_qty decimal(10,2) NOT NULL DEFAULT 0 COMMENT '当前库存数量',
   min_stock decimal(10,2) NOT NULL DEFAULT 0 COMMENT '最低库存预警阈值',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_dish_category (category_id),
+  KEY idx_dish_tenant (tenant_id)
 );
 
 -- ==================== 菜品口味表 ====================
@@ -115,7 +123,8 @@ CREATE TABLE IF NOT EXISTS dish_flavor (
   create_user bigint NOT NULL COMMENT '创建人',
   update_user bigint NOT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_dish_flavor_dish (dish_id)
 );
 
 -- ==================== 套餐表 ====================
@@ -134,7 +143,9 @@ CREATE TABLE IF NOT EXISTS setmeal (
   update_user bigint NOT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_setmeal_category (category_id),
+  KEY idx_setmeal_tenant (tenant_id)
 );
 
 -- ==================== 套餐菜品关联表 ====================
@@ -152,7 +163,8 @@ CREATE TABLE IF NOT EXISTS setmeal_dish (
   create_user bigint NOT NULL COMMENT '创建人',
   update_user bigint NOT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_setmeal_dish_setmeal (setmeal_id)
 );
 
 -- ==================== 订单表 ====================
@@ -199,7 +211,12 @@ CREATE TABLE IF NOT EXISTS orders (
   version int NOT NULL DEFAULT 0 COMMENT '乐锁版朏',
   master_order_id bigint NULL DEFAULT NULL COMMENT '父订单ID（AA分账时指向主订单）',
   split_count int NULL DEFAULT NULL COMMENT '分账份数（AA分账记录拆分数量）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_orders_platform (tenant_id,platform_type,platform_order_id),
+  KEY idx_order_user (user_id,order_time),
+  KEY idx_order_number (number),
+  KEY idx_order_status (status),
+  KEY idx_order_tenant (tenant_id)
 );
 
 -- ==================== 订单明细表 ====================
@@ -220,7 +237,8 @@ CREATE TABLE IF NOT EXISTS order_detail (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_order_detail_order (order_id)
 );
 
 -- ==================== 购物车 ====================
@@ -236,7 +254,8 @@ CREATE TABLE IF NOT EXISTS shopping_cart (
   image varchar(255) NULL DEFAULT NULL COMMENT '图片',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_cart_user (user_id)
 );
 
 -- ==================== 员工表 ====================
@@ -260,7 +279,10 @@ CREATE TABLE IF NOT EXISTS employee (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
   role int NOT NULL DEFAULT 2 COMMENT '角色 1:超级管理员 2:普通员工',
   department_id bigint NULL DEFAULT NULL COMMENT '部门ID（企业组织架构，2026-10-06）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_employee_username (username),
+  UNIQUE KEY idx_employee_tenant_jobno (tenant_id,job_number),
+  KEY idx_employee_tenant (tenant_id)
 );
 -- 工号租户内唯一（job_number 为 NULL 时不参与约束，允许多个未设工号员工）
 
@@ -278,7 +300,8 @@ CREATE TABLE IF NOT EXISTS role (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '是否删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_role_key (role_key)
 );
 
 -- ==================== 部门表（企业组织架构，2026-10-06） ====================
@@ -313,7 +336,9 @@ CREATE TABLE IF NOT EXISTS permission (
   status int NOT NULL DEFAULT 1 COMMENT '状态 0:禁用 1:启用',
   create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_permission_key (permission_key),
+  KEY idx_permission_parent (parent_id)
 );
 
 -- ==================== 角色权限关联表 ====================
@@ -322,7 +347,9 @@ CREATE TABLE IF NOT EXISTS role_permission (
   role_id bigint NOT NULL COMMENT '角色ID',
   permission_id bigint NOT NULL COMMENT '权限ID',
   create_time datetime NOT NULL COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_role_permission_role (role_id),
+  KEY idx_role_permission_permission (permission_id)
 );
 
 -- ==================== 员工角色关联表（RBAC 闭环：用户→角色，多对多） ====================
@@ -333,7 +360,9 @@ CREATE TABLE IF NOT EXISTS employee_role (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (id),
-  UNIQUE KEY uk_employee_role (employee_id, role_id)
+  UNIQUE KEY uk_employee_role (employee_id,role_id),
+  KEY idx_employee_role_employee (employee_id),
+  KEY idx_employee_role_role (role_id)
 );
 
 -- ==================== 系统配置表 ====================
@@ -348,7 +377,8 @@ CREATE TABLE IF NOT EXISTS system_config (
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人ID',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_system_config_key_tenant (config_key,tenant_id)
 );
 
 -- ==================== 菜单表 ====================
@@ -421,7 +451,9 @@ CREATE TABLE IF NOT EXISTS ai_provider_config (
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   capabilities text NULL DEFAULT NULL COMMENT '模型能力声明（JSON 数组：chat/embedding/vision/tool_call 等）',
   embedding_dimensions int NULL DEFAULT NULL COMMENT '向量维度（embedding 模型专用）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_ai_provider_config_code (provider_code),
+  KEY idx_ai_provider_config_active (is_active)
 );
 
 -- ==================== 区域表 ====================
@@ -469,7 +501,9 @@ CREATE TABLE IF NOT EXISTS dish_evaluation (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除 0=未删除 1=已删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_dish_evaluation_tenant (tenant_id),
+  KEY idx_dish_evaluation_user_setmeal (user_id,setmeal_id,order_id)
 );
 
 -- ==================== 门店表 ====================
@@ -603,7 +637,9 @@ CREATE TABLE IF NOT EXISTS platform_config (
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_platform_type_shop (platform_type,shop_id),
+  KEY idx_platform_tenant (tenant_id)
 );
 
 -- ==================== tenant ====================
@@ -648,7 +684,11 @@ CREATE TABLE IF NOT EXISTS operation_log (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NOT NULL COMMENT '创建时间',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_operation_log_tenant (tenant_id),
+  KEY idx_operation_log_operator (operator_id),
+  KEY idx_operation_log_module (module),
+  KEY idx_operation_log_time (create_time)
 );
 
 -- ==================== 营销活动 / 满减规则 / 核销（满减引擎计费依赖） ====================
@@ -674,7 +714,9 @@ CREATE TABLE IF NOT EXISTS marketing_campaign (
   create_time datetime NOT NULL COMMENT '创建时间',
   update_time datetime NOT NULL COMMENT '更新时间',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_mc_tenant_status (tenant_id,status),
+  KEY idx_mc_time (start_time,end_time)
 );
 
 CREATE TABLE IF NOT EXISTS full_reduction_rule (
@@ -697,7 +739,9 @@ CREATE TABLE IF NOT EXISTS full_reduction_rule (
   update_user bigint NULL DEFAULT NULL COMMENT '更新人',
   create_time datetime NOT NULL COMMENT '创建时间',
   update_time datetime NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_frr_campaign (campaign_id),
+  KEY idx_frr_tenant (tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS campaign_usage_record (
@@ -715,7 +759,12 @@ CREATE TABLE IF NOT EXISTS campaign_usage_record (
   use_time datetime NULL DEFAULT NULL COMMENT '使用时间',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NOT NULL COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_cur_campaign (campaign_id),
+  KEY idx_cur_user (user_id),
+  KEY idx_cur_order (order_id),
+  KEY idx_cur_time (use_time),
+  KEY idx_cur_tenant (tenant_id)
 );
 
 -- 秒杀活动（C 端下单秒杀替换价 / CAS 扣库存）
@@ -738,7 +787,9 @@ CREATE TABLE IF NOT EXISTS flash_sale (
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
   create_user bigint NULL DEFAULT NULL COMMENT '创建人',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_flash_dish (dish_id),
+  KEY idx_flash_tenant (tenant_id)
 );
 
 -- 买赠活动
@@ -763,7 +814,10 @@ CREATE TABLE IF NOT EXISTS buy_get_free (
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
   create_user bigint NULL DEFAULT NULL COMMENT '创建人',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_bgf_tenant (tenant_id),
+  KEY idx_bgf_dish (dish_id),
+  KEY idx_bgf_gift (gift_dish_id)
 );
 
 -- 新客立减
@@ -782,7 +836,8 @@ CREATE TABLE IF NOT EXISTS new_customer_discount (
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
   create_user bigint NULL DEFAULT NULL COMMENT '创建人',
   update_user bigint NULL DEFAULT NULL COMMENT '修改人',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_ncd_tenant (tenant_id)
 );
 
 -- ==================== 用户收藏 ====================
@@ -793,7 +848,9 @@ CREATE TABLE IF NOT EXISTS user_favorite (
   target_id bigint NOT NULL COMMENT '收藏对象ID',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NOT NULL COMMENT '收藏时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_user_favorite (user_id,target_type,target_id,tenant_id),
+  KEY idx_uf_user (user_id)
 );
 
 
@@ -815,7 +872,9 @@ CREATE TABLE IF NOT EXISTS cs_session (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_css_user (user_id),
+  KEY idx_css_tenant (tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS cs_message (
@@ -830,7 +889,9 @@ CREATE TABLE IF NOT EXISTS cs_message (
   is_read int NULL DEFAULT 0 COMMENT '是否已读 0否 1是',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_csm_session (session_id),
+  KEY idx_csm_tenant (tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS complaint (
@@ -856,7 +917,9 @@ CREATE TABLE IF NOT EXISTS complaint (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户ID',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_cp_user (user_id),
+  KEY idx_cp_tenant (tenant_id)
 );
 
 -- ==================== 实体表补齐（由 .review/test-schema-backfill.js 依据 db/xinfei.sql 生成）
@@ -882,7 +945,10 @@ CREATE TABLE IF NOT EXISTS ai_attachment (
   update_time datetime NOT NULL,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_owner (tenant_id,actor_type,owner_id),
+  KEY idx_owner_scene (owner_id,scene),
+  KEY idx_sha256 (sha256)
 );
 
 -- ai_conversation
@@ -900,7 +966,11 @@ CREATE TABLE IF NOT EXISTS ai_conversation (
   create_time datetime NOT NULL,
   update_time datetime NOT NULL,
   tenant_id bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_conversation_id (conversation_id),
+  KEY idx_user_id (user_id),
+  KEY idx_tenant_id (tenant_id),
+  KEY idx_tenant_actor (tenant_id,actor_type,user_id)
 );
 
 -- ai_knowledge_chunk
@@ -914,7 +984,9 @@ CREATE TABLE IF NOT EXISTS ai_knowledge_chunk (
   embed_model varchar(100) DEFAULT NULL,
   create_time datetime NOT NULL,
   update_time datetime NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_doc (tenant_id,doc_id),
+  FULLTEXT KEY ft_content (content) /*!50100 WITH PARSER ngram */
 );
 
 -- ai_knowledge_doc
@@ -933,7 +1005,9 @@ CREATE TABLE IF NOT EXISTS ai_knowledge_doc (
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_status (tenant_id,status),
+  KEY idx_tenant_audience (tenant_id,audience)
 );
 
 -- ai_message
@@ -956,7 +1030,11 @@ CREATE TABLE IF NOT EXISTS ai_message (
   update_user bigint DEFAULT NULL,
   create_time datetime NOT NULL,
   tenant_id bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_conversation_client_msg (conversation_id,client_msg_id),
+  KEY idx_conversation_id (conversation_id),
+  KEY idx_user_id (user_id),
+  KEY idx_create_time (create_time)
 );
 
 -- ai_prompt_template
@@ -977,7 +1055,9 @@ CREATE TABLE IF NOT EXISTS ai_prompt_template (
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_code (code),
+  KEY idx_scene_type (scene,type,enabled)
 );
 
 -- ai_prompt_template_history（模板历史版本快照，与主表同构、无 tenant_id，已加入租户插件白名单）
@@ -995,7 +1075,7 @@ CREATE TABLE IF NOT EXISTS ai_prompt_template_history (
   operator_id bigint DEFAULT NULL,
   create_time datetime NOT NULL,
   PRIMARY KEY (id),
-  KEY idx_apt_history_template (template_id, id)
+  KEY idx_apt_history_template (template_id,id)
 );
 
 -- ai_user_profile
@@ -1024,7 +1104,9 @@ CREATE TABLE IF NOT EXISTS ai_user_profile (
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_id (user_id),
+  KEY idx_tenant_id (tenant_id)
 );
 
 -- attendance
@@ -1041,7 +1123,9 @@ CREATE TABLE IF NOT EXISTS attendance (
   tenant_id bigint DEFAULT NULL,
   create_time datetime DEFAULT CURRENT_TIMESTAMP,
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_attendance_emp_date (employee_id,date),
+  KEY idx_attendance_tenant (tenant_id)
 );
 
 -- delivery_fee_step
@@ -1057,7 +1141,9 @@ CREATE TABLE IF NOT EXISTS delivery_fee_step (
   tenant_id bigint DEFAULT NULL,
   create_time datetime DEFAULT CURRENT_TIMESTAMP,
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_rule_id (rule_id),
+  KEY idx_tenant_id (tenant_id)
 );
 
 -- delivery_range_rule
@@ -1083,7 +1169,9 @@ CREATE TABLE IF NOT EXISTS delivery_range_rule (
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_id (tenant_id),
+  KEY idx_status (status)
 );
 
 -- discount_rule
@@ -1107,7 +1195,9 @@ CREATE TABLE IF NOT EXISTS discount_rule (
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_campaign_id (campaign_id),
+  KEY idx_tenant_id (tenant_id)
 );
 
 -- dish_spec_group
@@ -1125,7 +1215,9 @@ CREATE TABLE IF NOT EXISTS dish_spec_group (
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_id (tenant_id),
+  KEY idx_status (status)
 );
 
 -- dish_spec_option
@@ -1142,7 +1234,9 @@ CREATE TABLE IF NOT EXISTS dish_spec_option (
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_group_id (group_id),
+  KEY idx_tenant_id (tenant_id)
 );
 
 -- dish_spec_relation
@@ -1154,7 +1248,11 @@ CREATE TABLE IF NOT EXISTS dish_spec_relation (
   tenant_id bigint DEFAULT NULL,
   create_time datetime DEFAULT CURRENT_TIMESTAMP,
   create_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_dish_group (dish_id,group_id),
+  KEY idx_dish_id (dish_id),
+  KEY idx_group_id (group_id),
+  KEY idx_tenant_id (tenant_id)
 );
 
 -- marketing_message
@@ -1174,7 +1272,10 @@ CREATE TABLE IF NOT EXISTS marketing_message (
   create_user bigint DEFAULT NULL,
   update_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  KEY idx_user (user_id) USING BTREE,
+  KEY idx_campaign (campaign_id) USING BTREE,
+  KEY idx_tenant (tenant_id) USING BTREE
 );
 
 -- member_tag
@@ -1191,7 +1292,9 @@ CREATE TABLE IF NOT EXISTS member_tag (
   create_user bigint DEFAULT NULL,
   update_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_tenant_member_biz (tenant_id,member_id,biz_tag),
+  KEY idx_member_tenant (member_id,tenant_id)
 );
 
 -- notification_record
@@ -1216,7 +1319,11 @@ CREATE TABLE IF NOT EXISTS notification_record (
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
   is_deleted int NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_status (tenant_id,status),
+  KEY idx_biz_type (biz_type),
+  KEY idx_send_time (send_time),
+  KEY idx_create_time (create_time)
 );
 
 -- notification_template
@@ -1238,7 +1345,9 @@ CREATE TABLE IF NOT EXISTS notification_template (
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
   is_deleted tinyint NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_biz (tenant_id,biz_type),
+  KEY idx_template_code (template_code)
 );
 
 -- recommendation_cache
@@ -1256,7 +1365,10 @@ CREATE TABLE IF NOT EXISTS recommendation_cache (
   is_deleted int NOT NULL DEFAULT 0,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  KEY idx_user_recommend (user_id,recommend_type) USING BTREE,
+  KEY idx_tenant (tenant_id) USING BTREE,
+  KEY idx_expire (expire_time) USING BTREE
 );
 
 -- recommendation_feedback
@@ -1272,7 +1384,10 @@ CREATE TABLE IF NOT EXISTS recommendation_feedback (
   create_user bigint DEFAULT NULL,
   update_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  KEY idx_user (user_id) USING BTREE,
+  KEY idx_dish (dish_id) USING BTREE,
+  KEY idx_tenant (tenant_id) USING BTREE
 );
 
 -- urgency_record
@@ -1286,7 +1401,10 @@ CREATE TABLE IF NOT EXISTS urgency_record (
   tenant_id bigint NOT NULL,
   create_time datetime NOT NULL,
   update_time datetime DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_member_id (member_id),
+  KEY idx_tenant_id (tenant_id),
+  KEY idx_create_time (create_time)
 );
 
 -- user_browse_history
@@ -1301,7 +1419,10 @@ CREATE TABLE IF NOT EXISTS user_browse_history (
   action_type tinyint NOT NULL DEFAULT 1,
   create_time datetime NOT NULL,
   is_deleted int NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  KEY idx_user_time (user_id,create_time DESC) USING BTREE,
+  KEY idx_tenant (tenant_id) USING BTREE,
+  KEY idx_target (target_type,target_id) USING BTREE
 );
 
 -- user_device
@@ -1319,7 +1440,9 @@ CREATE TABLE IF NOT EXISTS user_device (
   is_deleted int NOT NULL DEFAULT 0,
   create_user bigint DEFAULT NULL,
   update_user bigint DEFAULT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_platform (user_id,platform),
+  KEY idx_device_token (device_token)
 );
 
 -- user_preference_tag
@@ -1336,7 +1459,9 @@ CREATE TABLE IF NOT EXISTS user_preference_tag (
   create_user bigint NOT NULL,
   update_user bigint NOT NULL,
   is_deleted int NOT NULL DEFAULT 0,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id) USING BTREE,
+  KEY idx_user_tag (user_id,tag_type) USING BTREE,
+  KEY idx_tenant (tenant_id) USING BTREE
 );
 
 -- work_schedule
@@ -1353,5 +1478,7 @@ CREATE TABLE IF NOT EXISTS work_schedule (
   tenant_id bigint DEFAULT NULL,
   create_time datetime DEFAULT CURRENT_TIMESTAMP,
   update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_schedule_emp_date (employee_id,schedule_date),
+  KEY idx_schedule_tenant (tenant_id)
 );

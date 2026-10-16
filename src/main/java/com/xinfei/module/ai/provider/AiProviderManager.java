@@ -26,6 +26,7 @@ import com.xinfei.module.ai.model.AiProviderConfig;
 import com.xinfei.module.ai.model.ModelTurn;
 import com.xinfei.module.ai.tool.ToolDefinition;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -48,7 +49,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class AiProviderManager {
+public class AiProviderManager implements SmartInitializingSingleton {
 
     @Resource
     private AiProviderConfigMapper providerConfigMapper;
@@ -122,9 +123,19 @@ public class AiProviderManager {
     private volatile long lastReloadTime = 0L;
 
     /**
+     * 全部单例实例化完成后再加载数据库配置，而不是 @PostConstruct。
+     * <p>Flyway 的启动期迁移由 flywayInitializer 单例执行，@PostConstruct 可能排在它之前；
+     * 空库首次部署时 ai_provider_config 还没建表，过早加载会静默降级成"无 AI 供应商"，
+     * 直到下一次 reload 才恢复。此回调保证晚于迁移。</p>
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        init();
+    }
+
+    /**
      * 初始化。
      */
-    @PostConstruct
     public void init() {
         try {
             reloadConfig();

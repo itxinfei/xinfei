@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS material_category (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_material_category_tenant_id (tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS supplier (
@@ -30,7 +31,8 @@ CREATE TABLE IF NOT EXISTS supplier (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_supplier_tenant_id (tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS material (
@@ -50,7 +52,10 @@ CREATE TABLE IF NOT EXISTS material (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_material_tenant_id (tenant_id),
+  KEY idx_material_category_id (category_id),
+  KEY idx_material_supplier_id (supplier_id)
 );
 
 CREATE TABLE IF NOT EXISTS purchase_order (
@@ -69,7 +74,10 @@ CREATE TABLE IF NOT EXISTS purchase_order (
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   VERSION int NOT NULL DEFAULT 0 COMMENT 'ֹ汾',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_purchase_order_tenant_id (tenant_id),
+  KEY idx_purchase_order_supplier_id (supplier_id),
+  KEY idx_purchase_order_order_no (order_no)
 );
 
 CREATE TABLE IF NOT EXISTS stock_check (
@@ -86,7 +94,9 @@ CREATE TABLE IF NOT EXISTS stock_check (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_stock_check_tenant_id (tenant_id),
+  KEY idx_stock_check_check_no (check_no)
 );
 
 CREATE TABLE IF NOT EXISTS purchase_order_detail (
@@ -104,7 +114,10 @@ CREATE TABLE IF NOT EXISTS purchase_order_detail (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_purchase_order_detail_tenant_id (tenant_id),
+  KEY idx_purchase_order_detail_purchase_order_id (purchase_order_id),
+  KEY idx_purchase_order_detail_material_id (material_id)
 );
 
 CREATE TABLE IF NOT EXISTS stock_check_detail (
@@ -121,7 +134,10 @@ CREATE TABLE IF NOT EXISTS stock_check_detail (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_stock_check_detail_tenant_id (tenant_id),
+  KEY idx_stock_check_detail_check_id (check_id),
+  KEY idx_stock_check_detail_material_id (material_id)
 );
 
 CREATE TABLE IF NOT EXISTS dish_material (
@@ -136,7 +152,11 @@ CREATE TABLE IF NOT EXISTS dish_material (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_dish_material_dish_material (tenant_id,dish_id,material_id),
+  KEY idx_dish_material_tenant_id (tenant_id),
+  KEY idx_dish_material_dish_id (dish_id),
+  KEY idx_dish_material_material_id (material_id)
 );
 
 CREATE TABLE IF NOT EXISTS stock_record (
@@ -156,7 +176,11 @@ CREATE TABLE IF NOT EXISTS stock_record (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_stock_record_tenant_id (tenant_id),
+  KEY idx_stock_record_material_id (material_id),
+  KEY idx_stock_record_biz_id (biz_id),
+  KEY idx_stock_record_type (type)
 );
 
 -- Separate CREATE INDEX statements for H2 compatibility
@@ -171,7 +195,10 @@ CREATE TABLE IF NOT EXISTS price_history (
   CHANGE_REASON varchar(255) DEFAULT '' COMMENT '变动原因',
   OPERATOR_ID bigint NOT NULL DEFAULT 0 COMMENT '操作人ID',
   CREATE_TIME datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_price_history_tenant_id (tenant_id),
+  KEY idx_price_history_material_id (material_id),
+  KEY idx_price_history_create_time (create_time)
 );
 
 -- 供应商结算单表（H2 兼容）
@@ -188,7 +215,11 @@ CREATE TABLE IF NOT EXISTS supplier_settlement (
   CREATE_USER bigint NULL DEFAULT NULL COMMENT '创建人ID',
   UPDATE_USER bigint NULL DEFAULT NULL COMMENT '更新人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_supplier_settlement_tenant_id (tenant_id),
+  KEY idx_supplier_settlement_supplier_id (supplier_id),
+  KEY idx_supplier_settlement_period (period),
+  KEY idx_supplier_settlement_status (status)
 );
 
 -- 修改点(2026-09-26)：每方法执行前清空模块表，消除跨方法残留导致的计数/主键冲突

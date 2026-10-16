@@ -42,7 +42,12 @@ CREATE TABLE IF NOT EXISTS orders (
   version int NOT NULL DEFAULT 0 COMMENT '乐锁版朏',
   master_order_id bigint NULL DEFAULT NULL COMMENT '父订单ID（AA分账时指向主订单）',
   split_count int NULL DEFAULT NULL COMMENT '分账份数（AA分账记录拆分数量）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_orders_platform (tenant_id,platform_type,platform_order_id),
+  KEY idx_order_user (user_id,order_time),
+  KEY idx_order_number (number),
+  KEY idx_order_status (status),
+  KEY idx_order_tenant (tenant_id)
 );
 
 -- ==================== 订单明细表 ====================
@@ -63,7 +68,8 @@ CREATE TABLE IF NOT EXISTS order_detail (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_order_detail_order (order_id)
 );
 
 -- 只清理本测试专用的平台订单（订单号前缀 MT20260824），绝不删开发库（tenant=1）的平台订单。
@@ -88,7 +94,9 @@ CREATE TABLE IF NOT EXISTS platform_config (
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_platform_type_shop (platform_type,shop_id),
+  KEY idx_platform_tenant (tenant_id)
 );
 
 -- ==================== 商品平台映射表 ====================
@@ -106,7 +114,7 @@ CREATE TABLE IF NOT EXISTS dish_platform_mapping (
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (id),
-  UNIQUE INDEX idx_mapping_dish_platform (dish_id, platform_type, platform_dish_id)
+  UNIQUE KEY idx_mapping_dish_platform (dish_id,platform_type,platform_dish_id)
 );
 
 -- ==================== 平台同步操作日志表 ====================
@@ -124,7 +132,10 @@ CREATE TABLE IF NOT EXISTS platform_sync_log (
   error_message varchar(512) NULL DEFAULT NULL COMMENT '错信息',
   retry_count int NOT NULL DEFAULT 0 COMMENT '重试次数',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_sync_log_platform_order (platform_type,platform_order_id),
+  KEY idx_sync_log_local_order (local_order_id),
+  KEY idx_sync_log_create_time (create_time)
 );
 
 -- ==================== 平台对账任务表 ====================
@@ -144,7 +155,8 @@ CREATE TABLE IF NOT EXISTS platform_reconcile_task (
   error_message varchar(512) NULL DEFAULT NULL COMMENT '错信息',
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   update_time datetime NULL DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_reconcile_task_date_platform (reconcile_date,platform_type,tenant_id)
 );
 
 -- 清理测试租户段（999 默认 / 998 第二租户）的平台配置相关数据，保证可重复执行；不触碰 tenant=1/2。

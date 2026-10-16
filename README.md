@@ -62,11 +62,11 @@
 
 <!-- ============ 徽章墙：系统能力与规模（6 个 / 592px） ============ -->
 <img src="docs/badges/shield-33.svg" alt="多租户隔离">
-<img src="docs/badges/shield-34.svg" alt="39 模块">
-<img src="docs/badges/shield-35.svg" alt="124 表">
-<img src="docs/badges/shield-36.svg" alt="955 测试">
-<img src="docs/badges/shield-37.svg" alt="111 页面">
-<img src="docs/badges/shield-38.svg" alt="873 Java 文件">
+<img src="docs/badges/shield-34.svg" alt="40 模块">
+<img src="docs/badges/shield-35.svg" alt="129 表">
+<img src="docs/badges/shield-36.svg" alt="1019 测试">
+<img src="docs/badges/shield-37.svg" alt="114 页面">
+<img src="docs/badges/shield-38.svg" alt="903 Java 文件">
 
 <br>
 <br>
@@ -93,7 +93,7 @@
 
 **心飞外卖**是一套在真实餐饮业务上反复打磨的全栈管理系统，基于 **Spring Boot + Vue 单体架构**，一套实例、一个 Jar 即可同时驱动「管理后台 / 用户点餐 / 骑手配送」三端，覆盖**堂食、外卖、进销存、会员营销、多渠道支付、票据打印、经营报表**等餐饮经营全场景。
 
-- 🖥️ **管理后台**：Vue2 + Element-UI，**78 个功能页**，员工日常经营的生产力工具
+- 🖥️ **管理后台**：Vue2 + Element-UI，**80 个功能页**，员工日常经营的生产力工具
 - 📱 **用户点餐 H5**：Vue2 + Vant，**25 个页面**，扫码点餐 / 外卖到家 / 会员中心
 - 🛵 **骑手配送 H5**：Vant，**8 个页面**，抢单派单 / GPS 实时追踪
 
@@ -101,7 +101,7 @@
 
 > ### 🥇 这不是一个玩具级 Demo
 >
-> **39 个业务模块 · 124 张数据表 · 955 个自动化测试 · 873 个 Java 类**，系统性地解决了多租户隔离、资金安全、库存成本、履约配送、并发下单、幂等退款等企业级难题。**克隆即可运行，开箱即可交付。**
+> **40 个业务模块 · 129 张数据表 · 1019 个自动化测试 · 903 个 Java 类**，系统性地解决了多租户隔离、资金安全、库存成本、履约配送、并发下单、幂等退款等企业级难题。**克隆即可运行，开箱即可交付。**
 
 ### 🧭 内容导航
 
@@ -134,7 +134,7 @@ MyBatis-Plus 行级租户插件自动注入 `tenant_id`，基于 `ThreadLocal` �
 原料 BOM 配方、供应商、采购入库、库存盘点、库存流水、成本核算，菜品销售自动扣减原料库存，退款自动回补，**经营报表 + 财务利润分析**打通业财。
 
 ### 🛡️ 企业级安全 & 质量
-行级租户隔离、CSRF Token、Redis 滑动窗口限流（降级内存仍 fail-closed）、BCrypt 加密（兼容 MD5 自动升级）、`#{}` 预编译防注入、XSS 转义、日志脱敏、Jasypt 配置加密。**955 个自动化测试 + JaCoCo 覆盖率**为每次改动兜底。
+行级租户隔离、CSRF Token、Redis 滑动窗口限流（降级内存仍 fail-closed）、BCrypt 加密（兼容 MD5 自动升级）、`#{}` 预编译防注入、XSS 转义、日志脱敏、Jasypt 配置加密。**1019 个自动化测试 + JaCoCo 覆盖率**为每次改动兜底。
 
 </td>
 </tr>
@@ -175,7 +175,7 @@ MyBatis-Plus 行级租户插件自动注入 `tenant_id`，基于 `ThreadLocal` �
     <td align="center" width="25%"><img src="docs/screenshots/12-evaluations.png" width="96%" alt="评价管理" style="border-radius:8px;border:1px solid #e5e7eb;"><br><sub>⭐ 评价管理</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/14-roles.png" width="96%" alt="角色权限" style="border-radius:8px;border:1px solid #e5e7eb;"><br><sub>🛡️ 角色权限</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/16-payment.png" width="96%" alt="支付配置" style="border-radius:8px;border:1px solid #e5e7eb;"><br><sub>💳 支付配置</sub></td>
-    <td align="center" width="25%"><sub>后台共 <b>78</b> 个功能页<br>（此处为代表页面）</sub></td>
+    <td align="center" width="25%"><sub>后台共 <b>80</b> 个功能页<br>（此处为代表页面）</sub></td>
   </tr>
 </table>
 
@@ -233,7 +233,7 @@ Session + HttpOnly Cookie 鉴权 · **MyBatis-Plus 行级租户隔离（上下�
 |---|---|
 | 🎓 计算机专业学生 | 罕见「大而全」的全栈实战项目：三端 + AI + 多租户 + 真实支付，简历 / 毕设硬核加分项 |
 | 🍜 餐饮商家 / 创业者 | 自助部署、数据完全自持，一套系统管门店，**无需为 SaaS 持续付费** |
-| 👨‍💻 全栈开发者 | 标准分层 + 多租户 + 支付 + 955 测试，可直接二开或作为企业脚手架 |
+| 👨‍💻 全栈开发者 | 标准分层 + 多租户 + 支付 + 1019 测试，可直接二开或作为企业脚手架 |
 | 🏢 外包 / 技术团队 | Apache-2.0 协议允许商用交付，省去从零搭建的数周成本 |
 
 ---
@@ -283,7 +283,7 @@ Session + HttpOnly Cookie 鉴权 · **MyBatis-Plus 行级租户隔离（上下�
 | ⚡ Redis | 6.0+ |
 | 📦 Maven | 3.6+ |
 
-> 三端前端均为**免构建**静态资源（Vue 2 全局引入 + 浏览器原生 JS），**不需要 Node.js** 即可运行。Node.js 仅在跑 E2E 脚本或 UI 规范 pre-commit 门禁时才需要。
+> 三端前端均为**免构建**静态资源（Vue 2 全局引入 + 浏览器原生 JS），**不需要 Node.js** 即可运行。Node.js 仅在执行 UI 规范 pre-commit 门禁（`scripts/lint-ui-conventions.js`）时需要；Playwright E2E 套件在本地 `tests/` 目录，按 `.gitignore` 不随本仓库发布。
 
 > 💡 **贡献者建议**：执行一次 `bash hooks/install.sh` 启用 UI 规范 pre-commit 门禁（ERROR 级别违规阻断提交，规则与豁免清单见 `scripts/lint-ui-conventions.js` 头部说明）。
 
@@ -297,22 +297,17 @@ cd xinfei
 # 2. 创建数据库（务必指定 utf8mb4，否则中文数据乱码）
 mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS xinfei CHARACTER SET utf8mb4;"
 
-# 3. 建表：导入仓库内建表脚本（18 个文件，覆盖 122 张表）
-#    注意 --default-character-set=utf8mb4 不可省略
-for f in src/test/resources/schema*.sql; do
-  mysql -uroot -p --default-character-set=utf8mb4 xinfei < "$f"
-done
-
-# 4. 插入最小初始化数据（租户 / 门店 / 超管账号，脚本可重复执行）
-mysql -uroot -p --default-character-set=utf8mb4 xinfei < db/seed-minimal.sql
-
-# 5. 启动（application-dev.yml 默认连 localhost:3306/xinfei 与 localhost:6379）
+# 3. 启动：dev 环境由 Flyway 自动建表 + 写入最小种子（V1 全量表结构 129 张表、
+#    V2 租户/门店/超管账号），首次启动即可完成初始化，无需手工导脚本
 mvn spring-boot:run
 ```
 
-> 建表脚本原为自动化测试所用（位于 `src/test/resources/`），内容与生产一致（`CREATE TABLE IF NOT EXISTS`，可重复执行）。它覆盖 **122 张表**，比生产库少 `invoice_record`、`invoice_title` 两张发票表——需要时可在 `docs/数据模型.md` 查结构补建，或联系作者获取全量建库脚本。
+> **迁移机制**：结构脚本在 `src/main/resources/db/migration/`，`V1`=全量表结构基线、`V2`=最小可登录数据，新变更从 `V3` 起递增；约定、既有结构漂移清单见 `docs/FLYWAY_MIGRATION.md`。
+> 已有库（例如从全量演示库 `db/xinfei.sql` 恢复的库）首次启动只会记一条 version=2 的基线行，**不会重放 V1/V2、不会覆盖你已有的数据**。
 >
-> 💡 **想要带演示数据的完整环境？** 含 124 张表与各端演示数据的全量建库脚本未随仓库发布（体积大且含本地定制），可通过文末 **QQ 747011882 / 交流群** 获取。
+> 仍可走旧的手工建表路径（`src/test/resources/schema*.sql` + `db/seed-minimal.sql`，`CREATE TABLE IF NOT EXISTS` 可重复执行）：先手工建完表再启动，Flyway 同样只记基线。该夹具 2026-10-16 起已与 V1 基线结构核验一致（129 张表、列/索引/排序规则零漂移），两条路径任选；核验方法见 `docs/FLYWAY_MIGRATION.md` 第 7 节。
+>
+> 💡 **想要带演示数据的完整环境？** 含 129 张表与各端演示数据的全量建库脚本未随仓库发布（体积大且含本地定制），可通过文末 **QQ 747011882 / 交流群** 获取；拿到后导入空库即可，应用启动只会记基线。
 
 启动后访问：
 
@@ -331,10 +326,10 @@ mvn spring-boot:run
 
 ```bash
 cp .env.example .env        # 按需改：数据库密码 / 端口 / 对外访问地址（手机扫码填局域网 IP）
-bash docker/up.sh   # 构建镜像 + 拉起 MySQL 8 / Redis 7 / 应用 + 自动建库导种子
+bash docker/up.sh   # 构建镜像 + 拉起 MySQL 8 / Redis 7 / 应用 + 自动建库
 ```
 
-- 首启自动建 122 张表并导入最小种子数据（`docker/db-init.sh`，幂等，重复执行不丢数据）。
+- 首启 `docker/db-init.sh` 只确保 `xinfei` 库存在；建 129 张表 + 最小种子数据（`admin`/`123456`）由应用启动期的 Flyway 完成（`FLYWAY_ENABLED` 默认 true，见 `.env.example`）。已有库只记一条基线行，不重放、不动业务数据。
 - 默认 `prod` profile + 短信/支付 mock 开（验证码只打日志、下单走模拟支付），接真实微信/支付宝后通过环境变量关闭。
 - 数据持久化：`mysql-data` / `redis-data` / `app-uploads` 三个 Docker 卷；上传图片在 `app-uploads`。
 - 日常运维：
@@ -392,7 +387,7 @@ mvn clean compile
 mvn animal-sniffer:check
 ```
 
-后端含 **123 个测试类、955 个测试用例**（单元测试 + Spring 集成测试 + 并发负载测试，0 失败），JaCoCo 产出覆盖率报告。
+后端含 **131 个可执行测试类、1019 个测试用例**（单元测试 + Spring 集成测试 + 并发负载测试，0 失败 0 跳过），JaCoCo 产出覆盖率报告。
 
 ---
 
@@ -415,7 +410,7 @@ xinfei/
 │   │   │                          #   CORS / 异步 / 调度 / 过滤器注册 / Jasypt / WebSocket）
 │   ├── filter/                    # 过滤器（登录校验、安全头、链路追踪）
 │   ├── dto/  enums/  utils/
-│   └── module/                    # ★ 39 个业务模块，各含 controller/service/mapper/model/dto
+│   └── module/                    # ★ 40 个业务模块，各含 controller/service/mapper/model/dto
 │       │
 │       ├── 【交易主链路】
 │       │   ├── order/             #   订单（状态机）
@@ -467,20 +462,22 @@ xinfei/
 │           └── inventory/         #   进销存（原料/供应商/采购/盘点）
 │
 ├── src/main/resources/
-│   ├── backend/                   # 🖥️ 管理后台（Element-UI，78 页，api/page/js/styles）
-│   ├── front/                     # 📱 用户点餐 H5（Vant，25 页）
+│   ├── backend/                   # 🖥️ 管理后台（Element-UI，80 页，api/page/js/styles）
+│   ├── front/                     # 📱 用户点餐 H5（Vant，26 页）
 │   ├── rider/                     # 🛵 骑手配送 H5（Vant，8 页）
 │   ├── shared/                    # 三端共享（CSRF 核心、状态字典、样式令牌）
 │   ├── scripts/rate_limit.lua     # Redis 限流 Lua 脚本
 │   └── application.yml / application-dev.yml / application-prod.yml
 │
-├── src/test/                      # JUnit 5 测试（123 个测试类 / 955 用例）
-│   └── resources/schema*.sql      # 按模块拆分建表脚本（亦供本地建表复用）
+├── src/main/resources/db/migration/   # Flyway 迁移脚本（V1 全量表结构基线 / V2 最小种子，V3 起递增）
+│
+├── src/test/                      # JUnit 5 测试（131 个可执行测试类 / 1019 用例）
+│   └── resources/schema*.sql      # 测试建表夹具（@Sql 使用；结构以 src/main/resources/db/migration/ 为准）
 │
 ├── db/
-│   └── seed-minimal.sql           # 最小初始化数据（建表后必执行）
+│   └── seed-minimal.sql           # 最小初始化数据（旧手工路径留档；Flyway 路径已并入 V2）
 ├── docs/                          # 架构 / 数据模型 / 模块 API 文档 + screenshots/
-├── scripts/                       # Node 前端检查 / H5 体验巡逻脚本（非运行时）
+├── scripts/                       # 仅发布 lint-ui-conventions.js（UI 规范门禁）；其余本地工具脚本不入库
 └── pom.xml
 ```
 
@@ -492,7 +489,7 @@ xinfei/
 |---|---|
 | [项目总览](docs/项目总览.md) | 业务背景与整体设计 |
 | [模块与接口](docs/模块与接口.md) | 各模块接口清单 |
-| [数据模型](docs/数据模型.md) | 124 张数据表与关系设计 |
+| [数据模型](docs/数据模型.md) | 129 张数据表与关系设计 |
 | [架构设计](docs/架构设计.md) | 关键技术选型与决策记录 |
 | [后台页面清单](docs/后台页面清单.md) | 管理后台全部页面索引 |
 
@@ -507,13 +504,14 @@ xinfei/
 
 1. 漏了 `--default-character-set=utf8mb4`（最常见）——不指定时 MySQL 客户端会按 GBK 解释脚本；
 2. 建库没指定字符集：`CREATE DATABASE xinfei CHARACTER SET utf8mb4;`（已有库可 `ALTER DATABASE xinfei CHARACTER SET utf8mb4;`）；
-3. `schema*.sql` 可重复执行，报「表已存在」属正常；如需重来，`DROP DATABASE xinfei;` 后重建即可。
+3. 走 Flyway 路径（推荐）不会乱码：`spring.flyway.encoding=UTF-8` 已固定；如需重来，`DROP DATABASE xinfei;` 后重建即可，下次启动自动重放 V1/V2；
+4. 手工导 `schema*.sql` 可重复执行，报「表已存在」属正常。
 </details>
 
 <details>
 <summary><b>建完表登录不了 / 提示用户名或密码错误？</b></summary>
 
-你多半只执行了建表、没执行第 4 步。建表脚本**不含任何初始数据**，必须再导入 `db/seed-minimal.sql`，否则 `employee` 表为空、无可登录账号。
+走 Flyway 路径不会有这个问题：V2 会写入租户 / 门店 / `admin`（口令 123456）。只有手工只导了 `schema*.sql` 而没导 `db/seed-minimal.sql` 时，`employee` 表才为空。
 </details>
 
 <details>
@@ -552,7 +550,7 @@ curl -b c.txt -X PUT http://localhost:8080/employee/password \
 <details>
 <summary><b>接口报「表不存在」？</b></summary>
 
-本地库通过 `schema*.sql` 建表；新增业务表后需把 DDL 同步到对应文件（基础表 → `schema.sql`，模块表 → `schema-<module>.sql`）。项目**未启用 Flyway**，脚本不会自动迁移已有库，需手动补执行。
+结构以 Flyway 为准：新增表/列写 `src/main/resources/db/migration/V<n>__描述.sql`（dev 启动自动执行，prod 需人工注入 `FLYWAY_ENABLED=true`），并同步 `src/test/resources/schema*.sql` 供测试夹具使用。若接口报「表不存在」，先查 `flyway_schema_history` 是否缺该版本，再确认测试夹具是否同步。
 </details>
 
 <details>

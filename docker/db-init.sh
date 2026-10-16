@@ -1,7 +1,9 @@
 #!/bin/bash
-# 一次性建库容器：按 README「自助建表」路径初始化数据库。
-# 幂等：schema*.sql 全部为 CREATE TABLE IF NOT EXISTS，seed-minimal.sql 先清后插，
-# 重复执行不会丢数据（但也不会动已有业务数据）。
+# 一次性确保 xinfei 库存在（幂等，重复执行不丢数据）。
+# 建表与最小种子数据由应用启动期的 Flyway 负责：
+#   V1 = 全量表结构基线，V2 = admin/123456 等最小可登录数据
+#   （src/main/resources/db/migration/，基线语义见 docs/FLYWAY_MIGRATION.md）。
+# 本容器不再导入任何 SQL 脚本，避免与 Flyway 形成两个结构来源。
 set -euo pipefail
 
 : "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}"
@@ -24,15 +26,4 @@ done
 echo "[db-init] ensuring database ${DB} (utf8mb4)"
 "${MYSQL_CMD[@]}" -e "CREATE DATABASE IF NOT EXISTS ${DB} CHARACTER SET utf8mb4;"
 
-echo "[db-init] import base schema.sql"
-"${MYSQL_CMD[@]}" "${DB}" < /schemas/schema.sql
-
-for f in /schemas/schema-*.sql; do
-  echo "[db-init] import $(basename "${f}")"
-  "${MYSQL_CMD[@]}" "${DB}" < "${f}"
-done
-
-echo "[db-init] import seed-minimal.sql (admin / 123456)"
-"${MYSQL_CMD[@]}" "${DB}" < /seed/seed-minimal.sql
-
-echo "[db-init] done"
+echo "[db-init] done (schema 交给 Flyway)"

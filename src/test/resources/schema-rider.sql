@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS delivery_time_record (
   create_time datetime DEFAULT CURRENT_TIMESTAMP,
   update_time datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE (order_id)
+  UNIQUE KEY order_id (order_id)
 );
 
 CREATE TABLE IF NOT EXISTS rider_location_record (
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS rider_remember_token (
   token varchar(64) NOT NULL,
   expire_time datetime NOT NULL,
   created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_token (token),
-  KEY idx_rider (rider_id)
-);
+  PRIMARY KEY (id) USING BTREE,
+  UNIQUE KEY uk_token (token) USING BTREE,
+  KEY idx_rider (rider_id) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;

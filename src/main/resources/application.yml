@@ -29,6 +29,27 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 12MB
+  # 数据库版本化迁移（Flyway）。约定与漂移清单见 docs/FLYWAY_MIGRATION.md。
+  # 默认关闭：是否启动期执行迁移由各 profile 显式决定
+  #   dev=${FLYWAY_ENABLED:true}（自动跟上结构）、prod=${FLYWAY_ENABLED:false}
+  #   （红线：不自动对生产库执行 DDL）、test=false（保护 @Sql + 租户 999 清库机制，
+  #   不让启动期 DDL 干扰 1019 个测试）。未指定 profile 时保持关闭，除非显式注入 FLYWAY_ENABLED。
+  # 用占位符而非硬编码 false，是为了让 docker-compose 这类「profile 配置文件被 .gitignore
+  # 忽略、镜像里可能没有」的部署路径仍能通过环境变量打开迁移。
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+    locations: classpath:db/migration
+    table: flyway_schema_history
+    # 已有业务表但没有 history 表的库（本地开发库、既有部署）：只写入一条 baseline 记账行，
+    # 不重放 <= baseline-version 的脚本；空库则从 V1 正常全量执行。
+    baseline-on-migrate: true
+    # V1（全量表结构）+ V2（最小种子）共同描述"前 Flyway 时代"的既有状态，故基线定在 2，
+    # 新迁移编号从 V3 起递增。V1/V2 一经入库禁止改动（改内容会改 checksum，validate 失败）。
+    baseline-version: 2
+    baseline-description: xinfei pre-flyway baseline
+    validate-on-migrate: true
+    out-of-order: false
+    encoding: UTF-8
 
 mybatis-plus:
   mapper-locations:

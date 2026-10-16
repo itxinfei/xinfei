@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS group_buy_campaign (
   CREATE_TIME datetime NULL DEFAULT NULL COMMENT '创建时间',
   UPDATE_TIME datetime NULL DEFAULT NULL COMMENT '更新时间',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除：0=未删除，1=已删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_group_buy_campaign_tenant_id (tenant_id),
+  KEY idx_group_buy_campaign_status (status)
 );
 
 
@@ -38,7 +40,11 @@ CREATE TABLE IF NOT EXISTS group_buy_participation (
   JOIN_TIME datetime NOT NULL COMMENT '参团时间',
   PAY_TIME datetime NULL DEFAULT NULL COMMENT '支付时间',
   CREATE_TIME datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_groupbuy_tenant_user (group_buy_id,user_id),
+  KEY idx_group_buy_participation_tenant_id (tenant_id),
+  KEY idx_group_buy_participation_group_buy_id (group_buy_id),
+  KEY idx_group_buy_participation_order_id (order_id)
 );
 
 
@@ -57,7 +63,10 @@ CREATE TABLE IF NOT EXISTS withdrawal_request (
   APPROVE_TIME datetime NULL DEFAULT NULL COMMENT '审批时间',
   APPROVE_USER_ID bigint NULL DEFAULT NULL COMMENT '审批人ID',
   IS_DELETED int NOT NULL DEFAULT 0 COMMENT '逻辑删除：0=未删除，1=已删除',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_withdrawal_request_tenant_id (tenant_id),
+  KEY idx_withdrawal_request_user_id (user_id),
+  KEY idx_withdrawal_request_status (status)
 );
 
 
@@ -71,7 +80,9 @@ CREATE TABLE IF NOT EXISTS withdrawal_record (
   TRANSFER_TIME datetime NULL DEFAULT NULL COMMENT '转账时间',
   BANK_TRACE_NO varchar(100) NULL DEFAULT '' COMMENT '银行流水号',
   CREATE_TIME datetime NULL DEFAULT NULL COMMENT '创建时间',
-  PRIMARY KEY (ID)
+  PRIMARY KEY (id),
+  KEY idx_withdrawal_record_tenant_id (tenant_id),
+  KEY idx_withdrawal_record_withdrawal_id (withdrawal_id)
 );
 
 

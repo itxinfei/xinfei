@@ -44,7 +44,12 @@ CREATE TABLE IF NOT EXISTS orders (
   version int NOT NULL DEFAULT 0 COMMENT '乐锁版朏',
   master_order_id bigint NULL DEFAULT NULL COMMENT '父订单ID（AA分账时指向主订单）',
   split_count int NULL DEFAULT NULL COMMENT '分账份数（AA分账记录拆分数量）',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_orders_platform (tenant_id,platform_type,platform_order_id),
+  KEY idx_order_user (user_id,order_time),
+  KEY idx_order_number (number),
+  KEY idx_order_status (status),
+  KEY idx_order_tenant (tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS order_detail (
@@ -64,5 +69,6 @@ CREATE TABLE IF NOT EXISTS order_detail (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   is_deleted int NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_order_detail_order (order_id)
 );

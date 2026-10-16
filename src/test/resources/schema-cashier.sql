@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS cashier_record (
   create_time datetime NULL DEFAULT NULL COMMENT '创建时间',
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   PRIMARY KEY (id),
-  UNIQUE INDEX uk_tenant_order (tenant_id, order_id)
+  UNIQUE KEY uk_tenant_order (tenant_id,order_id)
 );
 
 -- DailySettlement entity (@TableName("daily_settlement"))
@@ -56,5 +56,6 @@ CREATE TABLE IF NOT EXISTS daily_settlement (
   create_user bigint NULL DEFAULT NULL COMMENT '创建人ID',
   update_user bigint NULL DEFAULT NULL COMMENT '更新人ID',
   version int NOT NULL DEFAULT 0 COMMENT '乐锁版朏',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_daily_settlement_tenant_date (tenant_id,settlement_date)
 );

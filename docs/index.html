@@ -135,7 +135,7 @@
     <div class="section-head reveal">
       <span class="eyebrow">Features</span>
       <h2>功能全景 · 餐饮全业务覆盖</h2>
-      <p>从一笔下单到门店经营决策，39 个模块覆盖餐饮商家的每一个环节。</p>
+      <p>从一笔下单到门店经营决策，40 个模块覆盖餐饮商家的每一个环节。</p>
     </div>
     <div class="matrix">
       <div class="mx-card reveal"><h3>🍳 交易主链路</h3><div class="mx-list"><span>分类</span><span>菜品</span><span>口味规格</span><span>BOM 配方</span><span>套餐</span><span>购物车</span><span>下单</span><span>订单状态机</span><span>收货地址</span></div></div>
@@ -204,7 +204,7 @@
     <div class="section-head reveal">
       <span class="eyebrow">Architecture</span>
       <h2>清晰的分层架构</h2>
-      <p>标准 Controller → Service → Mapper 分层，39 个业务模块高内聚低耦合。</p>
+      <p>标准 Controller → Service → Mapper 分层，40 个业务模块高内聚低耦合。</p>
     </div>
     <div class="arch reveal">
       <div class="arch-layer l1"><div class="t">表现层 · Controller</div><div class="d">统一 R 响应 · 参数校验 · 限流 · 三端静态资源伺服</div></div>
@@ -213,7 +213,7 @@
       <div class="arch-arrow">▼</div>
       <div class="arch-layer l3"><div class="t">数据访问层 · Mapper</div><div class="d">MyBatis-Plus BaseMapper · XML 复杂查询 · 自动填充 · 乐观锁</div></div>
       <div class="arch-arrow">▼</div>
-      <div class="arch-layer l4"><div class="t">数据层 · MySQL 8 + Redis</div><div class="d">124 张表 · 行级 tenant_id · 缓存 / 限流 / 会话</div></div>
+      <div class="arch-layer l4"><div class="t">数据层 · MySQL 8 + Redis</div><div class="d">129 张表 · 行级 tenant_id · 缓存 / 限流 / 会话</div></div>
     </div>
   </div>
 </section>
@@ -241,16 +241,20 @@ git clone https://github.com/itxinfei/xinfei.git &amp;&amp; cd xinfei
 <span class="cmt"># 创建数据库（utf8mb4 防中文乱码）</span>
 mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS xinfei CHARACTER SET utf8mb4;"
 
-<span class="cmt"># 建表（脚本可重复执行）</span>
+<span class="cmt"># 启动：dev 环境由 Flyway 自动建表 + 写入最小种子（V1 表结构 / V2 admin 账号）</span>
+mvn spring-boot:run</pre>
+    </div>
+
+    <div class="codeblock reveal">
+      <div class="codebar"><i></i><i></i><i></i><span class="fname">也可以手工建表</span></div>
+<pre><span class="cmt"># 建表（脚本可重复执行；比 Flyway 基线少 2 张发票表与若干索引）</span>
 for f in src/test/resources/schema*.sql; do
   mysql -uroot -p --default-character-set=utf8mb4 xinfei &lt; "$f"
 done
 
-<span class="cmt"># 最小初始化数据（租户 / 门店 / 超管，必执行）</span>
+<span class="cmt"># 最小初始化数据</span>
 mysql -uroot -p --default-character-set=utf8mb4 xinfei &lt; db/seed-minimal.sql
-
-<span class="cmt"># 启动</span>
-mvn spring-boot:run</pre>
+<span class="cmt"># 之后启动，Flyway 只记基线、不会重放 V1/V2</span></pre>
     </div>
 
     <div class="codeblock reveal">
@@ -274,11 +278,11 @@ mvn spring-boot:run</pre>
     </div>
     <div class="faq reveal">
       <details class="faq-item"><summary>导入 SQL 中文乱码 / 建表报错？</summary><div class="body">最常见是漏了 <code>--default-character-set=utf8mb4</code>；建库时也要指定字符集。schema*.sql 可重复执行，报「表已存在」属正常。</div></details>
-      <details class="faq-item"><summary>建完表登录不了，提示用户名或密码错误？</summary><div class="body">建表脚本不含初始数据，必须再导入 <code>db/seed-minimal.sql</code>，否则 employee 表为空、无可登录账号。</div></details>
+      <details class="faq-item"><summary>建完表登录不了，提示用户名或密码错误？</summary><div class="body">走 Flyway 路径不会有这个问题（<code>V2</code> 会写入租户 / 门店 / admin）。只有手工只导了 <code>schema*.sql</code> 没导 <code>db/seed-minimal.sql</code> 时，<code>employee</code> 表才为空。</div></details>
       <details class="faq-item"><summary>AI 助手不工作 / 答得不对？</summary><div class="body">未配置供应商时走 Mock 占位模式（属预期）；已配置则检查启用状态、API Key 余额，并查看日志。短信/推送同样默认 mock-mode。</div></details>
       <details class="faq-item"><summary>可以用于商业项目吗？</summary><div class="body">本项目基于 Apache-2.0 开源协议，允许个人与商业使用、二次开发与部署；建议保留原始版权声明。</div></details>
       <details class="faq-item"><summary>接口报 429 / Redis 不可用？</summary><div class="body">限流基于 Redis 滑动窗口；Redis 故障时会降级为本地内存窗口（fail-closed，不直接放行），恢复后自愈。</div></details>
-      <details class="faq-item"><summary>想要带演示数据的完整建库脚本？</summary><div class="body">含 124 张表与各端演示数据的全量脚本未随仓库发布，可通过下方 QQ 群 / 私信作者获取。</div></details>
+      <details class="faq-item"><summary>想要带演示数据的完整建库脚本？</summary><div class="body">含 129 张表与各端演示数据的全量脚本未随仓库发布，可通过下方 QQ 群 / 私信作者获取。</div></details>
     </div>
   </div>
 </section>
