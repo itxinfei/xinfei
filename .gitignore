@@ -40,6 +40,9 @@ build/
 *.ear
 logs/
 *.log
+# uni-app 三端编译产物（dev 监听模式产出 dist/dev/，靠上面 build/ 兜不住；
+# miniapp/.gitignore 本身不入库，见本文件末尾 .gitignore 规则，故根规则必须覆盖）
+miniapp/apps/*/dist/
 
 # ===== 依赖和缓存 =====
 .m2/
