@@ -1,0 +1,20 @@
+{
+  "name": "xinfei-miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "心飞外卖小程序三端（顾客 / 骑手 / 门店），pnpm workspace + uni-app（Vue 3 + Vite）",
+  "scripts": {
+    "gen": "node scripts/gen-app.mjs",
+    "sync:tokens": "node scripts/sync-tokens.mjs",
+    "dev:customer": "pnpm -F @xinfei/mini-customer dev:mp-weixin",
+    "dev:rider": "pnpm -F @xinfei/mini-rider dev:mp-weixin",
+    "dev:staff": "pnpm -F @xinfei/mini-staff dev:mp-weixin",
+    "build:customer": "pnpm -F @xinfei/mini-customer build:mp-weixin",
+    "build:rider": "pnpm -F @xinfei/mini-rider build:mp-weixin",
+    "build:staff": "pnpm -F @xinfei/mini-staff build:mp-weixin",
+    "build": "pnpm -r --filter \"./apps/*\" build:mp-weixin"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

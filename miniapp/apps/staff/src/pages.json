@@ -1,0 +1,55 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "员工登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/workbench/workbench",
+      "style": {
+        "navigationBarTitleText": "工作台",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/order/order",
+      "style": {
+        "navigationBarTitleText": "订单处理",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/store/store",
+      "style": {
+        "navigationBarTitleText": "门店状态"
+      }
+    },
+    {
+      "path": "pages/me/me",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "心飞门店",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F3F2F7"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ffc200",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/workbench/workbench", "text": "工作台" },
+      { "pagePath": "pages/order/order", "text": "订单" },
+      { "pagePath": "pages/store/store", "text": "门店" },
+      { "pagePath": "pages/me/me", "text": "我的" }
+    ]
+  }
+}

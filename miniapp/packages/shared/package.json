@@ -1,0 +1,16 @@
+{
+  "name": "@xinfei/mini-shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "小程序三端共用的请求层、鉴权 API、状态枚举与设计令牌",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./request": "./src/request.js",
+    "./config": "./src/config.js",
+    "./enums": "./src/enums.js",
+    "./auth": "./src/auth.js",
+    "./storage": "./src/storage.js",
+    "./styles/tokens.css": "./src/styles/tokens.css"
+  }
+}

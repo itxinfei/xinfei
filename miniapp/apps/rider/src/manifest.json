@@ -1,0 +1,30 @@
+{
+  "name": "心飞骑手",
+  "appid": "",
+  "description": "心飞骑手 小程序端，与 Web 端共用同一套后端接口",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true
+    },
+    "usingComponents": true,
+    "__usePrivacyCheck__": true,
+    "permission": {
+      "scope.userLocation": {
+        "desc": "用于配送定位与附近门店展示"
+      }
+    },
+    "requiredPrivateInfos": [
+      "getLocation"
+    ]
+  },
+  "vueVersion": "3",
+  "uniStatistics": {
+    "enable": false
+  }
+}

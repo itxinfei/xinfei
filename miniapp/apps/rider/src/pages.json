@@ -1,0 +1,56 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "骑手登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/hall/hall",
+      "style": {
+        "navigationBarTitleText": "抢单大厅",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/task/task",
+      "style": {
+        "navigationBarTitleText": "我的任务",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/income/income",
+      "style": {
+        "navigationBarTitleText": "我的收入",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/me/me",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "心飞骑手",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F3F2F7"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ffc200",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/hall/hall", "text": "大厅" },
+      { "pagePath": "pages/task/task", "text": "任务" },
+      { "pagePath": "pages/income/income", "text": "收入" },
+      { "pagePath": "pages/me/me", "text": "我的" }
+    ]
+  }
+}

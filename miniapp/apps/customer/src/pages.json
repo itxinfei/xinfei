@@ -1,0 +1,48 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "点餐",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/order/list",
+      "style": {
+        "navigationBarTitleText": "我的订单",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/user/user",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "心飞外卖",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F3F2F7"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ffc200",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "点餐" },
+      { "pagePath": "pages/order/list", "text": "订单" },
+      { "pagePath": "pages/user/user", "text": "我的" }
+    ]
+  }
+}

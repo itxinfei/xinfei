@@ -1,0 +1,216 @@
+<template>
+  <view class="hall">
+    <view class="bar">
+      <text class="bar__title">可抢订单</text>
+      <text class="bar__count">{{ tasks.length }} 单</text>
+    </view>
+
+    <scroll-view class="list" scroll-y>
+      <view v-for="t in tasks" :key="t.id" class="card">
+        <view class="card__head">
+          <text class="card__no">{{ t.number }}</text>
+          <text class="card__fee">配送费 ¥{{ t.deliveryFee }}</text>
+        </view>
+
+        <view class="line">
+          <text class="line__tag">取</text>
+          <view class="line__body">
+            <text class="line__title">{{ t.storeName }}</text>
+            <text class="line__sub">{{ t.storeAddress }}</text>
+          </view>
+        </view>
+
+        <view class="line">
+          <text class="line__tag line__tag--dest">送</text>
+          <view class="line__body">
+            <text class="line__title">{{ t.consignee }} {{ t.phone }}</text>
+            <text class="line__sub">{{ t.address }}</text>
+          </view>
+        </view>
+
+        <view class="card__foot">
+          <text class="card__meta">订单额 ¥{{ t.amount }}｜{{ t.expectDeliveryTime || '立即配送' }}</text>
+          <text class="card__btn" :class="{ 'card__btn--off': grabbed[t.id] }" @tap="grab(t)">
+            {{ grabbed[t.id] ? '已抢' : '抢单' }}
+          </text>
+        </view>
+      </view>
+
+      <view v-if="!tasks.length && !loading" class="list__empty">
+        <text>当前没有可抢订单，下拉刷新</text>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script>
+import { http } from '@xinfei/mini-shared'
+
+export default {
+  data() {
+    return {
+      tasks: [],
+      grabbed: {},
+      loading: false
+    }
+  },
+  onShow() {
+    this.load()
+  },
+  onPullDownRefresh() {
+    this.load().then(() => uni.stopPullDownRefresh())
+  },
+  methods: {
+    load() {
+      this.loading = true
+      return http.get('/api/rider/tasks/hall').then(list => {
+        this.tasks = list || []
+      }).catch(() => {}).then(() => {
+        this.loading = false
+      })
+    },
+    grab(task) {
+      if (this.grabbed[task.id]) return
+      http.post('/api/rider/tasks/' + task.id + '/grab').then(() => {
+        uni.showToast({ title: '抢单成功', icon: 'none' })
+        this.grabbed[task.id] = true
+        uni.switchTab({ url: '/pages/task/task' })
+      }).catch(() => {})
+    }
+  }
+}
+</script>
+
+<style>
+.hall {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-page);
+}
+
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: var(--bg-card);
+  border-bottom: 1rpx solid var(--border-light);
+}
+
+.bar__title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.bar__count {
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+}
+
+.list {
+  flex: 1;
+}
+
+.card {
+  margin: 16rpx 24rpx;
+  padding: 24rpx;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.card__no {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+}
+
+.card__fee {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-price);
+}
+
+.line {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 12rpx;
+}
+
+.line__tag {
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 44rpx;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  font-size: 24rpx;
+  color: var(--color-text-white);
+  background: var(--color-success);
+  flex-shrink: 0;
+}
+
+.line__tag--dest {
+  background: var(--color-primary-dark);
+}
+
+.line__body {
+  margin-left: 16rpx;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.line__title {
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+}
+
+.line__sub {
+  margin-top: 4rpx;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  color: var(--color-text-hint);
+}
+
+.card__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-light);
+}
+
+.card__meta {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+}
+
+.card__btn {
+  padding: 12rpx 36rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  color: var(--color-primary-text);
+  background: var(--color-primary);
+}
+
+.card__btn--off {
+  color: var(--color-text-disabled);
+  background: var(--bg-input);
+}
+
+.list__empty {
+  padding: 120rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+}
+</style>
