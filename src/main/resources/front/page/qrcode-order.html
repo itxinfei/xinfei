@@ -146,7 +146,7 @@
 
         <div class="form-group">
           <label class="form-label">联系人 <span class="required">*</span></label>
-          <input v-model="submitForm.contactName" placeholder="请输入联系人姓名" class="form-input" />
+          <input v-model="submitForm.contactName" placeholder="请输入联系人姓名" maxlength="50" class="form-input" />
         </div>
 
         <div class="form-group">
@@ -156,7 +156,7 @@
 
         <div class="form-group">
           <label class="form-label">备注</label>
-          <textarea v-model="submitForm.remark" placeholder="如有特殊需求请备注" rows="2" class="form-textarea"></textarea>
+          <textarea v-model="submitForm.remark" placeholder="如有特殊需求请备注" rows="2" maxlength="100" class="form-textarea"></textarea>
         </div>
 
         <div class="form-group">
