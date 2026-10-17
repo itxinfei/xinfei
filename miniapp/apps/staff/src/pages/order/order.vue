@@ -6,6 +6,7 @@
         :key="String(t.status)"
         class="tab"
         :class="{ 'tab--on': t.status === status }"
+        hover-class="hover-press"
         @tap="switchTab(t.status)"
       ><text>{{ t.label }}</text></view>
     </scroll-view>
@@ -37,10 +38,10 @@
         <view class="card__foot">
           <text class="card__time">{{ o.orderTime }}｜¥{{ fmtAmount(o.amount) }}</text>
           <view class="ops">
-            <text v-if="o.status === 2" class="op op--danger" :class="{ 'op--off': busy('act:reject:' + o.id) }" @tap="act('reject', o)">拒单</text>
-            <text v-if="o.status === 2" class="op op--main" :class="{ 'op--off': busy('act:confirm:' + o.id) }" @tap="act('confirm', o)">接单</text>
-            <text v-if="o.status === 3" class="op op--main" :class="{ 'op--off': busy('act:complete:' + o.id) }" @tap="act('complete', o)">完成</text>
-            <text v-if="o.status !== 4 && o.status !== 5" class="op" :class="{ 'op--off': busy('act:cancel:' + o.id) }" @tap="act('cancel', o)">取消</text>
+            <text v-if="o.status === 2" class="op op--danger" :class="{ 'op--off': busy('act:reject:' + o.id) }" hover-class="hover-press" @tap="act('reject', o)">拒单</text>
+            <text v-if="o.status === 2" class="op op--main" :class="{ 'op--off': busy('act:confirm:' + o.id) }" hover-class="hover-press" @tap="act('confirm', o)">接单</text>
+            <text v-if="o.status === 3" class="op op--main" :class="{ 'op--off': busy('act:complete:' + o.id) }" hover-class="hover-press" @tap="act('complete', o)">完成</text>
+            <text v-if="o.status !== 4 && o.status !== 5" class="op" :class="{ 'op--off': busy('act:cancel:' + o.id) }" hover-class="hover-press" @tap="act('cancel', o)">取消</text>
           </view>
         </view>
       </view>
@@ -51,7 +52,17 @@
       </view>
       <view v-if="!records.length && !loading && !listError" class="list__empty"><text>暂无订单</text></view>
       <view v-if="loading && !records.length" class="list__loading"><text>加载中…</text></view>
+      <view v-if="!hasMore && records.length" class="list__nomore"><text>没有更多了</text></view>
     </scroll-view>
+
+    <x-input-modal
+      :visible="reasonModal.visible"
+      :title="reasonModal.title"
+      desc="请输入原因（可留空）"
+      placeholder="原因"
+      @confirm="onReasonConfirm"
+      @cancel="reasonModal.visible = false"
+    />
   </view>
 </template>
 
@@ -82,7 +93,9 @@ export default {
       page: 1,
       pageSize: 20,
       hasMore: true,
-      loading: false
+      loading: false,
+      // 修改点(2026-10-17)：拒单/取消原因改走自定义弹窗（showModal editable 低版本基础库不显示输入框）
+      reasonModal: { visible: false, title: '', action: '', orderId: null }
     })
   },
   onLoad(query) {
@@ -289,6 +302,13 @@ export default {
   padding: 120rpx 0;
   text-align: center;
   font-size: 26rpx;
+  color: var(--color-text-hint);
+}
+
+.list__nomore {
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 24rpx;
   color: var(--color-text-hint);
 }
 

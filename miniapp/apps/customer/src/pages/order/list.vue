@@ -48,6 +48,7 @@
         <text>暂无订单</text>
       </view>
       <view v-if="loading" class="list__more"><text>加载中…</text></view>
+      <view v-if="!hasMore && records.length" class="list__more"><text>没有更多了</text></view>
     </scroll-view>
   </view>
 </template>

@@ -16,7 +16,7 @@
     "__usePrivacyCheck__": true,
     "permission": {
       "scope.userLocation": {
-        "desc": "用于配送定位与附近门店展示"
+        "desc": "用于上报骑手位置与导航送餐"
       }
     },
     "requiredPrivateInfos": [

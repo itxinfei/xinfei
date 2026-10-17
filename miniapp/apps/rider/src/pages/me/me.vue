@@ -6,7 +6,7 @@
         <text class="profile__name">{{ rider.name || '未登录' }}</text>
         <text class="profile__phone">{{ rider.phone || '' }}</text>
       </view>
-      <text class="profile__badge" :class="{ 'profile__badge--on': online }" @tap="toggle">
+      <text class="profile__badge" :class="{ 'profile__badge--on': online }" hover-class="hover-press" @tap="toggle">
         {{ online ? '在线接单中' : '已下班' }}
       </text>
     </view>
@@ -26,7 +26,7 @@
       </view>
     </view>
 
-    <view class="cell" @tap="reportLocation">
+    <view class="cell" hover-class="hover-press" @tap="reportLocation">
       <text class="cell__label">上报当前定位</text>
       <text class="cell__value">{{ lastReport || '未上报' }}</text>
     </view>

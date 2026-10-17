@@ -20,11 +20,11 @@
 
     <view class="section">
       <text class="section__title">待处理</text>
-      <view class="todo" @tap="toOrders(2)">
+      <view class="todo" hover-class="hover-press" @tap="toOrders(2)">
         <text class="todo__label">待接单</text>
         <text class="todo__num">{{ overview.pendingOrders || 0 }}</text>
       </view>
-      <view class="todo" @tap="toOrders(3)">
+      <view class="todo" hover-class="hover-press" @tap="toOrders(3)">
         <text class="todo__label">配送中</text>
         <text class="todo__num">{{ stats.deliveringOrders || 0 }}</text>
       </view>
@@ -33,8 +33,8 @@
     <view class="quick">
       <text class="quick__title">快捷操作</text>
       <view class="quick__row">
-        <text class="quick__item" @tap="toOrders(null)">订单列表</text>
-        <text class="quick__item" @tap="toStore">门店状态</text>
+        <text class="quick__item" hover-class="hover-press" @tap="toOrders(null)">订单列表</text>
+        <text class="quick__item" hover-class="hover-press" @tap="toStore">门店状态</text>
       </view>
     </view>
   </view>

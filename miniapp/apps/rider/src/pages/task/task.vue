@@ -6,6 +6,7 @@
         :key="t.scope"
         class="tab"
         :class="{ 'tab--on': t.scope === scope }"
+        hover-class="hover-press"
         @tap="switchScope(t.scope)"
       >{{ t.label }}</text>
     </view>
@@ -27,10 +28,10 @@
         <view class="card__foot">
           <text class="card__meta">配送费 ¥{{ fmtAmount(t.deliveryFee) }}</text>
           <view class="ops">
-            <text v-if="scope === 'todo'" class="op op--main" :class="{ 'op--off': busy('accept:' + t.id) }" @tap="accept(t)">接单</text>
-            <text v-if="scope === 'delivering'" class="op" :class="{ 'op--off': busy('pickup:' + t.id) }" @tap="pickup(t)">取餐</text>
-            <text v-if="scope === 'delivering'" class="op op--main" :class="{ 'op--off': busy('deliver:' + t.id) }" @tap="deliver(t)">送达</text>
-            <text class="op" @tap="navigate(t)">导航</text>
+            <text v-if="scope === 'todo'" class="op op--main" :class="{ 'op--off': busy('accept:' + t.id) }" hover-class="hover-press" @tap="accept(t)">接单</text>
+            <text v-if="scope === 'delivering'" class="op" :class="{ 'op--off': busy('pickup:' + t.id) }" hover-class="hover-press" @tap="pickup(t)">取餐</text>
+            <text v-if="scope === 'delivering'" class="op op--main" :class="{ 'op--off': busy('deliver:' + t.id) }" hover-class="hover-press" @tap="deliver(t)">送达</text>
+            <text class="op" hover-class="hover-press" @tap="navigate(t)">导航</text>
           </view>
         </view>
       </view>
@@ -44,6 +45,15 @@
         <text>{{ emptyText }}</text>
       </view>
     </scroll-view>
+
+    <x-input-modal
+      :visible="pickupModal.visible"
+      title="确认取餐"
+      desc="如有取餐码请输入，留空直接确认"
+      placeholder="取餐码"
+      @confirm="onPickupConfirm"
+      @cancel="pickupModal.visible = false"
+    />
   </view>
 </template>
 
@@ -61,7 +71,8 @@ export default {
       ],
       scope: 'delivering',
       tasks: [],
-      loading: false
+      loading: false,
+      pickupModal: { visible: false, taskId: null }
     })
   },
   computed: {
@@ -104,20 +115,18 @@ export default {
       // P0-6：订单已生成取餐码时，后端要求带正确取餐码方可核销
       const key = 'pickup:' + task.id
       if (this.busy(key)) return
-      uni.showModal({
-        title: '确认取餐',
-        content: '如有取餐码请输入，留空直接确认',
-        editable: true,
-        placeholderText: '取餐码',
-        success: res => {
-          if (!res.confirm) return
-          this.setBusy(key, true)
-          http.post(qs('/api/rider/tasks/' + task.id + '/pickup', { pickupCode: res.content })).then(() => {
-            uni.showToast({ title: '已取餐', icon: 'none' })
-            this.load()
-          }).catch(() => {}).then(() => { this.setBusy(key, false) })
-        }
-      })
+      this.pickupModal.taskId = task.id
+      this.pickupModal.visible = true
+    },
+    onPickupConfirm(pickupCode) {
+      const taskId = this.pickupModal.taskId
+      this.pickupModal.visible = false
+      const key = 'pickup:' + taskId
+      this.setBusy(key, true)
+      http.post(qs('/api/rider/tasks/' + taskId + '/pickup', { pickupCode })).then(() => {
+        uni.showToast({ title: '已取餐', icon: 'none' })
+        this.load()
+      }).catch(() => {}).then(() => { this.setBusy(key, false) })
     },
     deliver(task) {
       const key = 'deliver:' + task.id

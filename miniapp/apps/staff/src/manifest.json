@@ -13,15 +13,7 @@
       "minified": true
     },
     "usingComponents": true,
-    "__usePrivacyCheck__": true,
-    "permission": {
-      "scope.userLocation": {
-        "desc": "用于配送定位与附近门店展示"
-      }
-    },
-    "requiredPrivateInfos": [
-      "getLocation"
-    ]
+    "__usePrivacyCheck__": true
   },
   "vueVersion": "3",
   "uniStatistics": {

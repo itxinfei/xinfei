@@ -17,6 +17,13 @@
 
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
+    <view class="agree">
+      <checkbox :checked="agreed" color="#ffc200" @tap="agreed = !agreed" />
+      <text class="agree__text">我已阅读并同意</text>
+      <text class="agree__link" @tap="showAgreement('user')">《用户协议》</text>
+      <text class="agree__link" @tap="showAgreement('privacy')">《隐私政策》</text>
+    </view>
+
     <view class="tip">
       <text class="tip__text">员工账号由门店管理员分配，如需开号或重置密码请联系店长</text>
     </view>
@@ -31,11 +38,23 @@ export default {
     return {
       username: '',
       password: '',
-      submitting: false
+      submitting: false,
+      agreed: false
     }
   },
   methods: {
+    showAgreement(kind) {
+      const title = kind === 'user' ? '用户协议' : '隐私政策'
+      const content = kind === 'user'
+        ? '欢迎使用心飞门店。使用本服务即表示您同意遵守平台门店操作规范：及时处理订单、如实更新门店状态、妥善保管账号密码。'
+        : '我们重视您的个人信息保护。本应用仅收集员工账号信息用于登录与门店管理操作。未经您授权，我们不会向第三方共享您的个人信息。'
+      uni.showModal({ title, content, showCancel: false })
+    },
     doLogin() {
+      if (!this.agreed) {
+        uni.showToast({ title: '请先勾选同意用户协议与隐私政策', icon: 'none' })
+        return
+      }
       if (!this.username) {
         uni.showToast({ title: '请输入用户名', icon: 'none' })
         return
@@ -111,6 +130,21 @@ export default {
   font-size: 32rpx;
   color: var(--color-primary-text);
   background: var(--color-primary-gradient);
+}
+
+.agree {
+  display: flex;
+  align-items: center;
+  margin-top: 32rpx;
+  font-size: 24rpx;
+}
+
+.agree__text {
+  color: var(--color-text-hint);
+}
+
+.agree__link {
+  color: var(--color-primary-text-strong);
 }
 
 .tip {

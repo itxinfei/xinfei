@@ -34,6 +34,13 @@
 
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
+    <view class="agree">
+      <checkbox :checked="agreed" color="#ffc200" @tap="agreed = !agreed" />
+      <text class="agree__text">我已阅读并同意</text>
+      <text class="agree__link" @tap="showAgreement('user')">《用户协议》</text>
+      <text class="agree__link" @tap="showAgreement('privacy')">《隐私政策》</text>
+    </view>
+
     <view class="tip">
       <text class="tip__text">未注册的手机号验证后将自动创建账号</text>
     </view>
@@ -53,6 +60,7 @@ export default {
       countdown: 60,
       counting: false,
       submitting: false,
+      agreed: false,
       timer: null
     }
   },
@@ -77,8 +85,19 @@ export default {
         }
       }, 1000)
     },
+    showAgreement(kind) {
+      const title = kind === 'user' ? '用户协议' : '隐私政策'
+      const content = kind === 'user'
+        ? '欢迎使用心飞外卖。使用本服务即表示您同意遵守本平台的使用规则：合法使用账号、不发布违规内容、不恶意下单。平台有权对违规账号进行限制或封禁。'
+        : '我们重视您的个人信息保护。本应用仅收集手机号用于注册登录、收货地址用于配送、订单信息用于履约。未经您授权，我们不会向第三方共享您的个人信息。'
+      uni.showModal({ title, content, showCancel: false })
+    },
     sendCode() {
       if (this.counting) return
+      if (!this.agreed) {
+        uni.showToast({ title: '请先勾选同意用户协议与隐私政策', icon: 'none' })
+        return
+      }
       if (!PHONE_RE.test(this.phone)) {
         uni.showToast({ title: '手机号格式不正确', icon: 'none' })
         return
@@ -89,6 +108,10 @@ export default {
       }).catch(() => {})
     },
     doLogin() {
+      if (!this.agreed) {
+        uni.showToast({ title: '请先勾选同意用户协议与隐私政策', icon: 'none' })
+        return
+      }
       if (!PHONE_RE.test(this.phone)) {
         uni.showToast({ title: '请输入正确手机号', icon: 'none' })
         return
@@ -174,6 +197,21 @@ export default {
   font-size: 32rpx;
   color: var(--color-primary-text);
   background: var(--color-primary-gradient);
+}
+
+.agree {
+  display: flex;
+  align-items: center;
+  margin-top: 32rpx;
+  font-size: 24rpx;
+}
+
+.agree__text {
+  color: var(--color-text-hint);
+}
+
+.agree__link {
+  color: var(--color-primary-text-strong);
 }
 
 .tip {

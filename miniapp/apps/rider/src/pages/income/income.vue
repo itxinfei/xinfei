@@ -6,6 +6,7 @@
         :key="r.key"
         class="range"
         :class="{ 'range--on': r.key === range }"
+        hover-class="hover-press"
         @tap="switchRange(r.key)"
       >{{ r.label }}</text>
     </view>
@@ -50,6 +51,7 @@
         <text class="list__retry" @tap="load()">重试</text>
       </view>
       <view v-if="!records.length && !loading && !listError" class="list__empty"><text>该时间段暂无收入明细</text></view>
+      <view v-if="!hasMore && records.length" class="list__nomore"><text>没有更多了</text></view>
     </scroll-view>
   </view>
 </template>
@@ -258,6 +260,13 @@ export default {
   padding: 80rpx 0;
   text-align: center;
   font-size: 26rpx;
+  color: var(--color-text-hint);
+}
+
+.list__nomore {
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 24rpx;
   color: var(--color-text-hint);
 }
 
