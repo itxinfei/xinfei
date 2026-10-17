@@ -183,12 +183,16 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理限流异常（RateLimitExceededException 在 RateLimitAspect 中抛出）
-     * 返回 429 Too Many Requests，与 HTTP 标准对齐
+     * 返回 429 Too Many Requests + Retry-After 响应头，与 HTTP 标准对齐。
+     * <p>Retry-After（R-02）：携带限流窗口秒数，客户端可据此退避而非盲目重试。</p>
      */
     @ExceptionHandler(RateLimitAspect.RateLimitExceededException.class)
     public ResponseEntity<R<String>> handleRateLimitExceededException(RateLimitAspect.RateLimitExceededException ex) {
         log.warn("接口限流：{}", ex.getMessage());
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(org.springframework.http.HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()));
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .headers(headers)
                 .body(R.error(ex.getMessage()));
     }
 

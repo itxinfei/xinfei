@@ -125,14 +125,34 @@ public class RateLimitAspect {
 
     /**
      * 限流异常，用于区分 Redis 连接异常
+     * <p>携带 retryAfterSeconds（限流窗口秒数），供 GlobalExceptionHandler 写入
+     * HTTP Retry-After 响应头，客户端可据此退避而非盲目重试（R-02）。</p>
      */
     public static class RateLimitExceededException extends RuntimeException {
+        /** 建议客户端等待的重试秒数（取限流窗口时长，至少 1 秒） */
+        private final long retryAfterSeconds;
+
         /**
          * 处理 super。
          * @param message 参数 message
          * @return 返回结果
          */
-        public RateLimitExceededException(String message) { super(message); }
+        public RateLimitExceededException(String message) {
+            this(message, 1L);
+        }
+
+        /**
+         * 构造带重试秒数的限流异常。
+         *
+         * @param message          错误信息
+         * @param retryAfterSeconds 建议重试等待秒数（限流窗口时长）
+         */
+        public RateLimitExceededException(String message, long retryAfterSeconds) {
+            super(message);
+            this.retryAfterSeconds = Math.max(1L, retryAfterSeconds);
+        }
+
+        public long getRetryAfterSeconds() { return retryAfterSeconds; }
     }
 
     /**
@@ -162,7 +182,7 @@ public class RateLimitAspect {
             if (count != null && count > rateLimit.maxRequestsPerSecond()) {
                 log.warn("接口限流触发 - 请求数：{}/{}，Key：{}",
                     count, rateLimit.maxRequestsPerSecond(), limitKey);
-                throw new RateLimitExceededException("请求过于频繁，请稍后重试");
+                throw new RateLimitExceededException("请求过于频繁，请稍后重试", rateLimit.time());
             }
         } catch (RateLimitExceededException e) {
             // 限流命中：直接向上抛出，由 GlobalExceptionHandler 返回 429
@@ -187,7 +207,7 @@ public class RateLimitAspect {
                 if (lw.timestamps.size() >= rateLimit.maxRequestsPerSecond()) {
                     log.warn("本地降级限流触发 - 请求数：{}/{}，Key：{}",
                             lw.timestamps.size(), rateLimit.maxRequestsPerSecond(), limitKey);
-                    throw new RateLimitExceededException("请求过于频繁，请稍后重试");
+                    throw new RateLimitExceededException("请求过于频繁，请稍后重试", rateLimit.time());
                 }
                 lw.timestamps.add(now);
             }
