@@ -16,16 +16,16 @@
     </view>
 
     <view class="row">
-      <label class="remember" @tap="rememberMe = !rememberMe">
-        <checkbox :checked="rememberMe" color="#ffc200" />
-        <text>记住我</text>
-      </label>
+      <view class="remember">
+        <x-checkbox :checked="rememberMe" @change="rememberMe = $event" />
+        <text @tap="rememberMe = !rememberMe">记住我</text>
+      </view>
     </view>
 
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
     <view class="agree">
-      <checkbox :checked="agreed" color="#ffc200" @tap="agreed = !agreed" />
+      <x-checkbox :checked="agreed" @change="agreed = $event" />
       <text class="agree__text">我已阅读并同意</text>
       <text class="agree__link" @tap="showAgreement('user')">《用户协议》</text>
       <text class="agree__link" @tap="showAgreement('privacy')">《隐私政策》</text>

@@ -38,9 +38,7 @@
         <text>加载失败</text>
         <text class="menu__retry" @tap="reload()">重试</text>
       </view>
-      <view v-if="!dishes.length && !loading && !listError" class="menu__empty">
-        <text>该分类下暂无在售菜品</text>
-      </view>
+      <x-empty v-if="!dishes.length && !loading && !listError" text="该分类下暂无在售菜品" />
     </scroll-view>
 
     <view class="cartbar" v-if="cartCount > 0">

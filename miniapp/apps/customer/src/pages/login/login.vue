@@ -35,7 +35,7 @@
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
     <view class="agree">
-      <checkbox :checked="agreed" color="#ffc200" @tap="agreed = !agreed" />
+      <x-checkbox :checked="agreed" @change="agreed = $event" />
       <text class="agree__text">我已阅读并同意</text>
       <text class="agree__link" @tap="showAgreement('user')">《用户协议》</text>
       <text class="agree__link" @tap="showAgreement('privacy')">《隐私政策》</text>

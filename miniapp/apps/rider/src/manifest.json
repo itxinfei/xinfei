@@ -1,11 +1,14 @@
 {
   "name": "心飞骑手",
+  // DCloud appid：uni-app 云服务用，本地开发可留空；发布到 DCloud 时在 https://dev.dcloud.net.cn 申请
   "appid": "",
   "description": "心飞骑手 小程序端，与 Web 端共用同一套后端接口",
   "versionName": "0.1.0",
   "versionCode": "100",
   "transformPx": false,
   "mp-weixin": {
+    // 微信小程序 appid（上线必填）：在 https://mp.weixin.qq.com 注册小程序后获取，
+    // 填入此处方可使用微信开发者工具预览、真机调试与上传发布
     "appid": "",
     "setting": {
       "urlCheck": false,

@@ -61,6 +61,9 @@ public class OrderStatusFlowServiceImpl
     /** 取餐码长度（P0-6 核销） */
     private static final int PICKUP_CODE_LENGTH = 6;
 
+    /** 取消/拒单原因长度上限：写入口径与前端及 RefundRequestDTO 的 200 字保持一致，列为 varchar(255) */
+    private static final int REASON_MAX_LENGTH = 200;
+
     /** 订单明细服务 */
     @Autowired
     private OrderDetailService orderDetailService;
@@ -190,6 +193,9 @@ public class OrderStatusFlowServiceImpl
         // 修改点(2026-10-17)：拒单原因透传操作人输入，缺省回退"商家拒单"
         //（此前硬编码字符串，员工端 UI 收集的原因被静默丢弃）
         String rejectReason = (reason != null && !reason.trim().isEmpty()) ? reason.trim() : "商家拒单";
+        if (rejectReason.length() > REASON_MAX_LENGTH) {
+            throw new CustomException("拒单原因不能超过" + REASON_MAX_LENGTH + "个字符");
+        }
         Orders order = this.getById(id);
         if (order == null) {
             throw new CustomException("订单不存在");
@@ -276,6 +282,9 @@ public class OrderStatusFlowServiceImpl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelOrder(Long id, String reason) {
+        if (reason != null && reason.trim().length() > REASON_MAX_LENGTH) {
+            throw new CustomException("取消原因不能超过" + REASON_MAX_LENGTH + "个字符");
+        }
         Orders order = this.getById(id);
         if (order == null) {
             throw new CustomException("订单不存在");

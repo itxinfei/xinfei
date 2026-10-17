@@ -433,6 +433,9 @@ public class RefundRecordServiceImpl extends ServiceImpl<RefundRecordMapper, Ref
         if (reason == null || reason.trim().isEmpty()) {
             throw new CustomException("退款原因不能为空");
         }
+        if (reason.trim().length() > 200) {
+            throw new CustomException("退款原因不能超过200个字符");
+        }
         Long currentUserId = BaseContext.getCurrentId();
         Long currentTenantId = BaseContext.getCurrentTenantId();
         if (currentUserId == null || currentTenantId == null) {

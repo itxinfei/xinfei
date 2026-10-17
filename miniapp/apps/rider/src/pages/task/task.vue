@@ -41,9 +41,7 @@
         <text>加载失败</text>
         <text class="list__retry" @tap="load()">重试</text>
       </view>
-      <view v-if="!tasks.length && !loading && !listError" class="list__empty">
-        <text>{{ emptyText }}</text>
-      </view>
+      <x-empty v-if="!tasks.length && !loading && !listError" :text="emptyText" />
     </scroll-view>
 
     <x-input-modal

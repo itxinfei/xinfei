@@ -9,6 +9,7 @@
         v-model="inner"
         :placeholder="placeholder"
         placeholder-class="x-modal__placeholder"
+        :maxlength="200"
         :focus="visible"
       />
       <view class="x-modal__btns">

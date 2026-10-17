@@ -50,7 +50,7 @@
         <text>加载失败</text>
         <text class="list__retry" @tap="load()">重试</text>
       </view>
-      <view v-if="!records.length && !loading && !listError" class="list__empty"><text>该时间段暂无收入明细</text></view>
+      <x-empty v-if="!records.length && !loading && !listError" text="该时间段暂无收入明细" />
       <view v-if="!hasMore && records.length" class="list__nomore"><text>没有更多了</text></view>
     </scroll-view>
   </view>

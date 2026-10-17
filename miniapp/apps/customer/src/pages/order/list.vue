@@ -44,9 +44,7 @@
         <text>加载失败</text>
         <text class="list__retry" @tap="load(true)">重试</text>
       </view>
-      <view v-if="!records.length && !loading && !listError" class="list__empty">
-        <text>暂无订单</text>
-      </view>
+      <x-empty v-if="!records.length && !loading && !listError" text="暂无订单" />
       <view v-if="loading" class="list__more"><text>加载中…</text></view>
       <view v-if="!hasMore && records.length" class="list__more"><text>没有更多了</text></view>
     </scroll-view>

@@ -41,9 +41,7 @@
         <text>加载失败</text>
         <text class="list__retry" @tap="load()">重试</text>
       </view>
-      <view v-if="!tasks.length && !loading && !listError" class="list__empty">
-        <text>当前没有可抢订单，下拉刷新</text>
-      </view>
+      <x-empty v-if="!tasks.length && !loading && !listError" text="当前没有可抢订单" sub="下拉刷新试试" />
     </scroll-view>
   </view>
 </template>

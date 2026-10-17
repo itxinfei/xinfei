@@ -1,10 +1,7 @@
 <template>
   <view class="store">
     <!-- 修改点(2026-10-17)：未绑定租户 / 加载失败显式状态（此前二者都表现为"加载中"） -->
-    <view v-if="noTenant" class="store__empty">
-      <text>当前账号未绑定租户/门店</text>
-      <text class="store__empty-sub">请联系管理员在「门店管理」中为你分配门店</text>
-    </view>
+    <x-empty v-if="noTenant" text="当前账号未绑定租户/门店" sub="请联系管理员在「门店管理」中为你分配门店" />
     <view v-else-if="listError" class="store__error">
       <text>门店信息加载失败</text>
       <text class="store__retry" @tap="load()">重试</text>
@@ -21,7 +18,7 @@
           <text class="switch-row__title">门店启用</text>
           <text class="switch-row__desc">{{ enabled ? '已启用（对外可见）' : '已停用（对外隐藏）' }}</text>
         </view>
-        <switch :checked="enabled" color="#ffc200" @change="toggleStatus" />
+        <x-switch :checked="enabled" @change="toggleStatus" />
       </view>
       <view class="divider"></view>
       <view class="switch-row">
@@ -29,7 +26,7 @@
           <text class="switch-row__title">暂停接单</text>
           <text class="switch-row__desc">{{ paused ? '已暂停：门店在线但不接新单' : '正常接单中' }}</text>
         </view>
-        <switch :checked="!paused" color="#ffc200" @change="togglePause" />
+        <x-switch :checked="!paused" @change="togglePause" />
       </view>
     </view>
 
@@ -85,8 +82,9 @@ export default {
         this.detail = data || {}
       }).catch(() => { this.listError = true })
     },
-    toggleStatus(e) {
-      const next = e.detail.value ? 1 : 0
+    toggleStatus(val) {
+      // x-switch 直接回传布尔值（原生 switch 需 e.detail.value）
+      const next = val ? 1 : 0
       http.put(qs('/store/' + this.tenantId + '/status', { status: next })).then(() => {
         this.detail = Object.assign({}, this.detail, { status: next })
         uni.showToast({ title: next ? '已启用' : '已停用', icon: 'none' })
@@ -94,8 +92,9 @@ export default {
         this.load()
       })
     },
-    togglePause(e) {
-      const pause = !e.detail.value
+    togglePause(val) {
+      // x-switch 直接回传布尔值（原生 switch 需 e.detail.value）
+      const pause = !val
       http.put(qs('/store/' + this.tenantId + '/pause', { pause })).then(() => {
         this.paused = pause
         uni.showToast({ title: pause ? '已暂停接单' : '已恢复接单', icon: 'none' })
