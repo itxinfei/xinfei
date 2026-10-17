@@ -156,24 +156,30 @@ export default {
       //（/order/reject 2026-10-17 起接收可选 reason，此前静默丢弃）
       const lockKey = 'act:' + key + ':' + order.id
       if (this.busy(lockKey)) return
-      const doIt = reason => {
-        this.setBusy(lockKey, true)
-        http.put(qs(action.path, { id: order.id, reason })).then(() => {
-          uni.showToast({ title: action.label + '成功', icon: 'none' })
-          this.load(true)
-        }).catch(() => {}).then(() => { this.setBusy(lockKey, false) })
-      }
       if (key === 'cancel' || key === 'reject') {
-        uni.showModal({
-          title: action.label,
-          content: '请输入原因（可留空）',
-          editable: true,
-          placeholderText: '原因',
-          success: res => { if (res.confirm) doIt(res.content) }
-        })
+        // showModal editable 在低版本微信基础库不显示输入框，改用 x-input-modal
+        this.reasonModal.title = action.label
+        this.reasonModal.action = key
+        this.reasonModal.orderId = order.id
+        this.reasonModal.visible = true
         return
       }
-      doIt()
+      this.setBusy(lockKey, true)
+      http.put(qs(action.path, { id: order.id })).then(() => {
+        uni.showToast({ title: action.label + '成功', icon: 'none' })
+        this.load(true)
+      }).catch(() => {}).then(() => { this.setBusy(lockKey, false) })
+    },
+    onReasonConfirm(reason) {
+      const { action, orderId } = this.reasonModal
+      this.reasonModal.visible = false
+      const conf = ACTIONS[action]
+      const lockKey = 'act:' + action + ':' + orderId
+      this.setBusy(lockKey, true)
+      http.put(qs(conf.path, { id: orderId, reason })).then(() => {
+        uni.showToast({ title: conf.label + '成功', icon: 'none' })
+        this.load(true)
+      }).catch(() => {}).then(() => { this.setBusy(lockKey, false) })
     }
   }
 }
