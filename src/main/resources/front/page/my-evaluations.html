@@ -135,10 +135,11 @@
                                           :class="['star-item', { active: s <= dish.starRating }]"
                                           role="radio" :aria-checked="s === dish.starRating"
                                           :aria-label="s + ' 星'" tabindex="0"
-                                          @click="!dish._submitted && (dish.starRating = s)"
-                                          @keydown.enter.prevent="!dish._submitted && (dish.starRating = s)">★</span>
+                                          @click="rateDish(dish, s)"
+                                          @keydown.enter.prevent="rateDish(dish, s)">★</span>
                                 </span>
                             </div>
+                            <div v-if="dish._error && !dish._submitted" style="color:var(--color-danger);font-size:12rem;margin:4rem 0 0;">{{ dish._error }}</div>
                             <!-- 快捷评价标签（对齐美团） -->
                             <div class="quick-tags">
                                 <span class="quick-tag" v-for="tag in quickTags" :key="tag"
@@ -503,7 +504,8 @@
                                 content: '',
                                 images: [],       // 已上传成功的服务器图片路径
                                 _fileList: [],    // van-uploader 受控展示列表
-                                _submitted: evaluated
+                                _submitted: evaluated,
+                                _error: ''
                             }
                         })
                 },
@@ -624,6 +626,12 @@
                     } catch (e) { /* 忽略 */ }
                     return null
                 },
+                // 就地化：给某道菜评分（同时清除该菜缺失评分的提示）
+                rateDish(dish, s) {
+                    if (dish._submitted) return
+                    dish.starRating = s
+                    dish._error = ''
+                },
                 // 提交评价（逐菜提交）
                 async doSubmit() {
                     if (this.submitLoading) return // 防重守卫：防止连点重复提交
@@ -633,13 +641,15 @@
                         vant.Toast.fail('订单信息缺失，请重新进入评价页')
                         return
                     }
-                    // 校验每个待提交菜品的评分（已成功提交的无需再评）
+                    // 校验每个待提交菜品的评分（已成功提交的无需再评）：就地化，逐个标记缺评的菜
+                    var missingRating = false
                     for (let i = 0; i < dishes.length; i++) {
                         if (!dishes[i]._submitted && (!dishes[i].starRating || dishes[i].starRating < 1)) {
-                            vant.Toast.fail('请为「' + (dishes[i].dishName || '菜品') + '」评分')
-                            return
+                            dishes[i]._error = '请为这道菜品评分'
+                            missingRating = true
                         }
                     }
+                    if (missingRating) return
                     // 图片仍在上传时不可提交，避免评价丢失图片
                     for (let j = 0; j < dishes.length; j++) {
                         var fl = dishes[j]._fileList || []

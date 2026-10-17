@@ -60,6 +60,8 @@
               <img v-if="form.logo" :src="logoPreview" class="logo-preview" alt="店铺Logo">
               <i v-else class="ri-add-line logo-uploader-icon" role="img" aria-label="上传店铺Logo"></i>
             </el-upload>
+            <!-- 修改点(2026-10-17)：新增「恢复默认」入口——此前 Logo 一旦上传无法撤销，提示文案的默认态不可达 -->
+            <el-button v-if="form.logo" type="text" size="small" style="margin-left: 12px;" @click="clearLogo">恢复默认</el-button>
             <div class="form-tip">点击上传图片；不上传时顾客端显示系统默认 Logo</div>
           </el-form-item>
 
@@ -102,11 +104,11 @@
         }
       },
       computed: {
-        // 相对路径规范化为绝对路径，保证 /page/store/ 层级下图片可显示
+        // 统一走 imgPath：public/ 前缀直出 /uploads/…，其余走 /common/download 鉴权，
+        // 旧写法 '/' + v 会拼成 /images/logos/x.png（根路径无此资源 → 裂图）
         logoPreview() {
           if (!this.form.logo) return ''
-          var v = this.form.logo
-          return (/^https?:\/\//.test(v) || v.charAt(0) === '/') ? v : ('/' + v)
+          return imgPath(this.form.logo)
         }
       },
       created() { this.fetchSettings() },
@@ -150,6 +152,11 @@
         onLogoError(err) {
           // 未登录时后端返回 401 NOTLOGIN，由 request.js 统一跳转
           XinfeiUI.error('Logo 上传失败' + (err && err.message ? '：' + err.message : ''))
+        },
+        // 修改点(2026-10-17)：清除 Logo 后需点「保存设置」才生效（保存时 logo 传 null，后端回退默认）
+        clearLogo() {
+          this.form.logo = ''
+          XinfeiUI.warning('已清除，点击「保存设置」后恢复默认 Logo')
         },
         async onSave() {
           try {

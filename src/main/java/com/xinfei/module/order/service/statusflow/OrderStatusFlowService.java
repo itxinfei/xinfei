@@ -29,8 +29,9 @@ public interface OrderStatusFlowService {
     /**
      * 拒单：待接单(2) → 已取消(5)，同时回退库存与会员权益
      * @param id 订单ID
+     * @param reason 拒单原因（可选，缺省落"商家拒单"；修改点 2026-10-17：透传操作人原因，不再静默丢弃）
      */
-    void rejectOrder(Long id);
+    void rejectOrder(Long id, String reason);
 
     /**
      * 完成订单：配送中(3) → 已完成(4)

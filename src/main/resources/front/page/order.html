@@ -163,7 +163,7 @@
                     <div class="rp-title">申请售后退款</div>
                     <div class="rp-tip">请简要描述退款原因（如商品质量问题、漏送、错送等），提交后客服将尽快处理。</div>
                     <van-field v-model="refundReason" type="textarea" rows="3"
-                               maxlength="200" show-word-limit placeholder="请输入退款原因"></van-field>
+                           maxlength="200" show-word-limit placeholder="请输入退款原因" :error="refundError"></van-field>
                     <div class="rp-actions">
                         <van-button block @click="showRefundDialog = false">取消</van-button>
                         <van-button block type="primary" :loading="refundSubmitting" @click="submitRefund">提交申请</van-button>
@@ -221,6 +221,7 @@
                     // 售后退款（Vant2 无 Dialog.prompt，自建 popup 收集原因）
                     showRefundDialog: false,
                     refundReason: '',
+                    refundError: '',
                     refundOrder: null,
                     refundSubmitting: false
                 }
@@ -625,6 +626,7 @@
                 applyRefund(order){
                     this.refundOrder = order
                     this.refundReason = ''
+                    this.refundError = ''
                     this.showRefundDialog = true
                 },
                 async submitRefund(){
@@ -632,8 +634,9 @@
                     const order = this.refundOrder
                     if(!order) return;
                     const reason = this.refundReason ? this.refundReason.trim() : ''
-                    if(!reason){ vant.Toast.fail('退款原因不能为空'); return }
-                    if(reason.length > 200){ vant.Toast.fail('退款原因不超过 200 字'); return }
+                    if(!reason){ this.refundError = '退款原因不能为空'; return }
+                    if(reason.length > 200){ this.refundError = '退款原因不超过 200 字'; return }
+                    this.refundError = ''
                     this.refundSubmitting = true
                     try {
                         const res = await applyRefundApi({ id: order.id, reason: reason })

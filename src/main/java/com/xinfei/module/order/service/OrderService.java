@@ -99,8 +99,9 @@ public interface OrderService extends IService<Orders> {
     /**
      * 后台拒单（待接单→已取消）
      * @param id 订单ID
+     * @param reason 拒单原因（可选，缺省落"商家拒单"）
      */
-    void rejectOrder(Long id);
+    void rejectOrder(Long id, String reason);
 
     /**
      * 后台完成订单（配送中→已完成）

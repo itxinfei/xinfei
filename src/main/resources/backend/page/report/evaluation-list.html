@@ -92,7 +92,9 @@
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
   <a href="#main-content" class="skip-link">跳转到主内容</a>
   <div class="eval-app-wrap" id="eval-app" v-loading="loading">
-    <main class="container" id="main-content" role="main" aria-label="页面主要内容">
+    <!-- 修改点(2026-10-17)：主地标统一为 aria-labelledby + sr-only 标题（原 aria-label="页面主要内容" 无信息量） -->
+    <main class="container" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">菜品评价管理</h1>
 
       
       

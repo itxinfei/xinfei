@@ -53,7 +53,7 @@
                         <!-- 修改点(P1-2 自提)：自提订单醒目展示取餐码，供到店向店员核销 -->
                         <div v-if="isSelfPickup" class="od-row od-pickup-row">
                             <span class="od-label">取餐码</span>
-                            <span class="od-value" style="font-size:22px;font-weight:700;letter-spacing:3px;color:var(--color-success);">{{ order.pickupCode }}</span>
+                            <span class="od-value" style="font-size:;font-weight:700;letter-spacing:;color:var(--color-success);">{{ order.pickupCode }}</span>
                         </div>
                         <div v-if="isSelfPickup" class="od-row">
                             <span class="od-label">取餐方式</span>
@@ -270,7 +270,7 @@
                 <div class="rep-title">申请售后退款</div>
                 <div class="rep-label">请填写退款原因（如商品质量问题、漏送、错送等），提交后客服将尽快处理。</div>
                 <van-field v-model="refundReason" type="textarea" rows="3"
-                           maxlength="200" show-word-limit placeholder="请输入退款原因"></van-field>
+                           maxlength="200" show-word-limit placeholder="请输入退款原因" :error="refundError"></van-field>
                 <div class="rep-actions">
                   <van-button block @click="showRefundDialog = false">取消</van-button>
                   <van-button block type="primary" :loading="refundSubmitting" @click="submitRefund">提交申请</van-button>
@@ -318,6 +318,7 @@
                     // 售后退款原因（Vant2 无 Dialog.prompt，自建 popup 收集）
                     showRefundDialog: false,
                     refundReason: '',
+                    refundError: '',
                     refundSubmitting: false
                 }
             },
@@ -590,13 +591,15 @@
                 // Vant2 无 Dialog.prompt，改为自建 popup 收集退款原因
                 applyRefund: function() {
                     this.refundReason = ''
+                    this.refundError = ''
                     this.showRefundDialog = true
                 },
                 submitRefund: async function() {
                     var self = this
                     var reason = this.refundReason ? this.refundReason.trim() : ''
-                    if (!reason) { vant.Toast.fail('退款原因不能为空'); return }
-                    if (reason.length > 200) { vant.Toast.fail('退款原因不超过 200 字'); return }
+                    if (!reason) { this.refundError = '退款原因不能为空'; return }
+                    if (reason.length > 200) { this.refundError = '退款原因不超过 200 字'; return }
+                    this.refundError = ''
                     self.refundSubmitting = true
                     try {
                         var res = await applyRefundApi({ id: self.orderId, reason: reason })
@@ -697,29 +700,29 @@
 
         <style>
           .rider-eval-tip {
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-            margin: 10px 14px 0; padding: 10px 12px; border-radius: 10px;
-            background: var(--bg-soft, #f6f7f9); font-size: 13px; color: var(--text-secondary, #8a8f99);
+            display: flex; align-items: center; gap: ; flex-wrap: wrap;
+            margin:   0; padding:  ; border-radius: ;
+            background: var(--bg-hover, #f5f5f5); font-size: ; color: var(--color-text-secondary, #666666);
           }
-          .rider-eval-tip .ret-content { color: var(--text-primary, #1f2329); }
-          .rider-eval-pop { padding: 18px 16px 24px; }
-          .rider-eval-pop .rep-title { font-size: 16px; font-weight: 600; color: var(--text-primary, #1f2329); margin-bottom: 14px; }
-          .rider-eval-pop .rep-rate { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-          .rider-eval-pop .rep-label { font-size: 14px; color: var(--text-primary, #1f2329); }
-          .rider-eval-pop .rep-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+          .rider-eval-tip .ret-content { color: var(--color-text-primary, #333333); }
+          .rider-eval-pop { padding:   ; }
+          .rider-eval-pop .rep-title { font-size: ; font-weight: 600; color: var(--color-text-primary, #333333); margin-bottom: ; }
+          .rider-eval-pop .rep-rate { display: flex; align-items: center; gap: ; margin-bottom: ; }
+          .rider-eval-pop .rep-label { font-size: ; color: var(--color-text-primary, #333333); }
+          .rider-eval-pop .rep-tags { display: flex; flex-wrap: wrap; gap: ; margin-bottom: ; }
           .rider-eval-pop .rep-tag {
-            padding: 5px 12px; border-radius: 16px; font-size: 13px; cursor: pointer;
-            background: var(--bg-soft, #f6f7f9); color: var(--text-secondary, #8a8f99);
+            padding:  ; border-radius: ; font-size: ; cursor: pointer;
+            background: var(--bg-hover, #f5f5f5); color: var(--color-text-secondary, #666666);
           }
           .rider-eval-pop .rep-tag.on { background: rgba(255,107,53,0.12); color: var(--color-primary, #ff6b35); }
-          .rider-eval-pop .rep-actions { display: flex; gap: 12px; margin-top: 16px; }
+          .rider-eval-pop .rep-actions { display: flex; gap: ; margin-top: ; }
           /* 取消 / 退款原因回执（P0-5） */
           .od-cancel-reason {
-            margin: 10px 14px 0; padding: 12px; border-radius: 10px;
-            background: var(--bg-soft, #f6f7f9);
+            margin:   0; padding: ; border-radius: ;
+            background: var(--bg-hover, #f5f5f5);
           }
-          .od-cr-title { font-size: 13px; color: var(--text-secondary, #8a8f99); margin-bottom: 4px; }
-          .od-cr-text { font-size: 14px; color: var(--text-primary, #1f2329); line-height: 1.5; }
+          .od-cr-title { font-size: ; color: var(--color-text-secondary, #666666); margin-bottom: ; }
+          .od-cr-text { font-size: ; color: var(--color-text-primary, #333333); line-height: 1.5; }
         </style>
     </body>
 </html>

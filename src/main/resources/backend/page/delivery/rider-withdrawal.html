@@ -12,8 +12,6 @@
     html { overflow: hidden; }
     body { overflow-y: auto; }
     .container { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
-    .tool-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-    .tool-bar .spacer { flex: 1; }
   </style>
 </head>
 <body>
@@ -22,60 +20,60 @@
     <h1 class="sr-only" id="page-title">骑手提现审核</h1>
 
     <el-card shadow="never">
-      <div class="tool-bar">
-        <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 160px;" @change="load">
-          <el-option label="待审核" value="PENDING"></el-option>
-          <el-option label="已通过" value="APPROVED"></el-option>
-          <el-option label="已驳回" value="REJECTED"></el-option>
-        </el-select>
-        <el-button type="primary" @click="load">查询</el-button>
-        <span class="spacer"></span>
-        <el-pagination
-          layout="total, prev, pager, next"
-          :total="total"
-          :page-size="pageSize"
-          :current-page="page"
-          @current-change="onPageChange">
-        </el-pagination>
-      </div>
+      <!-- 修改点(2026-10-17)：迁移到 table-bar + crud-table + crud-dialog 共享层。
+           此前裸 el-table + el-pagination 导致列表请求失败被渲染成"暂无数据"（误导）；
+           现由 crud-table 监听 xinfei:list-fail 展示失败态+重试，分页/骨架复用组件内置能力 -->
+      <table-bar
+        :search-items="searchItems"
+        :show-refresh="true"
+        @search="onSearch"
+        @reset="onReset"
+        @refresh="load()"
+      ></table-bar>
 
-      <el-table :data="rows" v-loading="loading" border>
-        <el-table-column prop="id" label="申请ID" width="90" align="center"></el-table-column>
-        <el-table-column prop="riderId" label="骑手ID" width="100" align="center"></el-table-column>
-        <el-table-column label="提现金额" width="120" align="center">
-          <template slot-scope="{ row }"><strong>¥{{ formatMoney(row.amount) }}</strong></template>
-        </el-table-column>
-        <el-table-column label="状态" width="100" align="center">
-          <template slot-scope="{ row }">
-            <el-tag :type="statusTag(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="applyTime" label="申请时间" width="170" align="center"></el-table-column>
-        <el-table-column prop="reviewTime" label="审核时间" width="170" align="center">
-          <template slot-scope="{ row }">{{ row.reviewTime || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="140" align="center"></el-table-column>
-        <el-table-column label="操作" width="160" align="center" fixed="right">
-          <template slot-scope="{ row }">
-            <el-button v-if="row.status === 'PENDING'" type="text" size="small"
-                       @click="openReview(row, true)">通过</el-button>
-            <el-button v-if="row.status === 'PENDING'" type="text" size="small"
-                       class="btn-warning" @click="openReview(row, false)">驳回</el-button>
-            <span v-if="row.status !== 'PENDING'" class="el-text--secondary">已处理</span>
-          </template>
-        </el-table-column>
-      </el-table>
+      <crud-table
+        empty-hint="试试调整筛选条件"
+        :data="rows"
+        :columns="columns"
+        :loading="loading"
+        :page="page"
+        :page-size="pageSize"
+        :total="total"
+        :show-actions="true"
+        :actions-width="120"
+        :actions-fixed="true"
+        @page-change="onPageChange"
+        @size-change="onSizeChange"
+      >
+        <template #col-status="{ row }">
+          <el-tag :type="statusTag(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
+        </template>
+        <template #actions="{ row }">
+          <el-button v-if="row.status === 'PENDING'" type="text" size="small" class="btn-success"
+                     @click="openReview(row, true)">通过</el-button>
+          <el-button v-if="row.status === 'PENDING'" type="text" size="small"
+                     class="btn-delete" @click="openReview(row, false)">驳回</el-button>
+          <span v-if="row.status !== 'PENDING'" class="el-text--secondary">已处理</span>
+        </template>
+      </crud-table>
     </el-card>
 
-    <el-dialog :title="reviewApprove ? '通过提现' : '驳回提现'" :visible.sync="reviewVisible" width="420px">
+    <crud-dialog
+      :title="reviewApprove ? '通过提现' : '驳回提现'"
+      :visible.sync="reviewVisible"
+      size="sm"
+      :submit-loading="submitting"
+      :submit-text="reviewApprove ? '确认通过' : '确认驳回'"
+      :before-close="beforeReviewClose"
+      @submit="submitReview"
+    >
       <p>申请ID：{{ reviewRow ? reviewRow.id : '' }}　金额：¥{{ reviewRow ? formatMoney(reviewRow.amount) : '0.00' }}</p>
-      <el-input v-model="reviewRemark" type="textarea" :rows="3" placeholder="审核备注（驳回建议填写原因）"></el-input>
-      <span slot="footer">
-        <el-button @click="reviewVisible = false">取消</el-button>
-        <el-button :type="reviewApprove ? 'primary' : 'danger'" :loading="submitting"
-                   @click="submitReview">确认{{ reviewApprove ? '通过' : '驳回' }}</el-button>
-      </span>
-    </el-dialog>
+      <el-form :model="reviewForm" :rules="reviewRules" ref="reviewForm" label-width="70px" size="small">
+        <el-form-item label="审核备注" prop="remark">
+          <el-input v-model="reviewForm.remark" type="textarea" :rows="3" placeholder="审核备注（驳回建议填写原因）"></el-input>
+        </el-form-item>
+      </el-form>
+    </crud-dialog>
   </main>
 
   <script src="../../plugins/vue/vue.js"></script>
@@ -83,6 +81,7 @@
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/common.js?v=20260928"></script>
+  <script src="../../js/components.js?v=20261002"></script>
   <script>
     function fmt(v) {
       if (v == null) return '0.00';
@@ -97,13 +96,48 @@
           total: 0,
           page: 1,
           pageSize: 10,
-          filterStatus: '',
+          lastSearch: {},
+          searchItems: [
+            { type: 'select', field: 'status', placeholder: '全部状态', width: '160px',
+              options: [
+                { label: '待审核', value: 'PENDING' },
+                { label: '已通过', value: 'APPROVED' },
+                { label: '已驳回', value: 'REJECTED' }
+              ] }
+          ],
+          columns: [
+            { prop: 'id', label: '申请ID', width: 90 },
+            { prop: 'riderId', label: '骑手ID', width: 100 },
+            { prop: 'amount', label: '提现金额', width: 120, type: 'money' },
+            { prop: 'status', label: '状态', width: 100, slot: true },
+            { prop: 'applyTime', label: '申请时间', width: 170 },
+            { prop: 'reviewTime', label: '审核时间', width: 170, formatter: function (v) { return v || '-' } },
+            { prop: 'remark', label: '备注', width: 140 }
+          ],
           reviewVisible: false,
           reviewRow: null,
           reviewApprove: true,
-          reviewRemark: '',
+          reviewForm: { remark: '' },
           submitting: false
         };
+      },
+      computed: {
+        // 修改点：驳回时备注必填——校验规则随审核动作动态生效，字段级报错（原为顶部 toast）
+        reviewRules: function () {
+          var vm = this;
+          return {
+            remark: [{
+              validator: function (rule, value, callback) {
+                if (!vm.reviewApprove && !value) {
+                  callback(new Error('驳回请填写原因'));
+                } else {
+                  callback();
+                }
+              },
+              trigger: 'blur'
+            }]
+          };
+        }
       },
       mounted: function () {
         this.load();
@@ -111,42 +145,62 @@
       methods: {
         load: function () {
           var vm = this;
+          var s = vm.lastSearch || {};
           vm.loading = true;
           $axios.get('/api/delivery/rider-withdrawal/page', {
-            params: { status: vm.filterStatus || undefined, page: vm.page, size: vm.pageSize }
+            params: { status: s.status || undefined, page: vm.page, size: vm.pageSize }
           }).then(function (res) {
             var page = res.data || {};
             vm.rows = page.records || [];
             vm.total = page.total || 0;
-          }).catch(function () { /* 提示已统一 */ }).then(function () {
+          }).catch(function () { /* 提示已统一；失败态由 crud-table 监听 xinfei:list-fail 展示 */ }).then(function () {
             vm.loading = false;
           });
         },
-        onPageChange: function (p) {
-          this.page = p;
+        onSearch: function (params) {
+          this.lastSearch = params || {};
+          this.page = 1;
           this.load();
+        },
+        onReset: function () {
+          this.lastSearch = {};
+          this.page = 1;
+          this.load();
+        },
+        onPageChange: function (payload) {
+          this.page = payload.page;
+          this.load();
+        },
+        // 修改点：只更新状态不加载——crud-table 改页大小后会紧接着 emit page-change(page=1) 统一触发加载
+        onSizeChange: function (val) {
+          this.pageSize = (typeof val === 'object' && val != null) ? (val.pageSize || val) : val;
+          this.page = 1;
         },
         openReview: function (row, approve) {
           this.reviewRow = row;
           this.reviewApprove = approve;
-          this.reviewRemark = '';
+          this.reviewForm.remark = '';
           this.reviewVisible = true;
+        },
+        // 修改点：未保存守卫——已填备注未提交前阻止误关（X/ESC/取消按钮）
+        beforeReviewClose: function () {
+          return !this.reviewForm.remark;
         },
         submitReview: function () {
           var vm = this;
-          if (!vm.reviewApprove && !vm.reviewRemark) {
-            vm.$message.warning('驳回请填写原因');
-            return;
-          }
-          vm.submitting = true;
-          $axios.post('/api/delivery/rider-withdrawal/' + vm.reviewRow.id + '/review', null, {
-            params: { approve: vm.reviewApprove, remark: vm.reviewRemark }
-          }).then(function () {
-            vm.$message.success('审核完成');
-            vm.reviewVisible = false;
-            vm.load();
-          }).catch(function () { /* 提示已统一 */ }).then(function () {
-            vm.submitting = false;
+          vm.$refs.reviewForm.validate(function (valid) {
+            if (!valid) return;
+            vm.submitting = true;
+            $axios.post('/api/delivery/rider-withdrawal/' + vm.reviewRow.id + '/review', null, {
+              params: { approve: vm.reviewApprove, remark: vm.reviewForm.remark }
+            }).then(function () {
+              vm.$message.success('审核完成');
+              vm.reviewForm.remark = '';
+              vm.reviewVisible = false;
+              vm.load();
+            }).catch(function () { /* 提示已统一 */ }).then(function () {
+              vm.submitting = false;
+            });
           });
         },
         formatMoney: fmt,

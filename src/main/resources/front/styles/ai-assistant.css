@@ -880,7 +880,7 @@
     padding: 9px 10px;
     cursor: pointer;
     font-size: 13px;
-    color: var(--text-primary, #333);
+    color: var(--color-text-primary, #333333);
     text-align: left;
     font-family: inherit;
 }
@@ -895,7 +895,7 @@
 .sug-src {
     flex-shrink: 0;
     font-size: 11px;
-    color: var(--text-secondary, #999);
+    color: var(--color-text-secondary, #666666);
     border: 1px solid var(--ai-border-light);
     border-radius: 999px;
     padding: 0 6px;

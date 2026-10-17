@@ -436,8 +436,11 @@ public class OrderController {
     @RateLimit(maxRequestsPerSecond = 20, type = RateLimitType.USER)
     @Operation(summary = "拒单", description = "后台拒单，订单状态变为已取消")
     @Parameter(name = "id", description = "订单ID", required = true)
-    public R<String> reject(@RequestParam Long id) {
-        statusFlowService.rejectOrder(id);
+    // 修改点(2026-10-17)：新增可选 reason——员工端拒单弹框收集的原因经此落库（cancel_reason 字段），
+    // 此前前端发了但后端不收，原因静默丢失
+    @Parameter(name = "reason", description = "拒单原因（可选，缺省为商家拒单）", required = false)
+    public R<String> reject(@RequestParam Long id, @RequestParam(required = false) String reason) {
+        statusFlowService.rejectOrder(id, reason);
         return R.success("已拒单");
     }
 

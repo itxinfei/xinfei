@@ -241,7 +241,8 @@
                :class="['rc-amount-cell', (!rc.customAmount && rc.amount===a) ? 'on':'']"
                @click="pickAmount(a)">{{ a }}元</div>
         </div>
-        <input class="rc-custom-input" type="number" v-model="rc.customAmount" min="1" placeholder="自定义金额（元）">
+        <input class="rc-custom-input" type="number" v-model="rc.customAmount" min="1" placeholder="自定义金额（元）" @input="rc.error=''">
+        <div v-if="rc.error" style="color:var(--color-danger);font-size:12rem;margin:4rem 0 8rem;">{{ rc.error }}</div>
         <div class="rc-channel-label">支付方式（在线支付，立即到账）</div>
         <div class="rc-channel-row">
           <div :class="['rc-channel', rc.paymentMethod==='WECHAT'?'on':'']" @click="rc.paymentMethod='WECHAT'">
@@ -258,17 +259,6 @@
       </div>
     </van-popup>
 
-    <!-- 充值待确认弹层 -->
-    <van-popup v-model="pending.show" position="center" round :close-on-click-overlay="false">
-      <div class="rc-pending-card">
-        <div class="rc-pending-icon"><i class="ri-time-line"></i></div>
-        <div class="rc-pending-title">充值待确认</div>
-        <div class="rc-pending-amount">¥{{ Number(pending.amount||0).toFixed(2) }}</div>
-        <div class="rc-pending-desc">请到店出示{{ pending.paymentMethod==='ALIPAY'?'支付宝':'微信' }}付款，门店确认收款后余额到账</div>
-        <div class="rc-pending-no">单号：{{ pending.rechargeNo }}</div>
-        <button class="rc-pending-close" @click="closePending">我知道了</button>
-      </div>
-    </van-popup>
 
     <div class="mc-bottom-spacer"></div>
   </div>
@@ -295,8 +285,7 @@
           allLevels: [],
           // 会员在线充值（门店确认到账模式）
           amountOptions: [50, 100, 200, 500],
-          rc: { show: false, amount: 100, customAmount: '', paymentMethod: 'WECHAT', submitting: false, tradeNo: '' },
-          pending: { show: false, rechargeNo: '', amount: null, paymentMethod: 'WECHAT' },
+          rc: { show: false, amount: 100, customAmount: '', paymentMethod: 'WECHAT', submitting: false, tradeNo: '', error: '' },
           activating: false
         }
       },
@@ -350,7 +339,6 @@
         }
       },
       created: function() { this.loadAll() },
-      beforeDestroy: function() { this.stopRechargePolling() },
       methods: {
         // 等级折扣格式化：0.95 → "9.5"，0.9 → "9"（原 (discount*100) 把 9.5 折显示成 95 折）
         formatDiscount(d) {
@@ -456,17 +444,19 @@
           this.activating = false
         },
         // ---------- 在线充值（门店确认到账） ----------
-        openRecharge: function() { this.rc.show = true },
+        openRecharge: function() { this.rc.show = true; this.rc.error = '' },
         pickAmount: function(a) {
           this.rc.amount = a
           this.rc.customAmount = ''
+          this.rc.error = ''
         },
         submitRecharge: async function() {
           if (this.rc.submitting) return
           var raw = (this.rc.customAmount || '').toString().trim()
           var amount = raw ? Number(raw) : this.rc.amount
-          if (!amount || amount <= 0) { vant.Toast.fail('请输入正确的充值金额'); return }
-          if (amount > 5000) { vant.Toast.fail('单笔充值不能超过5000元'); return }
+          if (!amount || amount <= 0) { this.rc.error = '请输入正确的充值金额'; return }
+          if (amount > 5000) { this.rc.error = '单笔充值不能超过5000元'; return }
+          this.rc.error = ''
           this.rc.submitting = true
           try {
             // 1. 创建 PENDING 充值单
@@ -536,54 +526,6 @@
             vant.Toast.fail('网络异常，支付确认失败，请稍后在充值记录查看')
           }
           this.rc.submitting = false
-        },
-        closePending: function() {
-          // 仅关闭弹层，后台继续轮询，直到门店确认到账
-          this.pending.show = false
-        },
-        startRechargePolling: function() {
-          this.stopRechargePolling()
-          this._rcTicks = 0
-          this._rcFailTicks = 0
-          this._rcTimer = setInterval(this.pollRechargeStatus, 3000)
-        },
-        pollRechargeStatus: async function() {
-          if (!this.pending.rechargeNo) return
-          this._rcTicks = (this._rcTicks || 0) + 1
-          try {
-            var res = await getRechargeStatusApi(this.pending.rechargeNo)
-            if (res.code === 1) {
-              this._rcFailTicks = 0
-              var st = (res.data || {}).status
-              if (st === 'SUCCESS') {
-                this.stopRechargePolling()
-                this.pending.show = false
-                vant.Toast.success('充值成功，余额已到账')
-                this.loadAll()
-              } else if (st === 'CANCELLED') {
-                this.stopRechargePolling()
-                this.pending.show = false
-                vant.Toast.fail('充值单已取消')
-              }
-            } else {
-              this.onRechargePollFail()
-            }
-          } catch(e) { this.onRechargePollFail() }
-          // 最多轮询约10分钟（200次×3s），超时静默停止
-          if (this._rcTicks >= 200) { this.stopRechargePolling() }
-        },
-        stopRechargePolling: function() {
-          if (this._rcTimer) { clearInterval(this._rcTimer); this._rcTimer = null }
-        },
-        // 连续约30秒（10次×3s）查询失败才提示一次并停轮询，零散失败静默重试，既不轰炸也不无感
-        onRechargePollFail: function() {
-          this._rcFailTicks = (this._rcFailTicks || 0) + 1
-          if (this._rcFailTicks >= 10) {
-            this.stopRechargePolling()
-            if (this.pending.show) {
-              vant.Toast.fail('充值状态查询中断，请稍后在会员中心查看')
-            }
-          }
         },
         showRules: function() {
           vant.Dialog.alert({

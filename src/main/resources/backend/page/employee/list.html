@@ -144,7 +144,7 @@
           <el-input v-model="memberForm.username" placeholder="请输入账号" maxlength="20" :disabled="memberDialog.actionType === 'view'" ></el-input>
         </el-form-item>
         <el-form-item label="员工姓名:" prop="name">
-          <el-input v-model="memberForm.name" placeholder="请输入员工姓名" maxlength="20" :disabled="memberDialog.actionType === 'view'" ></el-input>
+          <el-input v-model="memberForm.name" placeholder="请输入员工姓名" maxlength="12" :disabled="memberDialog.actionType === 'view'" ></el-input>
         </el-form-item>
         <el-form-item label="手机号:" prop="phone">
           <el-input v-model="memberForm.phone" placeholder="请输入手机号" maxlength="20" :disabled="memberDialog.actionType === 'view'" ></el-input>
@@ -419,7 +419,8 @@
           },
           /* ── 筛选选项加载 ── */
           async loadFilterOptions() {
-            this.optionsLoading = true            this.optionsLoadError = false
+            this.optionsLoading = true
+            this.optionsLoadError = false
             try {
               const res = await employeeOptions()
               if (String(res.code) === '1' && res.data) {

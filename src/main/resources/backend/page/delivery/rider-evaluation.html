@@ -12,8 +12,6 @@
     html { overflow: hidden; }
     body { overflow-y: auto; }
     .container { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
-    .tool-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-    .tool-bar .spacer { flex: 1; }
   </style>
 </head>
 <body>
@@ -22,74 +20,68 @@
     <h1 class="sr-only" id="page-title">骑手评价管理</h1>
 
     <el-card shadow="never">
-      <div class="tool-bar">
-        <el-input v-model="filterRiderName" placeholder="骑手姓名" clearable style="width: 160px;"></el-input>
-        <el-select v-model="filterStar" placeholder="全部评分" clearable style="width: 130px;">
-          <el-option v-for="n in [1,2,3,4,5]" :key="n" :label="n + ' 星'" :value="n"></el-option>
-        </el-select>
-        <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 130px;">
-          <el-option label="待审核" value="0"></el-option>
-          <el-option label="已通过" value="1"></el-option>
-          <el-option label="已拒绝" value="2"></el-option>
-        </el-select>
-        <el-button type="primary" @click="load">查询</el-button>
-        <span class="spacer"></span>
-        <el-pagination
-          layout="total, prev, pager, next"
-          :total="total"
-          :page-size="pageSize"
-          :current-page="page"
-          @current-change="onPageChange">
-        </el-pagination>
-      </div>
+      <!-- 修改点(2026-10-17)：迁移到 table-bar + crud-table + crud-dialog 共享层。
+           此前裸 el-table + el-pagination 导致列表请求失败被渲染成"暂无数据"（误导）；
+           现由 crud-table 监听 xinfei:list-fail 展示失败态+重试，分页/骨架复用组件内置能力 -->
+      <table-bar
+        :search-items="searchItems"
+        :show-refresh="true"
+        @search="onSearch"
+        @reset="onReset"
+        @refresh="load()"
+      ></table-bar>
 
-      <el-table :data="rows" v-loading="loading" border>
-        <el-table-column prop="id" label="评价ID" width="90" align="center"></el-table-column>
-        <el-table-column prop="riderName" label="骑手" width="110" align="center"></el-table-column>
-        <el-table-column label="顾客" width="110" align="center">
-          <template slot-scope="{ row }">{{ row.anonymous === 1 ? '匿名' : (row.userName || '-') }}</template>
-        </el-table-column>
-        <el-table-column label="评分" width="160" align="center">
-          <template slot-scope="{ row }">
-            <el-rate :value="row.starRating" disabled></el-rate>
-          </template>
-        </el-table-column>
-        <el-table-column prop="content" label="评价内容" min-width="180" align="center">
-          <template slot-scope="{ row }">{{ row.content || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="标签" min-width="160" align="center">
-          <template slot-scope="{ row }">
-            <el-tag v-for="t in (row.tagsParsed || [])" :key="t" size="mini" style="margin:2px;">{{ t }}</el-tag>
-            <span v-if="!row.tagsParsed || !row.tagsParsed.length">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="90" align="center">
-          <template slot-scope="{ row }">
-            <el-tag :type="statusTag(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="评价时间" width="170" align="center"></el-table-column>
-        <el-table-column label="商家回复" min-width="160" align="center">
-          <template slot-scope="{ row }">{{ row.replyContent || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" align="center" fixed="right">
-          <template slot-scope="{ row }">
-            <el-button v-if="!row.replyContent" type="text" size="small"
-                       @click="openReply(row)">回复</el-button>
-            <span v-else class="el-text--secondary">已回复</span>
-          </template>
-        </el-table-column>
-      </el-table>
+      <crud-table
+        empty-hint="试试调整筛选条件"
+        :data="rows"
+        :columns="columns"
+        :loading="loading"
+        :page="page"
+        :page-size="pageSize"
+        :total="total"
+        :show-actions="true"
+        :actions-width="120"
+        :actions-fixed="true"
+        @page-change="onPageChange"
+        @size-change="onSizeChange"
+      >
+        <template #col-userName="{ row }">
+          {{ row.anonymous === 1 ? '匿名' : (row.userName || '-') }}
+        </template>
+        <template #col-starRating="{ row }">
+          <el-rate :value="row.starRating" disabled></el-rate>
+        </template>
+        <template #col-tags="{ row }">
+          <el-tag v-for="t in (row.tagsParsed || [])" :key="t" size="mini" style="margin:2px;">{{ t }}</el-tag>
+          <span v-if="!row.tagsParsed || !row.tagsParsed.length">-</span>
+        </template>
+        <template #col-status="{ row }">
+          <el-tag :type="statusTag(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
+        </template>
+        <template #actions="{ row }">
+          <el-button v-if="!row.replyContent" type="text" size="small" class="btn-success"
+                     @click="openReply(row)">回复</el-button>
+          <span v-else class="el-text--secondary">已回复</span>
+        </template>
+      </crud-table>
     </el-card>
 
-    <el-dialog title="回复评价" :visible.sync="replyVisible" width="460px">
+    <crud-dialog
+      title="回复评价"
+      :visible.sync="replyVisible"
+      size="sm"
+      :submit-loading="submitting"
+      submit-text="确认回复"
+      :before-close="beforeReplyClose"
+      @submit="submitReply"
+    >
       <p>骑手：{{ replyRow ? replyRow.riderName : '' }}　评分：{{ replyRow ? replyRow.starRating : '' }} 星</p>
-      <el-input v-model="replyContent" type="textarea" :rows="3" placeholder="请输入回复内容"></el-input>
-      <span slot="footer">
-        <el-button @click="replyVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitReply">确认回复</el-button>
-      </span>
-    </el-dialog>
+      <el-form :model="replyForm" :rules="replyRules" ref="replyForm" label-width="70px" size="small">
+        <el-form-item label="回复内容" prop="content">
+          <el-input v-model="replyForm.content" type="textarea" :rows="3" placeholder="请输入回复内容"></el-input>
+        </el-form-item>
+      </el-form>
+    </crud-dialog>
   </main>
 
   <script src="../../plugins/vue/vue.js"></script>
@@ -97,6 +89,7 @@
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/common.js?v=20260928"></script>
+  <script src="../../js/components.js?v=20261002"></script>
   <script>
     function parseTags(tags) {
       try { return tags ? JSON.parse(tags) : []; } catch (e) { return []; }
@@ -110,12 +103,35 @@
           total: 0,
           page: 1,
           pageSize: 10,
-          filterRiderName: '',
-          filterStar: '',
-          filterStatus: '',
+          lastSearch: {},
+          searchItems: [
+            { type: 'input', field: 'riderName', placeholder: '骑手姓名', width: '160px' },
+            { type: 'select', field: 'starRating', placeholder: '全部评分', width: '130px',
+              options: [1, 2, 3, 4, 5].map(function (n) { return { label: n + ' 星', value: n } }) },
+            { type: 'select', field: 'status', placeholder: '全部状态', width: '130px',
+              options: [
+                { label: '待审核', value: '0' },
+                { label: '已通过', value: '1' },
+                { label: '已拒绝', value: '2' }
+              ] }
+          ],
+          columns: [
+            { prop: 'id', label: '评价ID', width: 90 },
+            { prop: 'riderName', label: '骑手', width: 110 },
+            { prop: 'userName', label: '顾客', width: 110, slot: true },
+            { prop: 'starRating', label: '评分', width: 160, slot: true },
+            { prop: 'content', label: '评价内容', width: 180, formatter: function (v) { return v || '-' } },
+            { prop: 'tags', label: '标签', width: 160, slot: true },
+            { prop: 'status', label: '状态', width: 90, slot: true },
+            { prop: 'createTime', label: '评价时间', width: 170 },
+            { prop: 'replyContent', label: '商家回复', width: 160, formatter: function (v) { return v || '-' } }
+          ],
           replyVisible: false,
           replyRow: null,
-          replyContent: '',
+          replyForm: { content: '' },
+          replyRules: {
+            content: [{ required: true, message: '请输入回复内容', trigger: 'blur' }]
+          },
           submitting: false
         };
       },
@@ -125,12 +141,13 @@
       methods: {
         load: function () {
           var vm = this;
+          var s = vm.lastSearch || {};
           vm.loading = true;
           $axios.get('/api/rider-evaluation/admin/page', {
             params: {
-              riderName: vm.filterRiderName || undefined,
-              starRating: vm.filterStar || undefined,
-              status: vm.filterStatus || undefined,
+              riderName: s.riderName || undefined,
+              starRating: (s.starRating === '' || s.starRating == null) ? undefined : s.starRating,
+              status: s.status || undefined,
               page: vm.page,
               pageSize: vm.pageSize
             }
@@ -142,34 +159,54 @@
             }
             vm.rows = records;
             vm.total = page.total || 0;
-          }).catch(function () { /* 提示已统一 */ }).then(function () {
+          }).catch(function () { /* 提示已统一；失败态由 crud-table 监听 xinfei:list-fail 展示 */ }).then(function () {
             vm.loading = false;
           });
         },
-        onPageChange: function (p) {
-          this.page = p;
+        onSearch: function (params) {
+          this.lastSearch = params || {};
+          this.page = 1;
           this.load();
+        },
+        onReset: function () {
+          this.lastSearch = {};
+          this.page = 1;
+          this.load();
+        },
+        onPageChange: function (payload) {
+          this.page = payload.page;
+          this.load();
+        },
+        // 修改点：只更新状态不加载——crud-table 改页大小后会紧接着 emit page-change(page=1) 统一触发加载，
+        // 若这里再 load 会发出两次相同请求
+        onSizeChange: function (val) {
+          this.pageSize = (typeof val === 'object' && val != null) ? (val.pageSize || val) : val;
+          this.page = 1;
         },
         openReply: function (row) {
           this.replyRow = row;
-          this.replyContent = '';
+          this.replyForm.content = '';
           this.replyVisible = true;
+        },
+        // 修改点：未保存守卫——回复内容未提交前阻止误关（X/ESC/取消按钮）
+        beforeReplyClose: function () {
+          return !this.replyForm.content;
         },
         submitReply: function () {
           var vm = this;
-          if (!vm.replyContent) {
-            vm.$message.warning('请输入回复内容');
-            return;
-          }
-          vm.submitting = true;
-          $axios.put('/api/rider-evaluation/' + vm.replyRow.id + '/reply', {
-            replyContent: vm.replyContent
-          }).then(function () {
-            vm.$message.success('回复成功');
-            vm.replyVisible = false;
-            vm.load();
-          }).catch(function () { /* 提示已统一 */ }).then(function () {
-            vm.submitting = false;
+          vm.$refs.replyForm.validate(function (valid) {
+            if (!valid) return;
+            vm.submitting = true;
+            $axios.put('/api/rider-evaluation/' + vm.replyRow.id + '/reply', {
+              replyContent: vm.replyForm.content
+            }).then(function () {
+              vm.$message.success('回复成功');
+              vm.replyForm.content = '';
+              vm.replyVisible = false;
+              vm.load();
+            }).catch(function () { /* 提示已统一 */ }).then(function () {
+              vm.submitting = false;
+            });
           });
         },
         statusText: function (s) {

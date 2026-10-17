@@ -405,7 +405,9 @@
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
   <a href="#main-content" class="skip-link">跳转到主内容</a>
 
-  <div id="main-content" class="cashier-container" role="main" aria-label="页面主要内容">
+  <!-- 修改点(2026-10-17)：主地标统一为 aria-labelledby + sr-only 标题（原 aria-label="页面主要内容" 无信息量） -->
+  <div id="main-content" class="cashier-container" role="main" aria-labelledby="page-title">
+    <h1 class="sr-only" id="page-title">收银台</h1>
     <!-- 头部统计（统一 stat-cards 组件） -->
     <div class="cashier-header">
       <div class="cashier-title">
@@ -456,7 +458,7 @@
         <div v-if="selectedTable">
           <div class="detail-header">
             <h3>
-              <i class="ri-arrow-left-line" style="cursor:pointer;margin-right:8px;" @click="clearTableSelection" title="返回桌台列表"></i>
+              <i class="ri-arrow-left-line" style="cursor:pointer;margin-right:8px;" role="button" tabindex="0" aria-label="返回桌台列表" @click="clearTableSelection" @keydown.enter="clearTableSelection" title="返回桌台列表"></i>
               {{ selectedTable.tableName }}
               <span style="font-size:var(--font-size-sm);color:var(--el-text-muted);margin-left:8px;">
                 {{ selectedTable.areaName || '' }} · {{ selectedTable.seatCount }}人
@@ -616,7 +618,8 @@
                 :key="coupon.id"
                 class="coupon-item"
                 :class="{ active: selectedCouponId === coupon.id }"
-                @click="selectCoupon(coupon)">
+                role="button" tabindex="0" :aria-pressed="selectedCouponId === coupon.id"
+                @click="selectCoupon(coupon)" @keydown.enter="selectCoupon(coupon)">
                 <div class="coupon-left">
                   <div class="coupon-name">{{ coupon.name }}</div>
                   <div class="coupon-cond">{{ couponConditionText(coupon) }}</div>
@@ -627,42 +630,48 @@
           </div>
         </div>
 
-        <!-- 支付方式 -->
+        <!-- 支付方式（修改点 2026-10-17：自绘可点控件补 role/tabindex/keydown + aria-pressed，键盘用户可完成结账） -->
         <div v-if="selectedOrder">
           <div style="margin-bottom: var(--space-3); font-weight: 500;">支付方式</div>
           <div class="payment-methods">
             <div
               class="payment-method"
               :class="{ active: payType === 1 }"
-              @click="selectPayType(1)">
+              role="button" tabindex="0" :aria-pressed="payType === 1"
+              @click="selectPayType(1)" @keydown.enter="selectPayType(1)">
               <i class="ri-money-cny-circle-line" style="color: var(--color-success-text);"></i>
               <span>现金</span>
             </div>
             <div
               class="payment-method"
               :class="{ active: payType === 2 }"
-              @click="selectPayType(2)">
+              role="button" tabindex="0" :aria-pressed="payType === 2"
+              @click="selectPayType(2)" @keydown.enter="selectPayType(2)">
               <i class="ri-chat-3-line" style="color: var(--color-success-text);"></i>
               <span>微信</span>
             </div>
             <div
               class="payment-method"
               :class="{ active: payType === 3 }"
-              @click="selectPayType(3)">
+              role="button" tabindex="0" :aria-pressed="payType === 3"
+              @click="selectPayType(3)" @keydown.enter="selectPayType(3)">
               <i class="ri-computer-line" style="color: var(--el-color-primary);"></i>
               <span>支付宝</span>
             </div>
             <div
               class="payment-method"
               :class="{ active: payType === 4 }"
-              @click="selectPayType(4)">
+              role="button" tabindex="0" :aria-pressed="payType === 4"
+              @click="selectPayType(4)" @keydown.enter="selectPayType(4)">
               <i class="ri-bank-card-line" style="color: var(--el-color-warning);"></i>
               <span>银行卡</span>
             </div>
             <div
               class="payment-method"
               :class="{ active: payType === 5, disabled: !currentMember }"
-              @click="currentMember ? selectPayType(5) : XinfeiUI.warning('请先识别会员后使用储值支付')">
+              role="button" tabindex="0" :aria-pressed="payType === 5" :aria-disabled="!currentMember"
+              @click="currentMember ? selectPayType(5) : XinfeiUI.warning('请先识别会员后使用储值支付')"
+              @keydown.enter="currentMember ? selectPayType(5) : XinfeiUI.warning('请先识别会员后使用储值支付')">
               <i class="ri-wallet-line" style="color: var(--el-color-primary);"></i>
               <span>会员储值</span>
             </div>
@@ -741,13 +750,14 @@
         </el-input>
         <div class="add-items-grid">
           <div v-for="d in filteredDishes" :key="d.id" class="dish-pick-card"
-            :class="{selected: addItemsSelection[d.id]}" @click="toggleDishSelect(d)">
+            :class="{selected: addItemsSelection[d.id]}" role="button" tabindex="0" :aria-pressed="!!addItemsSelection[d.id]"
+            @click="toggleDishSelect(d)" @keydown.enter="toggleDishSelect(d)">
             <div class="dish-name">{{ d.name }}</div>
             <div class="dish-price">¥{{ formatMoney(d.price) }}</div>
             <div class="dish-qty" v-if="addItemsSelection[d.id]" @click.stop>
-              <el-button size="mini" icon="el-icon-minus" circle @click="adjustDishQty(d.id,-1)"></el-button>
+              <el-button size="mini" icon="el-icon-minus" circle aria-label="减少数量" @click="adjustDishQty(d.id,-1)"></el-button>
               <span style="min-width:24px;text-align:center;font-weight:600;">{{ addItemsSelection[d.id].qty }}</span>
-              <el-button size="mini" icon="el-icon-plus" circle @click="adjustDishQty(d.id,1)"></el-button>
+              <el-button size="mini" icon="el-icon-plus" circle aria-label="增加数量" @click="adjustDishQty(d.id,1)"></el-button>
             </div>
           </div>
         </div>

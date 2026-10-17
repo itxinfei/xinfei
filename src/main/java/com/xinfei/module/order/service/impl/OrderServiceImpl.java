@@ -1816,8 +1816,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      * @param id 参数 id
      */
     @Override
-    public void rejectOrder(Long id) {
-        statusFlowService.rejectOrder(id);
+    public void rejectOrder(Long id, String reason) {
+        statusFlowService.rejectOrder(id, reason);
     }
 
     /**

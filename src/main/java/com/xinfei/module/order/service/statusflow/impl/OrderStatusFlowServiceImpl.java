@@ -186,7 +186,10 @@ public class OrderStatusFlowServiceImpl
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void rejectOrder(Long id) {
+    public void rejectOrder(Long id, String reason) {
+        // 修改点(2026-10-17)：拒单原因透传操作人输入，缺省回退"商家拒单"
+        //（此前硬编码字符串，员工端 UI 收集的原因被静默丢弃）
+        String rejectReason = (reason != null && !reason.trim().isEmpty()) ? reason.trim() : "商家拒单";
         Orders order = this.getById(id);
         if (order == null) {
             throw new CustomException("订单不存在");
@@ -205,7 +208,7 @@ public class OrderStatusFlowServiceImpl
             // P1-7：关闭遗留 PENDING 支付单，杜绝拒单退款窗口内陈旧预支付仍可付款
             paymentOrderService.closePendingPayments(PaymentOrder.BIZ_ORDER, id);
             // 修改点(P0-5)：落拒单原因供顾客端回执
-            persistCancelReason(id, "商家拒单");
+            persistCancelReason(id, rejectReason);
             registerAutoRefund(id, "商家拒单自动退款", order.getTenantId());
             log.warn("订单拒单（已支付，自动退款）: id={}, number={}", id, order.getNumber());
             return;
@@ -221,7 +224,7 @@ public class OrderStatusFlowServiceImpl
         // handlePaymentSuccess 的 CLOSED→SUCCESS 挽救 + 已取消订单自动退款兜底。
         paymentOrderService.closePendingPayments(PaymentOrder.BIZ_ORDER, id);
         // 修改点(P0-5)：拒单原因回执（独立字段，不覆盖顾客下单备注）
-        persistCancelReason(id, "商家拒单");
+        persistCancelReason(id, rejectReason);
 
         // 拒单时回退库存（部分失败也允许，补偿任务会重试）
         boolean refundOk = refundStockByOrderId(id);
