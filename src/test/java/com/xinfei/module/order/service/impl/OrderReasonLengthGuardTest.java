@@ -33,7 +33,7 @@ class OrderReasonLengthGuardTest {
     void rejectOrderRejectsOverLongReason() {
         OrderStatusFlowServiceImpl service = new OrderStatusFlowServiceImpl();
         CustomException ex = assertThrows(CustomException.class,
-                () -> service.rejectOrder(1L, repeat("库存不足无法出餐", 34)));
+                () -> service.rejectOrder(1L, repeat("原", 201)));
         assertEquals("拒单原因不能超过200个字符", ex.getMessage());
     }
 
@@ -42,7 +42,7 @@ class OrderReasonLengthGuardTest {
     void cancelOrderRejectsOverLongReason() {
         OrderStatusFlowServiceImpl service = new OrderStatusFlowServiceImpl();
         CustomException ex = assertThrows(CustomException.class,
-                () -> service.cancelOrder(1L, repeat("取消", 101)));
+                () -> service.cancelOrder(1L, repeat("因", 201)));
         assertEquals("取消原因不能超过200个字符", ex.getMessage());
     }
 
@@ -51,7 +51,7 @@ class OrderReasonLengthGuardTest {
     void applyUserRefundRejectsOverLongReason() {
         RefundRecordServiceImpl service = new RefundRecordServiceImpl();
         CustomException ex = assertThrows(CustomException.class,
-                () -> service.applyUserRefund(1L, repeat("退款", 101)));
+                () -> service.applyUserRefund(1L, repeat("因", 201)));
         assertEquals("退款原因不能超过200个字符", ex.getMessage());
     }
 
@@ -60,9 +60,9 @@ class OrderReasonLengthGuardTest {
     void normalReasonNotBlockedByGuard() {
         OrderStatusFlowServiceImpl service = new OrderStatusFlowServiceImpl();
         Throwable t = assertThrows(Throwable.class,
-                () -> service.rejectOrder(1L, repeat("库存不足无法出餐", 28)));
+                () -> service.rejectOrder(1L, repeat("原", 200)));
         boolean blockedByGuard = t instanceof CustomException
                 && String.valueOf(t.getMessage()).contains("不能超过200个字符");
-        assertFalse(blockedByGuard, "196 字原因不应被长度守卫拦下，实际异常：" + t);
+        assertFalse(blockedByGuard, "恰好 200 字不应被长度守卫拦下，实际异常：" + t);
     }
 }
