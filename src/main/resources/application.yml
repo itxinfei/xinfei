@@ -29,6 +29,15 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 12MB
+  # Spring Session Redis（R-01 会话 Redis 化）：HttpSession 自动落 Redis，多副本部署共享登录态。
+  # timeout 与 server.servlet.session.timeout 保持一致（30m）；flush-mode=on_save 保证只在
+  # 请求结束时写 Redis，避免每次getAttribute都产生一次网络往返。
+  session:
+    store-type: redis
+    timeout: 30m
+    redis:
+      namespace: xinfei:session
+      flush-mode: on_save
   # 数据库版本化迁移（Flyway）。约定与漂移清单见 docs/FLYWAY_MIGRATION.md。
   # 默认关闭：是否启动期执行迁移由各 profile 显式决定
   #   dev=${FLYWAY_ENABLED:true}（自动跟上结构）、prod=${FLYWAY_ENABLED:false}

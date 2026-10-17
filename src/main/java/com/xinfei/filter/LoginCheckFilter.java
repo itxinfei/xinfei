@@ -11,6 +11,7 @@ import com.xinfei.module.store.service.StoreService;
 import com.xinfei.module.tenant.model.Tenant;
 import com.xinfei.module.tenant.service.TenantService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -82,7 +83,15 @@ public class LoginCheckFilter implements Filter{
             }
 
             //4-1、判断登录状态，如果已登录，则直接放行
-            HttpSession session = request.getSession(false);
+            //（R-01 会话 Redis 化：Redis 不可用时 getSession 抛 DataAccessException，降级 401 而非 500）
+            HttpSession session;
+            try {
+                session = request.getSession(false);
+            } catch (DataAccessException e) {
+                log.error("Redis 不可用，会话服务降级（R-01）：{}", e.getMessage());
+                writeSessionUnavailable(response);
+                return;
+            }
             if (session != null && session.getAttribute("employee") != null) {
                 if (applyEmployeeContext(session, request, response)) {
                     filterChain.doFilter(request, response);
@@ -138,7 +147,14 @@ public class LoginCheckFilter implements Filter{
      * @param request 请求
      */
     private void restoreExcludeContext(HttpServletRequest request) {
-        HttpSession excludeSession = request.getSession(false);
+        //（R-01）公开端点不因 Redis 不可用而拒绝服务：会话读取失败按匿名处理，
+        // 继续走请求参数/默认租户两级回落，保证匿名用户仍可浏览公开菜单
+        HttpSession excludeSession = null;
+        try {
+            excludeSession = request.getSession(false);
+        } catch (DataAccessException e) {
+            log.warn("公开端点会话读取降级（Redis 不可用），按匿名处理：{}", e.getMessage());
+        }
         Long excludeTenantId = excludeSession == null ? null : (Long) excludeSession.getAttribute("tenantId");
         if (excludeTenantId == null) {
             excludeTenantId = resolvePublicTenantId(request);
@@ -390,6 +406,20 @@ public class LoginCheckFilter implements Filter{
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(OBJECT_MAPPER.writeValueAsString(R.error("NOTLOGIN")));
+    }
+
+    /**
+     * 写出会话服务不可用响应（R-01 Redis 降级）：HTTP 401 + JSON 体 code=401。
+     * <p>与 writeNotLogin 区分：NOTLOGIN 是用户未登录（正常业务流），SESSION_UNAVAILABLE
+     * 是基础设施故障（Redis 断连），前端/网关可据此给出差异化提示。</p>
+     *
+     * @param response 响应
+     * @throws IOException 写响应失败
+     */
+    private void writeSessionUnavailable(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"code\":401,\"msg\":\"会话服务不可用，请重新登录\"}");
     }
 
     /**
