@@ -18,10 +18,7 @@
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
     <view class="tip">
-      <text class="tip__text">
-        员工登录走 /employee/login（用户名 + 密码，密码强度与账号锁定在服务端）。
-        返回体为员工资料 Map（id、username、name、role、tenantId 等），tenantId 用于门店状态接口拼路径。
-      </text>
+      <text class="tip__text">员工账号由门店管理员分配，如需开号或重置密码请联系店长</text>
     </view>
   </view>
 </template>

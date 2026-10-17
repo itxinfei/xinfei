@@ -9,7 +9,7 @@
       <view v-for="t in tasks" :key="t.id" class="card">
         <view class="card__head">
           <text class="card__no">{{ t.number }}</text>
-          <text class="card__fee">配送费 ¥{{ t.deliveryFee }}</text>
+          <text class="card__fee">配送费 ¥{{ fmtAmount(t.deliveryFee) }}</text>
         </view>
 
         <view class="line">
@@ -29,14 +29,19 @@
         </view>
 
         <view class="card__foot">
-          <text class="card__meta">订单额 ¥{{ t.amount }}｜{{ t.expectDeliveryTime || '立即配送' }}</text>
-          <text class="card__btn" :class="{ 'card__btn--off': grabbed[t.id] }" @tap="grab(t)">
+          <text class="card__meta">订单额 ¥{{ fmtAmount(t.amount) }}｜{{ t.expectDeliveryTime || '立即配送' }}</text>
+          <text class="card__btn" :class="{ 'card__btn--off': grabbed[t.id] || busy('grab:' + t.id) }" hover-class="hover-press" @tap="grab(t)">
             {{ grabbed[t.id] ? '已抢' : '抢单' }}
           </text>
         </view>
       </view>
 
-      <view v-if="!tasks.length && !loading" class="list__empty">
+      <view v-if="loading && !tasks.length" class="list__loading"><text>加载中…</text></view>
+      <view v-if="listError" class="list__error">
+        <text>加载失败</text>
+        <text class="list__retry" @tap="load()">重试</text>
+      </view>
+      <view v-if="!tasks.length && !loading && !listError" class="list__empty">
         <text>当前没有可抢订单，下拉刷新</text>
       </view>
     </scroll-view>
@@ -44,15 +49,16 @@
 </template>
 
 <script>
-import { http } from '@xinfei/mini-shared'
+import { http, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）与抢单 in-flight 锁（busyLock）
+    return Object.assign(listState(), busyLock(), {
       tasks: [],
       grabbed: {},
       loading: false
-    }
+    })
   },
   onShow() {
     this.load()
@@ -63,19 +69,22 @@ export default {
   methods: {
     load() {
       this.loading = true
+      this.listError = false
       return http.get('/api/rider/tasks/hall').then(list => {
         this.tasks = list || []
-      }).catch(() => {}).then(() => {
+      }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
     },
     grab(task) {
-      if (this.grabbed[task.id]) return
+      const key = 'grab:' + task.id
+      if (this.grabbed[task.id] || this.busy(key)) return
+      this.setBusy(key, true)
       http.post('/api/rider/tasks/' + task.id + '/grab').then(() => {
         uni.showToast({ title: '抢单成功', icon: 'none' })
         this.grabbed[task.id] = true
         uni.switchTab({ url: '/pages/task/task' })
-      }).catch(() => {})
+      }).catch(() => {}).then(() => { this.setBusy(key, false) })
     }
   }
 }
@@ -85,7 +94,7 @@ export default {
 .hall {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background: var(--bg-page);
 }
 
@@ -207,10 +216,17 @@ export default {
   background: var(--bg-input);
 }
 
-.list__empty {
+.list__empty,
+.list__error,
+.list__loading {
   padding: 120rpx 0;
   text-align: center;
   font-size: 26rpx;
   color: var(--color-text-hint);
+}
+
+.list__retry {
+  margin-left: 12rpx;
+  color: var(--color-primary-text);
 }
 </style>

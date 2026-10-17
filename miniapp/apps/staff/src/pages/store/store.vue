@@ -1,5 +1,15 @@
 <template>
   <view class="store">
+    <!-- 修改点(2026-10-17)：未绑定租户 / 加载失败显式状态（此前二者都表现为"加载中"） -->
+    <view v-if="noTenant" class="store__empty">
+      <text>当前账号未绑定租户/门店</text>
+      <text class="store__empty-sub">请联系管理员在「门店管理」中为你分配门店</text>
+    </view>
+    <view v-else-if="listError" class="store__error">
+      <text>门店信息加载失败</text>
+      <text class="store__retry" @tap="load()">重试</text>
+    </view>
+    <template v-else>
     <view class="head">
       <text class="head__name">{{ detail.storeName || '门店信息加载中' }}</text>
       <text class="head__code">编码 {{ detail.storeCode || '-' }}｜租户 {{ detail.tenantId || tenantId }}</text>
@@ -29,21 +39,23 @@
       <view class="info__row"><text class="info__label">负责人</text><text class="info__value">{{ detail.contactPerson || '-' }}</text></view>
       <view class="info__row"><text class="info__label">地址</text><text class="info__value">{{ detail.address || '-' }}</text></view>
       <view class="info__row"><text class="info__label">今日单量</text><text class="info__value">{{ detail.todayOrders || 0 }}</text></view>
-      <view class="info__row"><text class="info__label">今日营业额</text><text class="info__value">¥{{ detail.todayAmount || '0.00' }}</text></view>
+      <view class="info__row"><text class="info__label">今日营业额</text><text class="info__value">¥{{ fmtAmount(detail.todayAmount) }}</text></view>
     </view>
+    </template>
   </view>
 </template>
 
 <script>
-import { http, qs, employeeAuth } from '@xinfei/mini-shared'
+import { http, qs, employeeAuth, listState, fmtAmount } from '@xinfei/mini-shared'
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）
+    return Object.assign(listState(), {
       detail: {},
       // 暂停接单状态由后端 businessHoursService 维护，详情接口不回传，本页只在写成功后本地回填
       paused: false
-    }
+    })
   },
   computed: {
     employee() {
@@ -51,6 +63,10 @@ export default {
     },
     tenantId() {
       return this.detail.tenantId || this.employee.tenantId
+    },
+    // 修改点(2026-10-17)：未绑定租户显式空态——此前 load() 直接 return，页面永久停在"门店信息加载中"
+    noTenant() {
+      return !this.employee.tenantId
     },
     enabled() {
       return Number(this.detail.status) === 1
@@ -60,12 +76,14 @@ export default {
     this.load()
   },
   methods: {
+    fmtAmount,
     load() {
       const tid = this.employee.tenantId
       if (!tid) return Promise.resolve()
+      this.listError = false
       return http.get('/store/detail/' + tid).then(data => {
         this.detail = data || {}
-      }).catch(() => {})
+      }).catch(() => { this.listError = true })
     },
     toggleStatus(e) {
       const next = e.detail.value ? 1 : 0
@@ -89,7 +107,7 @@ export default {
 
 <style>
 .store {
-  min-height: 100vh;
+  min-height: 100%;
   padding-bottom: 40rpx;
   background: var(--bg-page);
 }
@@ -182,5 +200,31 @@ export default {
   font-size: 26rpx;
   line-height: 38rpx;
   color: var(--color-text-primary);
+}
+
+.store__empty {
+  padding: 160rpx 48rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+}
+
+.store__empty-sub {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+}
+
+.store__error {
+  padding: 160rpx 48rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--color-text-hint);
+}
+
+.store__retry {
+  margin-left: 12rpx;
+  color: var(--color-primary-text);
 }
 </style>

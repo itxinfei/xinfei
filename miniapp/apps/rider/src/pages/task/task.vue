@@ -25,17 +25,22 @@
         </view>
 
         <view class="card__foot">
-          <text class="card__meta">配送费 ¥{{ t.deliveryFee }}</text>
+          <text class="card__meta">配送费 ¥{{ fmtAmount(t.deliveryFee) }}</text>
           <view class="ops">
-            <text v-if="scope === 'todo'" class="op op--main" @tap="accept(t)">接单</text>
-            <text v-if="scope === 'delivering'" class="op" @tap="pickup(t)">取餐</text>
-            <text v-if="scope === 'delivering'" class="op op--main" @tap="deliver(t)">送达</text>
+            <text v-if="scope === 'todo'" class="op op--main" :class="{ 'op--off': busy('accept:' + t.id) }" @tap="accept(t)">接单</text>
+            <text v-if="scope === 'delivering'" class="op" :class="{ 'op--off': busy('pickup:' + t.id) }" @tap="pickup(t)">取餐</text>
+            <text v-if="scope === 'delivering'" class="op op--main" :class="{ 'op--off': busy('deliver:' + t.id) }" @tap="deliver(t)">送达</text>
             <text class="op" @tap="navigate(t)">导航</text>
           </view>
         </view>
       </view>
 
-      <view v-if="!tasks.length && !loading" class="list__empty">
+      <view v-if="loading && !tasks.length" class="list__loading"><text>加载中…</text></view>
+      <view v-if="listError" class="list__error">
+        <text>加载失败</text>
+        <text class="list__retry" @tap="load()">重试</text>
+      </view>
+      <view v-if="!tasks.length && !loading && !listError" class="list__empty">
         <text>{{ emptyText }}</text>
       </view>
     </scroll-view>
@@ -43,11 +48,12 @@
 </template>
 
 <script>
-import { http, qs, orderText } from '@xinfei/mini-shared'
+import { http, qs, orderText, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）与接单/取餐/送达 in-flight 锁（busyLock）
+    return Object.assign(listState(), busyLock(), {
       tabs: [
         { scope: 'todo', label: '待接单' },
         { scope: 'delivering', label: '配送中' },
@@ -56,7 +62,7 @@ export default {
       scope: 'delivering',
       tasks: [],
       loading: false
-    }
+    })
   },
   computed: {
     emptyText() {
@@ -78,20 +84,26 @@ export default {
     },
     load() {
       this.loading = true
+      this.listError = false
       return http.get(qs('/api/rider/tasks/mine', { scope: this.scope })).then(list => {
         this.tasks = list || []
-      }).catch(() => {}).then(() => {
+      }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
     },
     accept(task) {
+      const key = 'accept:' + task.id
+      if (this.busy(key)) return
+      this.setBusy(key, true)
       http.post('/api/rider/tasks/' + task.id + '/accept').then(() => {
         uni.showToast({ title: '已接单', icon: 'none' })
         this.load()
-      }).catch(() => {})
+      }).catch(() => {}).then(() => { this.setBusy(key, false) })
     },
     pickup(task) {
       // P0-6：订单已生成取餐码时，后端要求带正确取餐码方可核销
+      const key = 'pickup:' + task.id
+      if (this.busy(key)) return
       uni.showModal({
         title: '确认取餐',
         content: '如有取餐码请输入，留空直接确认',
@@ -99,18 +111,22 @@ export default {
         placeholderText: '取餐码',
         success: res => {
           if (!res.confirm) return
+          this.setBusy(key, true)
           http.post(qs('/api/rider/tasks/' + task.id + '/pickup', { pickupCode: res.content })).then(() => {
             uni.showToast({ title: '已取餐', icon: 'none' })
             this.load()
-          }).catch(() => {})
+          }).catch(() => {}).then(() => { this.setBusy(key, false) })
         }
       })
     },
     deliver(task) {
+      const key = 'deliver:' + task.id
+      if (this.busy(key)) return
+      this.setBusy(key, true)
       http.post('/api/rider/tasks/' + task.id + '/deliver').then(() => {
         uni.showToast({ title: '已送达', icon: 'none' })
         this.load()
-      }).catch(() => {})
+      }).catch(() => {}).then(() => { this.setBusy(key, false) })
     },
     navigate(task) {
       if (task.destLatitude == null || task.destLongitude == null) {
@@ -133,7 +149,7 @@ export default {
 .task {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background: var(--bg-page);
 }
 
@@ -149,12 +165,13 @@ export default {
   text-align: center;
   font-size: 28rpx;
   color: var(--color-text-secondary);
+  border-bottom: 4rpx solid transparent;
 }
 
 .tab--on {
   color: var(--color-text-primary);
   font-weight: 600;
-  border-bottom: 4rpx solid var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .list {
@@ -248,10 +265,21 @@ export default {
   border-color: var(--color-primary);
 }
 
-.list__empty {
+.list__empty,
+.list__error,
+.list__loading {
   padding: 120rpx 0;
   text-align: center;
   font-size: 26rpx;
   color: var(--color-text-hint);
+}
+
+.list__retry {
+  margin-left: 12rpx;
+  color: var(--color-primary-text);
+}
+
+.op--off {
+  opacity: 0.5;
 }
 </style>

@@ -16,23 +16,17 @@
       <view class="info__row"><text class="info__label">账号状态</text><text class="info__value">{{ employee.status === 1 ? '启用' : '停用' }}</text></view>
     </view>
 
-    <view class="cell" @tap="showBaseUrl">
-      <text class="cell__label">接口地址</text>
-      <text class="cell__value">{{ baseUrl }}</text>
-    </view>
-
     <button class="cell cell--btn" @tap="logout">退出登录</button>
   </view>
 </template>
 
 <script>
-import { employeeAuth, getBaseUrl } from '@xinfei/mini-shared'
+import { employeeAuth } from '@xinfei/mini-shared'
 
 export default {
   data() {
     return {
-      employee: {},
-      baseUrl: getBaseUrl()
+      employee: {}
     }
   },
   computed: {
@@ -56,9 +50,6 @@ export default {
     })
   },
   methods: {
-    showBaseUrl() {
-      uni.setClipboardData({ data: this.baseUrl })
-    },
     logout() {
       employeeAuth.logout().then(() => {
         uni.reLaunch({ url: '/pages/login/login' })
@@ -70,7 +61,7 @@ export default {
 
 <style>
 .me {
-  min-height: 100vh;
+  min-height: 100%;
   padding-bottom: 40rpx;
   background: var(--bg-page);
 }

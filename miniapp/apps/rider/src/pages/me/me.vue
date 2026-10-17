@@ -30,24 +30,19 @@
       <text class="cell__label">上报当前定位</text>
       <text class="cell__value">{{ lastReport || '未上报' }}</text>
     </view>
-    <view class="cell" @tap="showBaseUrl">
-      <text class="cell__label">接口地址</text>
-      <text class="cell__value">{{ baseUrl }}</text>
-    </view>
 
     <button class="cell cell--btn" @tap="logout">退出登录</button>
   </view>
 </template>
 
 <script>
-import { riderAuth, getBaseUrl, write, STORAGE_KEYS } from '@xinfei/mini-shared'
+import { riderAuth, write, STORAGE_KEYS } from '@xinfei/mini-shared'
 
 export default {
   data() {
     return {
       rider: {},
-      lastReport: '',
-      baseUrl: getBaseUrl()
+      lastReport: ''
     }
   },
   computed: {
@@ -95,9 +90,6 @@ export default {
         fail: () => uni.showToast({ title: '定位失败，检查授权', icon: 'none' })
       })
     },
-    showBaseUrl() {
-      uni.setClipboardData({ data: this.baseUrl })
-    },
     logout() {
       riderAuth.logout().then(() => {
         uni.reLaunch({ url: '/pages/login/login' })
@@ -109,7 +101,7 @@ export default {
 
 <style>
 .me {
-  min-height: 100vh;
+  min-height: 100%;
   padding-bottom: 40rpx;
   background: var(--bg-page);
 }

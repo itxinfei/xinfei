@@ -35,23 +35,28 @@
         </view>
 
         <view class="card__foot">
-          <text class="card__time">{{ o.orderTime }}｜¥{{ o.amount }}</text>
+          <text class="card__time">{{ o.orderTime }}｜¥{{ fmtAmount(o.amount) }}</text>
           <view class="ops">
-            <text v-if="o.status === 2" class="op op--danger" @tap="act('reject', o)">拒单</text>
-            <text v-if="o.status === 2" class="op op--main" @tap="act('confirm', o)">接单</text>
-            <text v-if="o.status === 3" class="op op--main" @tap="act('complete', o)">完成</text>
-            <text v-if="o.status !== 4 && o.status !== 5" class="op" @tap="act('cancel', o)">取消</text>
+            <text v-if="o.status === 2" class="op op--danger" :class="{ 'op--off': busy('act:reject:' + o.id) }" @tap="act('reject', o)">拒单</text>
+            <text v-if="o.status === 2" class="op op--main" :class="{ 'op--off': busy('act:confirm:' + o.id) }" @tap="act('confirm', o)">接单</text>
+            <text v-if="o.status === 3" class="op op--main" :class="{ 'op--off': busy('act:complete:' + o.id) }" @tap="act('complete', o)">完成</text>
+            <text v-if="o.status !== 4 && o.status !== 5" class="op" :class="{ 'op--off': busy('act:cancel:' + o.id) }" @tap="act('cancel', o)">取消</text>
           </view>
         </view>
       </view>
 
-      <view v-if="!records.length && !loading" class="list__empty"><text>暂无订单</text></view>
+      <view v-if="listError" class="list__error">
+        <text>加载失败</text>
+        <text class="list__retry" @tap="load(true)">重试</text>
+      </view>
+      <view v-if="!records.length && !loading && !listError" class="list__empty"><text>暂无订单</text></view>
+      <view v-if="loading && !records.length" class="list__loading"><text>加载中…</text></view>
     </scroll-view>
   </view>
 </template>
 
 <script>
-import { http, qs, orderText } from '@xinfei/mini-shared'
+import { http, qs, orderText, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
 
 // 状态流转与服务端一致：2 待接单 →(confirm) 3 配送中 →(complete) 4 已完成；2/3 →(cancel|reject) 5 已取消
 const ACTIONS = {
@@ -63,7 +68,8 @@ const ACTIONS = {
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）与操作 in-flight 锁（busyLock）
+    return Object.assign(listState(), busyLock(), {
       tabs: [
         { label: '待接单', status: 2 },
         { label: '配送中', status: 3 },
@@ -77,7 +83,7 @@ export default {
       pageSize: 20,
       hasMore: true,
       loading: false
-    }
+    })
   },
   onLoad(query) {
     if (query && query.status) this.status = Number(query.status)
@@ -114,6 +120,7 @@ export default {
         return Promise.resolve()
       }
       this.loading = true
+      this.listError = false
       return http.get(qs('/order/page', {
         page: this.page,
         pageSize: this.pageSize,
@@ -123,7 +130,7 @@ export default {
         this.records = this.records.concat(list)
         this.hasMore = list.length === this.pageSize
         this.page += 1
-      }).catch(() => {}).then(() => {
+      }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
     },
@@ -132,11 +139,16 @@ export default {
     },
     act(key, order) {
       const action = ACTIONS[key]
+      // 修改点(2026-10-17)：in-flight 锁防连点重复提交；拒单/取消的 reason 由后端落库
+      //（/order/reject 2026-10-17 起接收可选 reason，此前静默丢弃）
+      const lockKey = 'act:' + key + ':' + order.id
+      if (this.busy(lockKey)) return
       const doIt = reason => {
+        this.setBusy(lockKey, true)
         http.put(qs(action.path, { id: order.id, reason })).then(() => {
           uni.showToast({ title: action.label + '成功', icon: 'none' })
           this.load(true)
-        }).catch(() => {})
+        }).catch(() => {}).then(() => { this.setBusy(lockKey, false) })
       }
       if (key === 'cancel' || key === 'reject') {
         uni.showModal({
@@ -158,7 +170,7 @@ export default {
 .staff-order {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background: var(--bg-page);
 }
 
@@ -174,12 +186,13 @@ export default {
   padding: 24rpx 28rpx;
   font-size: 28rpx;
   color: var(--color-text-secondary);
+  border-bottom: 4rpx solid transparent;
 }
 
 .tab--on {
   color: var(--color-text-primary);
   font-weight: 600;
-  border-bottom: 4rpx solid var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .list {
@@ -270,10 +283,21 @@ export default {
   color: var(--color-danger-text);
 }
 
-.list__empty {
+.list__empty,
+.list__error,
+.list__loading {
   padding: 120rpx 0;
   text-align: center;
   font-size: 26rpx;
   color: var(--color-text-hint);
+}
+
+.list__retry {
+  margin-left: 12rpx;
+  color: var(--color-primary-text);
+}
+
+.op--off {
+  opacity: 0.5;
 }
 </style>

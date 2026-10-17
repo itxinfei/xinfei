@@ -25,10 +25,7 @@
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
     <view class="tip">
-      <text class="tip__text">
-        骑手端登录接口为 /api/rider/login（RiderAuthController），勾选「记住我」时后端下发持久 cookie；
-        小程序无 cookie 容器，该分支同样依赖后端的 token 会话通道改造。
-      </text>
+      <text class="tip__text">骑手账号由站点管理员开通，如需开号或重置密码请联系站长</text>
     </view>
   </view>
 </template>

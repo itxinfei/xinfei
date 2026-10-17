@@ -35,10 +35,7 @@
     <button class="btn-primary" :loading="submitting" @tap="doLogin">登录</button>
 
     <view class="tip">
-      <text class="tip__text">
-        当前后端登录态是 Session + Cookie（JSESSIONID，HttpOnly）。小程序没有 cookie 容器，
-        需先完成后端的 token 会话通道改造，登录才能真正建立会话；本页按目标接口 /user/sendMsg、/user/login 直连。
-      </text>
+      <text class="tip__text">未注册的手机号验证后将自动创建账号</text>
     </view>
   </view>
 </template>

@@ -12,7 +12,7 @@
 
     <view class="hero">
       <text class="hero__label">配送收入（元）</text>
-      <text class="hero__value">{{ current.income || '0.00' }}</text>
+      <text class="hero__value">{{ fmtAmount(current.income) }}</text>
       <view class="hero__grid">
         <view class="grid">
           <text class="grid__num">{{ current.orderCount || 0 }}</text>
@@ -23,7 +23,7 @@
           <text class="grid__label">里程(km)</text>
         </view>
         <view class="grid">
-          <text class="grid__num">{{ formatRate(current.onTimeRate) }}</text>
+          <text class="grid__num">{{ fmtPercent(current.onTimeRate) }}</text>
           <text class="grid__label">准时率</text>
         </view>
         <view class="grid">
@@ -40,21 +40,27 @@
           <text class="row__time">{{ rec.orderTime }}</text>
         </view>
         <view class="row__right">
-          <text class="row__amount">+{{ rec.income }}</text>
+          <text class="row__amount">+{{ fmtAmount(rec.income) }}</text>
           <text class="row__meta">{{ rec.distance }}km｜{{ rec.durationMin }}分</text>
         </view>
       </view>
-      <view v-if="!records.length && !loading" class="list__empty"><text>该时间段暂无收入明细</text></view>
+      <view v-if="loading && !records.length" class="list__loading"><text>加载中…</text></view>
+      <view v-if="listError" class="list__error">
+        <text>加载失败</text>
+        <text class="list__retry" @tap="load()">重试</text>
+      </view>
+      <view v-if="!records.length && !loading && !listError" class="list__empty"><text>该时间段暂无收入明细</text></view>
     </scroll-view>
   </view>
 </template>
 
 <script>
-import { http, qs } from '@xinfei/mini-shared'
+import { http, qs, listState, fmtAmount, fmtPercent } from '@xinfei/mini-shared'
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）
+    return Object.assign(listState(), {
       ranges: [
         { key: 'today', label: '今日' },
         { key: 'week', label: '本周' },
@@ -67,7 +73,7 @@ export default {
       size: 50,
       hasMore: true,
       loading: false
-    }
+    })
   },
   computed: {
     current() {
@@ -81,10 +87,10 @@ export default {
     this.load().then(() => uni.stopPullDownRefresh())
   },
   methods: {
-    formatRate(rate) {
-      if (rate === null || rate === undefined || rate === '') return '-'
-      return Math.round(Number(rate) * (Number(rate) <= 1 ? 100 : 1)) + '%'
-    },
+    // 修改点(2026-10-17)：formatRate 删除——旧实现 rate<=1?100:1 的量纲启发式
+    // 会把 0.5% 这类低准时率错误显示成 50%，统一改用共享 fmtPercent（后端已是 0-100）
+    fmtPercent,
+    fmtAmount,
     switchRange(key) {
       if (key === this.range) return
       this.range = key
@@ -94,8 +100,9 @@ export default {
       this.page = 1
       this.records = []
       this.hasMore = true
+      this.listError = false
       return Promise.all([
-        http.get('/api/rider/income/summary').then(data => { this.summary = data || {} }).catch(() => {}),
+        http.get('/api/rider/income/summary').then(data => { this.summary = data || {} }).catch(() => { this.listError = true }),
         this.loadRecords()
       ])
     },
@@ -111,7 +118,7 @@ export default {
         this.records = this.records.concat(list)
         this.hasMore = list.length === this.size
         this.page += 1
-      }).catch(() => {}).then(() => {
+      }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
     },
@@ -126,7 +133,7 @@ export default {
 .income {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background: var(--bg-page);
 }
 
@@ -142,12 +149,13 @@ export default {
   text-align: center;
   font-size: 28rpx;
   color: var(--color-text-secondary);
+  border-bottom: 4rpx solid transparent;
 }
 
 .range--on {
   color: var(--color-text-primary);
   font-weight: 600;
-  border-bottom: 4rpx solid var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .hero {
@@ -244,10 +252,17 @@ export default {
   color: var(--color-text-hint);
 }
 
-.list__empty {
+.list__empty,
+.list__error,
+.list__loading {
   padding: 80rpx 0;
   text-align: center;
   font-size: 26rpx;
   color: var(--color-text-hint);
+}
+
+.list__retry {
+  margin-left: 12rpx;
+  color: var(--color-primary-text);
 }
 </style>

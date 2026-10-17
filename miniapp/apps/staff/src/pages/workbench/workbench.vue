@@ -2,8 +2,13 @@
   <view class="wb">
     <view class="hero">
       <text class="hero__label">今日营业额（元）</text>
-      <text class="hero__value">{{ overview.totalRevenue || '0.00' }}</text>
+      <text class="hero__value">{{ fmtAmount(overview.totalRevenue) }}</text>
       <text class="hero__sub">完成率 {{ completionRate }}｜数据源 {{ overview.cacheSource || '-' }}</text>
+    </view>
+
+    <view v-if="listError" class="wb__error">
+      <text>看板数据加载失败</text>
+      <text class="wb__retry" @tap="load()">重试</text>
     </view>
 
     <view class="grid">
@@ -36,11 +41,12 @@
 </template>
 
 <script>
-import { http, employeeAuth } from '@xinfei/mini-shared'
+import { http, employeeAuth, listState, fmtAmount, fmtPercent } from '@xinfei/mini-shared'
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）
+    return Object.assign(listState(), {
       overview: {},
       stats: {},
       kpis: [
@@ -51,13 +57,12 @@ export default {
         { key: 'avgAmount', label: '客单价' },
         { key: 'totalUsers', label: '用户数' }
       ]
-    }
+    })
   },
   computed: {
+    // 修改点(2026-10-17)：完成率统一走共享 fmtPercent（后端为 0-100 百分比值，此前裸数字无 % 号）
     completionRate() {
-      const rate = this.overview.completionRate
-      if (rate === undefined || rate === null) return '-'
-      return rate
+      return fmtPercent(this.overview.completionRate)
     },
     employee() {
       return employeeAuth.cached() || {}
@@ -70,10 +75,12 @@ export default {
     this.load().then(() => uni.stopPullDownRefresh())
   },
   methods: {
+    fmtAmount,
     load() {
+      this.listError = false
       return Promise.all([
-        http.get('/api/dashboard/overview').then(data => { this.overview = data || {} }).catch(() => {}),
-        http.get('/order/statistics').then(data => { this.stats = data || {} }).catch(() => {})
+        http.get('/api/dashboard/overview').then(data => { this.overview = data || {} }).catch(() => { this.listError = true }),
+        http.get('/order/statistics').then(data => { this.stats = data || {} }).catch(() => { this.listError = true })
       ])
     },
     toOrders(status) {
@@ -90,7 +97,7 @@ export default {
 
 <style>
 .wb {
-  min-height: 100vh;
+  min-height: 100%;
   padding-bottom: 40rpx;
   background: var(--bg-page);
 }
@@ -117,6 +124,21 @@ export default {
   display: block;
   margin-top: 8rpx;
   font-size: 22rpx;
+  color: var(--color-primary-text);
+}
+
+.wb__error {
+  margin: 24rpx;
+  padding: 32rpx 24rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.wb__retry {
+  margin-left: 12rpx;
   color: var(--color-primary-text);
 }
 

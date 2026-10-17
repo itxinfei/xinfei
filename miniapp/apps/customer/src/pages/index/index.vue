@@ -6,6 +6,7 @@
         :key="c.id"
         class="side-item"
         :class="{ 'side-item--on': c.id === activeCategoryId }"
+        hover-class="hover-press"
         @tap="switchCategory(c.id)"
       >
         <text>{{ c.name }}</text>
@@ -15,23 +16,29 @@
       </view>
     </scroll-view>
 
-    <scroll-view class="menu__main" scroll-y @scrolltolower="loadMore">
+    <!-- 修改点(2026-10-17)：移除 @scrolltolower 空绑定——/dish/list 服务端封顶 200 条，无客户端翻页可触发 -->
+    <scroll-view class="menu__main" scroll-y>
       <view v-for="d in dishes" :key="d.id" class="dish">
-        <image class="dish__img" :src="img(d.image)" mode="aspectFill" />
+        <image class="dish__img" :src="img(d.image)" mode="aspectFill" lazy-load />
         <view class="dish__body">
           <text class="dish__name">{{ d.name }}</text>
           <text class="dish__desc">{{ d.description || '暂无描述' }}</text>
           <view class="dish__foot">
-            <text class="dish__price">¥{{ d.price }}</text>
+            <text class="dish__price">¥{{ fmtAmount(d.price) }}</text>
             <view class="counter">
-              <text v-if="countOf(d.id)" class="counter__btn" @tap="sub(d)">−</text>
+              <text v-if="countOf(d.id)" class="counter__btn" :class="{ 'counter__btn--off': busy('cart:' + d.id) }" hover-class="hover-press" @tap="sub(d)">−</text>
               <text v-if="countOf(d.id)" class="counter__num">{{ countOf(d.id) }}</text>
-              <text class="counter__btn counter__btn--add" @tap="add(d)">＋</text>
+              <text class="counter__btn counter__btn--add" :class="{ 'counter__btn--off': busy('cart:' + d.id) }" hover-class="hover-press" @tap="add(d)">＋</text>
             </view>
           </view>
         </view>
       </view>
-      <view v-if="!dishes.length && !loading" class="menu__empty">
+      <view v-if="loading && !dishes.length" class="menu__loading"><text>加载中…</text></view>
+      <view v-if="listError" class="menu__error">
+        <text>加载失败</text>
+        <text class="menu__retry" @tap="reload()">重试</text>
+      </view>
+      <view v-if="!dishes.length && !loading && !listError" class="menu__empty">
         <text>该分类下暂无在售菜品</text>
       </view>
     </scroll-view>
@@ -39,23 +46,24 @@
     <view class="cartbar" v-if="cartCount > 0">
       <text class="cartbar__count">已选 {{ cartCount }} 件</text>
       <text class="cartbar__amount">¥{{ cartAmount }}</text>
-      <text class="cartbar__go" @tap="goCheckout">去结算</text>
+      <text class="cartbar__go" hover-class="hover-press" @tap="goCheckout">去结算</text>
     </view>
   </view>
 </template>
 
 <script>
-import { http, qs, fullImage } from '@xinfei/mini-shared'
+import { http, qs, fullImage, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
 
 export default {
   data() {
-    return {
+    // 修改点(2026-10-17)：接入列表三态（listError）与购物车加/减 in-flight 锁（busyLock）
+    return Object.assign(listState(), busyLock(), {
       categories: [],
       dishes: [],
       activeCategoryId: null,
       cart: [],
       loading: false
-    }
+    })
   },
   computed: {
     cartCount() {
@@ -74,6 +82,7 @@ export default {
   },
   methods: {
     img: path => fullImage(path),
+    fmtAmount,
     loadCategories() {
       // 分类 type=1 菜品；套餐走 /setmeal/list，本轮未迁移
       return http.get(qs('/category/list', { type: 1 })).then(list => {
@@ -83,7 +92,7 @@ export default {
           return this.loadDishes()
         }
         return null
-      }).catch(() => {})
+      }).catch(() => { this.listError = true })
     },
     switchCategory(id) {
       if (id === this.activeCategoryId) return
@@ -92,14 +101,16 @@ export default {
     },
     loadDishes() {
       this.loading = true
+      this.listError = false
       return http.get(qs('/dish/list', { categoryId: this.activeCategoryId })).then(list => {
         this.dishes = list || []
-      }).catch(() => {}).then(() => {
+      }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
     },
-    loadMore() {
-      // /dish/list 服务端已封顶 200 条，无需客户端翻页
+    // 修改点(2026-10-17)：列表失败重试——分类未加载成功时重拉分类，否则重拉当前分类菜品
+    reload() {
+      if (this.activeCategoryId === null) { this.loadCategories() } else { this.loadDishes() }
     },
     loadCart() {
       return http.get('/shopping-cart/list').then(list => {
@@ -111,22 +122,27 @@ export default {
       return hit ? hit.number : 0
     },
     add(dish) {
+      const key = 'cart:' + dish.id
+      if (this.busy(key)) return
+      this.setBusy(key, true)
       const exist = this.cart.find(item => item.dishId === dish.id)
       http.post('/shopping-cart/add', { dishId: dish.id, name: dish.name, number: exist ? exist.number + 1 : 1 })
         .then(() => this.loadCart())
-        .catch(() => {})
+        .catch(() => {}).then(() => { this.setBusy(key, false) })
     },
     sub(dish) {
+      const key = 'cart:' + dish.id
+      if (this.busy(key)) return
+      this.setBusy(key, true)
       const exist = this.cart.find(item => item.dishId === dish.id)
       http.post('/shopping-cart/sub', { dishId: dish.id, number: exist ? exist.number : 1 })
         .then(() => this.loadCart())
-        .catch(() => {})
+        .catch(() => {}).then(() => { this.setBusy(key, false) })
     },
     goCheckout() {
-      // 结算/支付链路依赖微信支付 JSAPI 与地址簿页，属下一轮迁移
       uni.showModal({
-        title: '提示',
-        content: '地址簿与支付页尚未迁移到小程序端，可先在「订单」页查看历史订单',
+        title: '温馨提示',
+        content: '在线支付功能升级中，请稍后再试',
         showCancel: false
       })
     }
@@ -138,7 +154,7 @@ export default {
 .menu {
   display: flex;
   position: relative;
-  height: 100vh;
+  height: 100%;
   background: var(--bg-page);
 }
 
@@ -189,6 +205,7 @@ export default {
   height: 160rpx;
   border-radius: var(--radius-md);
   flex-shrink: 0;
+  background: var(--bg-input);
 }
 
 .dish__body {
@@ -253,18 +270,29 @@ export default {
   color: var(--color-text-primary);
 }
 
-.menu__empty {
+.menu__empty,
+.menu__error,
+.menu__loading {
   padding: 120rpx 0;
   text-align: center;
   font-size: 26rpx;
   color: var(--color-text-hint);
 }
 
+.menu__retry {
+  margin-left: 12rpx;
+  color: var(--color-primary-text);
+}
+
+.counter__btn--off {
+  opacity: 0.5;
+}
+
 .cartbar {
   position: fixed;
   left: 24rpx;
   right: 24rpx;
-  bottom: 24rpx;
+  bottom: calc(24rpx + env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   height: 96rpx;

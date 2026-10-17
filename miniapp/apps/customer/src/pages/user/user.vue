@@ -12,23 +12,19 @@
     </view>
 
     <view class="stats">
-      <view v-for="s in stats" :key="s.status" class="stat" @tap="toOrders(s.status)">
+      <view v-for="s in stats" :key="s.status" class="stat" hover-class="hover-press" @tap="toOrders(s.status)">
         <text class="stat__num">{{ s.count }}</text>
         <text class="stat__label">{{ s.label }}</text>
       </view>
     </view>
 
-    <view class="cell" @tap="toAddress">
+    <view class="cell" hover-class="hover-press" @tap="toAddress">
       <text class="cell__label">收货地址</text>
       <text class="cell__value">{{ addressCount }} 个</text>
     </view>
-    <view class="cell" @tap="toFavorite">
+    <view class="cell" hover-class="hover-press" @tap="toFavorite">
       <text class="cell__label">我的收藏</text>
       <text class="cell__value">查看</text>
-    </view>
-    <view class="cell" @tap="showBaseUrl">
-      <text class="cell__label">接口地址</text>
-      <text class="cell__value">{{ baseUrl }}</text>
     </view>
 
     <button class="cell cell--btn" @tap="logout">退出登录</button>
@@ -36,20 +32,19 @@
 </template>
 
 <script>
-import { customerAuth, http, getBaseUrl, fullImage } from '@xinfei/mini-shared'
+import { customerAuth, http, fullImage } from '@xinfei/mini-shared'
 
 export default {
   data() {
     return {
       user: {},
       stats: [
-        { status: 1, label: '待付款', count: '-' },
-        { status: 2, label: '待接单', count: '-' },
-        { status: 3, label: '配送中', count: '-' },
-        { status: 4, label: '已完成', count: '-' }
+        { status: 1, label: '待付款', count: 0 },
+        { status: 2, label: '待接单', count: 0 },
+        { status: 3, label: '配送中', count: 0 },
+        { status: 4, label: '已完成', count: 0 }
       ],
-      addressCount: 0,
-      baseUrl: getBaseUrl()
+      addressCount: 0
     }
   },
   onShow() {
@@ -84,13 +79,10 @@ export default {
       uni.switchTab({ url: '/pages/order/list' })
     },
     toAddress() {
-      uni.showToast({ title: '地址簿页待迁移', icon: 'none' })
+      uni.showToast({ title: '地址簿功能升级中', icon: 'none' })
     },
     toFavorite() {
-      uni.showToast({ title: '收藏页待迁移', icon: 'none' })
-    },
-    showBaseUrl() {
-      uni.setClipboardData({ data: this.baseUrl })
+      uni.showToast({ title: '收藏功能升级中', icon: 'none' })
     },
     logout() {
       customerAuth.logout().then(() => {
@@ -103,7 +95,7 @@ export default {
 
 <style>
 .me {
-  min-height: 100vh;
+  min-height: 100%;
   padding-bottom: 40rpx;
   background: var(--bg-page);
 }
