@@ -115,6 +115,15 @@ xinfei:
   platform:
     sync-enabled: false
 
+  # 租户隔离强校验（任务 3：违规显式化）
+  # - warn（默认）：Service 层租户上下文为空仅打 WARN 日志，由 TenantLineInnerInterceptor
+  #   fail-closed 兜底（tenant_id=-1 → 空集），保持零破坏；
+  # - strict：租户上下文为空直接抛 TenantViolationException → HTTP 403，
+  #   把静默空集升级为显式拒绝。建议测试环境验证全量测试通过后再于生产开启。
+  # 白名单表清单见 tenant-tables.yml（新增免隔离表改 yml 即可，无需改代码）。
+  tenant:
+    enforcement-mode: warn
+
   # 支付回调签名校验配置
   # 安全约定：mock-mode=true（默认，开发/演示）跳过回调验签仅告警；
   # 生产环境必须设为 false 并配置支付宝公钥/微信API密钥做真实签名校验，密钥缺失则拒绝回调（fail-closed）

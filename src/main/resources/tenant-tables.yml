@@ -1,0 +1,30 @@
+# 租户隔离表清单（任务 3：白名单外化）
+# 由 TenantTableRegistry 在启动期加载；本文件缺失或加载失败时回退到内置默认清单（零破坏）。
+#
+# ignore-tables：无 tenant_id 列的表，TenantLineInnerInterceptor 不对其追加 WHERE tenant_id = ?
+# 新增无 tenant_id 列的表时，只需在此清单追加表名并重启，无需改 Java 代码。
+#
+# 各表白名单理由：
+# - tenant: 租户表本身无 tenant_id
+# - employee: EmployeeController 手动过滤
+# - shopping_cart: 无 tenant_id 列，通过 userId 关联隔离
+# - ai_provider_config / ai_prompt_template / ai_prompt_template_history: 系统级 AI 配置，无 tenant_id 列
+# - dish_evaluation: 无 tenant_id 列，通过 userId 关联隔离
+# - permission / role_permission: 全局权限目录，无 tenant_id 列
+# - region: 行政区划字典表，全局共享
+# - store_sync_log: 跨店同步日志，用 source/target_tenant_id 表达跨店语义
+# - rider_remember_token: 骑手记住登录令牌，未登录时凭 cookie 校验，不能被追加 tenant_id=-1
+tenant:
+  ignore-tables:
+    - tenant
+    - employee
+    - shopping_cart
+    - ai_provider_config
+    - ai_prompt_template
+    - ai_prompt_template_history
+    - dish_evaluation
+    - permission
+    - role_permission
+    - region
+    - store_sync_log
+    - rider_remember_token

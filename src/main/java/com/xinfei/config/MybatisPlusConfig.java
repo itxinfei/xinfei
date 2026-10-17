@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.xinfei.common.BaseContext;
+import com.xinfei.common.tenant.TenantTableRegistry;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -29,32 +30,23 @@ import java.util.Set;
 public class MybatisPlusConfig {
 
     /**
-     * 不需要租户隔离的表：
-     * - tenant: 租户表本身不需要 tenant_id
-     * - employee: 在 EmployeeController 中手动添加了租户过滤
-     * - shopping_cart: 暂无 tenant_id 列，通过 userId 关联隔离
-     * - ai_provider_config: 系统级AI大模型配置表，暂无 tenant_id 列，不需要租户隔离
-     * - dish_evaluation: 暂无 tenant_id 列，通过 userId 关联隔离
-     * - permission: 全局权限目录表，无 tenant_id 列
-     * - role_permission: 角色-权限关联表，无 tenant_id 列
-     * - region: 行政区划字典表（省/市/区），全局共享，无 tenant_id 列，通过 level 关联隔离
-     * - store_sync_log: 门店同步日志表，无 tenant_id 列，用 source_tenant_id/target_tenant_id 表达跨店语义
-     * 修改点：permission/role_permission 两个表均无 tenant_id 列，若不加入忽略表，
-     * TenantLineInnerInterceptor 会对其追加 WHERE tenant_id = ? 导致 Unknown column 异常。
-     * 修改点：region 为全局行政区划字典表，无 tenant_id 列，加入白名单避免 Unknown column 异常。
-     * 修改点：store_sync_log 记录"总部→目标门店"的跨店同步，表本身无 tenant_id 列，
-     * 单租户过滤既会丢 target 侧视角又会报 Unknown column 异常，故加入白名单。
-     * 修改点（2026-09-14）：billing 模块已删除（假需求：默认MOCK模拟开通），billing_plan 白名单项一并移除。
+     * 租户白名单注册中心（任务 3：白名单外化）。
+     * <p>
+     * 原实现将 IGNORE_TABLES 硬编码于本类，新增免隔离表需改代码重新编译；
+     * 现由 {@link TenantTableRegistry} 从 tenant-tables.yml 加载，配置即生效。
+     * 各表白名单理由见 tenant-tables.yml 注释；yml 缺失时回退内置默认清单（零破坏）。
+     * </p>
      */
-    private static final Set<String> IGNORE_TABLES = new HashSet<>(Arrays.asList(
-        "tenant", "employee", "shopping_cart", "ai_provider_config", "ai_prompt_template",
-        // ai_prompt_template_history：模板历史版本快照，与主表同构（无 tenant_id），跟随主表白名单
-        "ai_prompt_template_history",
-        "dish_evaluation", "permission", "role_permission", "region", "store_sync_log",
-        // 记住登录令牌：骑手未登录(无租户上下文)时由 LoginCheckFilter 凭 cookie 校验，
-        // 自动建会话，不能被租户插件追加 tenant_id=-1 导致校验恒空
-        "rider_remember_token"
-    ));
+    private final TenantTableRegistry tenantTableRegistry;
+
+    /**
+     * 构造注入租户白名单注册中心。
+     *
+     * @param tenantTableRegistry 租户表清单注册中心
+     */
+    public MybatisPlusConfig(TenantTableRegistry tenantTableRegistry) {
+        this.tenantTableRegistry = tenantTableRegistry;
+    }
 
     /**
      * 处理 mybatis plus interceptor。
@@ -95,11 +87,11 @@ public class MybatisPlusConfig {
              */
             @Override
             public boolean ignoreTable(String tableName) {
-                // 仅忽略无 tenant_id 列的表，不跳过所有过滤
+                // 仅忽略无 tenant_id 列的表，不跳过所有过滤（白名单来源：tenant-tables.yml，任务 3 外化）
                 // 修复说明：原实现在此处判断 tenantId == null 时返回 true（跳过过滤），
                 // 与 getTenantId 的 fail-closed 逻辑自相矛盾，导致租户上下文为空时隔离完全失效。
                 // 现修复为仅做白名单判断，租户为空时由 getTenantId 返回 -1L 兜底，实现 fail-closed。
-                boolean ignored = IGNORE_TABLES.contains(tableName);
+                boolean ignored = tenantTableRegistry.isIgnored(tableName);
                 if (!ignored && BaseContext.getCurrentTenantId() == null) {
                     // 兜底告警：表不在白名单但租户上下文为空，getTenantId 将返回 -1L 导致查询返回空集，
                     // 用于及时发现白名单漏网或匿名访问未走预期路径的表

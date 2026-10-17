@@ -1,5 +1,6 @@
 package com.xinfei.common;
 
+import com.xinfei.common.tenant.TenantViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -194,6 +195,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .headers(headers)
                 .body(R.error(ex.getMessage()));
+    }
+
+    /**
+     * 处理租户隔离违规异常（TenantAspect strict 模式下抛出）
+     * 返回 403 Forbidden。
+     * <p>
+     * 任务 3：把租户上下文缺失从"静默空集"（fail-closed tenant_id=-1）升级为显式 403，
+     * 前端可区分"无数据"与"隔离故障"，后端排障有明确信号。
+     * 默认 enforcement-mode=warn 不触发本异常；strict 模式为渐进启用能力。
+     * </p>
+     */
+    @ExceptionHandler(TenantViolationException.class)
+    public ResponseEntity<R<String>> handleTenantViolationException(TenantViolationException ex) {
+        log.error("租户隔离违规（403）：{}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(R.error("租户上下文缺失，访问被拒绝"));
     }
 
     /**
