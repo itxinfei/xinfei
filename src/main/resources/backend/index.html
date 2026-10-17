@@ -396,8 +396,14 @@
             const out = []
             self.menuList.forEach(function (group) {
               if (group.roles && group.roles.length && !allow(group)) return
-              const kids = (group.children || []).filter(allow)
-              if (kids.length) out.push(Object.assign({}, group, { children: kids }))
+              if (group.children && group.children.length) {
+                const kids = group.children.filter(allow)
+                if (kids.length) out.push(Object.assign({}, group, { children: kids }))
+              } else if (group.url) {
+                // 修复：直链菜单（无二级子菜单，如"数据概览"）此前被 kids.length 判断丢弃，
+                // 导致侧边栏模板 v-else 直链分支成为死代码、首页入口不可见
+                out.push(group)
+              }
             })
             // 兜底：若过滤后为空（异常/无权限）则回退全量，避免整个后台不可用
             return out.length ? out : self.menuList
@@ -485,7 +491,14 @@
         },
         mounted() {
           // 修改点：将菜单数据与处理方法暴露到全局，供 iframe 内页面通过 window.parent 调用
-          window.menuList = this.visibleMenuList
+          // 修复：原为一次性赋值 window.menuList = this.visibleMenuList，在 mounted 时刻
+          // loadMenuAccess 尚未异步返回（isSuperAdmin=false），子页面（如 dashboard goTo）
+          // 拿到的是缺少 SUPER_ADMIN 菜单的过期快照；改为实时 getter 随角色状态更新
+          var vm = this
+          Object.defineProperty(window, 'menuList', {
+            get: function () { return vm.visibleMenuList },
+            configurable: true
+          })
           window.menuHandle = this.menuHandle
           // 供 iframe 内"店铺设置"保存成功后通知外壳实时刷新侧边栏品牌
           window.loadShopBrand = this.loadShopBrand.bind(this)
