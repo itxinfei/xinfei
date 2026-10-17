@@ -38,7 +38,9 @@
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
   <a href="#main-content" class="skip-link">跳转到主内容</a>
   <div class="timeslot-page" id="report-timeslot-app" v-loading="loading">
-    <main class="container" id="main-content" role="main" aria-label="页面主要内容">
+    <!-- 修改点(2026-10-17)：主地标统一为 aria-labelledby + sr-only 标题（原 aria-label="页面主要内容" 无信息量） -->
+    <main class="container" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">时段分析</h1>
 
       
       
@@ -110,8 +112,8 @@
   <script src="../../js/chart-panel.js?v=20260926"></script>
   <script>
     (function() {
-      // 修改点：颜色统一走 window.RgPalette（单一来源），不再硬编码 hex
-      const COLORS = [RgPalette.brand600, RgPalette.success, RgPalette.warning, RgPalette.danger, RgPalette.linkBlue, RgPalette.seriesViolet, RgPalette.emerald, RgPalette.orange500];
+      // 修改点：颜色统一走 window.XinfeiPalette（单一来源），不再硬编码 hex
+      const COLORS = [XinfeiPalette.brand600, XinfeiPalette.success, XinfeiPalette.warning, XinfeiPalette.danger, XinfeiPalette.linkBlue, XinfeiPalette.seriesViolet, XinfeiPalette.emerald, XinfeiPalette.orange500];
       new Vue({
         el: '#report-timeslot-app',
         data: function() {
@@ -252,25 +254,25 @@
             if (isEmpty) {
               this.heatmapChart.setOption({
                 title: { text: '暂无时段销售数据', left: 'center', top: 'center',
-                  textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                  textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
               }, true);
               return;
             }
             this.heatmapChart.setOption({
               tooltip: { formatter: function(p) { return days[p.value[1]] + ' ' + slots[p.value[0]] + ': ' + p.value[2] + ' 单'; },
-                backgroundColor: RgPalette.white, borderColor: RgPalette.borderLighter2, borderWidth: 1,
-                textStyle: { color: RgPalette.textPrimary, fontSize: 13 } },
+                backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+                textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 } },
               grid: { left: 80, right: 30, top: 15, bottom: 70 },
               xAxis: { type: 'category', data: slots, splitArea: { show: true },
-                axisLabel: { fontSize: 12, color: RgPalette.textRegular } },
+                axisLabel: { fontSize: 12, color: XinfeiPalette.textRegular } },
               yAxis: { type: 'category', data: days, splitArea: { show: true },
-                axisLabel: { fontSize: 12, color: RgPalette.textRegular } },
+                axisLabel: { fontSize: 12, color: XinfeiPalette.textRegular } },
               visualMap: { min: 0, max: maxVal, calculable: true,
                 orient: 'horizontal', left: 'center', bottom: 8,
-                inRange: { color: [RgPalette.blueSoft,RgPalette.blueSoft2,RgPalette.linkBlue,RgPalette.blueDark,RgPalette.blueDarkest] },
-                text: ['高', '低'], textStyle: { fontSize: 11, color: RgPalette.textRegular } },
+                inRange: { color: [XinfeiPalette.blueSoft,XinfeiPalette.blueSoft2,XinfeiPalette.linkBlue,XinfeiPalette.blueDark,XinfeiPalette.blueDarkest] },
+                text: ['高', '低'], textStyle: { fontSize: 11, color: XinfeiPalette.textRegular } },
               series: [{ type: 'heatmap', data: heatData,
-                label: { show: true, fontSize: 12, color: function(p) { return p.value[2] > maxVal * 0.6 ? RgPalette.white : RgPalette.textPrimary; } },
+                label: { show: true, fontSize: 12, color: function(p) { return p.value[2] > maxVal * 0.6 ? XinfeiPalette.white : XinfeiPalette.textPrimary; } },
                 emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } }]
             }, true);
           },
@@ -279,12 +281,12 @@
             // 修改点：Number 包裹，避免 toFixed 字符串触发 el-progress percentage 类型告警
             return Number((count / t * 100).toFixed(1));
           },
-          formatMoney: function(val) { return window.RgFormat.formatMoney(val) },
+          formatMoney: function(val) { return window.XinfeiFormat.formatMoney(val) },
           slotHeatColor: function(row) {
-            if (!this.tableData.length) return RgPalette.textSecondary;
+            if (!this.tableData.length) return XinfeiPalette.textSecondary;
             var max = this.tableData.reduce(function(m, r) { return Math.max(m, r.count || 0); }, 1);
             const r = (row.count || 0) / max;
-            if (r > 0.8) return RgPalette.seriesRed; if (r > 0.5) return RgPalette.warning; return RgPalette.linkBlue;
+            if (r > 0.8) return XinfeiPalette.seriesRed; if (r > 0.5) return XinfeiPalette.warning; return XinfeiPalette.linkBlue;
           },
           renderCharts: function() {
             const self = this;
@@ -298,7 +300,7 @@
             if (!this.barChart) return;
             if (!this.tableData.length) {
               this.barChart.setOption({ title: { text: '暂无时段数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
             }
             var names = this.tableData.map(function(r) { return r.name; });
             var counts = this.tableData.map(function(r) { return r.count; });
@@ -306,8 +308,8 @@
             const barW = names.length <= 3 ? 40 : names.length <= 5 ? 30 : 22;
             this.barChart.setOption({
               tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
-                backgroundColor: RgPalette.white, borderColor: RgPalette.borderLighter2, borderWidth: 1,
-                textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+                backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+                textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
                 formatter: function(ps) {
                   // 修改点：h 需累加拼接，声明为 const 会抛 "Assignment to constant variable"（悬停图表即崩溃）
                   let h = '<b>' + ps[0].axisValue + '</b><br/>';
@@ -316,31 +318,31 @@
                     h += p.marker + ' ' + p.seriesName + '：<b>' + v + '</b><br/>';
                   }); return h;
                 } },
-              legend: { data: ['订单数', '营业额'], bottom: 4, textStyle: { fontSize: 12, color: RgPalette.textRegular } },
+              legend: { data: ['订单数', '营业额'], bottom: 4, textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
               // 修改点：增大右 padding 防止营业额标签被裁剪
               grid: { left: 50, right: 70, top: 25, bottom: 48 },
               xAxis: { type: 'category', data: names, axisTick: { show: false },
-                axisLabel: { color: RgPalette.textRegular, interval: 0, fontSize: 13 } },
+                axisLabel: { color: XinfeiPalette.textRegular, interval: 0, fontSize: 13 } },
               yAxis: [
                 { type: 'value', name: '订单数(单)',
-                  nameTextStyle: { color: RgPalette.textSecondary, fontSize: 11 },
-                  splitLine: { lineStyle: { type: 'dashed', color: RgPalette.bgLight } },
-                  axisLabel: { color: RgPalette.textSecondary, fontSize: 12 } },
+                  nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 11 },
+                  splitLine: { lineStyle: { type: 'dashed', color: XinfeiPalette.bgLight } },
+                  axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
                 { type: 'value', name: '营业额(元)',
-                  nameTextStyle: { color: RgPalette.textSecondary, fontSize: 11 },
-                  axisLabel: { formatter: '¥{value}', color: RgPalette.textSecondary, fontSize: 12 },
+                  nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 11 },
+                  axisLabel: { formatter: '¥{value}', color: XinfeiPalette.textSecondary, fontSize: 12 },
                   splitLine: { show: false } }
               ],
               series: [
                 { name: '订单数', type: 'bar', data: counts, barWidth: barW,
-                  itemStyle: { borderRadius: [RgPalette.radiusMd, RgPalette.radiusMd, 0, 0],
+                  itemStyle: { borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
                     color: function(p) { return COLORS[p.dataIndex % COLORS.length]; } },
                   label: { show: true, position: 'top', fontSize: 12, fontWeight: 600, formatter: '{c} 单' } },
                 { name: '营业额', type: 'line', yAxisIndex: 1, data: amounts,
                   smooth: true, symbol: 'emptyCircle', symbolSize: 8,
-                  lineStyle: { color: RgPalette.seriesOrange, width: 3 },
-                  itemStyle: { color: RgPalette.seriesOrange, borderColor: RgPalette.white, borderWidth: 2 },
-                  label: { show: true, position: 'top', fontSize: 12, fontWeight: 700, color: RgPalette.warning,
+                  lineStyle: { color: XinfeiPalette.seriesOrange, width: 3 },
+                  itemStyle: { color: XinfeiPalette.seriesOrange, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                  label: { show: true, position: 'top', fontSize: 12, fontWeight: 700, color: XinfeiPalette.warning,
                     formatter: function(p) { return '¥' + Number(p.value).toFixed(0); } } }
               ]
             }, true);
@@ -353,21 +355,21 @@
             // 空态：与柱线图统一的居中文字范式（不渲染灰色假饼，legend 也不出现「暂无数据」）
             if (isEmpty) {
               this.pieChart.setOption({ title: { text: '暂无时段数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
               return;
             }
             this.pieChart.setOption({
-              tooltip: { trigger: 'item', backgroundColor: RgPalette.white,
-                borderColor: RgPalette.borderLighter2, borderWidth: 1, textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+              tooltip: { trigger: 'item', backgroundColor: XinfeiPalette.white,
+                borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
                 formatter: function(p) { return '<b>' + p.name + '</b><br/>' + p.marker + ' 订单：<b>' + p.value + ' 单</b>（' + p.percent + '%）'; } },
               legend: { bottom: 0, left: 'center', itemWidth: 10, itemHeight: 10,
-                textStyle: { color: RgPalette.textRegular, fontSize: 12 } },
+                textStyle: { color: XinfeiPalette.textRegular, fontSize: 12 } },
               title: { show: false },
               series: [{ type: 'pie', radius: ['45%','68%'], center: ['50%','44%'],
-                avoidLabelOverlap: false, itemStyle: { borderRadius: RgPalette.radiusMd, borderColor: RgPalette.white, borderWidth: 3 },
+                avoidLabelOverlap: false, itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 3 },
                 label: { show: true, position: 'outside', formatter: '{b}\n{d}%',
-                  fontSize: 13, lineHeight: 18, color: RgPalette.textRegular },
-                labelLine: { show: true, length: 25, length2: 20, lineStyle: { color: RgPalette.borderBase } },
+                  fontSize: 13, lineHeight: 18, color: XinfeiPalette.textRegular },
+                labelLine: { show: true, length: 25, length2: 20, lineStyle: { color: XinfeiPalette.borderBase } },
                 emphasis: { scaleSize: 10, label: { fontSize: 16, fontWeight: 'bold' } },
                 data: pieData }]
             }, true);

@@ -28,7 +28,7 @@
        - #header 插槽：自定义弹窗头部（如标签页切换）
        - #footer 插槽：自定义底部按钮
     5. 分页逻辑 → mixins:[window.XinfeiListMixin]，实现 fetchData()
-    6. 通用方法 → formatMoney/formatDate/rgStatusText/rgStatusTag/rgPreview
+    6. 通用方法 → formatMoney/formatDate/xinfeiStatusText/xinfeiStatusTag/xinfeiPreview
     7. 状态枚举 → window.XinfeiStatus.register('模块', textMap, tagMap)
     8. 操作列 → #actions 插槽契约：常显主操作 ≤3 个，超出收「更多」el-dropdown；
        宽度档 2 元素 120 / 3 元素 180 / 4 元素 240（更多触发器算 1 个元素）；
@@ -92,7 +92,7 @@
       >
         <!-- 自定义某列渲染：列配置需 slot: true -->
         <template #col-status="{ row }">
-          <el-tag :type="rgStatusTag('demo', row.status)" size="small">{{ rgStatusText('demo', row.status) }}</el-tag>
+          <el-tag :type="xinfeiStatusTag('demo', row.status)" size="small">{{ xinfeiStatusText('demo', row.status) }}</el-tag>
         </template>
         <!--
           操作列契约（固定插槽名 #actions）：

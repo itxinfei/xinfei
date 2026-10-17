@@ -281,7 +281,7 @@
         chartEmptyOption: function(text) {
           return {
             title: { text: text, left: 'center', top: 'center',
-              textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+              textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
           }
         },
         renderCharts: function() {
@@ -304,7 +304,7 @@
                 } } },
                 series: [{
                   type: 'bar', data: amounts, barWidth: '50%',
-                  itemStyle: { borderRadius: [RgPalette.radiusMd, RgPalette.radiusMd, 0, 0], color: RgPalette.amber500 }
+                  itemStyle: { borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0], color: XinfeiPalette.amber500 }
                 }]
               }, true)
             }
@@ -320,12 +320,12 @@
               self.paymentChart.setOption(self.chartEmptyOption('暂无充值数据'), true)
             } else {
               // 补齐到 6 色，支付方式多于 4 种时多余扇区不至于回落 ECharts 默认色
-              const colors = [RgPalette.emerald, RgPalette.alipayBlue, RgPalette.amber500, RgPalette.violet500, RgPalette.blue500, RgPalette.red500]
+              const colors = [XinfeiPalette.emerald, XinfeiPalette.alipayBlue, XinfeiPalette.amber500, XinfeiPalette.violet500, XinfeiPalette.blue500, XinfeiPalette.red500]
               self.paymentChart.setOption({
                 tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
                 series: [{
                   type: 'pie', radius: ['50%', '75%'], center: ['50%', '50%'],
-                  avoidLabelOverlap: false, itemStyle: { borderRadius: RgPalette.radiusMd, borderColor: RgPalette.white, borderWidth: 3 },
+                  avoidLabelOverlap: false, itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 3 },
                   label: { show: true, formatter: '{b}\n{d}%' },
                   data: pieData, color: colors
                 }]

@@ -546,7 +546,7 @@
         },
         // 批量删除：顺序循环单删，内置 builtin 不可删会汇总为失败
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({
+          return XinfeiBatchDeleteByOne({
             ids: payload.ids,
             label: '提示词模板',
             request: (id) => aiBackendApi.promptDelete(id)

@@ -302,7 +302,7 @@
         },
         // 内建批量删除：后端 /user 仅支持单 id，顺序循环单删
         doBatchDelete: function(payload) {
-          return window.RgBatchDeleteByOne({ ids: payload.ids, label: '用户', request: userDelete })
+          return window.XinfeiBatchDeleteByOne({ ids: payload.ids, label: '用户', request: userDelete })
         },
         // 批量删除成功后刷新列表与统计
         onBatchDeleted: function() {

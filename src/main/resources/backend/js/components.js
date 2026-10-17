@@ -37,9 +37,9 @@ var DIALOG_SIZE = { sm: '420px', md: '560px', lg: '720px', xl: '840px', fullscre
 // ============================================================
 // 公共批量删除 helper：顺序循环调用"单条删除"接口（禁止并发，避开 @RateLimit）
 // 用于后端暂无批量 DELETE 的模块。返回带 __batch 的汇总结果，供 crud-table 统一提示。
-// 用法：RgBatchDeleteByOne({ ids:[1,2], label:'食材', request:(id)=>Promise })
+// 用法：XinfeiBatchDeleteByOne({ ids:[1,2], label:'食材', request:(id)=>Promise })
 // ============================================================
-window.RgBatchDeleteByOne = function (opts) {
+window.XinfeiBatchDeleteByOne = function (opts) {
   var ids = (opts && opts.ids) || []
   var label = (opts && opts.label) || '记录'
   var ok = []
@@ -1114,7 +1114,7 @@ Vue.component('crud-table', {
       this.viewRow = row
       this.viewVisible = true
     },
-    /** 内置查看弹窗的单元格值格式化（复用全站 window.RgFormat 逻辑，空值显示 —） */
+    /** 内置查看弹窗的单元格值格式化（复用全站 window.XinfeiFormat 逻辑，空值显示 —） */
     formatViewValue: function (row, col) {
       var val = row ? row[col.prop] : undefined
       if (val === null || val === undefined || val === '') return '—'
@@ -1429,15 +1429,15 @@ window.renderTableBar = function (config) {
 
 
 // ============================================================
-// 全局工具：单一来源集中在 window.RgFormat，新代码可直接引用
-// （如 window.RgFormat.formatMoney），无需依赖全局 mixin
+// 全局工具：单一来源集中在 window.XinfeiFormat，新代码可直接引用
+// （如 window.XinfeiFormat.formatMoney），无需依赖全局 mixin
 // ============================================================
 // ============================================================
-// 全局调色板：window.RgPalette —— ECharts 等 canvas 场景无法使用 CSS 变量，
+// 全局调色板：window.XinfeiPalette —— ECharts 等 canvas 场景无法使用 CSS 变量，
 // 故运行时从 tokens.css 读取令牌值，作为 JS 侧唯一颜色来源（M2 修复）。
-// 用法：color: RgPalette.textSecondary / RgPalette.success ...
+// 用法：color: XinfeiPalette.textSecondary / XinfeiPalette.success ...
 // ============================================================
-window.RgPalette = (function () {
+window.XinfeiPalette = (function () {
   function read(name, fallback) {
     try {
       var v = getComputedStyle(document.documentElement).getPropertyValue(name)
@@ -1521,7 +1521,7 @@ window.RgPalette = (function () {
     graySoft:      '#d4d7de'
   }
 })()
-window.RgFormat = {
+window.XinfeiFormat = {
   /** 金额格式化：千分位 + 保留两位小数，空值返回 0.00（全站金额展示统一入口） */
   formatMoney: function (val) {
     if (val === null || val === undefined || val === '') return '0.00'
@@ -1553,30 +1553,30 @@ window.RgFormat = {
     return val ? String(val) : '-'
   },
   /** 状态中文：mapName 对应 XinfeiStatus.register 注册的名称 */
-  rgStatusText: function (mapName, status) {
+  xinfeiStatusText: function (mapName, status) {
     return window.XinfeiStatus ? window.XinfeiStatus.text(mapName, status) : ''
   },
   /** 状态标签类型：返回 Element tag type（warning/primary/...） */
-  rgStatusTag: function (mapName, status) {
+  xinfeiStatusTag: function (mapName, status) {
     return window.XinfeiStatus ? window.XinfeiStatus.tag(mapName, status) : 'info'
   },
   /** 构造 el-image 的 preview-src-list（避免各页重复拼接数组） */
-  rgPreview: function (url) {
+  xinfeiPreview: function (url) {
     return url ? [url] : []
   }
 }
 
-// 修改点：F7 全局 mixin 委托到 window.RgFormat（保持 51 页 this.formatXxx 兼容，
-// 同时统一逻辑来源，后续可逐步迁移到 window.RgFormat 并移除此 mixin 以降低全局污染）
+// 修改点：F7 全局 mixin 委托到 window.XinfeiFormat（保持 51 页 this.formatXxx 兼容，
+// 同时统一逻辑来源，后续可逐步迁移到 window.XinfeiFormat 并移除此 mixin 以降低全局污染）
 Vue.mixin({
   methods: {
-    formatMoney: function (val) { return window.RgFormat.formatMoney(val) },
-    formatNumber: function (val) { return window.RgFormat.formatNumber(val) },
-    formatDate: function (val) { return window.RgFormat.formatDate(val) },
-    formatDateTime: function (val) { return window.RgFormat.formatDateTime(val) },
-    rgStatusText: function (mapName, status) { return window.RgFormat.rgStatusText(mapName, status) },
-    rgStatusTag: function (mapName, status) { return window.RgFormat.rgStatusTag(mapName, status) },
-    rgPreview: function (url) { return window.RgFormat.rgPreview(url) }
+    formatMoney: function (val) { return window.XinfeiFormat.formatMoney(val) },
+    formatNumber: function (val) { return window.XinfeiFormat.formatNumber(val) },
+    formatDate: function (val) { return window.XinfeiFormat.formatDate(val) },
+    formatDateTime: function (val) { return window.XinfeiFormat.formatDateTime(val) },
+    xinfeiStatusText: function (mapName, status) { return window.XinfeiFormat.xinfeiStatusText(mapName, status) },
+    xinfeiStatusTag: function (mapName, status) { return window.XinfeiFormat.xinfeiStatusTag(mapName, status) },
+    xinfeiPreview: function (url) { return window.XinfeiFormat.xinfeiPreview(url) }
   }
 })
 
@@ -1585,7 +1585,7 @@ Vue.mixin({
 // 状态枚举注册中心：消除各页重复定义 statusMap / typeMap 的问题
 // 用法（页面内）：
 //   window.XinfeiStatus.register('order', textMap, tagMap)
-//   <el-tag :type="rgStatusTag('order', row.status)">{{ rgStatusText('order', row.status) }}</el-tag>
+//   <el-tag :type="xinfeiStatusTag('order', row.status)">{{ xinfeiStatusText('order', row.status) }}</el-tag>
 // ============================================================
 window.XinfeiStatus = {
   _maps: {},

@@ -180,7 +180,7 @@
       methods: {
         /* ── 数据加载 ── */
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '参数配置', request: sysApi.configDelete })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '参数配置', request: sysApi.configDelete })
         },
         async init(reloadStats = true) {
           this.loading = true

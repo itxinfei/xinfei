@@ -235,9 +235,9 @@
             paletteOpen: false,
             paletteQuery: '',
             paletteIndex: 0,
-            // 菜单颜色统一走 RgPalette（单一来源，不再硬编码）
-            menuTextColor: RgPalette.textSecondary || '#9da3b5',
-            menuActiveColor: RgPalette.brand || '#ffc200',
+            // 菜单颜色统一走 XinfeiPalette（单一来源，不再硬编码）
+            menuTextColor: XinfeiPalette.textSecondary || '#9da3b5',
+            menuActiveColor: XinfeiPalette.brand || '#ffc200',
             menuList: [
               /* ──1. 数据概览（直链，无二级）── */
               { id: '1', name: '数据概览', url: 'page/dashboard/overview.html', icon: 'ri-dashboard-line' },
@@ -348,7 +348,7 @@
                 { id: '9-19', name: '店铺设置', url: 'page/store/shop-settings.html?v=20260930', icon: 'ri-store-2-line' },
                 { id: '9-1', name: '员工管理', url: 'page/employee/list.html?v=20260922', icon: 'ri-user-settings-line' },
                 { id: '9-2', name: '角色管理', url: 'page/sys/role-list.html', icon: 'ri-shield-user-line', roles: ['SUPER_ADMIN'] },
-                { id: '9-20', name: '部门管理', url: 'page/sys/department-list.html', icon: 'ri-sitemap-line', roles: ['SUPER_ADMIN'] },
+                { id: '9-20', name: '部门管理', url: 'page/sys/department-list.html', icon: 'ri-node-tree', roles: ['SUPER_ADMIN'] },
                 { id: '9-21', name: '餐补管理', url: 'page/subsidy/account-list.html', icon: 'ri-hand-coin-line', roles: ['SUPER_ADMIN'] },
                 { id: '9-3', name: '考勤管理', url: 'page/attendance/attendance.html', icon: 'ri-calendar-check-line' },
                 { id: '9-15', name: '排班管理', url: 'page/schedule/schedule.html', icon: 'ri-calendar-schedule-line' },
@@ -545,9 +545,11 @@
                   self.shopName = res.data.name
                   document.title = res.data.name + '管理端'
                 }
-                // 仅商家自定义 Logo 才替换默认图标；系统默认 logo 不替换登录 Logo
-                if (res.data.logo && res.data.logo !== '/images/common/logo.png') {
-                  self.shopLogo = res.data.logo
+                // 仅商家自定义 Logo 才替换默认图标；RestaurantController 无自定义 logo 时回吐哨兵值 images/common/logo.png（无前导斜杠）
+                if (res.data.logo && res.data.logo !== 'images/common/logo.png') {
+                  // 库里存的是相对路径，直接给 :src 会被解析成 /backend/images/logos/…（404 裂图）；
+                  // 走 imgPath 统一成 /common/download?name=… 鉴权直出
+                  self.shopLogo = imgPath(res.data.logo)
                 }
               }
             }).catch(function (err) {

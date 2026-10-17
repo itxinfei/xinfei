@@ -287,7 +287,7 @@
           if (!this.trendChart) return;
           this.trendChart.setOption({
             title: { text: '暂无趋势数据', left: 'center', top: 'center',
-              textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+              textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
           }, true);
         },
         renderTrendChart: function(data) {
@@ -295,7 +295,7 @@
           if (!data || !data.dates || !data.dates.length) {
             this.trendChart.setOption({
               title: { text: '暂无趋势数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true);
             // 修改点：v-show 从隐藏切到可见后 echarts 宽高为 0，需 resize 才能正确渲染
             var emptyChart = this.trendChart;
@@ -310,30 +310,30 @@
             const b = parseInt(h.substring(4,6), 16);
             return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
           };
-          const colors = [RgPalette.brand, RgPalette.success, RgPalette.warning];
+          const colors = [XinfeiPalette.brand, XinfeiPalette.success, XinfeiPalette.warning];
           const dates = data.dates || [];
           var series = (data.series || []).map(function(s, i) {
-            const col = colors[i] || RgPalette.textSecondary;
+            const col = colors[i] || XinfeiPalette.textSecondary;
             return {
               name: s.name, type: 'line', data: s.data || [], smooth: true,
               symbol: 'circle', symbolSize: 7,
               lineStyle: { color: col, width: 3 },
-              itemStyle: { color: col, borderColor: RgPalette.white, borderWidth: 2 },
+              itemStyle: { color: col, borderColor: XinfeiPalette.white, borderWidth: 2 },
               areaStyle: { color: hexToRgba(col, 0.15) }
             };
           });
           this.trendChart.setOption({
-            tooltip: { trigger: 'axis', backgroundColor: RgPalette.white,
-              borderColor: RgPalette.borderLighter2, borderWidth: 1, textStyle: { color: RgPalette.textPrimary, fontSize: 13 } },
+            tooltip: { trigger: 'axis', backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 } },
             legend: { data: (data.series || []).map(function(s) { return s.name; }),
-              bottom: 8, textStyle: { fontSize: 12, color: RgPalette.textRegular } },
+              bottom: 8, textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
             grid: { left: 55, right: 30, top: 25, bottom: 52 },
             xAxis: { type: 'category', data: dates, boundaryGap: false,
-              axisLine: { lineStyle: { color: RgPalette.borderLighter2 } }, axisTick: { show: false },
-              axisLabel: { color: RgPalette.textSecondary, fontSize: 12 } },
+              axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } }, axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
             yAxis: { type: 'value', name: '销量(份)',
-              nameTextStyle: { color: RgPalette.textSecondary, fontSize: 12 },
-              splitLine: { lineStyle: { color: RgPalette.bgLight, type: 'dashed' } } },
+              nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+              splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } } },
             series: series
           }, true);
           const chart = this.trendChart;
@@ -347,16 +347,16 @@
         progressColor: function(count) {
           const max = this.tableData.length ? (this.tableData[0].count || 1) : 1;
           const ratio = count / max;
-          if (ratio > 0.8) return RgPalette.seriesRed;
-          if (ratio > 0.5) return RgPalette.linkBlue;
-          return RgPalette.seriesGreen;
+          if (ratio > 0.8) return XinfeiPalette.seriesRed;
+          if (ratio > 0.5) return XinfeiPalette.linkBlue;
+          return XinfeiPalette.seriesGreen;
         },
         renderChart: function() {
           if (!this.chart) return;
           if (!this.tableData || this.tableData.length === 0) {
             this.chart.setOption({
               title: { text: '暂无排行数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true); return;
           }
           var names = this.tableData.map(function(item) { return item.name; }).reverse();
@@ -365,26 +365,26 @@
           const barWidth = names.length <= 5 ? 26 : names.length <= 10 ? 22 : 18;
           this.chart.setOption({
             tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
-              backgroundColor: RgPalette.white, borderColor: RgPalette.borderLighter2, borderWidth: 1,
-              textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+              backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
               formatter: function(p) { return '<b>' + p[0].name + '</b><br/>' + p[0].marker + ' 销量：<b>' + p[0].value + ' 份</b>'; } },
             grid: { left: 130, right: 70, top: 16, bottom: 30 },
             xAxis: { type: 'value', name: '销量（份）',
-              splitLine: { lineStyle: { type: 'dashed', color: RgPalette.bgLight } },
-              axisLabel: { color: RgPalette.textSecondary } },
+              splitLine: { lineStyle: { type: 'dashed', color: XinfeiPalette.bgLight } },
+              axisLabel: { color: XinfeiPalette.textSecondary } },
             yAxis: { type: 'category', data: names,
-              axisLabel: { color: RgPalette.textRegular, interval: 0, width: 110, overflow: 'truncate', fontSize: 13 } },
+              axisLabel: { color: XinfeiPalette.textRegular, interval: 0, width: 110, overflow: 'truncate', fontSize: 13 } },
             series: [{ type: 'bar', data: counts, barMaxWidth: barWidth,
               itemStyle: {
-                borderRadius: [0, RgPalette.radiusMd, RgPalette.radiusMd, 0],
+                borderRadius: [0, XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0],
                 color: function(params) {
                   const v = params.value, r = v / maxVal;
-                  if (r > 0.8) return RgPalette.seriesRed;
-                  if (r > 0.5) return RgPalette.linkBlue;
-                  return RgPalette.success;
+                  if (r > 0.8) return XinfeiPalette.seriesRed;
+                  if (r > 0.5) return XinfeiPalette.linkBlue;
+                  return XinfeiPalette.success;
                 }
               },
-              label: { show: true, position: 'right', color: RgPalette.textRegular, fontSize: 12, fontWeight: 600,
+              label: { show: true, position: 'right', color: XinfeiPalette.textRegular, fontSize: 12, fontWeight: 600,
                 formatter: function(p) { return p.value + ' 份'; } }
             }]
           }, true);

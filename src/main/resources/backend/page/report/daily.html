@@ -662,7 +662,7 @@
           if (!trendData || trendData.length === 0) {
             chart.setOption({
               title: { text: '暂无趋势数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true)
             return
           }
@@ -675,11 +675,11 @@
           chart.setOption({
             tooltip: {
               trigger: 'axis',
-              axisPointer: { type: 'cross', crossStyle: { color: RgPalette.graySoft } },
-              backgroundColor: RgPalette.white,
-              borderColor: RgPalette.borderLighter2,
+              axisPointer: { type: 'cross', crossStyle: { color: XinfeiPalette.graySoft } },
+              backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2,
               borderWidth: 1,
-              textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
               formatter(params) {
                 let html = '<b>' + params[0].axisValue + '</b><br/>'
                 params.forEach(p => {
@@ -691,28 +691,28 @@
                 return html
               }
             },
-            legend: { data: ['订单数', '营业额'], bottom: 8, textStyle: { color: RgPalette.textRegular, fontSize: 13 } },
+            legend: { data: ['订单数', '营业额'], bottom: 8, textStyle: { color: XinfeiPalette.textRegular, fontSize: 13 } },
             // 增大 top/bottom/right 防止双Y轴标签和 legend 被裁剪
             grid: { left: 50, right: 65, top: 30, bottom: 52 },
             xAxis: {
               type: 'category',
               data: hasData ? dates : ['暂无数据'],
-              axisLine: { lineStyle: { color: RgPalette.borderLighter2 } },
+              axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } },
               axisTick: { show: false },
-              axisLabel: { color: RgPalette.textSecondary, fontSize: 12, rotate: dates.length > 7 ? 30 : 0 }
+              axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12, rotate: dates.length > 7 ? 30 : 0 }
             },
             yAxis: [
               {
                 type: 'value', name: '订单量(单)',
-                nameTextStyle: { color: RgPalette.textSecondary, fontSize: 12 },
-                axisLabel: { color: RgPalette.textSecondary, fontSize: 12 },
-                splitLine: { lineStyle: { color: RgPalette.bgLight, type: 'dashed' } },
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } },
                 axisLine: { show: false }, axisTick: { show: false }
               },
               {
                 type: 'value', name: '营业额(元)',
-                nameTextStyle: { color: RgPalette.textSecondary, fontSize: 12 },
-                axisLabel: { color: RgPalette.textSecondary, fontSize: 12, formatter: '¥{value}' },
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12, formatter: '¥{value}' },
                 splitLine: { show: false },
                 axisLine: { show: false }, axisTick: { show: false }
               }
@@ -722,21 +722,21 @@
                 name: '订单数', type: 'bar', data: hasData ? orders : [0],
                 barWidth: barW, barGap: '20%',
                 itemStyle: {
-                  borderRadius: [RgPalette.radiusMd, RgPalette.radiusMd, 0, 0],
-                  color: RgPalette.seriesBlue
+                  borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
+                  color: XinfeiPalette.seriesBlue
                 },
-                label: { show: hasData, position: 'top', color: RgPalette.seriesBlue, fontSize: 12, fontWeight: 600, formatter: '{c}' }
+                label: { show: hasData, position: 'top', color: XinfeiPalette.seriesBlue, fontSize: 12, fontWeight: 600, formatter: '{c}' }
               },
               {
                 name: '营业额', type: 'line', yAxisIndex: 1, data: hasData ? amounts : [0],
                 smooth: true, symbol: 'emptyCircle', symbolSize: 8,
-                lineStyle: { color: RgPalette.seriesGreen, width: 3 },
-                itemStyle: { color: RgPalette.seriesGreen, borderColor: RgPalette.white, borderWidth: 2 },
+                lineStyle: { color: XinfeiPalette.seriesGreen, width: 3 },
+                itemStyle: { color: XinfeiPalette.seriesGreen, borderColor: XinfeiPalette.white, borderWidth: 2 },
                 areaStyle: {
-                  color: RgPalette.seriesGreenArea
+                  color: XinfeiPalette.seriesGreenArea
                 },
                 label: {
-                  show: hasData, position: 'top', color: RgPalette.successDark, fontSize: 12, fontWeight: 700,
+                  show: hasData, position: 'top', color: XinfeiPalette.successDark, fontSize: 12, fontWeight: 700,
                   formatter: p => '¥' + Number(p.value).toFixed(0)
                 }
               }
@@ -754,11 +754,11 @@
           if (!data || data.length === 0) {
             chart.setOption({
               title: { text: '暂无分类数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true)
             return
           }
-          const colors = [RgPalette.seriesBlue,RgPalette.seriesGreen,RgPalette.seriesGold,RgPalette.seriesPink,RgPalette.seriesSky,RgPalette.seriesOrange,RgPalette.seriesViolet,RgPalette.seriesMagenta]
+          const colors = [XinfeiPalette.seriesBlue,XinfeiPalette.seriesGreen,XinfeiPalette.seriesGold,XinfeiPalette.seriesPink,XinfeiPalette.seriesSky,XinfeiPalette.seriesOrange,XinfeiPalette.seriesViolet,XinfeiPalette.seriesMagenta]
           chart.setOption({
             tooltip: { trigger: 'item', formatter: '{b}: {c} 份({d}%)' },
             legend: { bottom: 4, textStyle: { fontSize: 12 } },
@@ -767,7 +767,7 @@
               radius: ['45%', '72%'],
               // center top 从 48% 提至 44%，为底部 legend 留出空间
               center: ['50%', '44%'],
-              itemStyle: { borderRadius: RgPalette.radiusMd, borderColor: RgPalette.white, borderWidth: 2 },
+              itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 2 },
               label: { fontSize: 12, formatter: '{b}\n{d}%' },
               emphasis: { scaleSize: 8, label: { fontSize: 15, fontWeight: 'bold' } },
               data: data.map(function(item, i) {

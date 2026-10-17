@@ -47,7 +47,9 @@
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
   <a href="#main-content" class="skip-link">跳转到主内容</a>
   <div class="payment-page" id="report-payment-app" v-loading="loading">
-    <main class="container" id="main-content" role="main" aria-label="页面主要内容">
+    <!-- 修改点(2026-10-17)：主地标统一为 aria-labelledby + sr-only 标题（原 aria-label="页面主要内容" 无信息量） -->
+    <main class="container" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">支付分析</h1>
 
       
       
@@ -134,12 +136,12 @@
   <script src="../../js/chart-panel.js?v=20260926"></script>
   <script>
     const CHANNEL_LABEL = { wechat: '微信支付', alipay: '支付宝', balance: '线下/其他', other: '其他渠道' };
-    // 支付渠道配色：统一走 RgPalette（微信绿/支付宝蓝已收录为调色板字段），canvas 中禁止写 hex
+    // 支付渠道配色：统一走 XinfeiPalette（微信绿/支付宝蓝已收录为调色板字段），canvas 中禁止写 hex
     const CHANNEL_COLOR = {
-      wechat: RgPalette.wechatGreen, // 微信支付品牌绿
-      alipay: RgPalette.alipayBlue,  // 支付宝品牌蓝
-      balance: RgPalette.brand,      // 余额支付 → 品牌金
-      other: RgPalette.warning       // 其他渠道 → 警告橙
+      wechat: XinfeiPalette.wechatGreen, // 微信支付品牌绿
+      alipay: XinfeiPalette.alipayBlue,  // 支付宝品牌蓝
+      balance: XinfeiPalette.brand,      // 余额支付 → 品牌金
+      other: XinfeiPalette.warning       // 其他渠道 → 警告橙
     };
 
     (function() {
@@ -277,7 +279,7 @@
             const byReason = (this.refundAnalysis && this.refundAnalysis.byReason) || [];
             if (!byReason.length) {
               this.refundChart.setOption({ title: { text: '暂无退款数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
               return;
             }
             const reasons = byReason.map(function(r) { return r.reason; }).reverse();
@@ -286,31 +288,31 @@
             this.refundChart.setOption({
               tooltip: {
                 trigger: 'axis', axisPointer: { type: 'shadow' },
-                backgroundColor: RgPalette.white, borderColor: RgPalette.borderLighter2, borderWidth: 1,
-                textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+                backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+                textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
                 formatter: function(params) {
                   if (!params || !params.length) return '';
                   var p = params[0];
                   // 修改点：金额统一半角 ¥ + 千分位
-                  return p.name + '<br/>退款 ¥' + RgFormat.formatMoney(p.value) + ' · ' + RgFormat.formatNumber(counts[params[0].dataIndex]) + ' 笔';
+                  return p.name + '<br/>退款 ¥' + XinfeiFormat.formatMoney(p.value) + ' · ' + XinfeiFormat.formatNumber(counts[params[0].dataIndex]) + ' 笔';
                 }
               },
               grid: { left: 120, right: 60, top: 20, bottom: 30 },
               xAxis: {
-                type: 'value', axisLabel: { color: RgPalette.info, fontSize: 12,
+                type: 'value', axisLabel: { color: XinfeiPalette.info, fontSize: 12,
                   formatter: function(v) { return '¥' + Number(v).toLocaleString('zh-CN'); } },
-                splitLine: { lineStyle: { color: RgPalette.borderLighter2, type: 'dashed' } },
+                splitLine: { lineStyle: { color: XinfeiPalette.borderLighter2, type: 'dashed' } },
                 axisLine: { show: false }, axisTick: { show: false }
               },
               yAxis: {
                 type: 'category', data: reasons,
-                axisLine: { lineStyle: { color: RgPalette.borderLighter2 } }, axisTick: { show: false },
-                axisLabel: { color: RgPalette.textRegular, fontSize: 12 }
+                axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } }, axisTick: { show: false },
+                axisLabel: { color: XinfeiPalette.textRegular, fontSize: 12 }
               },
               series: [{
                 name: '退款金额', type: 'bar', data: amounts, barWidth: 18,
-                itemStyle: { color: RgPalette.danger, borderRadius: [0, RgPalette.radiusMd, RgPalette.radiusMd, 0] },
-                label: { show: true, position: 'right', fontSize: 12, fontWeight: 600, color: RgPalette.danger, formatter: function(p) { return '¥' + Number(p.value).toFixed(2); } }
+                itemStyle: { color: XinfeiPalette.danger, borderRadius: [0, XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0] },
+                label: { show: true, position: 'right', fontSize: 12, fontWeight: 600, color: XinfeiPalette.danger, formatter: function(p) { return '¥' + Number(p.value).toFixed(2); } }
               }]
             }, true);
           },
@@ -336,40 +338,40 @@
             if (!this.trendChart) return;
             if (!data || !data.dates || !data.dates.length) {
               this.trendChart.setOption({ title: { text: '暂无趋势数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
             }
             const dates = data.dates || [];
             var makeAreaGrad = function(c) { return c; };
             this.trendChart.setOption({
               // 修改点：金额 tooltip 统一半角 ¥ + 千分位（三个支付系列均为金额）
-              tooltip: { trigger: 'axis', backgroundColor: RgPalette.white,
-                borderColor: RgPalette.borderLighter2, borderWidth: 1, textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+              tooltip: { trigger: 'axis', backgroundColor: XinfeiPalette.white,
+                borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
                 formatter: function(params) {
                   var lines = params.map(function(p) {
-                    return p.marker + ' ' + p.seriesName + '：<b>¥' + RgFormat.formatMoney(p.value) + '</b>'
+                    return p.marker + ' ' + p.seriesName + '：<b>¥' + XinfeiFormat.formatMoney(p.value) + '</b>'
                   })
                   return '<b>' + params[0].axisValue + '</b><br/>' + lines.join('<br/>')
                 } },
-              legend: { data: ['微信支付', '支付宝', '线下/其他'], bottom: 8, textStyle: { fontSize: 12, color: RgPalette.textRegular } },
+              legend: { data: ['微信支付', '支付宝', '线下/其他'], bottom: 8, textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
               // 修改点：增大左/底部 padding 防止标签被裁剪
               grid: { left: 55, right: 30, top: 25, bottom: 52 },
               xAxis: { type: 'category', data: dates, boundaryGap: false,
-                axisLine: { lineStyle: { color: RgPalette.borderLighter2 } }, axisTick: { show: false },
-                axisLabel: { color: RgPalette.textSecondary, fontSize: 12 } },
+                axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } }, axisTick: { show: false },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
               yAxis: { type: 'value', name: '金额(元)',
-                nameTextStyle: { color: RgPalette.textSecondary, fontSize: 12 },
-                splitLine: { lineStyle: { color: RgPalette.bgLight, type: 'dashed' } } },
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } } },
               series: [
                 { name: '微信支付', type: 'line', data: data.wechat || [], smooth: true, symbol: 'circle', symbolSize: 6,
-                  lineStyle: { color: RgPalette.wechatGreen, width: 3 }, itemStyle: { color: RgPalette.wechatGreen, borderColor: RgPalette.white, borderWidth: 2 },
+                  lineStyle: { color: XinfeiPalette.wechatGreen, width: 3 }, itemStyle: { color: XinfeiPalette.wechatGreen, borderColor: XinfeiPalette.white, borderWidth: 2 },
                   // 面积半透明（opacity 0.15），三条线重叠时互不遮盖
-                  areaStyle: { color: makeAreaGrad(RgPalette.wechatGreen), opacity: 0.15 } },
+                  areaStyle: { color: makeAreaGrad(XinfeiPalette.wechatGreen), opacity: 0.15 } },
                 { name: '支付宝', type: 'line', data: data.alipay || [], smooth: true, symbol: 'circle', symbolSize: 6,
-                  lineStyle: { color: RgPalette.alipayBlue, width: 3 }, itemStyle: { color: RgPalette.alipayBlue, borderColor: RgPalette.white, borderWidth: 2 },
-                  areaStyle: { color: makeAreaGrad(RgPalette.alipayBlue), opacity: 0.15 } },
+                  lineStyle: { color: XinfeiPalette.alipayBlue, width: 3 }, itemStyle: { color: XinfeiPalette.alipayBlue, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                  areaStyle: { color: makeAreaGrad(XinfeiPalette.alipayBlue), opacity: 0.15 } },
                 { name: '线下/其他', type: 'line', data: data.balance || [], smooth: true, symbol: 'circle', symbolSize: 6,
-                  lineStyle: { color: RgPalette.warning, width: 3 }, itemStyle: { color: RgPalette.warning, borderColor: RgPalette.white, borderWidth: 2 },
-                  areaStyle: { color: makeAreaGrad(RgPalette.warning), opacity: 0.15 } }
+                  lineStyle: { color: XinfeiPalette.warning, width: 3 }, itemStyle: { color: XinfeiPalette.warning, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                  areaStyle: { color: makeAreaGrad(XinfeiPalette.warning), opacity: 0.15 } }
               ]
             }, true);
           },
@@ -379,7 +381,7 @@
                 transactionCount: item.count || 0, amount: item.amount != null ? item.amount : null }; });
           },
           calcPercent: function(count) { if (!this.totalCount) return 0; return Math.round(count / this.totalCount * 100); },
-          channelProgressColor: function(key) { return CHANNEL_COLOR[key] || RgPalette.textSecondary; },
+          channelProgressColor: function(key) { return CHANNEL_COLOR[key] || XinfeiPalette.textSecondary; },
           renderCharts: function() {
             // 修改点：渲染前 resize 确保容器尺寸正确
             [this.pieChart, this.barChart].forEach(function(ch) {
@@ -390,30 +392,30 @@
           renderPie: function() {
             if (!this.pieChart || !this.tableData.length) {
               if (this.pieChart) this.pieChart.setOption({ title: { text: '暂无支付数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
             }
             var pieData = this.tableData.filter(function(r) { return r.transactionCount > 0; })
               .map(function(r) { return { name: r.channel, value: r.transactionCount,
-                itemStyle: { color: CHANNEL_COLOR[r.key] || RgPalette.textSecondary } }; });
+                itemStyle: { color: CHANNEL_COLOR[r.key] || XinfeiPalette.textSecondary } }; });
             this.pieChart.setOption({
-              color: [RgPalette.wechatGreen,RgPalette.alipayBlue,RgPalette.warning,RgPalette.textSecondary],
-              tooltip: { trigger: 'item', backgroundColor: RgPalette.white,
-                borderColor: RgPalette.borderLighter2, borderWidth: 1, textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+              color: [XinfeiPalette.wechatGreen,XinfeiPalette.alipayBlue,XinfeiPalette.warning,XinfeiPalette.textSecondary],
+              tooltip: { trigger: 'item', backgroundColor: XinfeiPalette.white,
+                borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
                 formatter: function(p) { return '<b>' + p.name + '</b><br/>' + p.marker + ' 笔数：<b>' + p.value + '</b>（' + p.percent + '%）'; } },
               legend: { bottom: 0, left: 'center', itemWidth: 10, itemHeight: 10,
-                textStyle: { color: RgPalette.textRegular, fontSize: 12 } },
+                textStyle: { color: XinfeiPalette.textRegular, fontSize: 12 } },
               series: [{ type: 'pie', radius: ['45%','68%'], center: ['50%','44%'],
-                avoidLabelOverlap: false, itemStyle: { borderRadius: RgPalette.radiusMd, borderColor: RgPalette.white, borderWidth: 3 },
-                label: { position: 'outside', formatter: '{b}\n{d}%', fontSize: 13, lineHeight: 18, color: RgPalette.textRegular },
-                labelLine: { length: 25, length2: 20, lineStyle: { color: RgPalette.borderBase } },
+                avoidLabelOverlap: false, itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 3 },
+                label: { position: 'outside', formatter: '{b}\n{d}%', fontSize: 13, lineHeight: 18, color: XinfeiPalette.textRegular },
+                labelLine: { length: 25, length2: 20, lineStyle: { color: XinfeiPalette.borderBase } },
                 emphasis: { scaleSize: 10, label: { fontSize: 16, fontWeight: 'bold' } },
-                data: pieData.length ? pieData : [{ name: '暂无数据', value: 1, itemStyle: { color: RgPalette.borderLighter2 } }] }]
+                data: pieData.length ? pieData : [{ name: '暂无数据', value: 1, itemStyle: { color: XinfeiPalette.borderLighter2 } }] }]
             }, true);
           },
           renderBar: function() {
             if (!this.barChart || !this.tableData.length) {
               if (this.barChart) this.barChart.setOption({ title: { text: '暂无支付数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true); return;
             }
             var rows = this.tableData;
             var names = rows.map(function(r) { return r.channel; });
@@ -423,45 +425,45 @@
             const barW = names.length <= 2 ? 48 : names.length <= 3 ? 36 : 24;
             this.barChart.setOption({
               tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
-                backgroundColor: RgPalette.white, borderColor: RgPalette.borderLighter2, borderWidth: 1,
-                textStyle: { color: RgPalette.textPrimary, fontSize: 13 },
+                backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+                textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
                 formatter: function(ps) {
                   // 修改点：h 需累加拼接，声明为 const 会抛 "Assignment to constant variable"（悬停图表即崩溃）
                   let h = '<b>' + ps[0].axisValue + '</b><br/>';
                   ps.forEach(function(p) {
                     // 修改点：金额统一半角 ¥ + 千分位（原 toFixed(2) 无千分位）
-                    const v = p.seriesName === '交易金额' ? '¥' + RgFormat.formatMoney(p.value) : p.value + ' 笔';
+                    const v = p.seriesName === '交易金额' ? '¥' + XinfeiFormat.formatMoney(p.value) : p.value + ' 笔';
                     h += p.marker + ' ' + p.seriesName + '：<b>' + v + '</b><br/>';
                   }); return h;
                 } },
               legend: { data: hasAmount ? ['交易笔数', '交易金额'] : ['交易笔数'], bottom: 4,
-                textStyle: { fontSize: 12, color: RgPalette.textRegular } },
+                textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
               // 修改点：增大右 padding 防止金额标签被裁剪
               grid: { left: 55, right: hasAmount ? 70 : 20, top: 25, bottom: 52 },
               xAxis: { type: 'category', data: names, axisTick: { show: false },
-                axisLabel: { color: RgPalette.textRegular, interval: 0, fontSize: 13 } },
+                axisLabel: { color: XinfeiPalette.textRegular, interval: 0, fontSize: 13 } },
               yAxis: [
                 { type: 'value', name: '笔数',
-                  nameTextStyle: { color: RgPalette.textSecondary, fontSize: 12 },
-                  splitLine: { lineStyle: { type: 'dashed', color: RgPalette.bgLight } },
-                  axisLabel: { color: RgPalette.textSecondary, fontSize: 12 } },
+                  nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                  splitLine: { lineStyle: { type: 'dashed', color: XinfeiPalette.bgLight } },
+                  axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
                 hasAmount ? { type: 'value', name: '金额',
-                  nameTextStyle: { color: RgPalette.textSecondary, fontSize: 12 },
-                  axisLabel: { color: RgPalette.textSecondary, fontSize: 12,
+                  nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                  axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12,
                     formatter: function(v) { return '¥' + Number(v).toLocaleString('zh-CN'); } },
                   splitLine: { show: false } } : {}
               ].filter(function(y) { return Object.keys(y).length; }),
               series: [
                 { name: '交易笔数', type: 'bar', data: counts, barWidth: barW,
-                  itemStyle: { borderRadius: [RgPalette.radiusMd, RgPalette.radiusMd, 0, 0],
+                  itemStyle: { borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
                     // 按数据行真实渠道 key 取色（旧实现按 Object.keys 下标，渠道缺失/乱序时会错配）
-                    color: function(p) { const row = rows[p.dataIndex] || {}; return CHANNEL_COLOR[row.key] || RgPalette.textSecondary; } },
+                    color: function(p) { const row = rows[p.dataIndex] || {}; return CHANNEL_COLOR[row.key] || XinfeiPalette.textSecondary; } },
                   label: { show: true, position: 'top', fontSize: 12, fontWeight: 600, formatter: '{c} 笔' } },
                 hasAmount ? { name: '交易金额', type: 'line', yAxisIndex: 1, data: amounts,
                   smooth: true, symbol: 'emptyCircle', symbolSize: 8,
-                  lineStyle: { color: RgPalette.seriesOrange, width: 3 },
-                  itemStyle: { color: RgPalette.seriesOrange, borderColor: RgPalette.white, borderWidth: 2 },
-                  label: { show: true, position: 'top', fontSize: 12, fontWeight: 700, color: RgPalette.warning,
+                  lineStyle: { color: XinfeiPalette.seriesOrange, width: 3 },
+                  itemStyle: { color: XinfeiPalette.seriesOrange, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                  label: { show: true, position: 'top', fontSize: 12, fontWeight: 700, color: XinfeiPalette.warning,
                     formatter: function(p) { return '¥' + Number(p.value).toFixed(0); } } } : null
               ].filter(function(s) { return s; })
             }, true);

@@ -487,7 +487,7 @@
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/dining/reservation/{id}；非已取消行可能被拒）
         doBatchDelete: function(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '预订', request: deleteReservation })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '预订', request: deleteReservation })
         },
         onBatchDeleted: function() {
           this.init(true)

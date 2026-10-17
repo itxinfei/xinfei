@@ -263,7 +263,7 @@
           return Number(value).toFixed(2)
         },
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '结算记录', request: deleteDailySettlement })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '结算记录', request: deleteDailySettlement })
         },
         async fetchData() {
           this.loading = true

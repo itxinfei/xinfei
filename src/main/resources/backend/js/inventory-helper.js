@@ -1,10 +1,10 @@
 /**
- * 库存模块输入辅助（无构建环境，挂到 window.RgInventoryHelper）
+ * 库存模块输入辅助（无构建环境，挂到 window.XinfeiInventoryHelper）
  *   - queryMaterials：按名称远程模糊搜索食材，供 el-autocomplete 使用
  *   - queryUnits：常用计量单位本地候选（仍允许自由输入新单位）
  * 依赖页面已引入 inventory.js（materialPage）。
  */
-window.RgInventoryHelper = {
+window.XinfeiInventoryHelper = {
   /** 常用计量单位本地候选 */
   commonUnits: ['瓶', '箱', '斤', '公斤', '千克', '克', '个', '袋', '包', '桶', '升', '毫升', '盒', '份', '打'],
 

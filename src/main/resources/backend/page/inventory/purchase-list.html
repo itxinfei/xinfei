@@ -694,8 +694,8 @@
           if (!hasData) return
           await this.$nextTick()
           if (!this.trendChart) this.trendChart = echarts.init(dom)
-          const P = window.RgPalette
-          const moneyFmt = window.RgFormat ? window.RgFormat.formatMoney : function(v) { return Number(v).toFixed(2) }
+          const P = window.XinfeiPalette
+          const moneyFmt = window.XinfeiFormat ? window.XinfeiFormat.formatMoney : function(v) { return Number(v).toFixed(2) }
           this.trendChart.setOption({
             color: [P.brand, P.success],
             tooltip: {
@@ -957,7 +957,7 @@
         },
         handleClose() { this.formData.dialogVisible = false },
         queryOperatorSuggestions(queryString, cb) {
-          window.RgInventoryHelper.queryEmployees(queryString).then(function (list) { cb(list) })
+          window.XinfeiInventoryHelper.queryEmployees(queryString).then(function (list) { cb(list) })
         },
         addDetail() {
             this.formData.details.push({ materialId: '', qty: '', unitPrice: '' })
@@ -1046,7 +1046,7 @@
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/purchase-order/{id}；仅草稿/已取消可删）
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '采购单', request: deletePurchase })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '采购单', request: deletePurchase })
         },
         onBatchDeleted() {
           this.init()

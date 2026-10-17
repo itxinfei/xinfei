@@ -531,7 +531,7 @@
           this.createDialogVisible = true;
         },
         queryOperatorSuggestions: function(queryString, cb) {
-          window.RgInventoryHelper.queryEmployees(queryString).then(function (list) { cb(list) })
+          window.XinfeiInventoryHelper.queryEmployees(queryString).then(function (list) { cb(list) })
         },
         submitCreate: function() {
           var self = this;
@@ -752,7 +752,7 @@
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/stock-check/{id}）
         doBatchDelete: function(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '盘点单', request: deleteStockCheck })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '盘点单', request: deleteStockCheck })
         },
         onBatchDeleted: function() {
           this.init(true)

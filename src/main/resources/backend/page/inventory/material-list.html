@@ -439,7 +439,7 @@
           // ── 输入辅助（el-autocomplete）──
           queryNameSuggestions(queryString, cb) {
             if (!queryString || !String(queryString).trim()) { cb([]); return }
-            window.RgInventoryHelper.queryMaterials(queryString).then(function (list) { cb(list) })
+            window.XinfeiInventoryHelper.queryMaterials(queryString).then(function (list) { cb(list) })
           },
           // 新增时选中已存在食材：提示直接打开编辑，从源头防止重复建档
           handleNameSelect(item) {
@@ -455,7 +455,7 @@
             }).catch(function () {})
           },
           queryUnitSuggestions(queryString, cb) {
-            cb(window.RgInventoryHelper.queryUnits(queryString))
+            cb(window.XinfeiInventoryHelper.queryUnits(queryString))
           },
           addHandle() {
             this.action = 'add'
@@ -515,7 +515,7 @@
           },
           // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/material/{id}）
           doBatchDelete(payload) {
-            return RgBatchDeleteByOne({ ids: payload.ids, label: '食材', request: deleteMaterial })
+            return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '食材', request: deleteMaterial })
           },
           onBatchDeleted() {
             this.fetchData(true)

@@ -361,8 +361,8 @@
 <script src="../../api/marketing.js?v=20260926"></script>
 <script src="../../js/components.js?v=20261002"></script>
 <script>
-  // 图表语义色统一引用全局 window.RgPalette（components.js 从 tokens.css 运行时解析，
-  // canvas 无法使用 CSS 变量，RgPalette 为 JS 侧唯一颜色来源）；多色系列数据色保留图表调色板
+  // 图表语义色统一引用全局 window.XinfeiPalette（components.js 从 tokens.css 运行时解析，
+  // canvas 无法使用 CSS 变量，XinfeiPalette 为 JS 侧唯一颜色来源）；多色系列数据色保留图表调色板
   new Vue({
     el: '#app',
     data: function() {
@@ -538,15 +538,15 @@
             // 状态分布饼图 — 修改点：展示全部4种状态；全 0（初始/加载失败）时显示空态而非只剩 legend 的白图
             if (this.statusPieChart) {
                 const pieData = [
-                    { value: self.summary.active || 0, name: '进行中', itemStyle: { color: RgPalette.success } },
-                    { value: self.summary.draft || 0, name: '草稿', itemStyle: { color: RgPalette.info } },
-                    { value: self.summary.ended || 0, name: '已结束', itemStyle: { color: RgPalette.warning } },
-                    { value: self.summary.paused || 0, name: '已暂停', itemStyle: { color: RgPalette.danger } }
+                    { value: self.summary.active || 0, name: '进行中', itemStyle: { color: XinfeiPalette.success } },
+                    { value: self.summary.draft || 0, name: '草稿', itemStyle: { color: XinfeiPalette.info } },
+                    { value: self.summary.ended || 0, name: '已结束', itemStyle: { color: XinfeiPalette.warning } },
+                    { value: self.summary.paused || 0, name: '已暂停', itemStyle: { color: XinfeiPalette.danger } }
                 ];
                 const pieEmpty = pieData.every(function(d) { return !d.value; });
                 this.statusPieChart.setOption(pieEmpty ? {
                     title: { text: '暂无活动数据', left: 'center', top: 'center',
-                        textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                        textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
                 } : {
                     title: { show: false },
                     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -554,7 +554,7 @@
                     series: [{
                         type: 'pie', radius: ['45%', '70%'], center: ['35%', '50%'],
                         avoidLabelOverlap: false,
-                        itemStyle: { borderRadius: RgPalette.radiusSm, borderColor: RgPalette.white, borderWidth: 2 },
+                        itemStyle: { borderRadius: XinfeiPalette.radiusSm, borderColor: XinfeiPalette.white, borderWidth: 2 },
                         label: { show: false },
                         emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
                         data: pieData
@@ -580,13 +580,13 @@
                         {
                             type: 'bar',
                             data: [
-                                { value: self.summary.totalPushed || 0, name: '推送消息数', itemStyle: { color: RgPalette.brand } },
-                                { value: self.summary.totalParticipants || 0, name: '参与总人数', itemStyle: { color: RgPalette.seriesBlue } }
+                                { value: self.summary.totalPushed || 0, name: '推送消息数', itemStyle: { color: XinfeiPalette.brand } },
+                                { value: self.summary.totalParticipants || 0, name: '参与总人数', itemStyle: { color: XinfeiPalette.seriesBlue } }
                             ],
                             barWidth: 50,
-                            itemStyle: { borderRadius: [RgPalette.radiusMd, RgPalette.radiusMd, 0, 0] },
+                            itemStyle: { borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0] },
                             label: { show: true, position: 'top', fontSize: 14, fontWeight: 'bold',
-                                color: RgPalette.textRegular, formatter: '{c}' }
+                                color: XinfeiPalette.textRegular, formatter: '{c}' }
                         }
                     ]
                 }, true);
@@ -952,13 +952,13 @@
                     {
                         type: 'bar',
                         data: [
-                            { value: pushCount, name: '推送数', itemStyle: { color: RgPalette.brand } },
-                            { value: participants, name: '参与数', itemStyle: { color: RgPalette.seriesBlue } }
+                            { value: pushCount, name: '推送数', itemStyle: { color: XinfeiPalette.brand } },
+                            { value: participants, name: '参与数', itemStyle: { color: XinfeiPalette.seriesBlue } }
                         ],
                         barWidth: 50,
-                        itemStyle: { borderRadius: [RgPalette.radiusSm, RgPalette.radiusSm, 0, 0] },
+                        itemStyle: { borderRadius: [XinfeiPalette.radiusSm, XinfeiPalette.radiusSm, 0, 0] },
                         label: { show: true, position: 'top', fontSize: 13, fontWeight: 'bold',
-                            color: RgPalette.textRegular, formatter: '{c}' }
+                            color: XinfeiPalette.textRegular, formatter: '{c}' }
                     }
                 ]
             }, true);

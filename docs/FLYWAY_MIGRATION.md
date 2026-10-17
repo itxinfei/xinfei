@@ -11,8 +11,8 @@
 | 脚本位置 | `src/main/resources/db/migration/`（入库；`db/` 目录整体仍被 `.gitignore` 忽略，只有 `seed-minimal.sql` 例外） |
 | 记账表 | `flyway_schema_history` |
 | 已有基线 | `V1__baseline_schema.sql`（129 张表全量表结构）、`V2__seed_minimal.sql`（租户/门店/超管最小数据） |
-| 已入库的增量 | `V3__fix_gbk_column_comments.sql`（766 处列注释乱码复原，纯元数据）、`V4__drop_legacy_helpers_and_utf8mb4_content.sql`（1 列 utf8mb3 → utf8mb4_bin + 清理 3 个遗留存储过程） |
-| **新迁移编号** | 从 **V5** 起递增：`V5__描述.sql`、`V6__描述.sql` … |
+| 已入库的增量 | `V3__fix_gbk_column_comments.sql`（766 处列注释乱码复原，纯元数据）、`V4__drop_legacy_helpers_and_utf8mb4_content.sql`（1 列 utf8mb3 → utf8mb4_bin + 清理 3 个遗留存储过程）、`V5__seed_dining_demo_tables.sql`（2 区域 + 6 桌台演示数据，租户 1，`INSERT IGNORE` 只补缺不覆盖运行态）、`V6__move_dining_seed_out_of_test_id_band.sql`（纠正 V5：演示种子的固定主键 1~6 与测试硬编码主键相撞，搬到 8800011~16 段） |
+| **新迁移编号** | 从 **V7** 起递增：`V7__描述.sql`、`V8__描述.sql` … |
 
 配置在 `application.yml` 的 `spring.flyway`：`baseline-on-migrate=true`、`baseline-version=2`、`validate-on-migrate=true`、`out-of-order=false`、`encoding=UTF-8`；总开关按 profile：
 
@@ -43,20 +43,23 @@
 2. 同步 `src/test/resources/schema*.sql`（基础表→`schema.sql`，模块表→`schema-<module>.sql`），否则测试报"表不存在"；
 3. `mvn -B spring-boot:run` 在 dev 库上真跑一遍（或 `mvn -B test` 验证夹具）；
 4. 提交迁移脚本；**V1/V2 及任何已入库的脚本一律禁止改动** —— 内容变了 checksum 就变，已迁移库 `validate` 会直接启动失败。写错了就再加一个新版本纠正。
+5. **数据种子（`INSERT`）也属于迁移，同样要跑第 3 步的 `mvn test`**：演示数据里写死的固定主键会撞测试里写死的固定主键——主键是全局唯一，"测试数据挂租户 999、演示数据挂租户 1"的租户隔离**管不到主键**。V5 就是这么把 `TableAreaControllerTest` 打出 7 个 `DuplicateKey` 的（它往 `dining_area` 显式插 id=1，V5 也占了这个 id），只能由 V6 把演示种子整体搬到 `8800011` 段纠正。选号前先对照测试侧已占用的固定主键段（dining 域：`1 / 10 / 20 / 996001 / 996101 / 996201 / 996202`；全局另见 `AGENTS.md` 的 901-912、2001/2002、5001-6104、990xxx），并优先选与雪花（2.1e18 量级）和小整数都远离的高位段。
 
 ## 3. V1 基线携带的既有缺陷与处置状态
 
 | # | 缺陷 | 规模（2026-10-16 实测） | 处置 |
 |---|---|---|---|
-| 1 | ~~列注释 GBK 乱码（如 `绉熸埛ID` = "租户ID"）~~ | **766 处 / 81 张表**（候选 767 处 / 82 张表，其中 `store.status` 现网注释「状态 0:停业 1:营业」本身正常，属反向误报，不改——剔除后 `store` 表不再涉及，表数降到 81） | **V3 已修**：按现网列定义原样重写、只替换末尾注释文本。实测对 1878 列的类型/可空/默认值/extra/字符集/排序规则改动数 = 0，仅 766 处 `COLUMN_COMMENT` 变化。表注释无此问题 |
+| 1 | ~~列注释 GBK 乱码（如 `绉熸埛ID` = "租户ID"）~~ **未清零，见处置** | **766 处 / 81 张表**（候选 767 处 / 82 张表，其中 `store.status` 现网注释「状态 0:停业 1:营业」本身正常，属反向误报，不改——剔除后 `store` 表不再涉及，表数降到 81）；**2026-10-17 复测另有 ≥308 列 / 71 表 仍命中乱码，与 V3 的 766 个目标交集为 0** | **V3 已修其所认的 766 处**：按现网列定义原样重写、只替换末尾注释文本。实测对 1878 列的类型/可空/默认值/extra/字符集/排序规则改动数 = 0，仅 766 处 `COLUMN_COMMENT` 变化。表注释无此问题。**残留 308 列 2026-10-17 决定维持现状**（纯元数据、不影响运行）：它们的字节在导入时已丢失（251 列含 U+FFFD），原文不可程序化恢复，详见本节末方法学补充 |
 | 2 | ~~测试夹具缺表~~ | `invoice_record`、`invoice_title` | **已修复 2026-10-16**：新增 `src/test/resources/schema-invoice.sql`，列与索引按基线逐条对齐。当前没有任何测试触达这两张表，故该文件暂不挂 `@Sql`；新增发票用例时按本节约定用 `@Sql` 加载它 |
 | 3 | ~~测试夹具缺二级索引 / 索引命名不一致~~ | 原 203 个 / 87 张表（含 20 个唯一约束）、3 个无名 `UNIQUE KEY(...)` | **已修复 2026-10-16**：16 个夹具文件（`src/test/resources/schema*.sql` 共 20 个：16 个本轮重建 + 3 个原本一致 + 1 个本轮新建）的索引段按 `SHOW CREATE TABLE` 重建；本轮再按 `information_schema.statistics` 复核：**428 条索引行 / 355 个索引 / 129 个 PRIMARY，夹具与基线两侧零差异**（见第 7 节） |
 | 4 | 遗留 3 个手工迁移辅助存储过程 | `add_col_if_not_exists` / `create_index_if_not_exists` / `safe_create_index` | **V4 已处置**：全仓检索确认无调用点（只命中 `db/xinfei.sql` 与 `backups/` 里的定义本身），不在 V1 基线内，对新装库是空操作；定义仍可原样 `db/xinfei.sql` 重建 |
 | 5 | 字符集与整数显示宽度债务 | 列级非 utf8mb4 **仅 1 处**：`notification_template.content`（text / utf8mb3 / utf8mb3_bin，无索引无外键，10 行、最长 51 字节）；表级默认字符集 129 张表全部已是 utf8mb4；整数列 910 个中只有 **12 处 `tinyint(1)`**（其余 898 列已是裸 `int`/`bigint`/`tinyint`；现网第 13 处属 `flyway_schema_history`，非本应用表） | **V4 已收敛那 1 列**：二进制比较语义平移到 `utf8mb4_bin`（不放宽成 `*_0900_ai_ci`）。**`tinyint(1)` 明确保留**：Connector/J 默认 `tinyInt1isBit=true`，`(1)` 是布尔语义标记，抹掉宽度会改变 JDBC 元数据与返回类型，收益不抵风险 |
 | 6 | 运行期 deprecation 告警 | 旧式 `VALUES(col)` 引用 5 处，全在 `V2__seed_minimal.sql`（MySQL 8.0.20 起弃用，8.0.19+ 推荐行别名写法） | **不改**：按第 2 节第 4 条，已入库脚本改动会使 checksum 变化、已迁移库 `validate` 直接启动失败。新写迁移请用行别名形式 |
-| 7 | 7 张无代码引用的孤儿表 | `store`、`store_config`、`menu`、`log`、`print_terminal`、`printer_config`、`printer_log`（129 张表对 122 个 `@TableName`，差集正是这 7 张）。实测全仓无 Java/Mapper SQL 引用：`menu`/`log`/`store` 只命中注释与前端 CSS、`print_terminal`/`printer_config`/`printer_log`/`store_config` 零命中。现网行数：`store_config` 73 行、其余 6 张 0 行；`store` 由 V2 种子写入 1 行（超管门店），但没有任何代码读它 | **只留档不删**（本轮决定）：`DROP TABLE` 属红线操作，且这 7 张同时存在于 V1 基线与测试夹具，删表要连带改夹具与第 7 节表数口径。真要下线请另开 V5+，逐条 `DROP TABLE IF EXISTS`（先备份）、同步从 `schema.sql`/`schema-printer.sql` 移除、并更新本文件与 `docs/数据模型.md` 的表数 |
+| 7 | 7 张无代码引用的孤儿表 | `store`、`store_config`、`menu`、`log`、`print_terminal`、`printer_config`、`printer_log`（129 张表对 122 个 `@TableName`，差集正是这 7 张）。实测全仓无 Java/Mapper SQL 引用：`menu`/`log`/`store` 只命中注释与前端 CSS、`print_terminal`/`printer_config`/`printer_log`/`store_config` 零命中。现网行数：`store_config` 73 行、其余 6 张 0 行；`store` 由 V2 种子写入 1 行（超管门店），但没有任何代码读它 | **只留档不删**（本轮决定）：`DROP TABLE` 属红线操作，且这 7 张同时存在于 V1 基线与测试夹具，删表要连带改夹具与第 7 节表数口径。真要下线请另开 V7+，逐条 `DROP TABLE IF EXISTS`（先备份）、同步从 `schema.sql`/`schema-printer.sql` 移除、并更新本文件与 `docs/数据模型.md` 的表数 |
 
 > 乱码判定的方法学，避免后人重踩：把注释做 GBK↔UTF-8 往返后"反向再编码相等"**对任何文本恒成立**（只要转换不失败），所以它只能当候选生成器，**不能当证据**。真正的判据是用字白名单——取自仓库正文 1162 个文件（`docs/`、`src/main/java`、`backend`、`front`、`static`、`AGENTS.md`、`README.md`、`V2` 种子；**排除一切 `*.sql`**，因为基线与夹具本身就带乱码字；也排除 `.idea/`、`tools/`、`tests/node_modules` 这类含 DB 元数据快照或码表的文件），再把正文分别做 UTF-8→GBK 与 GBK→UTF-8 两种变形，仅在变形侧新出现的字判为"只可能由 mojibake 产生"。候选须满足：注释文本 ≥30% 的汉字落在乱码侧、且复原文本 0 个。此口径下 767 候选判出 766 修、1 留（`store.status`）。
+>
+> 2026-10-17 补充（残留 308 列为什么不能自动补，别再走一遍弯路）：判定脚本 `tests/analyze-gbk-comments.mjs` 改用**逐字符 cp936 编码 + 双向字节相等**作为唯一准入（只承认"能编回去且字节完全一致"的还原），结果 **0 列通过**。三条死路实测为：① MySQL `CONVERT(CAST(CONVERT(c USING gbk) AS BINARY) USING utf8mb4)` 对 251 个含 U+FFFD 的列全回 NULL（字节已在导入时被 `?`/替换符覆盖掉）；② Node `codepage` 1.15.0 的 `CP.utils.encode(936, s)` 对 cp936 表外字符**填 `0x00`** 而不是报错，于是"反解出一段能读的中文"是假象——按词表匹配曾"唯一命中"补出 12 处，逐条核对全是错的（`delivery_order.phone`→`ϵ绰`、`recharge_record.recharge_no`→`充金`、同一句「总金额（下单时快照）」被复制给 `stock_record`/`supplier_settlement`）；③ 用作词典的"干净注释"本身也含非 U+FFFD 的乱码，自污染。所以剩下的处置只有人工二选一：机械清空这些注释，或按列名 + 实体 Java 注释逐表重写。
 
 > 夹具与参照库（V1→V4 终态）的**结构**漂移已归零：表/列/索引/表级与列级排序规则四个维度实测零差异（第 7 节给出
 > 口径与八属性清单）。仍未决定的是要不要更进一步：**让 test profile 直接跑 Flyway 并删掉全部夹具**——更彻底，

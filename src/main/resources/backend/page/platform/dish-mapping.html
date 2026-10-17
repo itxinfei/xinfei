@@ -222,7 +222,7 @@
       },
       // 平台价：null 显 '-'；其余半角 ¥ + 千分位两位小数（formatMoney 内部做 Number 转换，字符串价格也不会崩）
       formatPrice(price) {
-        return price != null ? '¥' + window.RgFormat.formatMoney(price) : '-'
+        return price != null ? '¥' + window.XinfeiFormat.formatMoney(price) : '-'
       },
       /* ── 菜品与营业状态同步 ── */
       syncDish(row, action) {

@@ -234,7 +234,7 @@
         },
         // ========== 数据加载 ==========
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '菜品成本', request: deleteDishCost })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '菜品成本', request: deleteDishCost })
         },
         async fetchData() {
           this.loading = true

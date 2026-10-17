@@ -959,7 +959,7 @@
           if (dates.length === 0) {
             this.trendChart.setOption({ title: { text: '所选时间范围内暂无销售数据',
               left: 'center', top: 'center',
-              textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
+              textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
             this.$nextTick(() => { if (this.trendChart) this.trendChart.resize(); });
             return;
           }
@@ -971,14 +971,14 @@
 
           this.trendChart.setOption({
             title: { show: false },
-            color: [RgPalette.brand600, RgPalette.success],
+            color: [XinfeiPalette.brand600, XinfeiPalette.success],
             tooltip: {
               trigger: 'axis',
-              axisPointer: { type: 'cross', crossStyle: { color: this.cssVar('--gray-999') || RgPalette.gray999 } },
-              backgroundColor: RgPalette.white,
-              borderColor: this.cssVar('--el-border-lighter2') || RgPalette.borderLighter2,
+              axisPointer: { type: 'cross', crossStyle: { color: this.cssVar('--gray-999') || XinfeiPalette.gray999 } },
+              backgroundColor: XinfeiPalette.white,
+              borderColor: this.cssVar('--el-border-lighter2') || XinfeiPalette.borderLighter2,
               borderWidth: 1,
-              textStyle: { color: this.cssVar('--el-text-primary') || RgPalette.textPrimary, fontSize: 13 },
+              textStyle: { color: this.cssVar('--el-text-primary') || XinfeiPalette.textPrimary, fontSize: 13 },
               formatter: function(params) {
                 let html = '<strong>' + params[0].axisValue + '</strong><br/>';
                 params.forEach(function(p) {
@@ -995,7 +995,7 @@
               bottom: 8,
               itemWidth: 14,
               itemHeight: 14,
-              textStyle: { color: this.cssVar('--el-text-regular') || RgPalette.textRegular, fontSize: 13 }
+              textStyle: { color: this.cssVar('--el-text-regular') || XinfeiPalette.textRegular, fontSize: 13 }
             },
             grid: {
               left: 55,
@@ -1006,9 +1006,9 @@
             xAxis: {
               type: 'category',
               data: xData,
-              axisLine: { lineStyle: { color: this.cssVar('--el-border-lighter2') || RgPalette.borderLighter2 } },
+              axisLine: { lineStyle: { color: this.cssVar('--el-border-lighter2') || XinfeiPalette.borderLighter2 } },
               axisTick: { show: false },
-              axisLabel: { color: this.cssVar('--el-text-secondary') || RgPalette.textSecondary, fontSize: 12 }
+              axisLabel: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12 }
             },
             yAxis: [
               {
@@ -1016,17 +1016,17 @@
                 name: '订单量(单)',
                 // 修改点：订单数为整数类目轴，强制刻度间隔 1，避免出现小数刻度
                 minInterval: 1,
-                nameTextStyle: { color: this.cssVar('--el-text-secondary') || RgPalette.textSecondary, fontSize: 12, padding: [0, 40, 0, 0] },
-                axisLabel: { color: this.cssVar('--el-text-secondary') || RgPalette.textSecondary, fontSize: 12 },
-                splitLine: { lineStyle: { color: RgPalette.bgLight, type: 'dashed' } },
+                nameTextStyle: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12, padding: [0, 40, 0, 0] },
+                axisLabel: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12 },
+                splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } },
                 axisLine: { show: false },
                 axisTick: { show: false }
               },
               {
                 type: 'value',
                 name: '营业额(元)',
-                nameTextStyle: { color: this.cssVar('--el-text-secondary') || RgPalette.textSecondary, fontSize: 12, padding: [0, 0, 0, 40] },
-                axisLabel: { color: this.cssVar('--el-text-secondary') || RgPalette.textSecondary, fontSize: 12, formatter: '¥{value}' },
+                nameTextStyle: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12, padding: [0, 0, 0, 40] },
+                axisLabel: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12, formatter: '¥{value}' },
                 splitLine: { show: false },
                 axisLine: { show: false },
                 axisTick: { show: false }
@@ -1040,20 +1040,20 @@
                 barWidth: 28,
                 barGap: '20%',
                 itemStyle: {
-                  borderRadius: [RgPalette.radiusMd, RgPalette.radiusMd, 0, 0],
-                  color: RgPalette.brand
+                  borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
+                  color: XinfeiPalette.brand
                 },
                 label: {
                   show: showPointLabel,
                   position: 'top',
-                  color: RgPalette.brand800,
+                  color: XinfeiPalette.brand800,
                   fontSize: 12,
                   fontWeight: 600,
                   formatter: '{c}'
                 },
                 emphasis: {
                   itemStyle: {
-                    color: RgPalette.brand
+                    color: XinfeiPalette.brand
                   }
                 }
               },
@@ -1065,19 +1065,19 @@
                 smooth: true,
                 symbol: 'emptyCircle',
                 symbolSize: 10,
-                lineStyle: { color: RgPalette.success, width: 3 },
+                lineStyle: { color: XinfeiPalette.success, width: 3 },
                 itemStyle: {
-                  color: RgPalette.success,
-                  borderColor: RgPalette.white,
+                  color: XinfeiPalette.success,
+                  borderColor: XinfeiPalette.white,
                   borderWidth: 2
                 },
                 areaStyle: {
-                  color: RgPalette.successArea
+                  color: XinfeiPalette.successArea
                 },
                 label: {
                   show: showPointLabel,
                   position: 'top',
-                  color: RgPalette.successDeep,
+                  color: XinfeiPalette.successDeep,
                   fontSize: 14,
                   fontWeight: 700,
                   formatter: function(p) { return '¥' + Number(p.value).toFixed(0); }
@@ -1102,8 +1102,8 @@
           }
           const statusData = [];
           const colorPalette = [
-            RgPalette.brand, RgPalette.success, RgPalette.warning, RgPalette.danger, RgPalette.textSecondary,
-            RgPalette.seriesPurple, RgPalette.antdBlue, RgPalette.seriesGreen2, RgPalette.antdOrange, RgPalette.seriesCyan
+            XinfeiPalette.brand, XinfeiPalette.success, XinfeiPalette.warning, XinfeiPalette.danger, XinfeiPalette.textSecondary,
+            XinfeiPalette.seriesPurple, XinfeiPalette.antdBlue, XinfeiPalette.seriesGreen2, XinfeiPalette.antdOrange, XinfeiPalette.seriesCyan
           ];
 
           Object.keys(this.orderStatus).forEach(key => {
@@ -1117,17 +1117,17 @@
 
           const isEmpty = statusData.length === 0;
           if (isEmpty) {
-            statusData.push({ name: '暂无数据', value: 1, itemStyle: { color: this.cssVar('--el-border-lighter2') || RgPalette.borderLighter2 } });
+            statusData.push({ name: '暂无数据', value: 1, itemStyle: { color: this.cssVar('--el-border-lighter2') || XinfeiPalette.borderLighter2 } });
           }
 
           this.statusChart.setOption({
             color: colorPalette,
             tooltip: {
               trigger: 'item',
-              backgroundColor: RgPalette.white,
-              borderColor: this.cssVar('--el-border-lighter2') || RgPalette.borderLighter2,
+              backgroundColor: XinfeiPalette.white,
+              borderColor: this.cssVar('--el-border-lighter2') || XinfeiPalette.borderLighter2,
               borderWidth: 1,
-              textStyle: { color: this.cssVar('--el-text-primary') || RgPalette.textPrimary, fontSize: 13 },
+              textStyle: { color: this.cssVar('--el-text-primary') || XinfeiPalette.textPrimary, fontSize: 13 },
               formatter: function(p) {
                 return '<b>' + p.name + '</b><br/>' + p.marker
                   + ' 订单数：<b>' + p.value + '</b> 单'
@@ -1140,7 +1140,7 @@
               itemWidth: 10,
               itemHeight: 10,
               itemGap: 20,
-              textStyle: { color: this.cssVar('--el-text-regular') || RgPalette.textRegular, fontSize: 12, padding: [2, 0, 0, 0] }
+              textStyle: { color: this.cssVar('--el-text-regular') || XinfeiPalette.textRegular, fontSize: 12, padding: [2, 0, 0, 0] }
             },
             series: [{
               type: 'pie',
@@ -1148,15 +1148,15 @@
               center: ['50%', '46%'],
               avoidLabelOverlap: false,
               itemStyle: {
-                borderRadius: RgPalette.radiusMd,
-                borderColor: RgPalette.white,
+                borderRadius: XinfeiPalette.radiusMd,
+                borderColor: XinfeiPalette.white,
                 borderWidth: 3
               },
               label: {
                 show: !isEmpty,
                 position: 'outside',
                 formatter: '{b}\n{d}%',
-                color: this.cssVar('--el-text-regular') || RgPalette.textRegular,
+                color: this.cssVar('--el-text-regular') || XinfeiPalette.textRegular,
                 fontSize: 13,
                 lineHeight: 18
               },
@@ -1164,7 +1164,7 @@
                 show: !isEmpty,
                 length: 25,
                 length2: 20,
-                lineStyle: { color: this.cssVar('--el-border-base') || RgPalette.borderBase }
+                lineStyle: { color: this.cssVar('--el-border-base') || XinfeiPalette.borderBase }
               },
               emphasis: {
                 scaleSize: 12,

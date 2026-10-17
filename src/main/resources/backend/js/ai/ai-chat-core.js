@@ -725,7 +725,7 @@
                             canvas.height = th;
                             var ctx = canvas.getContext('2d');
                             // JPEG 无透明通道，透明 PNG 转 JPEG 用白色衬底；色值走全局调色板（canvas 回退）
-                            ctx.fillStyle = (window.RgPalette && RgPalette.white) || '#ffffff';
+                            ctx.fillStyle = (window.XinfeiPalette && XinfeiPalette.white) || '#ffffff';
                             ctx.fillRect(0, 0, tw, th);
                             ctx.drawImage(img, 0, 0, tw, th);
                             var blob = dataUrlToBlob(canvas.toDataURL('image/jpeg',

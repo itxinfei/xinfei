@@ -559,7 +559,7 @@
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/supplier/{id}）
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '供应商', request: deleteSupplier })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '供应商', request: deleteSupplier })
         },
         onBatchDeleted() {
           this.loadData(true)

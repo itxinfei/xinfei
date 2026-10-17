@@ -1,3 +1,7 @@
+// 三端共享 imgPath（单一真源，幂等注入）：本文件被部分页面单独引用且这些页面不加载 common.js，
+// 需自带注入，品牌 Logo 路径规范化才能与后台/骑手端走同一条口径
+document.write('<script src="/shared/js/img-path.js?v=20260924"><\/script>');
+
 (function (doc, win) {
     var docEl = doc.documentElement,
         resizeEvt = 'orientationchange' in win ? 'orientationchange' : 'resize';
@@ -57,6 +61,10 @@
     var BRAND_CACHE_KEY = 'xinfeiBrandInfo';
     var BRAND_CACHE_TTL = 60 * 1000;
     var DEFAULT_BRAND = '心飞外卖';
+    var DEFAULT_LOGO_SENTINEL = 'images/common/logo.png';
+    // applyBrand 会被调用多次（先读缓存再发请求），而店名常以默认品牌开头，
+    // 若每次都基于「当前 title」替换会逐次叠加成 心飞外卖11 → 心飞外卖1111，故固定以初始 title 为基准
+    var ORIGINAL_TITLE = doc.title;
 
     function readCache() {
         try {
@@ -74,25 +82,31 @@
         try { win.sessionStorage.setItem(BRAND_CACHE_KEY, JSON.stringify(data)); } catch (e) { /* 隐私模式等场景忽略 */ }
     }
 
-    // 相对路径规范化为上下文绝对路径（/front/page/ 下的页面按相对路径引用图片会 404）
+    // 相对路径交给共享 imgPath：public/ 前缀直出 /uploads/…，其余走 /common/download 鉴权。
+    // 旧写法 '/' + url 会拼成 /images/logos/x.png，而 /images/** 没有资源映射 → 品牌图裂掉
     function normalizeLogo(url) {
         if (!url) return null;
-        if (/^https?:\/\//.test(url) || url.charAt(0) === '/') return url;
-        return '/' + url;
+        return imgPath(url);
+    }
+
+    // RestaurantController 在商家未上传自定义 Logo 时回吐该哨兵值，磁盘上并无此文件（/images/** 也没有资源映射），
+    // 命中哨兵要当作"无自定义 Logo"保留页面写死的默认品牌图，否则替换后是张 404 破图
+    function isLogoSentinel(url) {
+        return !!url && url.replace(/^\//, '') === DEFAULT_LOGO_SENTINEL;
     }
 
     function applyBrand(info) {
         if (!info || !info.name || info.name === DEFAULT_BRAND) return;
         // 1) 标题：各页 <title> 均含写死的"心飞外卖"，运行时替换，免逐页改文件
-        if (doc.title && doc.title.indexOf(DEFAULT_BRAND) !== -1) {
-            doc.title = doc.title.split(DEFAULT_BRAND).join(info.name);
+        if (ORIGINAL_TITLE && ORIGINAL_TITLE.indexOf(DEFAULT_BRAND) !== -1) {
+            doc.title = ORIGINAL_TITLE.split(DEFAULT_BRAND).join(info.name);
         }
         // 2) 头部店名/Logo（元素存在才替换，防御式；首页主体由 Vue 读取 /restaurant/info 数据驱动）
         var nameEl = doc.querySelector('.rc-name');
         if (nameEl && nameEl.textContent.indexOf(DEFAULT_BRAND) !== -1) {
             nameEl.textContent = info.name;
         }
-        var logoUrl = normalizeLogo(info.logo);
+        var logoUrl = isLogoSentinel(info.logo) ? null : normalizeLogo(info.logo);
         if (logoUrl) {
             var logoEl = doc.querySelector('.rc-logo');
             if (logoEl && logoEl.tagName === 'IMG') {

@@ -389,7 +389,7 @@
 
         /* ========== 批量删除：顺序循环单删，汇总成功/失败 ========== */
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({
+          return XinfeiBatchDeleteByOne({
             ids: payload.ids,
             label: '知识库文档',
             request: (id) => aiBackendApi.knowledgeDelete(id)

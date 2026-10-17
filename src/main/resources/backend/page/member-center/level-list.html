@@ -236,7 +236,7 @@
           return ((idx + 1) / max * 100) + '%'
         },
         getBarColor: function(idx) {
-          const colors = [RgPalette.slate200,RgPalette.violet400,RgPalette.indigo400,RgPalette.blue400,RgPalette.emerald400,RgPalette.amber400,RgPalette.orange500,RgPalette.red500]
+          const colors = [XinfeiPalette.slate200,XinfeiPalette.violet400,XinfeiPalette.indigo400,XinfeiPalette.blue400,XinfeiPalette.emerald400,XinfeiPalette.amber400,XinfeiPalette.orange500,XinfeiPalette.red500]
           return colors[idx % colors.length]
         },
         /** 等级阶梯图标：RemixIcon 类名（按阶梯从低→高：种子→铜牌→奖牌→星星→皇冠） */
@@ -307,7 +307,7 @@
         },
         // 批量删除：顺序循环单删接口，汇总成功/失败
         doBatchDelete: function(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '会员等级', request: deleteLevel })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '会员等级', request: deleteLevel })
         },
         deleteHandle: function(id) {
           const self = this

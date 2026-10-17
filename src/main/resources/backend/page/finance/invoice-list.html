@@ -284,7 +284,7 @@
           return s.indexOf('T') > -1 ? s.replace('T', ' ') : s
         },
         formatMoney: function(val) {
-          return window.RgFormat ? window.RgFormat.formatMoney(val) : (val == null ? '0.00' : String(val))
+          return window.XinfeiFormat ? window.XinfeiFormat.formatMoney(val) : (val == null ? '0.00' : String(val))
         },
         // ========== 筛选/刷新 ==========
         onCardClick: function(payload) {

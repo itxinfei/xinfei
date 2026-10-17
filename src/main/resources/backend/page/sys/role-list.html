@@ -352,7 +352,7 @@
       methods: {
         // 修改点：F9 性能 — 全局角色统计不随翻页重算，仅 reloadStats 时纳入 Promise.all
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '角色', request: sysApi.roleDelete })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '角色', request: sysApi.roleDelete })
         },
         async init(reloadStats = true) {
           this.loading = true

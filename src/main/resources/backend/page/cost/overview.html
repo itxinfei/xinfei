@@ -81,7 +81,9 @@
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
   <a href="#main-content" class="skip-link">跳转到主内容</a>
   <div id="app" class="dashboard-container">
-    <main class="container ds-page" id="main-content" role="main" aria-label="页面主要内容">
+    <!-- 修改点(2026-10-17)：主地标统一为 aria-labelledby + sr-only 标题（原 aria-label="页面主要内容" 无信息量） -->
+    <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">成本核算</h1>
       <!-- 统计卡片（统一 <stat-cards> 组件） -->
       <stat-cards :cards="statsCards"></stat-cards>
 
@@ -143,7 +145,7 @@
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/cost.js?v=20260926"></script>
   <script>
-    // 颜色调色板已由 js/components.js 的全局 window.RgPalette 提供（运行时从 tokens.css 读取），
+    // 颜色调色板已由 js/components.js 的全局 window.XinfeiPalette 提供（运行时从 tokens.css 读取），
     // 本页不再定义本地调色板，消除重复并保证与设计令牌一致。
 
     new Vue({
@@ -345,7 +347,7 @@
           if (!this.trendData || !this.trendData.dates || this.trendData.dates.length === 0) {
             this.trendChart.setOption({
               title: { text: '暂无成本趋势数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true)
             return
           }
@@ -388,7 +390,7 @@
                 stack: 'Total',
                 data: this.trendData.materialCosts,
                 areaStyle: {},
-                itemStyle: { color: RgPalette.success }
+                itemStyle: { color: XinfeiPalette.success }
               },
               {
                 name: '人工成本',
@@ -396,7 +398,7 @@
                 stack: 'Total',
                 data: this.trendData.laborCosts,
                 areaStyle: {},
-                itemStyle: { color: RgPalette.warning }
+                itemStyle: { color: XinfeiPalette.warning }
               },
               {
                 name: '其他成本',
@@ -404,13 +406,13 @@
                 stack: 'Total',
                 data: this.trendData.otherCosts,
                 areaStyle: {},
-                itemStyle: { color: RgPalette.textSecondary }
+                itemStyle: { color: XinfeiPalette.textSecondary }
               },
               {
                 name: '总成本',
                 type: 'line',
                 data: this.trendData.totalCosts,
-                itemStyle: { color: RgPalette.linkBlue },
+                itemStyle: { color: XinfeiPalette.linkBlue },
                 lineStyle: { width: 3 }
               }
             ]
@@ -421,7 +423,7 @@
           if (!this.structureData || this.structureData.length === 0) {
             this.structureChart.setOption({
               title: { text: '暂无成本数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true)
             return
           }
@@ -436,7 +438,7 @@
               orient: 'vertical',
               right: '5%',
               top: 'center',
-              textStyle: { fontSize: 12, color: RgPalette.textSecondary }
+              textStyle: { fontSize: 12, color: XinfeiPalette.textSecondary }
             },
             series: [
               {
@@ -446,15 +448,15 @@
                 center: ['35%', '50%'],
                 avoidLabelOverlap: true,
                 itemStyle: {
-                  borderRadius: RgPalette.radiusMd,
-                  borderColor: RgPalette.white,
+                  borderRadius: XinfeiPalette.radiusMd,
+                  borderColor: XinfeiPalette.white,
                   borderWidth: 2
                 },
                 label: {
                   show: true,
                   formatter: '{b}\n{d}%',
                   fontSize: 12,
-                  color: RgPalette.textSecondary
+                  color: XinfeiPalette.textSecondary
                 },
                 labelLine: { show: true, length: 10, length2: 8 },
                 emphasis: {
@@ -477,7 +479,7 @@
           if (!this.rankingData || this.rankingData.length === 0) {
             this.rankingChart.setOption({
               title: { text: '暂无成本排名数据', left: 'center', top: 'center',
-                textStyle: { color: RgPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
+                textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } }
             }, true)
             return
           }
@@ -518,7 +520,7 @@
                 type: 'bar',
                 data: this.rankingData.map(item => item.totalCost).reverse(),
                 itemStyle: {
-                  color: RgPalette.linkBlue
+                  color: XinfeiPalette.linkBlue
                 }
               }
             ]

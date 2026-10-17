@@ -725,7 +725,7 @@
         },
         // 批量删除：顺序循环单删接口，汇总成功/失败
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '配送范围', request: deleteRangeRule })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '配送范围', request: deleteRangeRule })
         },
         async handleDelete(row) {
           try {

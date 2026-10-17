@@ -511,9 +511,9 @@
         })
       },
       methods: {
-        // 最低消费：半角 ¥ + 千分位两位小数（RgFormat 内部 Number 转换，字符串价格也不崩）
+        // 最低消费：半角 ¥ + 千分位两位小数（XinfeiFormat 内部 Number 转换，字符串价格也不崩）
         formatMinAmount: function(val) {
-          return '¥' + window.RgFormat.formatMoney(val)
+          return '¥' + window.XinfeiFormat.formatMoney(val)
         },
         // 修改点：F9 性能 — 列表与全局统计分离，reloadStats=true 才重算（默认 true，分页传 false）
         init: function(reloadStats) {
@@ -701,7 +701,7 @@
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/dining/table/{id}）
         doBatchDelete: function(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '桌台', request: deleteTable })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '桌台', request: deleteTable })
         },
         onBatchDeleted: function() {
           this.init(true)

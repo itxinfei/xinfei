@@ -262,7 +262,7 @@
       methods: {
         /* ========== 数据加载 ========== */
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '消息模板', request: sysApi.templateDelete })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '消息模板', request: sysApi.templateDelete })
         },
         async init(reloadStats = true) {
           this.loading = true

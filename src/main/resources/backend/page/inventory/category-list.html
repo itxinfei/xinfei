@@ -297,7 +297,7 @@
         },
         // 批量删除：顺序循环单删（后端仅 DELETE /api/inventory/material-category/{id}）
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '食材分类', request: deleteMatCategory })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '食材分类', request: deleteMatCategory })
         },
         onBatchDeleted() {
           this.fetchData(true)

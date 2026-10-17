@@ -159,7 +159,7 @@
       },
       methods: {
         doBatchDelete(payload) {
-          return RgBatchDeleteByOne({ ids: payload.ids, label: '部门', request: sysApi.departmentDelete })
+          return XinfeiBatchDeleteByOne({ ids: payload.ids, label: '部门', request: sysApi.departmentDelete })
         },
         async loadData() {
           this.loading = true
