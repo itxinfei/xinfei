@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -76,6 +77,28 @@ public class DatabaseSchemaHealthCheckTest {
         assertTrue(problems.isEmpty(),
                 "数据库健康检查发现 " + problems.size() + " 个问题:\n - "
                         + String.join("\n - ", problems));
+    }
+
+    /**
+     * V7（2026-10-18 §11-7 拍板②）列宽错配回归锁：
+     * dish/setmeal.name varchar(64) 与 dish_flavor value varchar(255) 的合法值
+     * 会复制到这四列，目标列必须不低于来源，否则加购/下单即 1406。
+     */
+    @Test
+    void v7WidenedColumnsMatchSourceWidths() {
+        assertColumnWidth("order_detail", "name", 64);
+        assertColumnWidth("order_detail", "dish_flavor", 255);
+        assertColumnWidth("shopping_cart", "name", 64);
+        assertColumnWidth("shopping_cart", "dish_flavor", 255);
+    }
+
+    private void assertColumnWidth(String table, String column, int expected) {
+        Integer size = jdbcTemplate.queryForObject(
+                "SELECT character_maximum_length FROM information_schema.columns "
+                        + "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?",
+                Integer.class, table, column);
+        assertEquals(Integer.valueOf(expected), size,
+                table + "." + column + " 列宽应为 varchar(" + expected + ")，实际 " + size);
     }
 
     private void warnUniqueIndex(String table, String column) {

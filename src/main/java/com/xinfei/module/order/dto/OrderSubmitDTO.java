@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * 提交订单请求 DTO
@@ -35,9 +36,13 @@ public class OrderSubmitDTO {
     @Schema(description = "订单来源：TAKEOUT-外卖配送，EAT_IN-堂食，SELF_PICKUP-到店自提", example = "TAKEOUT")
     private String source;
 
+    // 修改点（2026-10-18 §11-7 拍板①）：补服务端长度守卫，与列宽 orders.remark varchar(100) 对齐。
+    // C 端 UI 已夹 50 字，此处防的是绕过页面直连 API 的超长输入（1406 回滚族同口径）。
+    @Size(max = 100, message = "订单备注不能超过100个字符")
     @Schema(description = "订单备注")
     private String remark;
 
+    @Size(max = 255, message = "联系电话不能超过255个字符")
     @Schema(description = "联系电话")
     private String phone;
 

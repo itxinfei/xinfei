@@ -182,6 +182,30 @@ public class RefundAuditExecuteControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void testAuditRejectOverlongReason() throws Exception {
+        seedCompletedOrder();
+        long refundId = applyAsUser().getId();
+        asEmployee();
+
+        // §11-7 拍板③（2026-10-18）：拒绝原因服务端 200 字守卫（列为 varchar(500)，
+        // 应用侧契约与退款原因统一取 200）。201 字应被拦下且状态不变，不再穿透到库层。
+        StringBuilder overlong = new StringBuilder();
+        for (int i = 0; i < 201; i++) {
+            overlong.append('超');
+        }
+        mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/refund/user/audit")
+                .param("refundId", String.valueOf(refundId))
+                .param("approve", "false")
+                .param("rejectReason", overlong.toString())
+                .sessionAttr("employee", EMP_ID).sessionAttr("tenantId", 999L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.msg").value("拒绝原因不能超过200个字符"));
+
+        assertEquals("pending", refundStatus(refundId));
+    }
+
+    @Test
     void testReapplyAfterRejected() throws Exception {
         seedCompletedOrder();
         long firstId = applyAsUser().getId();

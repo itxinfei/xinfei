@@ -155,6 +155,31 @@ public class WithdrawalServiceTest {
     }
 
     @Test
+    void rejectWithdrawal_overlongReason_throws() {
+        // §11-7 拍板③（2026-10-18）：驳回原因服务端 200 字守卫（列为 varchar(255)，
+        // 应用侧契约与退款拒绝原因统一取 200），直连 API 超长不再穿透到库层。
+        Member member = memberService.registerByPhone("13900139010", "超长驳回测试");
+        BaseContext.setCurrentId(member.getId());
+        rechargeRecordService.recharge(member.getId(), new BigDecimal("100.00"),
+                BigDecimal.ZERO, "RECHARGE");
+        WithdrawalRequest request = new WithdrawalRequest();
+        request.setUserId(member.getId());
+        request.setAmount(new BigDecimal("100.00"));
+        request.setBankName("中国银行");
+        request.setAccountName("钱七");
+        request.setAccountNumber("6212261234560000");
+        WithdrawalRequest pending = withdrawalService.submitWithdrawal(request);
+
+        StringBuilder overlong = new StringBuilder();
+        for (int i = 0; i < 201; i++) {
+            overlong.append('驳');
+        }
+        CustomException ex = assertThrows(CustomException.class,
+                () -> withdrawalService.rejectWithdrawal(pending.getId(), overlong.toString(), 99L));
+        assertEquals("驳回原因不能超过200个字符", ex.getMessage());
+    }
+
+    @Test
     void approveWithdrawal_nonPending_throws() {
         Member member = memberService.registerByPhone("13900139005", "非待审批测试");
         BaseContext.setCurrentId(member.getId());

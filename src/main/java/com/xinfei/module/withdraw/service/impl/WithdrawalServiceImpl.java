@@ -168,6 +168,11 @@ public class WithdrawalServiceImpl extends ServiceImpl<WithdrawalRequestMapper, 
         if (exist.getAmount() == null || exist.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new CustomException("提现金额异常，无法处理该申请");
         }
+        // 修改点（2026-10-18 §11-7 拍板③）：入参是裸 @RequestParam，补长度守卫，
+        // 与退款拒绝原因 200 字口径一致（列为 varchar(255)，应用侧契约上限取 200）。
+        if (rejectReason != null && rejectReason.trim().length() > 200) {
+            throw new CustomException("驳回原因不能超过200个字符");
+        }
         exist.setStatus("REJECTED");
         exist.setRejectReason(rejectReason);
         exist.setApproveTime(LocalDateTime.now());

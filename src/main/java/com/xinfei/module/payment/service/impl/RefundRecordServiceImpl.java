@@ -604,6 +604,11 @@ public class RefundRecordServiceImpl extends ServiceImpl<RefundRecordMapper, Ref
             if (StringUtils.isBlank(rejectReason)) {
                 throw new CustomException("拒绝时必须填写拒绝原因");
             }
+            // 修改点（2026-10-18 §11-7 拍板③）：补长度守卫，与退款原因 200 字口径一致（列为 varchar(500)，
+            // 应用侧契约上限取 200）；入参是裸 @RequestParam，此前直连 API 可超长穿透。
+            if (rejectReason.trim().length() > 200) {
+                throw new CustomException("拒绝原因不能超过200个字符");
+            }
             record.setStatus(RefundStatus.REJECTED.getCode());
             record.setAuditUserId(BaseContext.getCurrentId());
             record.setAuditTime(LocalDateTime.now());

@@ -56,11 +56,11 @@ CREATE TABLE IF NOT EXISTS orders (
 -- ==================== 订单明细表 ====================
 CREATE TABLE IF NOT EXISTS order_detail (
   id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-  name varchar(50) NOT NULL COMMENT '名称',
+  name varchar(64) NOT NULL COMMENT '名称',
   order_id bigint NOT NULL COMMENT '订单id',
   dish_id bigint NULL DEFAULT NULL COMMENT '菜品id',
   setmeal_id bigint NULL DEFAULT NULL COMMENT '套餐id',
-  dish_flavor varchar(50) NULL DEFAULT NULL COMMENT '口味',
+  dish_flavor varchar(255) NULL DEFAULT NULL COMMENT '口味',
   number int NOT NULL DEFAULT 1 COMMENT '数量',
   amount decimal(10,2) NOT NULL COMMENT '单价',
   remark varchar(255) NULL DEFAULT NULL COMMENT '订单明细备注',
