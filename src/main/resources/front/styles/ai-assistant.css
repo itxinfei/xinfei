@@ -277,7 +277,7 @@
     text-overflow: ellipsis; white-space: nowrap; padding-right: 30px;
 }
 .sidebar-item .conv-time {
-    font-size: 11px; color: var(--color-text-hint); margin-top: 4px;
+    font-size: 12px; color: var(--color-text-hint); margin-top: 4px;
 }
 .sidebar-item .conv-delete {
     position: absolute; right: var(--spacing-sm); top: 50%; transform: translateY(-50%);

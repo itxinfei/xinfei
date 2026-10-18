@@ -333,8 +333,9 @@
   .mc-benefits { grid-template-columns: repeat(4, 1fr); gap: 6rem; padding: 14rem 8rem; }
   .mc-benefit { padding: 8rem 2rem; }
   .mc-benefit-icon { width: 48rem; height: 48rem; }
+  /* 触控补测(2026-10-18)：≤360 再缩到 11rem 在 320 下仅 9.4px，不可读；4 列栅格 12rem 放得下，取消缩字 */
   .mc-benefit-name,
-  .mc-benefit-desc { font-size: 11rem; }
+  .mc-benefit-desc { font-size: 12rem; }
 }
 
 /* 满级进度条满宽（原内联 width:100% 收口） */

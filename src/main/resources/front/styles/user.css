@@ -607,7 +607,7 @@
 }
 #user .member-card .card-level-badge {
   background: var(--surface-white-50);
-  color: var(--color-text-primary); font-size: 11rem; font-weight: 700;
+  color: var(--color-text-primary); font-size: 12rem; font-weight: 700;
   padding: 3rem 10rem; border-radius: var(--radius-round); letter-spacing: 0.5rem;
 }
 #user .member-card .card-level-badge.standard {
@@ -748,6 +748,13 @@
   font-size: 18rem;
   color: var(--gold-text);
   cursor: pointer;
+  /* 18rem 图标裸尺寸 19x20 低于 24px 触控下限：实盒扩到 28rem 并居中字形（不用 ::after，
+     伪元素热区不进 getBoundingClientRect，自动化测不到） */
+  min-width: max(24px, 28rem);
+  min-height: max(24px, 28rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 #user .user-hero .desc { display: flex; flex-direction: column; justify-content: center; }
 #user .user-hero .divName {

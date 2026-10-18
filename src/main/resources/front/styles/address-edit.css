@@ -558,7 +558,8 @@ body.scrollable-page {
   #address_edit .divContent .formGroup .formLabel { font-size: 12rem; }
   #address_edit .divContent .formGroup .nativeInput { padding: 11rem 12rem; font-size: 14rem; }
   #address_edit .divContent .formGroup .nativeTextarea { padding: 11rem 12rem 26rem 12rem; font-size: 14rem; }
-  #address_edit .divContent .formGroup .regionSlot { height: 36rem; line-height: 36rem; font-size: 11rem; }
+  /* 触控补测(2026-10-18)：11rem 在 320 下仅 9.4px 不可读，省宽靠 36rem 高度即可，字号回 12rem */
+  #address_edit .divContent .formGroup .regionSlot { height: 36rem; line-height: 36rem; font-size: 12rem; }
   #address_edit .divContent .formGroup .sexBtn { height: 36rem; line-height: 36rem; font-size: 13rem; }
   #address_edit .divContent .formGroup .tagBtn { min-width: 48rem; height: 32rem; line-height: 32rem; font-size: 12rem; padding: 0 12rem; }
   #address_edit .divFooter { padding: 10rem 14rem; padding-bottom: max(10rem, env(safe-area-inset-bottom)); }

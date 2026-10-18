@@ -161,7 +161,8 @@
   flex-direction: column;
   align-items: center;
   gap: 4rem;
-  font-size: var(--font-size-xs);
+  /* 2026-10-18 触控补测：--font-size-xs(10px) 低于 12px 可读下限，步进标签局部提到 12rem */
+  font-size: 12rem;
   color: var(--color-text-hint);
 }
 
