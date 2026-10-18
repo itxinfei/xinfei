@@ -797,6 +797,12 @@
   .unified-dialog .el-dialog__body {
     padding: 16px;
   }
+  /* 窄屏 el-tabs 标签压缩：减少 padding 让多标签尽量一屏放下，
+     放不下时仍有 Element 自带左右箭头可滚动（如 notification/list 4 标签） */
+  .el-tabs__item {
+    padding: 0 12px;
+    font-size: 13px;
+  }
 }
 
 /* ========== 表格列宽规范 ========== */

@@ -734,3 +734,10 @@
   .composer { border-radius: 12px; }
   .msg-image { max-width: 150px; max-height: 130px; }
 }
+
+/* 超窄带（≤480）：头栏 nowrap 子项总宽超出视口会被 overflow:hidden 无声裁切，
+   隐藏装饰性标题让位给状态徽章与操作按钮 */
+@media (max-width: 480px) {
+  .header-title, .current-conv-title { display: none; }
+  .header-conn { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+}
