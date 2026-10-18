@@ -124,3 +124,8 @@
   transform: scale(0.95);
   opacity: 0.8;
 }
+
+/* 320 超窄带字号下限：14rem 会缩到 11.95px，锁 12px（2026-10-18 触控补测） */
+@media screen and (max-width: 320px) {
+  #no_wifi .divContent .divSub { font-size: 12px; }
+}

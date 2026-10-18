@@ -27,7 +27,7 @@ body { background: var(--bg-page); font-family: var(--font-family-base); }
 .invalid-icon { font-size: 64rem; line-height: 1; color: var(--color-text-hint); display: block; margin-bottom: 16rem; }
 .invalid-title { font-size: 18rem; font-weight: 600; color: var(--color-text-primary); margin-bottom: 8rem; }
 .invalid-desc { font-size: 14rem; line-height: 1.6; color: var(--color-text-hint); margin-bottom: 28rem; }
-.invalid-btn { display: inline-block; height: 44rem; line-height: 44rem; padding: 0 40rem; border-radius: 22rem; background: var(--color-primary); color: var(--color-text-primary); font-size: 16rem; font-weight: 600; text-decoration: none; }
+.invalid-btn { display: inline-block; height: 44px; line-height: 44px; padding: 0 40rem; border-radius: 22rem; background: var(--color-primary); color: var(--color-text-primary); font-size: 16rem; font-weight: 600; text-decoration: none; }
 .invalid-btn:active { opacity: .85; }
 
 /* ========== 菜单主体：左分类竖栏 + 右菜品行 ========== */
@@ -148,3 +148,8 @@ body { background: var(--bg-page); font-family: var(--font-family-base); }
 .submit-success-tip { padding: 20rem 24rem 12rem; text-align: center; }
 .submit-success-tip i { font-size: 48rem; line-height: 1; color: var(--color-success-text); display: block; margin-bottom: 12rem; }
 .submit-success-tip p { margin: 0; font-size: 14rem; line-height: 1.5; color: var(--color-text-secondary); }
+
+/* 320 超窄带字号下限：14rem 会缩到 11.95px，锁 12px（2026-10-18 触控补测） */
+@media screen and (max-width: 320px) {
+  .invalid-desc { font-size: 12px; }
+}

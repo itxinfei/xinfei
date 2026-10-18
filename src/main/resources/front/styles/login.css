@@ -422,14 +422,15 @@ body.login-page {
   opacity: 0.75;
 }
 
-/* 透明热区扩容：44rem 命中区居中覆盖，不改变视觉尺寸 */
+/* 透明热区扩容：44px 命中区居中覆盖，不改变视觉尺寸
+   （px 而非 rem：触控物理尺寸不随视口缩放，320 下 44rem 会缩到 37.5px） */
 #login .codeBtn::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 44rem;
-  height: 44rem;
+  width: 44px;
+  height: 44px;
   transform: translate(-50%, -50%);
 }
 
@@ -578,14 +579,16 @@ body.login-page {
   opacity: 0.7;
 }
 
-/* 自定义勾选框 — 热区精确 44rem：20rem 视觉 + 纵向 12rem×2 扩展（原 22+14×2=50 偏大） */
+/* 自定义勾选框 — 热区精确 44rem：20rem 视觉 + 纵向 12rem×2 扩展（原 22+14×2=50 偏大）
+   横向 12px×2 用 px（触控物理尺寸不随视口缩放，320 下 rem 横向热区会缩破 24px 下限） */
 #login .agreementCheckbox {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
   margin-right: 6rem;
   flex-shrink: 0;
-  padding: 12rem 0;
+  padding: 12rem 12px;
+  margin-left: -12px; /* 左热区 padding 用负 margin 抵消，保持与输入框左缘对齐 */
   margin-top: -12rem;
   margin-bottom: -12rem;
   border-radius: 50%;
@@ -641,6 +644,8 @@ body.login-page {
   font-weight: 600;
   position: relative;
   white-space: nowrap;
+  /* 触控热区：行内文字垂直 padding 6px×2 扩到 ≥24px（WCAG 2.2 AA），透明背景零视觉位移 */
+  padding: 6px 2px;
 }
 
 #login .agreementLink:hover {
@@ -853,7 +858,17 @@ body.login-page {
   }
 
   #login .btnLogin {
-    height: 44rem;
+    /* 44rem 在 320 下缩为 37.5px 跌破触控标准，锁物理 44px（2026-10-18 触控补测） */
+    height: 44px;
+  }
+
+  /* 320 超窄带字号下限：13rem 会缩到 11.09px，中文可读性差，锁 12px */
+  #login .brandSlogan,
+  #login .loginSubHeading,
+  #login .codeBtn,
+  #login .agreementText,
+  #login .agreementLink {
+    font-size: 12px;
   }
 
   #login .divContainer .code-input {
