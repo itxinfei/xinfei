@@ -11,8 +11,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: var(--bg-page); color: var(--text-primary); font-family: var(--font-family-base); }
 
-        /* 卡片网格 */
-        .export-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        /* 卡片网格：minmax(0,1fr) 防内容(日期区间控件)撑爆列宽 */
+        .export-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 
         .export-card {
             background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px;
@@ -38,6 +38,11 @@
         /* 筛选区 */
         .filter-section { margin-bottom: 16px; padding: 12px; background: var(--el-bg-ghost); border-radius: var(--radius-md); }
         .filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        /* Element daterange 默认固定 350px，窄卡片(375px 视口)下 min-content 撑破卡片造成整页横向溢出；
+           小屏下让日期区间独占一行并吃满容器宽度 */
+        @media (max-width: 768px) {
+            .filter-section .el-date-editor { width: 100% !important; max-width: 100%; min-width: 0; }
+        }
         .filter-row:last-child { margin-bottom: 0; }
         .filter-label { font-size:var(--font-size-sm); color: var(--el-text-regular); white-space: nowrap; min-width: 50px; }
         .filter-hint { font-size: var(--font-size-sm); color: var(--text-muted); }
@@ -118,7 +123,7 @@
         .empty-icon-large { font-size: var(--font-size-4xl); margin-bottom: var(--space-2); }
 
         @media (max-width: 1200px) {
-            .export-cards { grid-template-columns: 1fr; }
+            .export-cards { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
 </head>

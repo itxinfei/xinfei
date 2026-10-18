@@ -697,6 +697,10 @@
 .el-dialog--fullscreen { width: 92% !important; }
 .el-dialog--fullscreen .el-dialog__body { max-height: 78vh; overflow-y: auto; }
 
+/* 弹窗窄带护栏：iframe 宽 769~840px（浏览器窗口约 969~1040）时，固定 px 宽的
+   sm/md/lg/xl 弹窗会超出视口，≤768 已有 90%/95% 钳制，此处补齐中间带 */
+.el-dialog { max-width: calc(100vw - 24px); }
+
 /* ========== 弹窗垂直居中（全局生效，revised 2026-07-17） ==========
  * 所有 el-dialog 自动水平+垂直居中。
  * 原理：
