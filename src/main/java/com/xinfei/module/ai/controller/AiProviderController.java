@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public class AiProviderController {
     @RateLimit(maxRequestsPerSecond = 5)
     @Operation(summary = "添加或更新供应商", description = "新增AI供应商配置，若providerCode已存在则自动更新")
     public R<Map<String, Object>> add(
-            @Parameter(description = "供应商配置信息", required = true) @RequestBody AiProviderConfig config) {
+            @Parameter(description = "供应商配置信息", required = true) @Validated @RequestBody AiProviderConfig config) {
         String validation = validateProviderConfig(config);
         if (validation != null) {
             return R.error(validation);
@@ -119,7 +120,7 @@ public class AiProviderController {
     @RateLimit(maxRequestsPerSecond = 5)
     @Operation(summary = "更新供应商配置", description = "修改AI供应商配置信息")
     public R<String> update(
-            @Parameter(description = "供应商配置信息", required = true) @RequestBody AiProviderConfig config) {
+            @Parameter(description = "供应商配置信息", required = true) @Validated @RequestBody AiProviderConfig config) {
         if (config.getId() == null) {
             return R.error("ID不能为空");
         }

@@ -769,6 +769,11 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
                                              BigDecimal actualAmount, BigDecimal changeAmount, Long cashierId,
                                              String cashierName, String remark, String voucherUrl) {
         CashierRecord cashierRecord = new CashierRecord();
+        // 修改点(2026-10-18 §10.4)：/cash-payment 与 /table-payment 的 remark 是裸 @RequestParam，
+        // 实体 @Size 管不到这条链，在统一构建口补 200 字守卫（列宽 cashier_record.remark varchar(200)）
+        if (remark != null && remark.trim().length() > 200) {
+            throw new CustomException("备注不能超过200个字符");
+        }
         cashierRecord.setOrderId(orderId);
         cashierRecord.setOrderNumber(orderNumber);
         cashierRecord.setPayType(payType);

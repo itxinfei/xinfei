@@ -263,7 +263,7 @@
           </el-autocomplete>
         </el-form-item>
         <el-form-item label="备注：">
-          <el-input v-model="createForm.remark" type="textarea" :rows="2" placeholder="盘点备注（可选）" ></el-input>
+          <el-input v-model="createForm.remark" type="textarea" :rows="2" placeholder="盘点备注（可选）" maxlength="200" show-word-limit></el-input>
         </el-form-item>
         <el-form-item label="凭证图片：">
           <rg-image-uploader v-model="createForm.voucherImages" biz-type="stockcheck" :max="5"></rg-image-uploader>

@@ -722,7 +722,7 @@
 
           <!-- 备注 -->
           <div style="margin-bottom: var(--space-5);">
-            <el-input v-model="remark" type="textarea" :rows="2" placeholder="备注（可选）"></el-input>
+            <el-input v-model="remark" type="textarea" :rows="2" placeholder="备注（可选）" maxlength="200" show-word-limit></el-input>
           </div>
 
           <!-- 提交按钮（C.1：快捷键 Enter，未聚焦输入框时触发） -->

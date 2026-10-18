@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -56,7 +57,9 @@ public class CashierRecord implements Serializable {
     @Schema(description = "收银员姓名")
     private String cashierName;
 
+    // 修改点(2026-10-18 §10.4)：cashier_record.remark varchar(200)，POST /record 走 @Valid 实体，补注解即生效
     @Schema(description = "备注")
+    @Size(max = 200, message = "备注不能超过200个字符")
     private String remark;
 
     @Schema(description = "付款凭证图片相对路径（微信/支付宝/银行卡线下收款截图，选填）")

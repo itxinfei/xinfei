@@ -240,7 +240,7 @@
                     :format-tooltip="function(val) { return '温度: ' + val; }"></el-slider>
             </el-form-item>
             <el-form-item label="备注说明">
-                <el-input v-model="form.remark" type="textarea" :rows="2"
+                <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" show-word-limit
                     placeholder="模型特点、适用场景等说明"></el-input>
             </el-form-item>
             <!-- 修改点(2026-09-18)：新增 —— 弹窗内连通测试（编辑模式，使用数据库已保存配置） -->

@@ -199,7 +199,7 @@ public class PurchaseOrderController {
     @PutMapping
     @RateLimit(maxRequestsPerSecond = 10)
     @Operation(summary = "修改采购单", description = "修改采购单的供应商、操作员与备注，已完成/已取消单据不可编辑")
-    public R<String> update(@Parameter(description = "采购单信息（含ID）", required = true) @RequestBody PurchaseOrder order) {
+    public R<String> update(@Parameter(description = "采购单信息（含ID）", required = true) @Validated @RequestBody PurchaseOrder order) {
         if (order == null || order.getId() == null) {
             return R.error("采购单ID不能为空");
         }

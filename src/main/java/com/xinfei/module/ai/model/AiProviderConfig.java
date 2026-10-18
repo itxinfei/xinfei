@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
@@ -83,7 +84,8 @@ public class AiProviderConfig {
     /** 排序号（越小越靠前） */
     private Integer sort;
 
-    /** 备注 */
+    /** 备注（修改点(2026-10-18 §10.4)：列宽 varchar(500)，/add 与 /update 直收实体，配合 @Validated 补守卫） */
+    @Size(max = 500, message = "备注不能超过500个字符")
     private String remark;
 
     // ========== 审计字段 ==========

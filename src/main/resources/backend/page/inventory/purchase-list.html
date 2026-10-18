@@ -249,7 +249,7 @@
           </el-autocomplete>
         </el-form-item>
         <el-form-item label="备注：">
-          <el-input v-model="formData.remark" placeholder="采购备注（可选）" ></el-input>
+          <el-input v-model="formData.remark" placeholder="采购备注（可选）" maxlength="200"></el-input>
         </el-form-item>
         <el-form-item label="凭证图片：">
           <rg-image-uploader v-model="formData.voucherImages" biz-type="purchase" :max="5"></rg-image-uploader>
@@ -294,7 +294,7 @@
           </el-autocomplete>
         </el-form-item>
         <el-form-item label="备注：">
-          <el-input v-model="editForm.remark" placeholder="采购备注（可选）" ></el-input>
+          <el-input v-model="editForm.remark" placeholder="采购备注（可选）" maxlength="200"></el-input>
         </el-form-item>
         <el-form-item label="凭证图片：">
           <rg-image-uploader v-model="editForm.voucherImages" biz-type="purchase" :max="5"></rg-image-uploader>

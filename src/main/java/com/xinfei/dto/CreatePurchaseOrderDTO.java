@@ -23,7 +23,9 @@ public class CreatePurchaseOrderDTO {
     @NotNull(message = "操作人不能为空")
     private String operator;
 
+    // 修改点(2026-10-18 §10.4)：purchase_order.remark varchar(200)，此前无守卫，超长直穿库层 1406
     @Schema(description = "备注", example = "紧急采购")
+    @Size(max = 200, message = "备注不能超过200个字符")
     private String remark;
 
     @Schema(description = "凭证图片（逗号分隔相对路径，最多5张）")

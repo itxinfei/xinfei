@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -49,7 +50,9 @@ public class PurchaseOrder implements Serializable {
     @Schema(description = "操作员", example = "张三")
     private String operator;
 
+    // 修改点(2026-10-18 §10.4)：purchase_order.remark varchar(200)，PUT 更新直收实体，配合 @Validated 生效
     @Schema(description = "备注", example = "紧急采购")
+    @Size(max = 200, message = "备注不能超过200个字符")
     private String remark;
 
     @Schema(description = "凭证图片（逗号分隔相对路径，最多5张）")
