@@ -131,19 +131,19 @@
     <crud-dialog :title="dialog.title" :visible.sync="dialog.visible" size="lg" :show-submit="false" :show-cancel="true" cancel-text="关 闭">
       <div class="task-detail">
         <el-row :gutter="16" class="task-detail__row">
-          <el-col :span="8"><span class="task-detail__label">任务ID：</span>{{ dialog.row.id }}</el-col>
-          <el-col :span="8"><span class="task-detail__label">订单ID：</span>{{ dialog.row.orderId || '-' }}</el-col>
-          <el-col :span="8"><span class="task-detail__label">类型：</span>{{ getTypeTag(dialog.row.taskType).label }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">任务ID：</span>{{ dialog.row.id }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">订单ID：</span>{{ dialog.row.orderId || '-' }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">类型：</span>{{ getTypeTag(dialog.row.taskType).label }}</el-col>
         </el-row>
         <el-row :gutter="16" class="task-detail__row">
-          <el-col :span="8"><span class="task-detail__label">状态：</span>{{ getStatusTag(dialog.row.status).label }}</el-col>
-          <el-col :span="8"><span class="task-detail__label">终端：</span>{{ dialog.row.terminalName || dialog.row.terminalCode }}</el-col>
-          <el-col :span="8"><span class="task-detail__label">门店：</span>{{ dialog.row.storeCode || '-' }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">状态：</span>{{ getStatusTag(dialog.row.status).label }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">终端：</span>{{ dialog.row.terminalName || dialog.row.terminalCode }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">门店：</span>{{ dialog.row.storeCode || '-' }}</el-col>
         </el-row>
         <el-row :gutter="16" class="task-detail__row">
-          <el-col :span="8"><span class="task-detail__label">创建时间：</span>{{ dialog.row.createdTime || '-' }}</el-col>
-          <el-col :span="8"><span class="task-detail__label">领取时间：</span>{{ dialog.row.pulledTime || '-' }}</el-col>
-          <el-col :span="8"><span class="task-detail__label">完成时间：</span>{{ dialog.row.doneTime || '-' }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">创建时间：</span>{{ dialog.row.createdTime || '-' }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">领取时间：</span>{{ dialog.row.pulledTime || '-' }}</el-col>
+          <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">完成时间：</span>{{ dialog.row.doneTime || '-' }}</el-col>
         </el-row>
         <el-row :gutter="16" class="task-detail__row" v-if="dialog.row.errorMsg">
           <el-col :span="24"><span class="task-detail__label">失败原因：</span>{{ dialog.row.errorMsg }}</el-col>

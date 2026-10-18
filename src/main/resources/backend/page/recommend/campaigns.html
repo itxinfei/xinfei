@@ -202,26 +202,26 @@
     >
         <el-form :model="form" :rules="rules" ref="campaignForm" label-width="100px" size="small">
             <el-row :gutter="16">
-                <el-col :span="14">
+                <el-col :span="14" :xs="24">
                     <el-form-item label="活动名称" prop="name">
                         <el-input v-model="form.name" placeholder="请输入活动名称" maxlength="50" show-word-limit ></el-input>
                     </el-form-item>
                 </el-col>
-                <el-col :span="10">
+                <el-col :span="10" :xs="24">
                     <el-form-item label="优先级" prop="priority">
                         <el-input-number v-model="form.priority" :min="0" :max="100" style="width:100%;" ></el-input-number>
                     </el-form-item>
                 </el-col>
             </el-row>
             <el-row :gutter="16">
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="活动类型" prop="campaignType">
                         <el-select v-model="form.campaignType" placeholder="请选择" style="width:100%;">
                             <el-option v-for="(label, val) in typeMap" :key="val" :label="label" :value="Number(val)" ></el-option>
                         </el-select>
                     </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="目标人群" prop="targetType">
                         <el-select v-model="form.targetType" placeholder="请选择" style="width:100%;">
                             <el-option v-for="(label, val) in targetMap" :key="val" :label="label" :value="Number(val)" ></el-option>
@@ -254,12 +254,12 @@
                     :picker-options="datePickerOptions" style="width:100%" />
             </el-form-item>
             <el-row :gutter="16">
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="参与上限">
                         <el-input-number v-model="form.maxParticipants" :min="0" placeholder="0=不限" style="width:100%;" ></el-input-number>
                     </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="关联优惠券">
                         <el-select v-model="form.couponTemplateId" placeholder="可选优惠券" clearable filterable style="width:100%;">
                             <el-option v-for="ct in couponTemplates" :key="ct.id" :label="ct.name" :value="ct.id" ></el-option>

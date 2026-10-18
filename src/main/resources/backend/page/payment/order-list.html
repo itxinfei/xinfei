@@ -131,24 +131,24 @@
         <!-- 交易信息 -->
         <div class="form-section-title">交易信息</div>
         <el-row :gutter="0" class="detail-grid">
-          <el-col :span="12"><span class="dt-label">内部流水号</span><span class="dt-value">{{ detailForm.tradeNo || '—' }}</span></el-col>
-          <el-col :span="12"><span class="dt-label">渠道交易号</span><span class="dt-value">{{ detailForm.channelTradeNo || '—' }}</span></el-col>
-          <el-col :span="12"><span class="dt-label">支付渠道</span><span class="dt-value">{{ channelLabel(detailForm.channel) }}</span></el-col>
-          <el-col :span="12"><span class="dt-label">关联订单号</span><span class="dt-value">{{ detailForm.orderId || '—' }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">内部流水号</span><span class="dt-value">{{ detailForm.tradeNo || '—' }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">渠道交易号</span><span class="dt-value">{{ detailForm.channelTradeNo || '—' }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">支付渠道</span><span class="dt-value">{{ channelLabel(detailForm.channel) }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">关联订单号</span><span class="dt-value">{{ detailForm.orderId || '—' }}</span></el-col>
         </el-row>
 
         <!-- 时间与状态 -->
         <div class="form-section-title">时间信息</div>
         <el-row :gutter="0" class="detail-grid">
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <span class="dt-label">支付状态</span>
             <span class="dt-value">
               <el-tag :type="statusTagType(detailForm.status)" size="small" effect="light">{{ statusLabel(detailForm.status) }}</el-tag>
             </span>
           </el-col>
-          <el-col :span="12"><span class="dt-label">支付时间</span><span class="dt-value">{{ detailForm.paidTime || '—' }}</span></el-col>
-          <el-col :span="12"><span class="dt-label">渠道通知时间</span><span class="dt-value">{{ detailForm.notifyTime || '—' }}</span></el-col>
-          <el-col :span="12"><span class="dt-label">创建时间</span><span class="dt-value">{{ detailForm.createdTime || '—' }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">支付时间</span><span class="dt-value">{{ detailForm.paidTime || '—' }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">渠道通知时间</span><span class="dt-value">{{ detailForm.notifyTime || '—' }}</span></el-col>
+          <el-col :span="12" :xs="24"><span class="dt-label">创建时间</span><span class="dt-value">{{ detailForm.createdTime || '—' }}</span></el-col>
         </el-row>
       </div>
     </crud-dialog>

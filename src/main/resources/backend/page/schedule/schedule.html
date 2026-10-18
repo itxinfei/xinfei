@@ -90,7 +90,7 @@
       <!-- 本周汇总 -->
       <!-- 修改点：同考勤页 —— gutter 24 → 20，负 margin(12px) 与容器内边距(10px) 不匹配会撑出 2px 横向溢出 -->
       <el-row :gutter="20" class="content-row">
-        <el-col :span="16">
+        <el-col :span="16" :xs="24">
           <el-card shadow="never" class="section-card">
             <div class="section-header">
               <h2>本周时段人数分布</h2>
@@ -111,7 +111,7 @@
             </div>
           </el-card>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="8" :xs="24" :sm="12">
           <el-card shadow="never" class="section-card">
             <div class="section-header">
               <h2>排班统计</h2>

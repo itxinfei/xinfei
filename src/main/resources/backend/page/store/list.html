@@ -149,19 +149,19 @@
         <el-form :model="form" ref="formRef" label-width="100px" size="small" :rules="formRules">
             <div class="form-section-title">基本信息</div>
             <el-row :gutter="16">
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="门店名称" prop="storeName">
                         <el-input v-model="form.storeName" placeholder="如：心飞外卖-朝阳店" maxlength="100" ></el-input>
                     </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="门店编码" prop="storeCode">
                         <el-input v-model="form.storeCode" placeholder="如：BJ001" maxlength="32" ></el-input>
                     </el-form-item>
                 </el-col>
             </el-row>
             <el-row :gutter="16">
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="门店类型" prop="storeType">
                         <el-select v-model="form.storeType" style="width:100%">
                             <el-option label="直营总店" :value="1" ></el-option>
@@ -170,7 +170,7 @@
                         </el-select>
                     </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="营业时间" prop="businessHours">
                         <el-time-picker
                             v-model="form.businessHoursRange"
@@ -189,12 +189,12 @@
 
             <div class="form-section-title">联系信息</div>
             <el-row :gutter="16">
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="联系人" prop="contactPerson">
                         <el-input v-model="form.contactPerson" placeholder="门店联系人" maxlength="64" ></el-input>
                     </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="联系电话" prop="contactPhone">
                         <el-input v-model="form.contactPhone" placeholder="联系电话" maxlength="20" ></el-input>
                     </el-form-item>
@@ -206,34 +206,34 @@
 
             <div class="form-section-title">运营设置</div>
             <el-row :gutter="16">
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <el-form-item label="配送半径(m)">
                         <el-input-number v-model="form.deliveryRadius" :min="500" :max="20000" :step="500" controls-position="right" style="width:100%" ></el-input-number>
                     </el-form-item>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <el-form-item label="起送金额">
                         <el-input-number v-model="form.minDeliveryAmount" :min="0" :max="200" :precision="2" :step="1" controls-position="right" style="width:100%" ></el-input-number>
                     </el-form-item>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <el-form-item label="配送费">
                         <el-input-number v-model="form.deliveryFee" :min="0" :max="50" :precision="2" :step="0.5" controls-position="right" style="width:100%" ></el-input-number>
                     </el-form-item>
                 </el-col>
             </el-row>
             <el-row :gutter="16">
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <el-form-item label="支持外卖">
                         <el-switch v-model="form.isDeliveryEnabled" :active-value="1" :inactive-value="0" active-color="var(--color-success)" />
                     </el-form-item>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <el-form-item label="支持堂食">
                         <el-switch v-model="form.isDineInEnabled" :active-value="1" :inactive-value="0" active-color="var(--color-brand-500)" />
                     </el-form-item>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <el-form-item label="门店状态">
                         <el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="停用" />
                     </el-form-item>
@@ -244,12 +244,12 @@
             <template v-if="isCreate">
                 <div class="form-section-title">管理员账号</div>
                 <el-row :gutter="16">
-                    <el-col :span="12">
+                    <el-col :span="12" :xs="24">
                         <el-form-item label="管理员账号" prop="adminUsername">
                             <el-input v-model="form.adminUsername" placeholder="门店管理员登录账号" maxlength="32" ></el-input>
                         </el-form-item>
                     </el-col>
-                    <el-col :span="12">
+                    <el-col :span="12" :xs="24">
                         <el-form-item label="管理员密码" prop="adminPassword">
                             <el-input v-model="form.adminPassword" type="password" placeholder="初始密码，至少6位" maxlength="32" show-password ></el-input>
                         </el-form-item>
@@ -283,30 +283,30 @@
             <!-- 基本信息 -->
             <div class="form-section-title">基本信息</div>
             <el-row :gutter="0" class="detail-grid">
-                <el-col :span="12"><span class="dt-label">门店名称</span><span class="dt-value">{{ detailData.storeName || '—' }}</span></el-col>
-                <el-col :span="12"><span class="dt-label">门店编码</span><span class="dt-value">{{ detailData.storeCode || '—' }}</span></el-col>
-                <el-col :span="12"><span class="dt-label">门店类型</span><span class="dt-value">{{ storeTypeName(detailData.storeType) }}</span></el-col>
-                <el-col :span="12"><span class="dt-label">营业时间</span><span class="dt-value">{{ detailData.businessHours || '—' }}</span></el-col>
-                <el-col :span="12"><span class="dt-label">联系人</span><span class="dt-value">{{ detailData.contactPerson || '—' }}</span></el-col>
-                <el-col :span="12"><span class="dt-label">联系电话</span><span class="dt-value">{{ detailData.contactPhone || '—' }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">门店名称</span><span class="dt-value">{{ detailData.storeName || '—' }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">门店编码</span><span class="dt-value">{{ detailData.storeCode || '—' }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">门店类型</span><span class="dt-value">{{ storeTypeName(detailData.storeType) }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">营业时间</span><span class="dt-value">{{ detailData.businessHours || '—' }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">联系人</span><span class="dt-value">{{ detailData.contactPerson || '—' }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">联系电话</span><span class="dt-value">{{ detailData.contactPhone || '—' }}</span></el-col>
                 <el-col :span="24"><span class="dt-label">门店地址</span><span class="dt-value">{{ detailData.address || '—' }}</span></el-col>
             </el-row>
 
             <!-- 运营设置 -->
             <div class="form-section-title">运营设置</div>
             <el-row :gutter="0" class="detail-grid">
-                <el-col :span="8"><span class="dt-label">配送半径</span><span class="dt-value">{{ detailData.deliveryRadius || 0 }} m</span></el-col>
-                <el-col :span="8"><span class="dt-label">起送金额</span><span class="dt-value">&yen;{{ fmtAmount(detailData.minDeliveryAmount) }}</span></el-col>
-                <el-col :span="8"><span class="dt-label">配送费</span><span class="dt-value">&yen;{{ fmtAmount(detailData.deliveryFee) }}</span></el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12"><span class="dt-label">配送半径</span><span class="dt-value">{{ detailData.deliveryRadius || 0 }} m</span></el-col>
+                <el-col :span="8" :xs="24" :sm="12"><span class="dt-label">起送金额</span><span class="dt-value">&yen;{{ fmtAmount(detailData.minDeliveryAmount) }}</span></el-col>
+                <el-col :span="8" :xs="24" :sm="12"><span class="dt-label">配送费</span><span class="dt-value">&yen;{{ fmtAmount(detailData.deliveryFee) }}</span></el-col>
+                <el-col :span="8" :xs="24" :sm="12">
                     <span class="dt-label">支持外卖</span>
                     <span class="dt-value"><el-tag :type="detailData.isDeliveryEnabled === 1 ? 'success' : 'info'" size="small">{{ detailData.isDeliveryEnabled === 1 ? '支持' : '不支持' }}</el-tag></span>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <span class="dt-label">支持堂食</span>
                     <span class="dt-value"><el-tag :type="detailData.isDineInEnabled === 1 ? 'success' : 'info'" size="small">{{ detailData.isDineInEnabled === 1 ? '支持' : '不支持' }}</el-tag></span>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="8" :xs="24" :sm="12">
                     <span class="dt-label">数据完善度</span>
                     <span class="dt-value"><el-progress :percentage="toNumber(detailData.dataCompleteRate)" :stroke-width="12" :color="progressColor(detailData.dataCompleteRate)"></el-progress></span>
                 </el-col>
@@ -315,8 +315,8 @@
             <!-- 时间信息 -->
             <div class="form-section-title">时间信息</div>
             <el-row :gutter="0" class="detail-grid">
-                <el-col :span="12"><span class="dt-label">创建时间</span><span class="dt-value">{{ formatDateTime(detailData.createTime) }}</span></el-col>
-                <el-col :span="12"><span class="dt-label">更新时间</span><span class="dt-value">{{ formatDateTime(detailData.updateTime) }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">创建时间</span><span class="dt-value">{{ formatDateTime(detailData.createTime) }}</span></el-col>
+                <el-col :span="12" :xs="24"><span class="dt-label">更新时间</span><span class="dt-value">{{ formatDateTime(detailData.updateTime) }}</span></el-col>
             </el-row>
 
             <div class="footer-actions">

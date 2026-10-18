@@ -230,6 +230,9 @@
             shopName: '心飞外卖',
             shopLogo: '',
             sidebarCollapsed: false,
+            // 窄屏(≤1200px)自动收起标记：仅自动收起过的，放宽后才自动展开，不覆盖用户手动选择
+            sidebarAutoCollapsed: false,
+            lastSidebarWidth: window.innerWidth,
             sidebarOpen: false,
             // 全局菜单检索命令面板（Ctrl+K）
             paletteOpen: false,
@@ -509,6 +512,11 @@
           window.addEventListener('keydown', this.handleGlobalKeydown)
           // 修改点：监听窗口尺寸变化与 iframe 内容加载完成事件，动态调整 iframe 高度避免内容被裁剪
           this.initIframeAutoHeight()
+          // 首屏即窄屏（≤1200px）时直接收起侧栏，不等 resize 事件
+          if (window.innerWidth <= 1200 && window.innerWidth > 767) {
+            this.sidebarCollapsed = true
+            this.sidebarAutoCollapsed = true
+          }
           // 修改点：让侧边栏菜单可被键盘操作（详见 initMenuKeyboard 注释）
           this.initMenuKeyboard()
         },
@@ -755,7 +763,8 @@
               this.sidebarOpen = !this.sidebarOpen
               return
             }
-            // 桌面端切换折叠/展开
+            // 桌面端切换折叠/展开；手动操作后不再被自动放宽逻辑覆盖
+            this.sidebarAutoCollapsed = false
             this.sidebarCollapsed = !this.sidebarCollapsed
           },
           closeSidebar() {
@@ -822,6 +831,22 @@
           // 窗口尺寸变化处理（具名注册，便于 beforeDestroy 精确移除监听）
           handleWindowResize() {
             this.resizeIframe()
+            this.autoCollapseSidebar()
+          },
+          // ≤1200px 自动收起侧栏为图标栏、放宽回 >1200px 自动展开（只纠正自动收起的那次）。
+          // 移动端 ≤767px 走抽屉逻辑不干预；阈值只在跨越时动作，带内拖动不反复翻转。
+          autoCollapseSidebar() {
+            const w = window.innerWidth
+            const prev = this.lastSidebarWidth
+            this.lastSidebarWidth = w
+            if (w <= 767 || prev === w) return
+            if (prev > 1200 && w <= 1200 && !this.sidebarCollapsed) {
+              this.sidebarCollapsed = true
+              this.sidebarAutoCollapsed = true
+            } else if (prev <= 1200 && w > 1200 && this.sidebarAutoCollapsed) {
+              this.sidebarCollapsed = false
+              this.sidebarAutoCollapsed = false
+            }
           }
         },
         beforeDestroy() {

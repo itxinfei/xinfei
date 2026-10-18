@@ -224,12 +224,12 @@
             </el-form-item>
             <el-divider content-position="left">生成参数</el-divider>
             <el-row :gutter="16">
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="超时（秒）">
                         <el-input-number v-model="form.timeout" :min="10" :max="300"></el-input-number>
                     </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="12" :xs="24">
                     <el-form-item label="最大 Token">
                         <el-input-number v-model="form.maxTokens" :min="100" :max="32768"></el-input-number>
                     </el-form-item>

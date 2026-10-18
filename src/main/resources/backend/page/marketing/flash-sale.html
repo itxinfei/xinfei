@@ -105,25 +105,25 @@
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="原价(元)">
               <el-input-number v-model="formData.originalPrice" :precision="2" :min="0" disabled style="width: 100%;"></el-input-number>
               <div class="form-tip">选择菜品后自动带出</div>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="秒杀价(元)" prop="flashPrice">
               <el-input-number v-model="formData.flashPrice" :precision="2" :min="0.01" style="width: 100%;"></el-input-number>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="总数量" prop="totalQuantity">
               <el-input-number v-model="formData.totalQuantity" :min="1" :max="9999" style="width: 100%;"></el-input-number>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="每人限购">
               <el-input-number v-model="formData.maxPerUser" :min="0" :max="99" style="width: 100%;"></el-input-number>
               <div class="form-tip">填0表示不限制，1表示每人限购1份</div>

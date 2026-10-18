@@ -84,30 +84,30 @@
     <div v-if="detail" class="po-detail">
       <el-form label-width="100px" size="small">
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="平台">{{ platformTypeText(detail.platformType) }}</el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="状态">
               <el-tag size="small" :type="statusTagType(detail.status)">{{ statusText(detail.status) }}</el-tag>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="平台订单号">{{ detail.platformOrderId || '-' }}</el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="本地订单号">{{ detail.number || '-' }}</el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="金额">¥{{ formatMoney(detail.amount) }}</el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="下单时间">{{ detail.orderTime || '-' }}</el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="顾客">{{ detail.userName || '-' }}</el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" :xs="24">
             <el-form-item label="电话">{{ detail.phone || '-' }}</el-form-item>
           </el-col>
           <el-col :span="24">

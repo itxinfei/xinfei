@@ -679,22 +679,8 @@
 }
 
 /* ========== 弹窗宽度规范 ========== */
-
-/* 小弹窗：简单确认（删除、提示） */
-.container .el-dialog--sm,
-.el-dialog--sm { width: 420px !important; }
-/* 中弹窗：详情展示 */
-.container .el-dialog--md,
-.el-dialog--md { width: 560px !important; }
-/* 大弹窗：常规表单（新增/编辑） */
-.container .el-dialog--lg,
-.el-dialog--lg { width: 720px !important; }
-/* 超大弹窗：复杂表单（订单详情、菜品编辑） */
-.container .el-dialog--xl,
-.el-dialog--xl { width: 840px !important; }
-/* 全屏弹窗：iframe 嵌入、大屏看板等（宽度 92%，top 由 crud-dialog 组件控制为 4vh） */
-.container .el-dialog--fullscreen,
-.el-dialog--fullscreen { width: 92% !important; }
+/* 尺寸真源 = js/components.js 的 DIALOG_SIZE（sm 420 / md 560 / lg 720 / xl 840 / fullscreen 92%），
+   由 crud-dialog 以内联 width 下发；此处禁止再写重复的宽度 !important（双源必漂移）。 */
 .el-dialog--fullscreen .el-dialog__body { max-height: 78vh; overflow-y: auto; }
 
 /* 弹窗窄带护栏：iframe 宽 769~840px（浏览器窗口约 969~1040）时，固定 px 宽的
