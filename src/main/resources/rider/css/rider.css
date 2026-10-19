@@ -399,8 +399,8 @@ html, body {
   color: #fff;
 }
 .van-button--primary:not(.van-button--plain):active {
-  background-color: #7a4f00;
-  border-color: #7a4f00;
+  background-color: var(--color-primary-text-strong-active, #7a4f00);
+  border-color: var(--color-primary-text-strong-active, #7a4f00);
 }
 .van-button--primary.van-button--plain {
   color: var(--color-primary-text-strong, #955f00);
