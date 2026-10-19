@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -59,6 +60,7 @@ public class SubsidyServiceImpl extends ServiceImpl<MealSubsidyAccountMapper, Me
     private DepartmentService departmentService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int grant(SubsidyGrantDTO dto, Long tenantId, Long operatorId) {
         if (dto.getAmount() == null || dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new CustomException("发放金额必须大于0");
@@ -92,6 +94,7 @@ public class SubsidyServiceImpl extends ServiceImpl<MealSubsidyAccountMapper, Me
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void consumeForOrder(Long userId, Long tenantId, Long orderId, BigDecimal amount, String tradeNo) {
         // 幂等先行：同 tradeNo 的核销流水已存在则直接返回（不重复扣款）
         if (recordExists(tradeNo, MealSubsidyRecord.TYPE_CONSUME)) {
@@ -108,6 +111,7 @@ public class SubsidyServiceImpl extends ServiceImpl<MealSubsidyAccountMapper, Me
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void refundForOrder(Long tenantId, Long userId, Long orderId, BigDecimal amount, String refundNo) {
         if (recordExists(refundNo, MealSubsidyRecord.TYPE_REFUND)) {
             log.info("[餐补] 回充幂等跳过: refundNo={}, orderId={}", refundNo, orderId);
