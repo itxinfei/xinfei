@@ -14,15 +14,12 @@
     <script src="../js/icon-fallback.js?v=20260917"></script>
     <!-- 修改点(S0 三端状态机统一)：引入跨端状态字典，作为配送追踪文案单一真源 -->
     <script src="/shared/js/order-status.js?v=20260928"></script>
-    <!-- 修改点(2026-09-17)：配送地图配置——申请到「高德 Web 端(JS API)」Key 后填入 amapKey 并将 enabled 改为 true 即可生效。
-         未配置（enabled=false 或 amapKey 为空）时页面自动降级为「ETA + 距离 + 位置新鲜度」文字版，
+    <!-- 修改点(2026-10-19 百度地图改造 P2)：地图引擎配置不再内联写死 Key（原 window.DELIVERY_MAP_CONFIG 内联高德 Key），
+         改由页面加载后向 /api/map/config 拉取（服务端单源，Key 走 gitignored 配置项）。
+         未配置浏览器端 AK 时接口返回 enabled=false，页面自动降级为「ETA + 距离 + 位置新鲜度」文字版，
          不加载地图 SDK、不渲染地图容器，配送追踪主流程完全不受影响。 -->
-    <script>
-        window.DELIVERY_MAP_CONFIG = {
-            enabled: false,
-            amapKey: ''
-        };
-    </script>
+    <!-- 坐标系转换 util：库内存原始坐标系（WGS-84/GCJ-02），渲染前据此转百度 BD-09 -->
+    <script src="../js/coord.js?v=20261019"></script>
     <!-- 修改点(2026-09-17)：删除 300 行内联样式块 —— 其在 tracking.css 之后加载，
          覆盖了 CSS 中的骑手按钮金色渐变/时间线入场动画（真实视觉回归）。
          状态色变体等独有规则已迁入 tracking.css，其余由 CSS 原样覆盖 -->
@@ -187,11 +184,12 @@
                     missingOrder: false,
                     // 后端透出的"无需配送"原因：EAT_IN=堂食 / NO_DELIVERY=自取或无地址
                     noDeliveryReason: '',
-                    // 修改点(2026-09-17)：配送地图相关状态（未配置 Key 时 mapEnabled 恒为 false）
+                    // 修改点(2026-10-19 百度地图改造 P2)：配送地图相关状态（未配置 Key 时 mapEnabled 恒为 false）
                     mapEnabled: false,
                     mapReady: false,
                     mapInstance: null,
                     riderMarker: null,
+                    riderPolyline: null,
                     riderHasLocation: false
                 };
             },
@@ -274,6 +272,12 @@
                 }
             },
             created() {
+                // 修改点(2026-10-19 百度地图改造 P2)：地图引擎配置改由服务端下发，页面加载即拉取（缓存为 Promise，
+                // 与首屏 loadTracking 的地图初始化竞态由 initDeliveryMap await 该 Promise 消除）
+                var self = this;
+                this._mapCfgReady = getMapConfig()
+                    .then(function (res) { return (res && res.code === 1 && res.data) ? res.data : null; })
+                    .catch(function () { return null; });
                 this.orderId = this.getUrlParam('orderId');
                 if (this.orderId) {
                     this.loadTracking();
@@ -308,7 +312,7 @@
             beforeDestroy(){
                 if(this._pollTimer) clearInterval(this._pollTimer);
                 if(this._onVisibility) document.removeEventListener('visibilitychange', this._onVisibility);
-                // 销毁高德地图实例，释放内部事件/图层资源
+                // 销毁地图实例（百度 BMapGL），释放内部事件/图层资源
                 if(this.mapInstance){
                     try { this.mapInstance.destroy(); } catch(e) {}
                     this.mapInstance = null;
@@ -382,6 +386,7 @@
                             this.$nextTick(function () {
                                 self.initDeliveryMap();
                                 self.updateRiderMarker();
+                                self.updateRiderPolyline();
                             });
                         } else if (!silent) {
                             // 堂食/自取等"本单无需配送"不是加载失败：透出原因、停轮询、不弹失败 Toast
@@ -424,29 +429,43 @@
                     if(this.trackingData.status === 'CANCELLED') return false;
                     return stepStatus === this.trackingData.status;
                 },
-                // 修改点(2026-09-17)：初始化配送地图（动态加载高德 JS API，失败自动降级为文字版）
-                initDeliveryMap() {
-                    var cfg = window.DELIVERY_MAP_CONFIG || {};
-                    if (!cfg.enabled || !cfg.amapKey) {
+                // 修改点(2026-10-19 百度地图改造 P2)：初始化配送地图（动态加载百度 BMapGL，未配置 Key/加载失败自动降级文字版）
+                async initDeliveryMap() {
+                    if (this.mapReady || this._mapLoading) return;
+                    // 等待服务端地图配置就绪（消除与首屏 loadTracking 的竞态）
+                    if (!this._mapCfg) {
+                        this._mapCfg = (this._mapCfgReady ? await this._mapCfgReady : null) || {};
+                    }
+                    var cfg = this._mapCfg;
+                    if (!cfg.enabled || !cfg.ak) {
                         this.mapEnabled = false;
                         return;
                     }
-                    if (this.mapReady || this._mapLoading) return;
                     this.mapEnabled = true;
                     var self = this;
                     this._mapLoading = true;
                     var script = document.createElement('script');
-                    script.src = 'https://webapi.amap.com/maps?v=2.0&key=' + encodeURIComponent(cfg.amapKey);
-                    script.onload = function () {
+                    // 百度 BMapGL 以 callback 参数在 SDK 就绪时回调（比 script.onload 更可靠）
+                    window.__xinfeiBmapReady = function () {
                         self._mapLoading = false;
-                        if (!window.AMap) {
+                        if (!window.BMapGL) { self.mapEnabled = false; return; }
+                        try {
+                            self.mapInstance = new window.BMapGL.Map('deliveryMap');
+                            var loc = self.trackingData && self.trackingData.riderLocation;
+                            var center = (loc && loc.longitude != null && loc.latitude != null)
+                                ? window.XinfeiCoord.toBd09(loc.longitude, loc.latitude, loc.coordSystem)
+                                : [116.404, 39.915];
+                            self.mapInstance.centerAndZoom(new window.BMapGL.Point(center[0], center[1]), 15);
+                            self.mapInstance.enableScrollWheelZoom(true);
+                            self.mapReady = true;
+                            self.updateRiderMarker();
+                            self.updateRiderPolyline();
+                        } catch (e) {
                             self.mapEnabled = false;
-                            return;
                         }
-                        self.mapInstance = new window.AMap.Map('deliveryMap', { zoom: 15 });
-                        self.mapReady = true;
-                        self.updateRiderMarker();
                     };
+                    script.src = 'https://api.map.baidu.com/api?type=webgl&v=1.0&ak='
+                        + encodeURIComponent(cfg.ak) + '&callback=__xinfeiBmapReady';
                     script.onerror = function () {
                         // SDK 加载失败（网络/Key 无效）：降级为文字版，不影响配送追踪主流程
                         self._mapLoading = false;
@@ -454,20 +473,48 @@
                     };
                     document.head.appendChild(script);
                 },
-                // 修改点(2026-09-17)：骑手位置标记刷新（随 15s 轮询同步移动）
+                // 修改点(2026-10-19)：骑手位置标记刷新（库内原始坐标 → BD-09，随 15s 轮询同步移动）
                 updateRiderMarker() {
-                    if (!this.mapReady || !this.mapInstance || !window.AMap) return;
+                    if (!this.mapReady || !this.mapInstance || !window.BMapGL) return;
                     var loc = this.trackingData && this.trackingData.riderLocation;
                     if (!loc || loc.longitude == null || loc.latitude == null) return;
                     this.riderHasLocation = true;
-                    var lngLat = [Number(loc.longitude), Number(loc.latitude)];
+                    var bd = window.XinfeiCoord.toBd09(loc.longitude, loc.latitude, loc.coordSystem);
+                    var point = new window.BMapGL.Point(bd[0], bd[1]);
                     if (this.riderMarker) {
-                        this.riderMarker.setPosition(lngLat);
+                        this.riderMarker.setPosition(point);
                     } else {
-                        this.riderMarker = new window.AMap.Marker({ position: lngLat, title: '骑手位置' });
-                        this.mapInstance.add(this.riderMarker);
+                        this.riderMarker = new window.BMapGL.Marker(point, { title: '骑手位置' });
+                        this.mapInstance.addOverlay(this.riderMarker);
                     }
-                    this.mapInstance.setCenter(lngLat);
+                    this.mapInstance.setCenter(point);
+                },
+                // 修改点(2026-10-19)：绘制骑手近端已走轨迹折线（逐点转 BD-09；点位不足则移除）
+                updateRiderPolyline() {
+                    if (!this.mapReady || !this.mapInstance || !window.BMapGL) return;
+                    var hist = this.trackingData && this.trackingData.riderHistory;
+                    if (this.riderPolyline) {
+                        this.mapInstance.removeOverlay(this.riderPolyline);
+                        this.riderPolyline = null;
+                    }
+                    if (!hist || hist.length < 2) return;
+                    var pts = [];
+                    for (var i = 0; i < hist.length; i++) {
+                        var p = hist[i];
+                        if (p.longitude == null || p.latitude == null) continue;
+                        var bd = window.XinfeiCoord.toBd09(p.longitude, p.latitude, p.coordSystem);
+                        pts.push(new window.BMapGL.Point(bd[0], bd[1]));
+                    }
+                    if (pts.length < 2) return;
+                    // 折线色引设计令牌主色（canvas/覆盖物场景无法用 var()，读取令牌值，回退十六进制）
+                    var accent = '';
+                    try {
+                        accent = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+                    } catch (e) {}
+                    this.riderPolyline = new window.BMapGL.Polyline(pts, {
+                        strokeColor: accent || '#1a73e8', strokeWeight: 5, strokeOpacity: 0.55
+                    });
+                    this.mapInstance.addOverlay(this.riderPolyline);
                 },
                 callRider() {
                     if (this.trackingData && this.trackingData.riderPhone) {

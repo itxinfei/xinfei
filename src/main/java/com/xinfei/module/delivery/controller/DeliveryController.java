@@ -15,6 +15,7 @@ import com.xinfei.module.address.service.AddressBookService;
 import com.xinfei.module.delivery.model.DeliveryOrder;
 import com.xinfei.module.delivery.model.DeliveryTimeRecord;
 import com.xinfei.module.delivery.model.Rider;
+import com.xinfei.module.delivery.model.RiderLocationRecord;
 import com.xinfei.module.delivery.service.DeliveryService;
 import com.xinfei.module.delivery.service.DeliveryTrackingService;
 import com.xinfei.module.order.model.OrderDetail;
@@ -45,6 +46,7 @@ import javax.validation.constraints.Max;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -338,7 +340,12 @@ public class DeliveryController {
             riderLocation.put("longitude", rider.getCurrentLongitude());
             riderLocation.put("latitude", rider.getCurrentLatitude());
             riderLocation.put("lastUpdate", rider.getLastLocationTime());
+            // 坐标系标识：库内存原始 WGS-84（新写入）或历史 GCJ-02，渲染端据此转换到地图引擎系（百度 BD-09）
+            riderLocation.put("coordSystem", rider.getCoordSystem());
             data.put("riderLocation", riderLocation);
+
+            // 骑手近端轨迹点：供追踪页绘制已走路径折线（渲染端逐点转 BD-09）
+            data.put("riderHistory", buildRiderHistory(riderId));
 
             // 骑手与收货点的实时距离（km）
             AddressBook addressBook = addressBookService.getById(order.getAddressBookId());
@@ -361,6 +368,47 @@ public class DeliveryController {
             data.put("estimatedMinutes", estimatedMinutes);
         }
         return data;
+    }
+
+    /** 轨迹回溯窗口（小时）：只取近期点位用于绘制已走路径。 */
+    private static final int RIDER_HISTORY_WINDOW_HOURS = 2;
+    /** 轨迹点上限：防止长时段/高频上报把整段历史塞进响应，超出时保留最新若干点。 */
+    private static final int RIDER_HISTORY_MAX_POINTS = 300;
+
+    /**
+     * 组装骑手近端轨迹点（供追踪页绘制已走路径折线）。
+     * <p>取 {@value #RIDER_HISTORY_WINDOW_HOURS} 小时内、最新不超 {@value #RIDER_HISTORY_MAX_POINTS}
+     * 条点位，逐点带 {@code coordSystem} 供渲染端转 BD-09。租户隔离由 MyBatis-Plus 会话上下文保证；
+     * 依赖 V9 新增的 {@code (tenant_id, rider_id, record_time)} 复合索引。</p>
+     *
+     * @param riderId 骑手 ID
+     * @return 轨迹点列表（按时间升序）；无骑手或无数据时为空列表
+     */
+    private List<Map<String, Object>> buildRiderHistory(Long riderId) {
+        if (riderId == null) {
+            return Collections.emptyList();
+        }
+        LocalDateTime start = LocalDateTime.now().minusHours(RIDER_HISTORY_WINDOW_HOURS);
+        List<RiderLocationRecord> history =
+                deliveryTrackingService.getRiderLocationHistory(riderId, start, LocalDateTime.now());
+        if (history == null || history.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 仅保留最新的上限条数（升序结果取尾部），避免响应体膨胀
+        int from = Math.max(0, history.size() - RIDER_HISTORY_MAX_POINTS);
+        List<Map<String, Object>> points = new ArrayList<>(history.size() - from);
+        for (int i = from; i < history.size(); i++) {
+            RiderLocationRecord r = history.get(i);
+            if (r.getLongitude() == null || r.getLatitude() == null) {
+                continue;
+            }
+            Map<String, Object> pt = new HashMap<>(3);
+            pt.put("longitude", r.getLongitude());
+            pt.put("latitude", r.getLatitude());
+            pt.put("coordSystem", r.getCoordSystem());
+            points.add(pt);
+        }
+        return points;
     }
 
     /**
@@ -439,14 +487,10 @@ public class DeliveryController {
         if (lng1 == null || lat1 == null || lng2 == null || lat2 == null) {
             return null;
         }
-        double earthRadiusKm = 6371.0;
-        double dLat = Math.toRadians(lat2.doubleValue() - lat1.doubleValue());
-        double dLng = Math.toRadians(lng2.doubleValue() - lng1.doubleValue());
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1.doubleValue())) * Math.cos(Math.toRadians(lat2.doubleValue()))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        double km = earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return BigDecimal.valueOf(km).setScale(2, RoundingMode.HALF_UP);
+        // 统一走 GeoUtils 全站唯一 Haversine 口径（米），换算为 km 保留 2 位
+        double meters = com.xinfei.utils.GeoUtils.haversineMeters(
+                lng1.doubleValue(), lat1.doubleValue(), lng2.doubleValue(), lat2.doubleValue());
+        return BigDecimal.valueOf(meters / 1000.0).setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
