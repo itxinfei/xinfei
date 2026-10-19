@@ -1,35 +1,4 @@
-/* 修改点：统一品牌色头部 + 移除ElementUI依赖 */
-#no_wifi .divHead {
-  width: 100%;
-  height: var(--header-height);
-  height: calc(var(--header-height) + constant(safe-area-inset-top));
-  height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  background: var(--color-primary-gradient);
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top, 0px);
-  box-sizing: border-box;
-  position: relative;
-}
-
-#no_wifi .divHead .divTitle {
-  font-size: var(--header-title-font-size);
-  font-family: var(--font-family-title);
-  font-weight: 600;
-  text-align: center;
-  color: var(--color-text-primary);
-  line-height: var(--header-height);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#no_wifi .divHead .divTitle i {
-  position: absolute;
-  left: var(--spacing-lg);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-primary);
-}
+/* 2026-10-19：旧 #no_wifi .divHead 金色头一族死规则已清理（头部已收敛到 cend-shell，见 no-wifi.html 注释） */
 
 #no_wifi .divContent {
   height: calc(100vh - var(--header-height));

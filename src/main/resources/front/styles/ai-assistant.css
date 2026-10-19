@@ -97,12 +97,8 @@
 .ai-container.dark-mode .dish-card img { background: var(--ai-dark-bg-input); }
 .ai-container.dark-mode .dish-card .dish-name { color: var(--ai-dark-text); }
 .ai-container.dark-mode .dish-card .dish-reason {color: var(--ai-dark-text-muted); }
-.ai-container.dark-mode .ai-header--custom {
-    background: var(--ai-dark-bg-header);
-    /* 修改点：暗色头部深底 → 亮色文字，与亮色模式金底深字区分层级 */
-}
+/* 2026-10-19：.ai-header--custom/.divTitle 暗色死规则已清理（头部收敛到 cend-shell，右侧按钮类 .ai-header-btn 仍在线） */
 .ai-container.dark-mode .ai-header-btn { color: var(--ai-dark-text); }
-.ai-container.dark-mode .ai-header--custom .divTitle { color: var(--ai-dark-text); }
 .ai-container.dark-mode .scene-tabs {
     background: var(--ai-dark-bg-elevated);
     border-bottom-color: var(--ai-dark-border);
@@ -208,24 +204,8 @@
 }
 
 /* ========== 顶部栏 ========== */
-/* 修改点(2026-09-17)：头部改为 .divHead 标准结构 + 定制层 .ai-header--custom */
-.ai-header--custom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: var(--spacing-md);
-}
-.ai-header--custom .divTitle {
-    flex: 1;
-    position: relative;
-    padding-left: 0;
-}
-.ai-header--custom .divTitle i {
-    position: absolute;
-    left: 0;
-    margin-left: 0;
-}
-.ai-header-actions { display: flex; gap: var(--spacing-sm); align-items: center; flex-shrink: 0; }
+/* 2026-10-19：旧 .divHead 标准结构定制层 .ai-header--custom/.divTitle 与 .ai-header-actions 死规则已清理
+   （头部 2026-09-26 收敛到 cend-shell，右侧按钮 .ai-header-btn 经 #right 插槽在线使用，予以保留） */
 .ai-header-btn {
     font-size: 18px; cursor: pointer; padding: 4px; opacity: 0.9;
     transition: opacity 0.2s;

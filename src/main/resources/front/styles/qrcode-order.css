@@ -10,11 +10,9 @@ body { background: var(--bg-page); font-family: var(--font-family-base); }
 /* 整页改为不滚动的 App 式竖柱：头部固定，主体内部左右独立滚动 */
 #dine-app { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
-/* 头部返回首页出口（绝对定位于 divHead 右侧，热区≥44rem） */
-.divHead { position: relative; flex-shrink: 0; }
-.qr-home-btn { position: absolute; right: 8rem; top: 0; height: 46rem; min-width: 44rem; display: flex; align-items: center; justify-content: center; font-size: 22rem; color: var(--color-text-primary); text-decoration: none; }
+/* 2026-10-19：旧 .divHead + .qr-home-btn 死规则已清理（返回首页出口由 cend-shell 的 show-home/.cend-navbar__home 承担） */
 
-/* 桌台凭据条（位于 divHead 下方）*/
+/* 桌台凭据条（位于 cend-navbar 下方）*/
 .table-info-bar { flex-shrink: 0; background: var(--bg-card); padding: 8rem 16rem; text-align: center; font-size: var(--font-size-sm); color: var(--color-text-secondary); border-bottom: var(--separator); }
 .table-info-bar i { color: var(--color-primary); margin-right: 4rem; }
 

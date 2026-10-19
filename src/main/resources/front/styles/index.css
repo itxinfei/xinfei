@@ -502,7 +502,7 @@ select {
 }
 
 /* ================================================================
-   cend-shell 导航栏（跨页统一；组件不命中各页 .divHead 金色作用域）
+   cend-shell 导航栏（跨页统一；旧各页 .divHead 金色作用域已于 2026-10-19 清理）
    ================================================================ */
 .cend-navbar {
   position: relative;
@@ -604,28 +604,7 @@ select {
   height: 100%;
 }
 
-/* ---- cend-shell 头部右侧操作区（首页图标等） ---- */
-.divHead {
-  position: relative;
-}
-.divHead-right {
-  position: absolute;
-  right: var(--spacing-lg, 16rem);
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md, 12rem);
-  font-size: var(--font-size-xl, 22rem);
-  /* 修改点(2026-09-24)：原 var(--text-primary, #1a1a1a) 引用了不存在的变量名且 hex 兜底，
-     归并到标准令牌 --color-text-primary */
-  color: var(--color-text-primary);
-  cursor: pointer;
-}
-.divHead-right i:active {
-  opacity: 0.6;
-  transform: scale(0.9);
-}
+/* ---- 2026-10-19：旧 .divHead/.divHead-right 金色头一族死规则已清理（头部统一走 .cend-navbar，见上方 cend-shell 导航栏节） ---- */
 
 /* ---- 通用返回箭头 (纯CSS，无需ElementUI依赖) ---- */
 .icon-back-arrow {
@@ -800,53 +779,10 @@ select {
 }
 
 /* ================================================================
-   通用品牌头兜底样式（无前缀，供未单独定制的页面使用）
-   页面级 #xxx .divHead 选择器优先级更高，会自动覆盖此兜底。
-   覆盖页面：my-evaluations / tracking / frequent-orders
+   通用品牌头兜底样式（2026-10-19 已清理）：旧无前缀 .divHead 一族兜底与
+   「回首页」入口 .head-home-btn 均为死规则（全站 class="divHead"/"head-home-btn"
+   渲染 0 命中，头部统一走 .cend-navbar），故整段移除。
    ================================================================ */
-.divHead {
-  width: 100%;
-  /* 总高 = 头部内容 + 刘海安全区；border-box 下 height 含 padding，内容区仍为 header-height */
-  height: var(--header-height);
-  height: calc(var(--header-height) + constant(safe-area-inset-top));
-  height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  background: var(--color-primary-gradient);
-  padding: 0 var(--spacing-lg);
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top, 0px);
-  /* width:100% 内含左右 padding，content-box 会使头部右侧溢出（客服/发票/消息等页受影响） */
-  box-sizing: border-box;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  flex-shrink: 0;
-}
-
-.divHead .divTitle {
-  font-size: var(--header-title-font-size);
-  font-family: var(--font-family-title);
-  font-weight: 600;
-  text-align: center;
-  color: var(--color-text-primary);
-  line-height: var(--header-height);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.divHead .divTitle .ri-arrow-left-s-line {
-  position: absolute;
-  left: var(--spacing-lg);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-primary);
-  font-size: 18rem;
-  cursor: pointer;
-}
-
-.divHead .divTitle .ri-arrow-left-s-line:active {
-  opacity: 0.6;
-}
 
 /* ================================================================
    桌面端修复：移动端 H5 在宽屏浏览器中居中呈现为“手机”预览，
@@ -1044,31 +980,9 @@ select:focus-visible,
 }
 
 /* ================================================================
-   二级页「回首页」入口（修改点 2026-09-17）
-   底部 Tab 仅覆盖 点餐/订单/我的 三个一级页，二级页（我的评价/常购清单/配送追踪等）
-   此前只能靠左上角返回箭头，深层路径易迷路。对齐大厂做法：二级页提供回到首页入口。
-   依赖 .divHead 为定位元素（sticky/relative 均可作为绝对定位包含块）。
+   二级页「回首页」入口（2026-10-19 已清理）：.head-home-btn 死规则整段移除，
+   全站渲染 0 命中；二级页回首页能力由 cend-shell 的 show-home 属性（.cend-navbar__home）承担。
    ================================================================ */
-.head-home-btn {
-  position: absolute;
-  right: 12rem;
-  /* 头部含顶部安全区，按钮居中于其下的 header-height 内容区（非整个头部），避免被安全区顶偏 */
-  top: 50%;
-  top: calc(constant(safe-area-inset-top) + (var(--header-height) - 32rem) / 2);
-  top: calc(env(safe-area-inset-top, 0px) + (var(--header-height) - 32rem) / 2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32rem;
-  height: 32rem;
-  font-size: 18rem;
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.28);
-  border-radius: var(--radius-round);
-  cursor: pointer;
-  z-index: 2;
-}
-.head-home-btn:active { opacity: 0.7; }
 
 /* 修改点(2026-09-17)：尊重系统「减少动态效果」偏好（可访问性 WCAG 2.3.3） */
 @media (prefers-reduced-motion: reduce) {

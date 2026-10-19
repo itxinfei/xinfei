@@ -7,9 +7,6 @@
   flex-direction: column;
   height: 100vh;
 }
-#csPage .divHead {
-  flex: none;
-}
 .cs-body {
   position: relative;
   flex: 1;

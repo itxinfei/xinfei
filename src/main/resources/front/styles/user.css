@@ -3,82 +3,7 @@
   height: 100%;
 }
 
-/* ---- 头部：统一品牌渐变色 + 增大头像 + 优化布局 ---- */
-#user .divHead {
-  width: 100%;
-  height: 140rem;
-  background: var(--color-primary-gradient);
-  box-sizing: border-box;
-  padding: 0 var(--spacing-lg) var(--spacing-lg);
-}
-
-#user .divHead .divTitle {
-  height: 25rem;
-  font-size: var(--header-title-font-size);
-  font-family: var(--font-family-title);
-  font-weight: 600;
-  text-align: center;
-  color: var(--color-text-primary);
-  line-height: 25rem;
-  /* 2026-09-21：48rem 过度下移 → 安全区 + 8，头高 164→140 */
-  padding-top: calc(env(safe-area-inset-top, 0px) + 8rem);
-  margin-bottom: 12rem;
-  position: relative;
-}
-
-#user .divHead .divTitle i {
-  position: absolute;
-  left: 0;
-  margin-top: 5rem;
-  cursor: pointer;
-  transition: transform var(--transition-fast);
-}
-
-#user .divHead .divTitle i:active {
-  transform: scale(0.85);
-}
-
-#user .divHead .divUser {
-  display: flex;
-  align-items: center;
-}
-
-/* 头像样式已迁移至文件末尾 .avatar-wrap（2026-09-21，自 user.html 内联样式迁入） */
-
-#user .divHead .divUser .desc {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#user .divHead .divUser .desc .divName {
-  font-size: 18rem;
-  font-family: var(--font-family-title);
-  font-weight: 600;
-  text-align: left;
-  color: var(--color-text-primary);
-  margin-bottom: 4rem;
-  display: flex;
-  align-items: center;
-  gap: 8rem;
-}
-
-/* 修改点：动态性别图标 */
-#user .divHead .divUser .desc .divName .gender-icon {
-  width: 18rem;
-  height: 18rem;
-  margin-left: 0;
-  opacity: 0.8;
-}
-
-/* 修改点：手机号脱敏显示 */
-#user .divHead .divUser .desc .divPhone {
-  font-size: 13rem;
-  font-family: var(--font-family-body);
-  font-weight: 400;
-  text-align: left;
-  color: rgba(51, 51, 51, 0.75);
-}
+/* ---- 2026-10-19：旧 #user .divHead 金色头一族死规则已清理（头部 2026-09-26 收敛为 .user-hero + cend-shell，见文件末尾 hero 区） ---- */
 
 /* 滚动交给外层 .user-scroll（cend-shell flex 布局），不再按旧固定头高 140rem 计算 */
 /* 底部留白必须 ≥ Tab 栏高度（50rem + 安全区），否则最后一条内容被 fixed 的 .app-tabbar 遮挡 */
@@ -344,7 +269,7 @@
 /* ================================================================
    新增：头部会员标签（紧跟用户名）
    ================================================================ */
-#user .divHead .divUser .desc .divName .member-tag {
+#user .user-hero .desc .divName .member-tag {
   display: inline-flex;
   align-items: center;
   gap: 3rem;
@@ -361,7 +286,7 @@
   box-shadow: 0 1rem 3rem var(--mask-soft);
 }
 
-#user .divHead .divUser .desc .divName .member-tag i {
+#user .user-hero .desc .divName .member-tag i {
   font-size: 12rem;
 }
 
@@ -697,11 +622,11 @@
 
 /* 窄屏（≤360px）：收窄头部与卡片侧距、用户名字号，保证 320px 不挤压 */
 @media (max-width: 360px) {
-  #user .divHead { padding-left: 14rem; padding-right: 14rem; }
+  #user .user-hero { padding-left: 14rem; padding-right: 14rem; }
   #user .divLinks,
   #user .divOrders { margin-left: 10rem; margin-right: 10rem; }
   #user .divLinks { padding: 0 12rem; }
-  #user .divHead .divUser .desc .divName { font-size: 16rem; }
+  #user .user-hero .divName { font-size: 16rem; }
 }
 #user .edit-profile-icon {
   margin-left: 8rem; font-size: 15rem; color: var(--gold-text);
