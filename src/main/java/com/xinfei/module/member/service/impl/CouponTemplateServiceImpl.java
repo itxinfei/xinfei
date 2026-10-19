@@ -262,11 +262,32 @@ public class CouponTemplateServiceImpl extends ServiceImpl<CouponTemplateMapper,
         int failCount = 0;
         int alreadyIssuedCount = 0;
 
+        // 单次批量预查询：uniqueMemberIds 中已持有该模板券的会员，避免逐个 claimCoupon
+        // 触发「扣库存→插入冲突→回滚→getOne」的多查询链路（uk_member_template 保证幂等）
+        java.util.Set<Long> alreadyHeld = new java.util.HashSet<>();
+        if (!uniqueMemberIds.isEmpty()) {
+            LambdaQueryWrapper<CouponUser> heldQw = new LambdaQueryWrapper<>();
+            heldQw.eq(CouponUser::getTemplateId, templateId);
+            heldQw.in(CouponUser::getMemberId, uniqueMemberIds);
+            heldQw.select(CouponUser::getMemberId);
+            List<CouponUser> heldList = couponUserService.list(heldQw);
+            if (heldList != null) {
+                for (CouponUser cu : heldList) {
+                    alreadyHeld.add(cu.getMemberId());
+                }
+            }
+        }
+
         for (Long memberId : uniqueMemberIds) {
+            if (alreadyHeld.contains(memberId)) {
+                alreadyIssuedCount++;
+                continue;
+            }
             boolean ok = claimCoupon(memberId, templateId);
             if (ok) {
                 successCount++;
             } else {
+                // 未预过滤却失败：区分「并发补插入」与「库存耗尽」
                 LambdaQueryWrapper<CouponUser> qw = new LambdaQueryWrapper<>();
                 qw.eq(CouponUser::getMemberId, memberId);
                 qw.eq(CouponUser::getTemplateId, templateId);
@@ -667,14 +688,6 @@ public class CouponTemplateServiceImpl extends ServiceImpl<CouponTemplateMapper,
         List<CouponTemplate> templates = listByIds(tidList);
         Map<Long, CouponTemplate> templateMap = new LinkedHashMap<>();
         for (CouponTemplate t : templates) { templateMap.put(t.getId(), t); }
-
-        // 查询即将到期 + 已过期的券明细（含 templateId），计算优惠总额
-        LambdaQueryWrapper<CouponUser> fullExpQw = new LambdaQueryWrapper<>();
-        fullExpQw.eq(CouponUser::getStatus, CouponStatus.UNUSED.getValue());
-        fullExpQw.ge(CouponUser::getExpireTime, now);
-        fullExpQw.le(CouponUser::getExpireTime, now.plusDays(days));
-        fullExpQw.select(CouponUser::getTemplateId);
-        List<CouponUser> fullExpiringList = couponUserService.list(fullExpQw);
 
         // 已过期券（含 templateId）的优惠总额
         Map<Long, Integer> expiredCountFinalMap = new LinkedHashMap<>();

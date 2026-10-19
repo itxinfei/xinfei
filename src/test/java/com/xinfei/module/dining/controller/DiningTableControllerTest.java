@@ -42,6 +42,9 @@ public class DiningTableControllerTest {
     private OrderService orderService;
 
     @Autowired
+    private com.xinfei.module.order.service.OrderDetailService orderDetailService;
+
+    @Autowired
     private com.xinfei.test.TestDatabaseCleaner cleaner;
 
     @Autowired
@@ -271,5 +274,76 @@ public class DiningTableControllerTest {
                 "分账后主订单状态应为 SPLIT");
         assertEquals(Integer.valueOf(3), masterAfter.getSplitCount(),
                 "分账后主订单 splitCount 应为 3");
+    }
+
+    /**
+     * getTableDetail 明细批量化改造的回归锁：同一桌台多笔活跃订单，
+     * 菜品明细必须严格按 orderId 分组，禁止批量 in() 查询后跨订单串味。
+     */
+    @Test
+    void testGetTableDetail_groupsDetailsByOrder() throws Exception {
+        // 清理本用例专用测试主键
+        cleaner.cleanByCondition("order_detail", "order_id IN (?, ?)", 996301L, 996302L);
+        cleaner.cleanByCondition("orders", "id IN (?, ?)", 996301L, 996302L);
+
+        Orders o1 = new Orders();
+        o1.setId(996301L);
+        o1.setNumber("ORD-DETAIL-1");
+        o1.setStatus(OrderStatus.ORDERED.getValue());
+        o1.setAmount(new BigDecimal("80.00"));
+        o1.setTenantId(999L);
+        o1.setTableId(996001L);
+        o1.setOrderTime(LocalDateTime.now().minusMinutes(5));
+        orderService.save(o1);
+
+        Orders o2 = new Orders();
+        o2.setId(996302L);
+        o2.setNumber("ORD-DETAIL-2");
+        o2.setStatus(OrderStatus.ORDERED.getValue());
+        o2.setAmount(new BigDecimal("120.00"));
+        o2.setTenantId(999L);
+        o2.setTableId(996001L);
+        o2.setOrderTime(LocalDateTime.now().minusMinutes(1));
+        orderService.save(o2);
+
+        // o1 一笔明细，o2 两笔明细——分组错误的信号最明显
+        orderDetailService.save(buildDetail(996301L, "甲菜"));
+        orderDetailService.save(buildDetail(996302L, "乙菜"));
+        orderDetailService.save(buildDetail(996302L, "丙菜"));
+
+        com.xinfei.module.dining.vo.TableDetailVO detail = diningTableService.getTableDetail(996001L);
+
+        assertNotNull(detail.getOrders());
+        assertEquals(2, detail.getOrders().size(), "应有两笔活跃订单");
+
+        // orders 按下单时间倒序：996302（更晚）在前，996301 在后
+        com.xinfei.module.dining.vo.TableDetailVO.TableOrder first = detail.getOrders().get(0);
+        com.xinfei.module.dining.vo.TableDetailVO.TableOrder second = detail.getOrders().get(1);
+        assertEquals(Long.valueOf(996302L), first.getOrderId());
+        assertEquals(Long.valueOf(996301L), second.getOrderId());
+
+        // 关键：明细按 orderId 归组，不串味
+        assertEquals(2, first.getDetails().size(), "订单996302应有2笔明细");
+        for (com.xinfei.module.order.model.OrderDetail d : first.getDetails()) {
+            assertEquals(Long.valueOf(996302L), d.getOrderId(), "明细不得串到其他订单");
+        }
+        java.util.Set<String> firstNames = new java.util.HashSet<>();
+        for (com.xinfei.module.order.model.OrderDetail d : first.getDetails()) { firstNames.add(d.getName()); }
+        assertTrue(firstNames.contains("乙菜") && firstNames.contains("丙菜"));
+        assertFalse(firstNames.contains("甲菜"));
+
+        assertEquals(1, second.getDetails().size(), "订单996301应有1笔明细");
+        assertEquals("甲菜", second.getDetails().get(0).getName());
+        assertEquals(Long.valueOf(996301L), second.getDetails().get(0).getOrderId());
+    }
+
+    private com.xinfei.module.order.model.OrderDetail buildDetail(Long orderId, String name) {
+        com.xinfei.module.order.model.OrderDetail d = new com.xinfei.module.order.model.OrderDetail();
+        d.setOrderId(orderId);
+        d.setName(name);
+        d.setNumber(1);
+        d.setAmount(new BigDecimal("10.00"));
+        d.setTenantId(999L);
+        return d;
     }
 }

@@ -897,6 +897,28 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
                .orderByDesc(Orders::getOrderTime);
         List<Orders> orders = orderService.list(orderQw);
 
+        // 批量查询所有活跃订单的菜品明细（单次 in() 查询，避免逐订单 N+1）
+        Map<Long, java.util.List<com.xinfei.module.order.model.OrderDetail>> detailsByOrderId =
+                new java.util.HashMap<>();
+        if (!orders.isEmpty()) {
+            java.util.List<Long> orderIds = new java.util.ArrayList<>();
+            for (Orders o : orders) {
+                orderIds.add(o.getId());
+            }
+            LambdaQueryWrapper<com.xinfei.module.order.model.OrderDetail> detailBatchQw =
+                    new LambdaQueryWrapper<>();
+            detailBatchQw.in(com.xinfei.module.order.model.OrderDetail::getOrderId, orderIds);
+            java.util.List<com.xinfei.module.order.model.OrderDetail> allDetails =
+                    orderDetailService.list(detailBatchQw);
+            if (allDetails != null) {
+                for (com.xinfei.module.order.model.OrderDetail d : allDetails) {
+                    detailsByOrderId
+                            .computeIfAbsent(d.getOrderId(), k -> new java.util.ArrayList<>())
+                            .add(d);
+                }
+            }
+        }
+
         java.util.List<com.xinfei.module.dining.vo.TableDetailVO.TableOrder> tableOrders =
                 new java.util.ArrayList<>();
         Integer customerCount = null;
@@ -913,11 +935,8 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
             if (customerCount == null && o.getCustomerCount() != null) {
                 customerCount = o.getCustomerCount();
             }
-            // 查该订单的菜品明细
-            LambdaQueryWrapper<com.xinfei.module.order.model.OrderDetail> detailQw =
-                    new LambdaQueryWrapper<>();
-            detailQw.eq(com.xinfei.module.order.model.OrderDetail::getOrderId, o.getId());
-            to.setDetails(orderDetailService.list(detailQw));
+            // 该订单的菜品明细（来自上面的批量结果分组）
+            to.setDetails(detailsByOrderId.getOrDefault(o.getId(), new java.util.ArrayList<>()));
             tableOrders.add(to);
         }
         vo.setCustomerCount(customerCount);
