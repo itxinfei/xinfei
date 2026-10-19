@@ -206,7 +206,7 @@
           if (document.hidden || !vm.t || vm.t.status === 4 || vm.t.status === 5 || vm.t.status === 6) return;
           vm.loadDetail();
         }, 15000);
-        // 从高德导航经 bfcache 返回本页时重新拉取
+        // 从外部地图（百度）导航经 bfcache 返回本页时重新拉取
         window.addEventListener('pageshow', vm.onPageShow);
       },
       beforeDestroy: function () {
@@ -235,7 +235,7 @@
           });
         },
         onPageShow: function (e) {
-          // bfcache 命中（从高德返回）才刷新，首次加载不重复请求
+          // bfcache 命中（从外部地图返回）才刷新，首次加载不重复请求
           if (e.persisted) { this.loadDetail(); }
         },
         statusTagType: function (s) {

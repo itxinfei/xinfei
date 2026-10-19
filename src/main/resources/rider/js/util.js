@@ -3,7 +3,7 @@ document.write('<script src="/shared/js/img-path.js?v=20260924"><\/script>');
 // 修改点(S0 三端状态机统一)：注入跨端状态字典，作为骑手端状态文案单一真源
 document.write('<script src="/shared/js/order-status.js?v=20260928"><\/script>');
 /**
- * 骑手端通用工具：时间/金额格式化、高德导航 URI、状态文案。
+ * 骑手端通用工具：时间/金额格式化、百度地图导航 URI、状态文案。
  */
 (function (win) {
   function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -31,12 +31,14 @@ document.write('<script src="/shared/js/order-status.js?v=20260928"><\/script>')
     return (isNaN(v) ? 0 : v).toFixed(2);
   }
 
-  /** 高德导航 URI（坐标 GCJ-02，与本系统一致）；坐标缺失时返回空串。 */
+  /** 百度地图调起 URI（地点标注，调起页自带「到这去」以设备当前定位为起点）；坐标 GCJ-02，与本系统一致。坐标缺失时返回空串。 */
   function navUrl(lng, lat, name) {
     if (lng == null || lat == null) return '';
     var n = encodeURIComponent(name || '目的地');
-    return 'https://uri.amap.com/navigation?to=' + lng + ',' + lat + ',' + n +
-      '&mode=car&src=xinfei&coordinate=gaode&callnative=1';
+    // 百度 location 参数顺序为「纬度,经度」；coord_type=gcj02 声明入参坐标系，免申请 ak
+    return 'https://api.map.baidu.com/marker?location=' + lat + ',' + lng +
+      '&title=' + n + '&content=' + n +
+      '&coord_type=gcj02&output=html&zoom=16&src=webapp.xinfei.rider';
   }
 
   /** 手机号脱敏：138****1234；非 11 位原样返回（tel: 链接仍使用真实号码）。 */

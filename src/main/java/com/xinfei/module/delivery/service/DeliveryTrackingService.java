@@ -239,6 +239,24 @@ public interface DeliveryTrackingService extends IService<Rider> {
     int estimateDeliveryTime(BigDecimal distance, Long riderId);
 
     /**
+     * 真实路网 ETA（百度路径规划）。
+     *
+     * <p>起终点坐标按各自 {@code originCoordSystem} 归一到 GCJ-02 后调用百度方向 API；
+     * 未配置服务端 AK 或路径规划失败时，回退按两点直线距离的
+     * {@link #estimateDeliveryTime(BigDecimal, Long)} 启发式估算，绝不阻断。</p>
+     *
+     * @param originLng           起点经度（骑手当前位置）
+     * @param originLat           起点纬度（骑手当前位置）
+     * @param originCoordSystem   起点坐标系（WGS-84/GCJ-02，按 {@code rider.coord_system}）
+     * @param destLng             终点经度（收货地址，GCJ-02）
+     * @param destLat             终点纬度（收货地址，GCJ-02）
+     * @param riderId             骑手 ID（可空，用于回落启发式）
+     * @return 预计送达分钟（含出餐/交付缓冲，四舍五入到 5 分钟档）；坐标不全时返回按现有逻辑的估算
+     */
+    int estimateDeliveryTimeByRoute(BigDecimal originLng, BigDecimal originLat, String originCoordSystem,
+                                     BigDecimal destLng, BigDecimal destLat, Long riderId);
+
+    /**
      * Get delivery time statistics
      *
      * @param startDate Start date

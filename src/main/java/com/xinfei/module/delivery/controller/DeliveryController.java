@@ -333,6 +333,9 @@ public class DeliveryController {
         // 骑手信息与实时位置
         Long riderId = order.getRiderId();
         Rider rider = riderId == null ? null : deliveryTrackingService.getRiderById(riderId);
+        // 收货点坐标（GCJ-02），供下方真实路网 ETA 使用；缺地址簿时为 null 触发按距离/基础回落
+        BigDecimal destLng = null;
+        BigDecimal destLat = null;
         if (rider != null) {
             data.put("riderName", rider.getName());
             data.put("riderPhone", rider.getPhone());
@@ -349,20 +352,23 @@ public class DeliveryController {
 
             // 骑手与收货点的实时距离（km）
             AddressBook addressBook = addressBookService.getById(order.getAddressBookId());
+            if (addressBook != null) {
+                destLng = addressBook.getLongitude();
+                destLat = addressBook.getLatitude();
+            }
             BigDecimal distanceKm = haversineKm(rider.getCurrentLongitude(), rider.getCurrentLatitude(),
-                    addressBook == null ? null : addressBook.getLongitude(),
-                    addressBook == null ? null : addressBook.getLatitude());
+                    destLng, destLat);
             if (distanceKm != null) {
                 data.put("distance", distanceKm);
             }
         }
 
-        // 预计送达分钟：时效记录已有则直接用，否则按距离估算
+        // 预计送达分钟：时效记录已有则直接用；否则优先真实路网 ETA（百度路径规划，AK 缺失内部自动回落直线估算）
         Integer estimatedMinutes = record == null ? null : record.getEstimatedMinutes();
-        if (estimatedMinutes == null && data.get("distance") != null) {
-            BigDecimal distanceMeters = ((BigDecimal) data.get("distance"))
-                    .multiply(new BigDecimal("1000"));
-            estimatedMinutes = deliveryTrackingService.estimateDeliveryTime(distanceMeters, riderId);
+        if (estimatedMinutes == null && rider != null) {
+            estimatedMinutes = deliveryTrackingService.estimateDeliveryTimeByRoute(
+                    rider.getCurrentLongitude(), rider.getCurrentLatitude(), rider.getCoordSystem(),
+                    destLng, destLat, riderId);
         }
         if (estimatedMinutes != null) {
             data.put("estimatedMinutes", estimatedMinutes);

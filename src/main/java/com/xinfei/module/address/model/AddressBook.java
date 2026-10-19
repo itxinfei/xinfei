@@ -113,10 +113,10 @@ public class AddressBook implements Serializable {
     @Size(max = 100, message = "标签不能超过100个字符")
     private String label;
 
-    @Schema(description = "经度（高德坐标系，GCJ-02）", example = "116.397428")
+    @Schema(description = "经度（国测局坐标系，GCJ-02）", example = "116.397428")
     private BigDecimal longitude;
 
-    @Schema(description = "纬度（高德坐标系，GCJ-02）", example = "39.90923")
+    @Schema(description = "纬度（国测局坐标系，GCJ-02）", example = "39.90923")
     private BigDecimal latitude;
 
     @Schema(description = "是否默认地址：0=否，1=是", example = "1")

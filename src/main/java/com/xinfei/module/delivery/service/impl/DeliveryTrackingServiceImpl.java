@@ -49,6 +49,9 @@ public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider>
     @Autowired
     private DeliveryTimeRecordMapper timeRecordMapper;
 
+    @Autowired
+    private com.xinfei.utils.GeoUtils geoUtils;
+
     // ==================== Rider Management ====================
 
     /**
@@ -672,6 +675,42 @@ public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider>
 
         // Round to nearest 5 minutes
         return ((baseTime + 4) / 5) * 5;
+    }
+
+    /**
+     * 处理 estimate delivery time by route（真实路网 ETA，百度路径规划；失败回落直线启发式）。
+     * @param originLng 参数 originLng
+     * @param originLat 参数 originLat
+     * @param originCoordSystem 参数 originCoordSystem
+     * @param destLng 参数 destLng
+     * @param destLat 参数 destLat
+     * @param riderId 参数 riderId
+     * @return 返回结果
+     */
+    @Override
+    public int estimateDeliveryTimeByRoute(BigDecimal originLng, BigDecimal originLat, String originCoordSystem,
+                                           BigDecimal destLng, BigDecimal destLat, Long riderId) {
+        // 坐标不全：无距离可估，退回基础时长口径（等价启发式 distance=null：10+5=15）
+        if (originLng == null || originLat == null || destLng == null || destLat == null) {
+            return estimateDeliveryTime(null, riderId);
+        }
+        // 骑手原始系（WGS-84/历史 GCJ-02）归一到 GCJ-02；终点地址簿已是 GCJ-02
+        double[] gcjOrigin = com.xinfei.utils.GeoUtils.toGcj02(
+                originLng.doubleValue(), originLat.doubleValue(), originCoordSystem);
+        BigDecimal gcjOriginLng = BigDecimal.valueOf(gcjOrigin[0]);
+        BigDecimal gcjOriginLat = BigDecimal.valueOf(gcjOrigin[1]);
+
+        com.xinfei.utils.GeoUtils.RouteResult route =
+                geoUtils.routePlanning(gcjOriginLng, gcjOriginLat, destLng, destLat, "driving");
+        if (route != null) {
+            // 真实路网耗时（分钟）+ 取餐/交付缓冲 5 分钟，四舍五入到 5 分钟档
+            int total = route.getDurationMinutes() + 5;
+            return ((total + 4) / 5) * 5;
+        }
+        // 降级（未配 AK / 调用失败）：按归一后直线距离走原启发式，不阻断
+        double meters = com.xinfei.utils.GeoUtils.haversineMeters(
+                gcjOrigin[0], gcjOrigin[1], destLng.doubleValue(), destLat.doubleValue());
+        return estimateDeliveryTime(BigDecimal.valueOf(meters), riderId);
     }
 
     /**
