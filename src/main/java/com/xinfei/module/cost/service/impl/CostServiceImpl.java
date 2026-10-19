@@ -441,43 +441,47 @@ public class CostServiceImpl extends ServiceImpl<DishCostMapper, DishCost> imple
         List<BigDecimal> otherCosts = new ArrayList<>();
         List<BigDecimal> totalCosts = new ArrayList<>();
 
-        // 按天统计
+        // 一次查出区间内全部成本记录再按天分桶：原实现逐天各查一次，N 天 = N 次往返。
+        LambdaQueryWrapper<CostRecord> costQw = new LambdaQueryWrapper<>();
+        costQw.ge(CostRecord::getCostDate, startDate.atStartOfDay());
+        costQw.le(CostRecord::getCostDate, endDate.atTime(23, 59, 59));
+        if (tenantId != null) {
+            costQw.eq(CostRecord::getTenantId, tenantId);
+        }
+        List<CostRecord> costRecords = costRecordMapper.selectList(costQw);
+
+        // day -> [material, labor, other]
+        Map<LocalDate, BigDecimal[]> byDay = new HashMap<>();
+        for (CostRecord record : costRecords) {
+            BigDecimal amount = record.getAmount();
+            Integer costType = record.getCostType();
+            if (amount == null || costType == null || record.getCostDate() == null) {
+                continue;
+            }
+            LocalDate day = record.getCostDate().toLocalDate();
+            BigDecimal[] bucket = byDay.computeIfAbsent(day,
+                    k -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO});
+            if (costType == 1) {
+                bucket[0] = bucket[0].add(amount);
+            } else if (costType == 2) {
+                bucket[1] = bucket[1].add(amount);
+            } else if (costType == 3) {
+                bucket[2] = bucket[2].add(amount);
+            }
+        }
+
+        // 按日历天补零输出，保证日期轴连续（与原逐天实现结果一致）
         LocalDate current = startDate;
         while (!current.isAfter(endDate)) {
             dates.add(current.toString());
-
-            // 查询当天成本记录
-            LambdaQueryWrapper<CostRecord> costQw = new LambdaQueryWrapper<>();
-            costQw.ge(CostRecord::getCostDate, current.atStartOfDay());
-            costQw.le(CostRecord::getCostDate, current.atTime(23, 59, 59));
-            if (tenantId != null) {
-                costQw.eq(CostRecord::getTenantId, tenantId);
-            }
-            List<CostRecord> costRecords = costRecordMapper.selectList(costQw);
-
-            BigDecimal dayMaterialCost = BigDecimal.ZERO;
-            BigDecimal dayLaborCost = BigDecimal.ZERO;
-            BigDecimal dayOtherCost = BigDecimal.ZERO;
-
-            for (CostRecord record : costRecords) {
-                BigDecimal amount = record.getAmount();
-                if (amount == null) {
-                    continue;
-                }
-                if (record.getCostType() == 1) {
-                    dayMaterialCost = dayMaterialCost.add(amount);
-                } else if (record.getCostType() == 2) {
-                    dayLaborCost = dayLaborCost.add(amount);
-                } else if (record.getCostType() == 3) {
-                    dayOtherCost = dayOtherCost.add(amount);
-                }
-            }
-
-            materialCosts.add(dayMaterialCost);
-            laborCosts.add(dayLaborCost);
-            otherCosts.add(dayOtherCost);
-            totalCosts.add(dayMaterialCost.add(dayLaborCost).add(dayOtherCost));
-
+            BigDecimal[] bucket = byDay.get(current);
+            BigDecimal dayMaterial = bucket == null ? BigDecimal.ZERO : bucket[0];
+            BigDecimal dayLabor = bucket == null ? BigDecimal.ZERO : bucket[1];
+            BigDecimal dayOther = bucket == null ? BigDecimal.ZERO : bucket[2];
+            materialCosts.add(dayMaterial);
+            laborCosts.add(dayLabor);
+            otherCosts.add(dayOther);
+            totalCosts.add(dayMaterial.add(dayLabor).add(dayOther));
             current = current.plusDays(1);
         }
 

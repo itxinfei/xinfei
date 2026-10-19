@@ -1382,28 +1382,31 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
         LocalDate current = startDate.toLocalDate();
         LocalDate end = endDate.toLocalDate();
 
+        // 一次查出区间内全部收银记录再按天分桶：原实现逐天各查一次，N 天 = N 次往返。
+        // 边界仍按「日历天」归一（起点取当日 00:00、终点取 LocalTime.MAX），与原逐天查询结果一致。
+        LambdaQueryWrapper<CashierRecord> qw = new LambdaQueryWrapper<>();
+        qw.ge(CashierRecord::getCashierTime, current.atStartOfDay());
+        qw.le(CashierRecord::getCashierTime, end.atTime(LocalTime.MAX));
+        if (tenantId != null) {
+            qw.eq(CashierRecord::getTenantId, tenantId);
+        }
+        List<CashierRecord> records = cashierRecordMapper.selectList(qw);
+
+        Map<LocalDate, BigDecimal> amountByDay = new HashMap<>();
+        Map<LocalDate, Integer> countByDay = new HashMap<>();
+        for (CashierRecord record : records) {
+            if (record.getCashierTime() == null) {
+                continue;
+            }
+            LocalDate day = record.getCashierTime().toLocalDate();
+            amountByDay.merge(day, record.getAmount() != null ? record.getAmount() : BigDecimal.ZERO, BigDecimal::add);
+            countByDay.merge(day, 1, Integer::sum);
+        }
+
         while (!current.isAfter(end)) {
             dates.add(current.toString());
-
-            // 查询当天收银记录
-            LambdaQueryWrapper<CashierRecord> qw = new LambdaQueryWrapper<>();
-            qw.ge(CashierRecord::getCashierTime, current.atStartOfDay());
-            qw.le(CashierRecord::getCashierTime, current.atTime(LocalTime.MAX));
-            if (tenantId != null) {
-                qw.eq(CashierRecord::getTenantId, tenantId);
-            }
-            List<CashierRecord> records = cashierRecordMapper.selectList(qw);
-
-            BigDecimal dayAmount = BigDecimal.ZERO;
-            int dayCount = 0;
-            for (CashierRecord record : records) {
-                dayAmount = dayAmount.add(record.getAmount() != null ? record.getAmount() : BigDecimal.ZERO);
-                dayCount++;
-            }
-
-            amounts.add(dayAmount);
-            counts.add(dayCount);
-
+            amounts.add(amountByDay.getOrDefault(current, BigDecimal.ZERO));
+            counts.add(countByDay.getOrDefault(current, 0));
             current = current.plusDays(1);
         }
 

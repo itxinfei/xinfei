@@ -489,9 +489,9 @@ public class FinanceControllerTest {
     }
 
     @Test
-    @DisplayName("19. 获取利润趋势")
+    @DisplayName("19. 获取利润趋势 - 跨天分桶 + 空日补零")
     void testGetProfitTrend() throws Exception {
-        // 插入两天的利润数据
+        // 插入两天的利润数据，查询区间含 8-27（无数据日）验证补零
         insertProfitAnalysis(LocalDate.of(2026, 8, 25), new BigDecimal("1000.00"),
                 new BigDecimal("600.00"), new BigDecimal("400.00"));
         insertProfitAnalysis(LocalDate.of(2026, 8, 26), new BigDecimal("1500.00"),
@@ -504,9 +504,14 @@ public class FinanceControllerTest {
                         .param("endDate", "2026-08-27"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(1))
-                .andExpect(jsonPath("$.data").isMap())
-                .andExpect(jsonPath("$.data.dates").isArray())
-                .andExpect(jsonPath("$.data.revenues").isArray());
+                .andExpect(jsonPath("$.data.dates[0]").value("2026-08-25"))
+                .andExpect(jsonPath("$.data.dates[1]").value("2026-08-26"))
+                .andExpect(jsonPath("$.data.dates[2]").value("2026-08-27"))
+                .andExpect(jsonPath("$.data.revenues[0]").value(1000.00))
+                .andExpect(jsonPath("$.data.revenues[1]").value(1500.00))
+                .andExpect(jsonPath("$.data.revenues[2]").value(0))   // 空日补零
+                .andExpect(jsonPath("$.data.profits[0]").value(400.00))
+                .andExpect(jsonPath("$.data.profits[2]").value(0));
     }
 
     @Test

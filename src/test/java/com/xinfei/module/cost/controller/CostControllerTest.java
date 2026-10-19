@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -207,6 +208,46 @@ public class CostControllerTest {
         assertThat(list).hasSize(1);
         assertThat(list.get(0).getCostType()).isEqualTo(1);
         assertThat(list.get(0).getAmount()).isEqualByComparingTo(new BigDecimal("25.00"));
+    }
+
+    @Test
+    @DisplayName("成本趋势 - 跨天分桶 + 空日补零（区间单次查询，替代逐天查询）")
+    @SuppressWarnings("unchecked")
+    void testGetCostTrend_multiDayBucketing() {
+        saveCost(1, new BigDecimal("100.00"), LocalDateTime.of(2026, 8, 26, 9, 0));   // 食材
+        saveCost(2, new BigDecimal("50.00"), LocalDateTime.of(2026, 8, 26, 10, 0));    // 人工
+        saveCost(3, new BigDecimal("200.00"), LocalDateTime.of(2026, 8, 28, 11, 0));   // 其他
+
+        Map<String, Object> trend =
+                costService.getCostTrend(LocalDate.of(2026, 8, 26), LocalDate.of(2026, 8, 28), 999L);
+
+        List<String> dates = (List<String>) trend.get("dates");
+        assertThat(dates).containsExactly("2026-08-26", "2026-08-27", "2026-08-28");
+
+        List<BigDecimal> material = (List<BigDecimal>) trend.get("materialCosts");
+        List<BigDecimal> labor = (List<BigDecimal>) trend.get("laborCosts");
+        List<BigDecimal> other = (List<BigDecimal>) trend.get("otherCosts");
+        List<BigDecimal> total = (List<BigDecimal>) trend.get("totalCosts");
+
+        assertThat(material.get(0)).isEqualByComparingTo("100.00");
+        assertThat(labor.get(0)).isEqualByComparingTo("50.00");
+        assertThat(material.get(1)).isEqualByComparingTo("0");   // 空日补零
+        assertThat(labor.get(1)).isEqualByComparingTo("0");
+        assertThat(other.get(1)).isEqualByComparingTo("0");
+        assertThat(total.get(0)).isEqualByComparingTo("150.00");
+        assertThat(total.get(1)).isEqualByComparingTo("0");
+        assertThat(other.get(2)).isEqualByComparingTo("200.00");
+        assertThat(total.get(2)).isEqualByComparingTo("200.00");
+    }
+
+    private void saveCost(int costType, BigDecimal amount, LocalDateTime costDate) {
+        CostRecord r = new CostRecord();
+        r.setCostType(costType);
+        r.setAmount(amount);
+        r.setCostDate(costDate);
+        r.setRefId(101L);
+        r.setRefName("趋势测试");
+        costService.saveCostRecord(r);
     }
 
     @Test

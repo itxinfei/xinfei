@@ -401,17 +401,42 @@ public class ReportServiceImpl implements ReportService {
      */
     private List<Map<String, Object>> collectDailyRows(LocalDate start, LocalDate end, Long tenantId) {
         List<Map<String, Object>> dailyRows = new ArrayList<>();
+
+        // 一次查出区间内全部订单再按天聚合：原实现逐天调用 getDailyReport，N 天 = N 次查询。
+        LambdaQueryWrapper<Orders> orderQw = new LambdaQueryWrapper<>();
+        orderQw.between(Orders::getOrderTime, start.atStartOfDay(), end.atTime(LocalTime.MAX));
+        if (tenantId != null) {
+            orderQw.eq(Orders::getTenantId, tenantId);
+        }
+        List<Orders> allOrders = orderService.list(orderQw);
+
+        // day -> [totalOrders, completedOrders, cancelledOrders]；营业额只计已完成订单
+        Map<LocalDate, int[]> countByDay = new HashMap<>();
+        Map<LocalDate, BigDecimal> amountByDay = new HashMap<>();
+        for (Orders o : allOrders) {
+            if (o.getOrderTime() == null) {
+                continue;
+            }
+            LocalDate day = o.getOrderTime().toLocalDate();
+            int[] c = countByDay.computeIfAbsent(day, k -> new int[3]);
+            c[0]++;
+            Integer status = o.getStatus();
+            if (status != null && status == Orders.STATUS_COMPLETED) {
+                c[1]++;
+                amountByDay.merge(day, o.getAmount() != null ? o.getAmount() : BigDecimal.ZERO, BigDecimal::add);
+            } else if (status != null && status == Orders.STATUS_CANCELLED) {
+                c[2]++;
+            }
+        }
+
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            Map<String, Object> report = getDailyReport(date.toString(), tenantId);
+            int[] c = countByDay.getOrDefault(date, new int[3]);
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("date", date.toString());
-            row.put("totalOrders", report.get("totalOrders") != null
-                    ? Integer.parseInt(report.get("totalOrders").toString()) : 0);
-            row.put("totalAmount", report.get("totalAmount") != null ? report.get("totalAmount").toString() : "0");
-            row.put("completedOrders", report.get("completedOrders") != null
-                    ? Integer.parseInt(report.get("completedOrders").toString()) : 0);
-            row.put("cancelledOrders", report.get("cancelledOrders") != null
-                    ? Integer.parseInt(report.get("cancelledOrders").toString()) : 0);
+            row.put("totalOrders", c[0]);
+            row.put("totalAmount", amountByDay.getOrDefault(date, BigDecimal.ZERO).toString());
+            row.put("completedOrders", c[1]);
+            row.put("cancelledOrders", c[2]);
             dailyRows.add(row);
         }
         return dailyRows;

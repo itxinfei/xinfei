@@ -735,11 +735,19 @@ public class FinanceServiceImpl extends ServiceImpl<WithdrawalApplicationMapper,
         List<BigDecimal> costs = new ArrayList<>();
         List<BigDecimal> profits = new ArrayList<>();
 
+        // 一次查出区间内全部利润分析再按天取用：原实现逐天调用 getProfitAnalysisByDate，N 天 = N 次 selectOne。
+        Map<LocalDate, ProfitAnalysis> byDate = new HashMap<>();
+        for (ProfitAnalysis analysis : getProfitAnalysisList(startDate, endDate, tenantId)) {
+            if (analysis.getAnalysisDate() != null) {
+                byDate.putIfAbsent(analysis.getAnalysisDate(), analysis);
+            }
+        }
+
         LocalDate current = startDate;
         while (!current.isAfter(endDate)) {
             dates.add(current.toString());
 
-            ProfitAnalysis analysis = getProfitAnalysisByDate(current, tenantId);
+            ProfitAnalysis analysis = byDate.get(current);
             if (analysis != null) {
                 revenues.add(analysis.getTotalRevenue());
                 costs.add(analysis.getTotalCost());

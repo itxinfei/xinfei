@@ -322,21 +322,35 @@ public class CashierControllerTest {
     }
 
     @Test
-    @DisplayName("13. 获取收银趋势")
+    @DisplayName("13. 获取收银趋势 - 跨天分桶 + 空日补零")
     void testGetCashierTrend() throws Exception {
-        CashierRecord record = createCashierRecord(8001L, "ORD009", 4,
-                new BigDecimal("150.00"), new BigDecimal("150.00"));
-        record.setCashierTime(LocalDateTime.of(2026, 8, 27, 9, 0, 0));
-        cashierService.saveCashierRecord(record);
+        // 8-26 两笔(100+50=150, count2)，8-27 空，8-28 一笔(200, count1)
+        CashierRecord r1 = createCashierRecord(8001L, "ORD009", 4, new BigDecimal("100.00"), new BigDecimal("100.00"));
+        r1.setCashierTime(LocalDateTime.of(2026, 8, 26, 9, 0, 0));
+        cashierService.saveCashierRecord(r1);
+        CashierRecord r2 = createCashierRecord(8002L, "ORD010", 4, new BigDecimal("50.00"), new BigDecimal("50.00"));
+        r2.setCashierTime(LocalDateTime.of(2026, 8, 26, 10, 0, 0));
+        cashierService.saveCashierRecord(r2);
+        CashierRecord r3 = createCashierRecord(8003L, "ORD011", 4, new BigDecimal("200.00"), new BigDecimal("200.00"));
+        r3.setCashierTime(LocalDateTime.of(2026, 8, 28, 11, 0, 0));
+        cashierService.saveCashierRecord(r3);
 
         mockMvc.perform(get("/cashier/trend")
                         .sessionAttr("employee", 1L)
                         .sessionAttr("tenantId", 999L)
-                        .param("startDate", "2026-08-27 00:00:00")
-                        .param("endDate", "2026-08-27 23:59:59"))
+                        .param("startDate", "2026-08-26 00:00:00")
+                        .param("endDate", "2026-08-28 23:59:59"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(1))
-                .andExpect(jsonPath("$.data").isMap());
+                .andExpect(jsonPath("$.data.dates[0]").value("2026-08-26"))
+                .andExpect(jsonPath("$.data.dates[1]").value("2026-08-27"))
+                .andExpect(jsonPath("$.data.dates[2]").value("2026-08-28"))
+                .andExpect(jsonPath("$.data.amounts[0]").value(150.00))
+                .andExpect(jsonPath("$.data.amounts[1]").value(0))   // 空日补零
+                .andExpect(jsonPath("$.data.amounts[2]").value(200.00))
+                .andExpect(jsonPath("$.data.counts[0]").value(2))
+                .andExpect(jsonPath("$.data.counts[1]").value(0))
+                .andExpect(jsonPath("$.data.counts[2]").value(1));
     }
 
     @Test
