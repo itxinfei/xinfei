@@ -1482,3 +1482,15 @@ CREATE TABLE IF NOT EXISTS work_schedule (
   KEY idx_schedule_emp_date (employee_id,schedule_date),
   KEY idx_schedule_tenant (tenant_id)
 );
+
+-- sms_send_log（V8，验证码防盗刷台账，全局表不参与租户隔离，见 tenant-tables.yml）
+CREATE TABLE IF NOT EXISTS sms_send_log (
+  id bigint NOT NULL AUTO_INCREMENT,
+  phone varchar(20) NOT NULL,
+  scene varchar(32) NOT NULL DEFAULT 'login',
+  send_date date NOT NULL,
+  create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_sms_send_log_phone_date (phone,send_date),
+  KEY idx_sms_send_log_send_date (send_date)
+);

@@ -88,6 +88,12 @@ public class TestDatabaseCleaner {
                 // 跨店同步表用 source_tenant_id 表达来源
                 jdbcTemplate.update("DELETE FROM store_sync_log WHERE source_tenant_id = ?", TEST_TENANT_ID);
                 break;
+            case "sms_send_log":
+                // 验证码发送台账：手机号无天然 test_ 命名空间，但本表由 V8 建表起才有、
+                // 从未被 db/xinfei.sql 演示导入灌过数据，内容纯属当日运维流水；
+                // 按 send_date=今天 条件删除即等价于「清掉本次测试写入」，非无 WHERE 全表删。
+                jdbcTemplate.update("DELETE FROM sms_send_log WHERE send_date = CURDATE()");
+                break;
             default:
                 throw new IllegalStateException("表 [" + table + "] 无 tenant_id 列，cleanTables 禁止在单库下全表删除。"
                         + "请用 cleanByCondition 显式指定命名空间条件，并在 TestDatabaseCleaner.cleanGlobalTable 登记。");

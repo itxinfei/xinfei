@@ -9,6 +9,7 @@ import com.xinfei.common.R;
 import com.xinfei.dto.SendMsgDTO;
 import com.xinfei.dto.UserLoginDTO;
 import com.xinfei.module.user.model.User;
+import com.xinfei.module.user.service.SmsSendLogService;
 import com.xinfei.module.user.service.UserService;
 import com.xinfei.utils.SMSUtils;
 import com.xinfei.common.RateLimit;
@@ -65,6 +66,14 @@ public class UserController {
 
     /** 每手机号每日验证码发送上限 */
     private static final int SMS_DAILY_LIMIT = 10;
+
+    /** 短信发送台账服务（V8 防盗刷 DB 权威兜底，见功能测试报告 §13） */
+    @Autowired
+    private SmsSendLogService smsSendLogService;
+
+    /** 全站验证码每日总发送上限（熔断线，防同号轮换 / 脚本化批量盗刷拖垮短信通道费用） */
+    @Value("${xinfei.sms.daily-total-cap:500}")
+    private long smsDailyTotalCap;
 
     /**
      * 当前激活的Spring Profile（dev / prod），用于区分开发/生产环境
@@ -128,9 +137,17 @@ public class UserController {
         }
 
         // 按手机号全局频控：60s 冷却（跨会话生效）+ 每日上限，防短信轰炸
-        if (smsRateLimitRedisTemplate != null) {
+        // Redis 计数键（sms:cooldown/sms:daily/sms:total:daily）为快路径，但 §13 已定性：
+        // 开发机 Redis 无 AOF，重启即清空计数键，让 SMS_DAILY_LIMIT 形同虚设。故 Redis 之外
+        // 必须叠加一层不依赖 Redis 的 sms_send_log DB 权威兜底计数（见 V8__add_sms_send_log.sql），
+        // 三层顺序：会话级 60s（防连点） -> Redis 冷却/快计数（省 DB 往返） -> DB 权威每日计数（重启免疫）。
+        boolean redisAvailable = smsRateLimitRedisTemplate != null;
+        String cooldownKey = null;
+        String dailyKey = null;
+        long redisDailyCount = 0;
+        if (redisAvailable) {
             try {
-                String cooldownKey = "sms:cooldown:" + phone;
+                cooldownKey = "sms:cooldown:" + phone;
                 Boolean first = smsRateLimitRedisTemplate.opsForValue()
                         .setIfAbsent(cooldownKey, "1", java.time.Duration.ofMillis(CODE_INTERVAL_MS));
                 if (!Boolean.TRUE.equals(first)) {
@@ -138,22 +155,65 @@ public class UserController {
                     long remaining = ttl != null && ttl > 0 ? ttl : CODE_INTERVAL_MS / 1000;
                     return R.error("请" + remaining + "秒后再试");
                 }
-                String dailyKey = "sms:daily:" + phone + ":"
+                dailyKey = "sms:daily:" + phone + ":"
                         + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
                 Long sent = smsRateLimitRedisTemplate.opsForValue().increment(dailyKey);
                 if (sent != null && sent == 1L) {
                     smsRateLimitRedisTemplate.expire(dailyKey, java.time.Duration.ofHours(25));
                 }
-                if (sent != null && sent > SMS_DAILY_LIMIT) {
-                    // 超限时回滚本次计数，避免冷却键已占位但短信未发导致的额度虚耗
-                    smsRateLimitRedisTemplate.delete(cooldownKey);
-                    return R.error("今日验证码发送次数已达上限，请明日再试");
-                }
+                redisDailyCount = sent == null ? 0 : sent;
             } catch (Exception e) {
-                // Redis 异常降级：仅保留会话级 60s 检查，不阻断发送链路
-                log.warn("验证码Redis频控异常，降级会话检查: phone={}, error={}",
+                // Redis 异常降级：冷却/快计数不可用，仍依赖会话级 60s 检查 + 下面的 DB 权威兜底
+                redisAvailable = false;
+                log.warn("验证码Redis频控异常，降级会话检查+DB兜底: phone={}, error={}",
                         LogMaskUtils.maskPhone(phone), e.getMessage());
             }
+        }
+
+        // DB 权威兜底：按手机号每日计数（不依赖 Redis 持久化，重启后依然有效）
+        long dbDailyCount;
+        try {
+            dbDailyCount = smsSendLogService.countTodayByPhone(phone);
+        } catch (Exception e) {
+            dbDailyCount = 0;
+            log.warn("验证码发送台账查询异常，本次仅依赖Redis计数: phone={}, error={}",
+                    LogMaskUtils.maskPhone(phone), e.getMessage());
+        }
+        // Redis 计数已含本次（INCR 在发送前）故用 >；DB 计数只记录发送成功的历史条数，
+        // 本次尚未落库，用 >= 才等价（已有10条=第11次请求应拒绝）。两者任一判定超限即拒绝。
+        if (redisDailyCount > SMS_DAILY_LIMIT || dbDailyCount >= SMS_DAILY_LIMIT) {
+            rollbackSmsCooldown(cooldownKey);
+            return R.error("今日验证码发送次数已达上限，请明日再试");
+        }
+
+        // 全站每日总量熔断：防同一 IP / 脚本轮换手机号批量轰炸，拖垮短信通道费用
+        if (redisAvailable) {
+            String totalKey = "sms:total:daily:"
+                    + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+            try {
+                Long totalSent = smsRateLimitRedisTemplate.opsForValue().increment(totalKey);
+                if (totalSent != null && totalSent == 1L) {
+                    smsRateLimitRedisTemplate.expire(totalKey, java.time.Duration.ofHours(25));
+                }
+                if (totalSent != null && totalSent > smsDailyTotalCap) {
+                    rollbackSmsCooldown(cooldownKey);
+                    return R.error("系统今日验证码发送总量已达上限，请稍后再试");
+                }
+            } catch (Exception e) {
+                redisAvailable = false;
+                log.warn("验证码全局总量Redis计数异常，降级DB兜底: error={}", e.getMessage());
+            }
+        }
+        long dbTotalCount;
+        try {
+            dbTotalCount = smsSendLogService.countTodayTotal();
+        } catch (Exception e) {
+            dbTotalCount = 0;
+            log.warn("验证码发送台账总量查询异常，本次跳过全局DB兜底: error={}", e.getMessage());
+        }
+        if (dbTotalCount >= smsDailyTotalCap) {
+            rollbackSmsCooldown(cooldownKey);
+            return R.error("系统今日验证码发送总量已达上限，请稍后再试");
         }
 
         // 修改点(2026-09-18)：验证码由 4 位改为 6 位，与 C 端登录页前端正则 /^\d{6}$/ 对齐
@@ -174,9 +234,38 @@ public class UserController {
             log.error("短信发送失败，phone={}, error={}", LogMaskUtils.maskPhone(phone), e.getMessage(), e);
             session.removeAttribute("smsCode_" + phone);
             session.removeAttribute("smsCode_" + phone + "_time");
+            rollbackSmsCooldown(cooldownKey);
             return R.error("短信发送失败，请稍后再试");
         }
+
+        // 发送成功后落台账（DB 权威兜底计数的数据源）；落库失败不影响本次发送结果，
+        // 仅告警——真实发送已完成，回滚反而会让用户以为没收到。
+        try {
+            smsSendLogService.record(phone, "login");
+        } catch (Exception e) {
+            log.warn("验证码发送台账落库失败（不影响本次发送结果）: phone={}, error={}",
+                    LogMaskUtils.maskPhone(phone), e.getMessage());
+        }
         return R.success("短信发送成功");
+    }
+
+    /**
+     * 频控拒绝/发送失败时删除本次占用的冷却键（原逻辑保留：只清 cooldownKey，不清 dailyKey）。
+     * <p>刻意不删除 dailyKey：删除会让 Redis 侧计数归零，与 DB 兜底同时失效（如 DB 短暂不可用）
+     * 时会被循环重试探针式绕过；保留 dailyKey 让 Redis 计数单调不减，是纵深防御的一层。
+     * cooldownKey 清理只为让"被拒绝"不额外占用 60s 冷却，拒绝结果本身已经生效，不受影响。</p>
+     *
+     * @param cooldownKey  Redis 60s 冷却键
+     */
+    private void rollbackSmsCooldown(String cooldownKey) {
+        if (smsRateLimitRedisTemplate == null || cooldownKey == null) {
+            return;
+        }
+        try {
+            smsRateLimitRedisTemplate.delete(cooldownKey);
+        } catch (Exception e) {
+            log.warn("回滚验证码Redis冷却键失败: error={}", e.getMessage());
+        }
     }
 
     /**

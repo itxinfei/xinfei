@@ -14,6 +14,7 @@
 # - region: 行政区划字典表，全局共享
 # - store_sync_log: 跨店同步日志，用 source/target_tenant_id 表达跨店语义
 # - rider_remember_token: 骑手记住登录令牌，未登录时凭 cookie 校验，不能被追加 tenant_id=-1
+# - sms_send_log: 验证码发送台账，按手机号全局频控（跨租户），/user/sendMsg 匿名调用无租户上下文
 tenant:
   ignore-tables:
     - tenant
@@ -28,3 +29,4 @@ tenant:
     - region
     - store_sync_log
     - rider_remember_token
+    - sms_send_log

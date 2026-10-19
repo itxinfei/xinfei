@@ -47,7 +47,7 @@ public class TenantTableRegistry {
             new HashSet<>(Arrays.asList(
                     "tenant", "employee", "shopping_cart", "ai_provider_config", "ai_prompt_template",
                     "ai_prompt_template_history", "dish_evaluation", "permission", "role_permission",
-                    "region", "store_sync_log", "rider_remember_token"
+                    "region", "store_sync_log", "rider_remember_token", "sms_send_log"
             )));
 
     /**
