@@ -58,6 +58,9 @@ public class Rider implements Serializable {
     @Schema(description = "Current Latitude")
     private BigDecimal currentLatitude;
 
+    @Schema(description = "Coordinate system of current location: WGS-84 / GCJ-02 / BD-09")
+    private String coordSystem;
+
     @Schema(description = "Status: 0-Offline, 1-Online, 2-Busy")
     private Integer status;
 

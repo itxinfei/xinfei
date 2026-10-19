@@ -150,8 +150,9 @@ public class DeliveryTrackingController {
             @Parameter(description = "经度", required = true) @RequestParam BigDecimal longitude,
             @Parameter(description = "纬度", required = true) @RequestParam BigDecimal latitude,
             @Parameter(description = "速度（可选）") @RequestParam(required = false) BigDecimal speed,
-            @Parameter(description = "方向（可选）") @RequestParam(required = false) BigDecimal direction) {
-        boolean success = deliveryTrackingService.updateRiderLocation(riderId, longitude, latitude, speed, direction);
+            @Parameter(description = "方向（可选）") @RequestParam(required = false) BigDecimal direction,
+            @Parameter(description = "坐标系（可选，默认WGS-84）") @RequestParam(required = false) String coordSystem) {
+        boolean success = deliveryTrackingService.updateRiderLocation(riderId, longitude, latitude, speed, direction, coordSystem);
         return success ? R.success("Location updated") : R.error("Update failed");
     }
 

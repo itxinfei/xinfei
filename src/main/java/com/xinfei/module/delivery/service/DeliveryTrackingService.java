@@ -131,15 +131,26 @@ public interface DeliveryTrackingService extends IService<Rider> {
     /**
      * Update rider location
      *
-     * @param riderId   Rider ID
-     * @param longitude Longitude
-     * @param latitude  Latitude
-     * @param speed     Speed
-     * @param direction Direction
+     * @param riderId     Rider ID
+     * @param longitude   Longitude
+     * @param latitude    Latitude
+     * @param speed       Speed
+     * @param direction   Direction
+     * @param coordSystem Coordinate system of the reported coords (WGS-84/GCJ-02/BD-09);
+     *                    null/blank/unknown falls back to WGS-84 on the server
      * @return Success or not
      */
-    boolean updateRiderLocation(Long riderId, BigDecimal longitude, BigDecimal latitude, 
-                                BigDecimal speed, BigDecimal direction);
+    boolean updateRiderLocation(Long riderId, BigDecimal longitude, BigDecimal latitude,
+                                BigDecimal speed, BigDecimal direction, String coordSystem);
+
+    /**
+     * 清理指定时刻之前的骑手轨迹点（在已设置租户上下文的前提下按租户作用域删除）。
+     * 供留存定时任务调用，止住 rider_location_record 无界增长。分批删除避免长事务/长锁。
+     *
+     * @param cutoff 早于该时间戳的轨迹点将被删除
+     * @return 实际删除的行数
+     */
+    int cleanupLocationRecordsBefore(java.time.LocalDateTime cutoff);
 
     /**
      * Get rider location history

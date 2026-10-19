@@ -279,8 +279,10 @@ public class RiderAuthController {
         }
         BigDecimal speed = toBigDecimal(body == null ? null : body.get("speed"));
         BigDecimal heading = toBigDecimal(body == null ? null : body.get("heading"));
+        // 坐标系由前端声明（骑手端上报原始 WGS-84）；空/未知值由服务端归一化回退 WGS-84
+        String coordSystem = body == null ? null : String.valueOf(body.getOrDefault("coordSystem", ""));
         boolean ok = deliveryTrackingService.updateRiderLocation(
-                BaseContext.getCurrentId(), longitude, latitude, speed, heading);
+                BaseContext.getCurrentId(), longitude, latitude, speed, heading, coordSystem);
         return ok ? R.success("位置已更新") : R.error("位置上报失败");
     }
 

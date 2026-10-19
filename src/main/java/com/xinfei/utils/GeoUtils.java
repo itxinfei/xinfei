@@ -12,6 +12,11 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * 地图工具类（高德 Web 服务 API）
@@ -60,6 +65,45 @@ public class GeoUtils {
      */
     public boolean isAvailable() {
         return keyAvailable;
+    }
+
+    /** 合法坐标系标识集合（统一大写）。 */
+    public static final Set<String> KNOWN_COORD_SYSTEMS = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList("WGS-84", "GCJ-02", "BD-09")));
+
+    /**
+     * 归一化坐标系标识：去空白转大写；为空或未知值时回退 {@code fallback}。
+     * 用于服务端统一登记位置来源系，杜绝混系写入无从判别。
+     *
+     * @param raw      原始输入（可能任意大小写/空白/null）
+     * @param fallback 回退值（应自身为合法值）
+     * @return 合法坐标系标识
+     */
+    public static String normalizeCoordSystem(String raw, String fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        String s = raw.trim().toUpperCase(Locale.ROOT);
+        return KNOWN_COORD_SYSTEMS.contains(s) ? s : fallback;
+    }
+
+    /**
+     * Haversine 大圆距离（米）。全站唯一距离口径，供配送范围判定与距离/ETA 复用，
+     * 避免各处重复实现导致地球半径/精度漂移。
+     *
+     * @param lng1 起点经度
+     * @param lat1 起点纬度
+     * @param lng2 终点经度
+     * @param lat2 终点纬度
+     * @return 两点间大圆距离（米）
+     */
+    public static double haversineMeters(double lng1, double lat1, double lng2, double lat2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return 6371000.0 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     /**

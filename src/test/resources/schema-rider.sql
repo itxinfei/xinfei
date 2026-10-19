@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS rider (
   avatar varchar(200) DEFAULT NULL,
   current_longitude decimal(12,8) DEFAULT NULL,
   current_latitude decimal(12,8) DEFAULT NULL,
+  coord_system varchar(16) DEFAULT 'GCJ-02',
   status int DEFAULT 0,
   current_order_count int DEFAULT 0,
   total_order_count int DEFAULT 0,
@@ -49,12 +50,14 @@ CREATE TABLE IF NOT EXISTS rider_location_record (
   order_id bigint DEFAULT NULL,
   longitude decimal(12,8) NOT NULL,
   latitude decimal(12,8) NOT NULL,
+  coord_system varchar(16) NOT NULL DEFAULT 'GCJ-02',
   speed decimal(5,2) DEFAULT NULL,
   direction decimal(5,2) DEFAULT NULL,
   record_time datetime NOT NULL,
   tenant_id bigint DEFAULT NULL,
   create_time datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_tenant_rider_time (tenant_id, rider_id, record_time)
 );
 
 -- P2-2 骑手记住登录令牌表（每骑手一条，30天有效，可凭 rider_remember cookie 自动登录）

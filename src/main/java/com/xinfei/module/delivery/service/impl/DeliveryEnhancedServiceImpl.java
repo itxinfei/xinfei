@@ -9,6 +9,7 @@ import com.xinfei.module.delivery.model.DeliveryRangeRule;
 import com.xinfei.module.delivery.model.DeliveryFeeStep;
 import com.xinfei.module.delivery.mapper.DeliveryFeeStepMapper;
 import com.xinfei.module.delivery.service.DeliveryEnhancedService;
+import com.xinfei.utils.GeoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -278,13 +279,21 @@ public class DeliveryEnhancedServiceImpl extends ServiceImpl<DeliveryRangeRuleMa
     @Override
     public boolean isInRange(Long ruleId, BigDecimal longitude, BigDecimal latitude) {
         DeliveryRangeRule rule = rangeRuleMapper.selectById(ruleId);
+        return isInRange(rule, longitude, latitude);
+    }
+
+    /**
+     * 范围判定的内部实现：直接接收已加载的规则对象，避免 {@code findMatchingRule}
+     * 逐条再 {@code selectById} 造成 N+1 查询。
+     */
+    private boolean isInRange(DeliveryRangeRule rule, BigDecimal longitude, BigDecimal latitude) {
         if (rule == null || rule.getStatus() != 1) {
             return false;
         }
 
         if (rule.getRangeType() == DeliveryRangeRule.TYPE_CIRCLE) {
             // 圆形范围校验
-            return isPointInCircle(longitude, latitude, 
+            return isPointInCircle(longitude, latitude,
                     rule.getCenterLongitude(), rule.getCenterLatitude(), rule.getRadius());
         } else if (rule.getRangeType() == DeliveryRangeRule.TYPE_POLYGON) {
             // 多边形范围校验
@@ -305,7 +314,7 @@ public class DeliveryEnhancedServiceImpl extends ServiceImpl<DeliveryRangeRuleMa
     public Long findMatchingRule(BigDecimal longitude, BigDecimal latitude, Long tenantId) {
         List<DeliveryRangeRule> rules = getRangeRules(tenantId);
         for (DeliveryRangeRule rule : rules) {
-            if (isInRange(rule.getId(), longitude, latitude)) {
+            if (isInRange(rule, longitude, latitude)) {
                 return rule.getId();
             }
         }
@@ -422,19 +431,9 @@ public class DeliveryEnhancedServiceImpl extends ServiceImpl<DeliveryRangeRuleMa
         if (lon1 == null || lat1 == null || lon2 == null || lat2 == null) {
             return BigDecimal.ZERO;
         }
-        // 使用 Haversine 公式计算两点间距离
-        double earthRadius = 6371000; // 地球半径（米）
-        double dLat = Math.toRadians(lat2.doubleValue() - lat1.doubleValue());
-        double dLon = Math.toRadians(lon2.doubleValue() - lon1.doubleValue());
-
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                   Math.cos(Math.toRadians(lat1.doubleValue())) * Math.cos(Math.toRadians(lat2.doubleValue())) *
-                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        double distance = earthRadius * c;
-
+        // 统一走 GeoUtils 全站唯一 Haversine 口径（米），不再本地重复实现
+        double distance = GeoUtils.haversineMeters(
+                lon1.doubleValue(), lat1.doubleValue(), lon2.doubleValue(), lat2.doubleValue());
         return BigDecimal.valueOf(distance).setScale(2, RoundingMode.HALF_UP);
     }
 

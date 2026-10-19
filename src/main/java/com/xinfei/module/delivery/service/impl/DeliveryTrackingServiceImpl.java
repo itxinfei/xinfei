@@ -37,6 +37,9 @@ import java.util.Map;
 public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider> 
         implements DeliveryTrackingService {
 
+    /** 轨迹清理单批删除条数，避免长事务与长时间锁表。 */
+    private static final int CLEANUP_BATCH_SIZE = 1000;
+
     @Autowired
     private RiderMapper riderMapper;
 
@@ -360,7 +363,7 @@ public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider>
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateRiderLocation(Long riderId, BigDecimal longitude, BigDecimal latitude,
-                                        BigDecimal speed, BigDecimal direction) {
+                                        BigDecimal speed, BigDecimal direction, String coordSystem) {
         Rider rider = riderMapper.selectById(riderId);
         if (rider == null) {
             return false;
@@ -371,8 +374,12 @@ public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider>
             throw new CustomException("无权操作其他门店的骑手");
         }
 
+        // 坐标系归一化：未知/空值回退 WGS-84（原始 GPS），使混系写入可被追溯判别
+        String coord = com.xinfei.utils.GeoUtils.normalizeCoordSystem(coordSystem, "WGS-84");
+
         rider.setCurrentLongitude(longitude);
         rider.setCurrentLatitude(latitude);
+        rider.setCoordSystem(coord);
         rider.setLastLocationTime(LocalDateTime.now());
         rider.setUpdateTime(LocalDateTime.now());
         riderMapper.updateById(rider);
@@ -382,6 +389,7 @@ public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider>
         record.setRiderId(riderId);
         record.setLongitude(longitude);
         record.setLatitude(latitude);
+        record.setCoordSystem(coord);
         record.setSpeed(speed);
         record.setDirection(direction);
         record.setRecordTime(LocalDateTime.now());
@@ -389,6 +397,40 @@ public class DeliveryTrackingServiceImpl extends ServiceImpl<RiderMapper, Rider>
         record.setCreateTime(LocalDateTime.now());
 
         return locationRecordMapper.insert(record) > 0;
+    }
+
+    /**
+     * 分批清理过期轨迹点。租户作用域由 MyBatis-Plus 租户插件依据当前 BaseContext 自动注入，
+     * 删除以 record_time 为条件（恒带 WHERE，符合无界删除红线），单批 {@value #CLEANUP_BATCH_SIZE}
+     * 条走主键批量删除，避免长事务与长时间锁表。
+     *
+     * @param cutoff 早于该时刻的轨迹点删除
+     * @return 删除总行数
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int cleanupLocationRecordsBefore(LocalDateTime cutoff) {
+        int total = 0;
+        while (true) {
+            List<RiderLocationRecord> batch = locationRecordMapper.selectList(
+                    new LambdaQueryWrapper<RiderLocationRecord>()
+                            .select(RiderLocationRecord::getId)
+                            .lt(RiderLocationRecord::getRecordTime, cutoff)
+                            .last("LIMIT " + CLEANUP_BATCH_SIZE));
+            if (batch == null || batch.isEmpty()) {
+                break;
+            }
+            List<Long> ids = new ArrayList<>(batch.size());
+            for (RiderLocationRecord r : batch) {
+                ids.add(r.getId());
+            }
+            int affected = locationRecordMapper.deleteBatchIds(ids);
+            total += affected;
+            if (affected <= 0 || batch.size() < CLEANUP_BATCH_SIZE) {
+                break;
+            }
+        }
+        return total;
     }
 
     /**

@@ -41,6 +41,9 @@ public class RiderLocationRecord implements Serializable {
     @Schema(description = "Latitude")
     private BigDecimal latitude;
 
+    @Schema(description = "Coordinate system: WGS-84 / GCJ-02 / BD-09")
+    private String coordSystem;
+
     @Schema(description = "Speed (km/h)")
     private BigDecimal speed;
 
