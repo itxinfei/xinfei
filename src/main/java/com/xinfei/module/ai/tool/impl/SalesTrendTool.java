@@ -1,13 +1,13 @@
 package com.xinfei.module.ai.tool.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xinfei.module.ai.tool.AiTool;
 import com.xinfei.module.ai.tool.ToolExecResult;
 import com.xinfei.module.ai.tool.ToolFormats;
 import com.xinfei.module.dashboard.service.DashboardService;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;

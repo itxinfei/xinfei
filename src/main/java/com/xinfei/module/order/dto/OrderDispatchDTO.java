@@ -3,7 +3,7 @@ package com.xinfei.module.order.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 店长派单请求：将待接单订单指派给指定骑手。

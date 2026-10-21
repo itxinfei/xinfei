@@ -1,7 +1,7 @@
 package com.xinfei.module.tenant.dto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 租户注册请求 DTO

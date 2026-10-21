@@ -3,7 +3,6 @@ package com.xinfei;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -19,7 +18,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Slf4j
 @SpringBootApplication
 @EnableTransactionManagement
-@EnableCaching
+// 缓存开关只在 RedisConfig（带 @ConditionalOnProperty(spring.data.redis.host)）上声明 @EnableCaching，
+// 此处不再重复：Boot 4 已把缓存自动配置移出核心模块，全局重复声明会让 @WebMvcTest 切片
+// 在没有 CacheManager 的情况下强制要求它，切片测试直接起不来。
 @EnableScheduling
 @EnableAsync
 public class XinfeiApplication {

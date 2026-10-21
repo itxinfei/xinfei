@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -40,8 +40,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         log.info("开始进行静态资源映射...");
-        // 根路径入口引导页：展示管理后台与用户端两个入口
-        registry.addResourceHandler("/").addResourceLocations("classpath:/");
+        // 根路径引导页由 Boot 默认的 classpath:/static/ 映射（static/index.html）承载，
+        // 不在此显式映射 classpath:/ —— Spring 7 会拒绝该位置（等于暴露整个 classpath）。
         registry.addResourceHandler("/backend/**").addResourceLocations("classpath:/backend/");
         registry.addResourceHandler("/front/**").addResourceLocations("classpath:/front/");
         // 骑手端 H5（独立目录）
@@ -64,8 +64,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         log.info("扩展消息转换器...");
-        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
-        messageConverter.setObjectMapper(new JacksonObjectMapper());
+        // Jackson 3 版转换器（Spring 7 提供 JacksonJsonHttpMessageConverter，
+        // 原 MappingJackson2HttpMessageConverter 属 Jackson 2 血统，已随兼容层一并退场）
+        JacksonJsonHttpMessageConverter messageConverter =
+                new JacksonJsonHttpMessageConverter(JacksonObjectMapper.create());
         // 插入到 StringHttpMessageConverter（默认位于列表首位，负责纯文本/字符串响应，
         // 如 springdoc 的 /v3/api-docs 字符串响应）之后、默认 Jackson 转换器之前。
         // 这样业务对象由自定义 Jackson 处理（Long→String 防精度丢失），

@@ -26,7 +26,7 @@ import com.xinfei.common.CustomException;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class SystemConfigServiceImpl extends com.baomidou.mybatisplus.extension.service.impl
+public class SystemConfigServiceImpl extends com.baomidou.mybatisplus.spring.service.impl
         .ServiceImpl<SystemConfigMapper, SystemConfig>
         implements SystemConfigService {
 

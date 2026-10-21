@@ -1,7 +1,7 @@
 package com.xinfei.module.auth.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.common.BaseContext;
 import com.xinfei.common.PasswordUtils;
 import com.xinfei.module.auth.model.Employee;

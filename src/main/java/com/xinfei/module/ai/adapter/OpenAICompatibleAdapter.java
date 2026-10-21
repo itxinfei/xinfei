@@ -1,6 +1,6 @@
 package com.xinfei.module.ai.adapter;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xinfei.module.ai.failover.AiFailureType;
 import com.xinfei.module.ai.failover.AiProviderException;
 import com.xinfei.module.ai.model.AIChatResponse;
@@ -246,7 +246,7 @@ public class OpenAICompatibleAdapter extends BaseModelAdapter {
             throw new AiProviderException(AiFailureType.SERVER_ERROR, 200,
                     "供应商「" + config.getProviderName() + "」返回了无法识别的响应格式");
 
-        } catch (com.fasterxml.jackson.core.JsonParseException e) {
+        } catch (tools.jackson.core.exc.StreamReadException e) {
             log.error("AI接口[{} / {}]返回了非JSON响应: bodyPreview={}",
                     config.getProviderCode(), FORMAT_ID, truncate(e.getMessage(), 200));
             // 地址配错返回 HTML 等非 JSON 内容：按服务端错误处理，切换其他厂家

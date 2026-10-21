@@ -6,7 +6,7 @@ import com.xinfei.module.ai.service.CircuitBreakerService.BreakerDecision;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

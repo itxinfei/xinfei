@@ -15,7 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
  * 餐补资金操作事务原子性回归测试。
  * <p>
  * 发放/核销/回充都是「账户余额原子 UPDATE」+「流水 INSERT」两步。历史上二者不在同一事务，
- * 中途失败会留下「钱动了、流水没落」的账实不符。此测试用 {@code @MockBean} 让流水 INSERT
+ * 中途失败会留下「钱动了、流水没落」的账实不符。此测试用 {@code @MockitoBean} 让流水 INSERT
  * 在真实 UPDATE 之后抛异常，验证 {@code @Transactional} 使整体回滚——余额/账户回到操作前状态，
  * 绝不出现无流水的余额变动。
  * </p>
@@ -62,7 +62,7 @@ public class SubsidyTransactionAtomicityTest {
     private TestIdGuard testIdGuard;
 
     /** 只 mock 流水 Mapper：让流水 INSERT 在真实余额 UPDATE 之后失败，观察余额是否随之回滚。 */
-    @MockBean
+    @MockitoBean
     private com.xinfei.module.subsidy.mapper.MealSubsidyRecordMapper recordMapper;
 
     @BeforeEach

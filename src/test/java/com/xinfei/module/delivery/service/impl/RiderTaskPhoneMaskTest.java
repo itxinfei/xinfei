@@ -1,5 +1,6 @@
 package com.xinfei.module.delivery.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.xinfei.common.BaseContext;
 import com.xinfei.module.delivery.dto.RiderTaskVO;
 import com.xinfei.module.order.model.Orders;
@@ -56,7 +57,7 @@ public class RiderTaskPhoneMaskTest {
     public void setUp() {
         BaseContext.setCurrentId(RIDER_ID);
         // 其余依赖默认返回 null/空，toVO 中均有判空兜底
-        when(orderDetailService.list(any())).thenReturn(Collections.emptyList());
+        when(orderDetailService.list(any(Wrapper.class))).thenReturn(Collections.emptyList());
     }
 
     @AfterEach
@@ -77,7 +78,7 @@ public class RiderTaskPhoneMaskTest {
 
     @Test
     public void hall_phoneMasked() {
-        when(orderService.list(any())).thenReturn(new ArrayList<>(Collections.singletonList(order(null))));
+        when(orderService.list(any(Wrapper.class))).thenReturn(new ArrayList<>(Collections.singletonList(order(null))));
         List<RiderTaskVO> list = service.listHall();
         assertEquals(1, list.size());
         assertEquals(MASKED, list.get(0).getPhone());
@@ -85,7 +86,7 @@ public class RiderTaskPhoneMaskTest {
 
     @Test
     public void mine_phoneRevealed() {
-        when(orderService.list(any())).thenReturn(new ArrayList<>(Collections.singletonList(order(RIDER_ID))));
+        when(orderService.list(any(Wrapper.class))).thenReturn(new ArrayList<>(Collections.singletonList(order(RIDER_ID))));
         List<RiderTaskVO> list = service.listMine(RIDER_ID, null);
         assertEquals(1, list.size());
         assertEquals(PHONE, list.get(0).getPhone());

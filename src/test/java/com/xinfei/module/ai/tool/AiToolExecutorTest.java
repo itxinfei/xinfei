@@ -1,6 +1,6 @@
 package com.xinfei.module.ai.tool;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xinfei.common.BaseContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -163,7 +163,7 @@ class AiToolExecutorTest {
         // JSON 安全截断：包装 truncated 标记且整体仍是合法 JSON（不再硬切成非法串）
         assertTrue(content.contains("\"truncated\":true"));
         try {
-            new com.fasterxml.jackson.databind.ObjectMapper().readTree(content);
+            new tools.jackson.databind.ObjectMapper().readTree(content);
         } catch (Exception e) {
             throw new AssertionError("截断结果应为合法 JSON: " + e.getMessage());
         }
@@ -182,8 +182,8 @@ class AiToolExecutorTest {
         String content = executor.toToolContent("t", null,
                 ToolExecResult.ok("s", data));
         try {
-            com.fasterxml.jackson.databind.JsonNode root =
-                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(content);
+            tools.jackson.databind.JsonNode root =
+                    new tools.jackson.databind.ObjectMapper().readTree(content);
             assertTrue(root.has("truncated"));
             assertTrue(root.get("partialResult").get("result").isArray(),
                     "嵌套数组截断后应闭合为完整数组");

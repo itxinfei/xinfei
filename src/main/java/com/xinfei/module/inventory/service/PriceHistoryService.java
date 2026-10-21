@@ -1,6 +1,6 @@
 package com.xinfei.module.inventory.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.inventory.model.PriceHistory;
 
 import java.util.List;

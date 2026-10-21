@@ -1,7 +1,7 @@
 package com.xinfei.module.sys.controller;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xinfei.common.R;
 import com.xinfei.common.annotation.RequiresAdmin;

@@ -1,6 +1,6 @@
 package com.xinfei.module.dining.controller;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import com.xinfei.common.utils.PageUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

@@ -1,7 +1,7 @@
 package com.xinfei.module.member.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.member.model.CouponEffectVO;
 import com.xinfei.module.member.model.CouponTemplate;
 import com.xinfei.module.member.model.ExpiringByTemplateVO;

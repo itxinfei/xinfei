@@ -13,7 +13,7 @@ import com.xinfei.common.RateLimitType;
 import com.xinfei.dto.PayRequestDTO;
 import com.xinfei.dto.RefundRequestDTO;
 import com.xinfei.module.order.model.Orders;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import com.xinfei.common.ObjectMapperHolder;
 import com.xinfei.module.payment.channel.MapNotifyCapable;
 import com.xinfei.module.payment.channel.PaymentChannel;
@@ -55,7 +55,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -117,7 +117,7 @@ public class PaymentController {
     @Operation(summary = "创建支付订单", description = "创建支付订单并调用支付渠道生成支付链接或二维码")
     public R<PayResponse> pay(
             @Parameter(description = "支付请求参数", required = true) @Validated @RequestBody PayRequestDTO dto,
-            javax.servlet.http.HttpServletRequest httpRequest) {
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
         // 金额从数据库订单读取，禁止使用客户端传入金额（防篡改）
         Long currentTenantId = BaseContext.getCurrentTenantId();
         if (currentTenantId == null) {
@@ -181,7 +181,7 @@ public class PaymentController {
      * 解析客户端真实 IP：依次取 X-Forwarded-For 首个非空、X-Real-IP、远端地址。
      * 仅用于支付风控上报；多级代理时 X-Forwarded-For 首个为最初客户端。
      */
-    private String resolveClientIp(javax.servlet.http.HttpServletRequest request) {
+    private String resolveClientIp(jakarta.servlet.http.HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.trim().isEmpty()) {
             // 逗号分隔，第一个为最初客户端

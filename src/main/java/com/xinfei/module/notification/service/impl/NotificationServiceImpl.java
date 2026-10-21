@@ -1,6 +1,6 @@
 package com.xinfei.module.notification.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 /**
  * 消息通知服务实现
@@ -431,7 +431,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         try {
             return objectMapper.writeValueAsString(params);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("JSON序列化失败", e);
             return "{}";
         }
@@ -532,7 +532,7 @@ public class NotificationServiceImpl implements NotificationService {
         record.setTargetType(1);
         try {
             record.setTargetValue(objectMapper.writeValueAsString(targets));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("目标列表JSON序列化失败", e);
             record.setTargetValue("[]");
         }
@@ -998,7 +998,7 @@ public class NotificationServiceImpl implements NotificationService {
         record.setTargetType(1);
         try {
             record.setTargetValue(objectMapper.writeValueAsString(targets));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             record.setTargetValue("[]");
         }
         record.setTargetCount(targets.size());

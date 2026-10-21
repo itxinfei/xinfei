@@ -1,7 +1,7 @@
 package com.xinfei.module.delivery.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.delivery.model.Rider;
 import com.xinfei.module.delivery.model.RiderLocationRecord;
 import com.xinfei.module.delivery.model.DeliveryTimeRecord;

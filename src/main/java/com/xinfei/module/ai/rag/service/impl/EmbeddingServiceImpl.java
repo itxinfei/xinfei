@@ -1,7 +1,8 @@
 package com.xinfei.module.ai.rag.service.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.module.ai.model.AiProviderConfig;
 import com.xinfei.module.ai.provider.AiProviderManager;
 import com.xinfei.module.ai.rag.service.EmbeddingService;
@@ -9,7 +10,7 @@ import com.xinfei.module.ai.util.AiUrlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -147,6 +148,11 @@ public class EmbeddingServiceImpl implements EmbeddingService {
                 }
             }
             return result;
+        } catch (JacksonException e) {
+            // Jackson 3 的解析异常是 unchecked（Jackson 2 时代是 checked 的 JsonProcessingException），
+            // 不再落到下面的 catch (Exception)，必须显式包装，否则对外契约会从
+            // IllegalStateException("Embedding响应解析失败…") 退化成裸 StreamReadException。
+            throw new IllegalStateException("Embedding响应解析失败: " + e.getMessage(), e);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

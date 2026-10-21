@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 /**
  * 菜品数据传输对象

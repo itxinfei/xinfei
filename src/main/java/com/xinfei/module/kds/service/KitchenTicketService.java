@@ -1,7 +1,7 @@
 package com.xinfei.module.kds.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.kds.model.KitchenTicket;
 import com.xinfei.module.kds.vo.KitchenBoardVO;
 

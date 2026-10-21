@@ -1,8 +1,8 @@
 package com.xinfei.module.recommend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.BaseContext;
 import com.xinfei.common.ObjectMapperHolder;
 import com.xinfei.module.category.model.Category;
@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 /**
  * 智能推荐引擎实现
@@ -962,7 +962,7 @@ public class RecommendServiceImpl implements RecommendService, SmartInitializing
     private List<Long> parseDishIds(String json) {
         try {
             return objectMapper.readValue(json, new TypeReference<List<Long>>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("[推荐引擎] JSON解析失败", e);
             return Collections.emptyList();
         }

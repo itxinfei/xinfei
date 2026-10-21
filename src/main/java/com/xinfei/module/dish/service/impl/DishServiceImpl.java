@@ -2,7 +2,7 @@ package com.xinfei.module.dish.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.dto.DishDto;
 import com.xinfei.module.category.model.Category;
 import com.xinfei.module.dish.model.Dish;

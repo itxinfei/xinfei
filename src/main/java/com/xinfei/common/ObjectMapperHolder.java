@@ -1,6 +1,6 @@
 package com.xinfei.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * ObjectMapper 统一持有工具类
@@ -22,7 +22,7 @@ public final class ObjectMapperHolder {
      * 通用 ObjectMapper 单例（JacksonObjectMapper，含日期/Long 序列化配置）
      * 线程安全：ObjectMapper 本身是线程安全的
      */
-    private static final ObjectMapper DEFAULT_MAPPER = new JacksonObjectMapper();
+    private static final ObjectMapper DEFAULT_MAPPER = JacksonObjectMapper.create();
 
     private ObjectMapperHolder() {
         throw new AssertionError();

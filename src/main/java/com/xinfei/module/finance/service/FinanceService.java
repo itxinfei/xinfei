@@ -1,6 +1,6 @@
 package com.xinfei.module.finance.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.finance.model.WithdrawalApplication;
 import com.xinfei.module.finance.model.ReconciliationStatement;
 import com.xinfei.module.finance.model.ProfitAnalysis;

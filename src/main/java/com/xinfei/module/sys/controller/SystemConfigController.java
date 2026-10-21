@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Max;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +80,7 @@ public class SystemConfigController {
     public R<String> rootBatchUpdate(
             @Parameter(description = "系统配置列表（configKey/configValue），兼容单对象与数组两种形态", required =
                     true) @RequestBody Object body) {
-        com.fasterxml.jackson.databind.ObjectMapper mapper = ObjectMapperHolder.getDefault();
+        tools.jackson.databind.ObjectMapper mapper = ObjectMapperHolder.getDefault();
         List<SystemConfig> configs = new java.util.ArrayList<>();
         if (body instanceof List) {
             for (Object element : (List<?>) body) {

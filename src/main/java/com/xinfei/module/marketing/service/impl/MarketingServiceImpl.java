@@ -1,7 +1,7 @@
 package com.xinfei.module.marketing.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.module.marketing.mapper.FullReductionRuleMapper;
 import com.xinfei.module.marketing.model.FullReductionRule;
 import com.xinfei.module.marketing.model.DiscountRule;

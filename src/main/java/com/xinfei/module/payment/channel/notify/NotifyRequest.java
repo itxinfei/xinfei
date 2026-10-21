@@ -2,7 +2,7 @@ package com.xinfei.module.payment.channel.notify;
 
 import lombok.Data;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;

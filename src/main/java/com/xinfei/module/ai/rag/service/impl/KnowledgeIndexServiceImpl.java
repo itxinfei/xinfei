@@ -1,7 +1,7 @@
 package com.xinfei.module.ai.rag.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.module.ai.rag.mapper.AiKnowledgeChunkMapper;
 import com.xinfei.module.ai.rag.mapper.AiKnowledgeDocMapper;
 import com.xinfei.module.ai.rag.model.AiKnowledgeChunk;
@@ -11,7 +11,7 @@ import com.xinfei.module.ai.rag.service.KnowledgeIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

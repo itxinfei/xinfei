@@ -1,9 +1,9 @@
 package com.xinfei.module.tenant.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.tenant.model.Tenant;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
 /**

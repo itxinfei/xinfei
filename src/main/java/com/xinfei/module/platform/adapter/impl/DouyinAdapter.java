@@ -1,7 +1,7 @@
 package com.xinfei.module.platform.adapter.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.LogMaskUtils;
 import com.xinfei.module.platform.adapter.PlatformAdapter;
 import com.xinfei.module.platform.adapter.PlatformOrder;

@@ -12,7 +12,7 @@ import com.xinfei.module.sys.service.RoleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
@@ -576,8 +576,8 @@ public class RoleControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.data.names").isArray())
                 .andReturn().getResponse().getContentAsString();
 
-        com.fasterxml.jackson.databind.JsonNode dataNode =
-                new com.fasterxml.jackson.databind.ObjectMapper().readTree(response).get("data");
+        tools.jackson.databind.JsonNode dataNode =
+                new tools.jackson.databind.ObjectMapper().readTree(response).get("data");
         int namesSize = dataNode.has("names") ? dataNode.get("names").size() : 0;
         org.junit.jupiter.api.Assertions.assertEquals(2, namesSize);
     }

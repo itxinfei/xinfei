@@ -19,6 +19,11 @@ server:
 spring:
   application:
     name: xinfei_take_out
+  # Boot 2.4.5（本项目旧基线）默认允许字段注入的循环依赖，Boot 2.6+ 改为默认禁止。
+  # 升级期先放行以恢复可启动状态；已存在的循环对（如 dishServiceImpl ↔ categoryServiceImpl）
+  # 属技术债，待单独解开后把此开关改回 false。
+  main:
+    allow-circular-references: true
   profiles:
     active: dev  # 默认开发环境
   devtools:

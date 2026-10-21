@@ -1,6 +1,6 @@
 package com.xinfei.module.ai.tool;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;

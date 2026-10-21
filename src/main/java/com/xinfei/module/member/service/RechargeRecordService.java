@@ -1,6 +1,6 @@
 package com.xinfei.module.member.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.member.model.RechargeRecord;
 import java.math.BigDecimal;
 

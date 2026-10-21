@@ -1,6 +1,6 @@
 package com.xinfei.module.auth.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.auth.model.Employee;
 
 /**

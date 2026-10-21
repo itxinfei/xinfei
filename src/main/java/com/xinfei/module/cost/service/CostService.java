@@ -1,6 +1,6 @@
 package com.xinfei.module.cost.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.cost.model.DishCost;
 import com.xinfei.module.cost.model.CostRecord;
 import com.xinfei.module.cost.model.LaborCost;

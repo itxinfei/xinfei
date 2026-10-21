@@ -1,6 +1,6 @@
 package com.xinfei.module.ai.adapter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.ObjectMapperHolder;
 import com.xinfei.module.ai.failover.AiProviderException;
 import com.xinfei.module.ai.model.AIChatResponse;

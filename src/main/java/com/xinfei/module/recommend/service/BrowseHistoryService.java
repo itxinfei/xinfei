@@ -1,6 +1,6 @@
 package com.xinfei.module.recommend.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.recommend.model.BrowseHistory;
 
 import java.util.List;

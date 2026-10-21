@@ -1,7 +1,7 @@
 package com.xinfei.module.withdraw.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.withdraw.model.WithdrawalRequest;
 import com.xinfei.module.withdraw.model.WithdrawalRecord;
 

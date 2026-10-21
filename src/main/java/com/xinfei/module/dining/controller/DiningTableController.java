@@ -34,9 +34,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.xinfei.common.RateLimit;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Max;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -385,7 +385,7 @@ public class DiningTableController {
     public R<String> qrcode(@PathVariable Long id,
                             @Parameter(description = "站点地址（手机扫码需可达）")
                             @RequestParam(value = "siteUrl", required = false) String siteUrl,
-                            javax.servlet.http.HttpServletRequest request) {
+                            jakarta.servlet.http.HttpServletRequest request) {
         // 租户归属校验：按 id + tenantId 查询，防止跨租户生成他门店桌台的点餐二维码
         Long tenantId = BaseContext.getCurrentTenantId();
         if (tenantId == null) {
@@ -421,7 +421,7 @@ public class DiningTableController {
      * 「协议://服务器IP:端口」（即部署服务器的对外地址，管理员浏览器就是用它访问后台的）。
      * <p>经反向代理部署时优先取 X-Forwarded-Proto/Host，避免编出代理内网地址。</p>
      */
-    private String resolveSiteUrl(String siteUrl, javax.servlet.http.HttpServletRequest request) {
+    private String resolveSiteUrl(String siteUrl, jakarta.servlet.http.HttpServletRequest request) {
         if (siteUrl != null && !siteUrl.trim().isEmpty()) {
             return siteUrl.trim();
         }
@@ -459,7 +459,7 @@ public class DiningTableController {
                             @RequestParam("tableId") Long tableId,
                             @Parameter(name = "siteUrl", description = "站点地址（前端传入）")
                             @RequestParam(value = "siteUrl", required = false) String siteUrl,
-                            javax.servlet.http.HttpServletRequest request) {
+                            jakarta.servlet.http.HttpServletRequest request) {
         // 租户归属校验：按 id + tenantId 查询，防止跨租户打印他门店桌贴海报
         Long tenantId = BaseContext.getCurrentTenantId();
         if (tenantId == null) {

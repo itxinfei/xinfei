@@ -1,6 +1,6 @@
 package com.xinfei.module.auth.dto;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 修改员工状态请求 DTO

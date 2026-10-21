@@ -1,7 +1,7 @@
 package com.xinfei.module.cost.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.module.cost.model.DishCost;
 import com.xinfei.module.cost.model.CostRecord;
 import com.xinfei.module.cost.model.LaborCost;

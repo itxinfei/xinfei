@@ -1,6 +1,6 @@
 package com.xinfei.module.address.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.address.model.AddressBook;
 
 import java.util.List;

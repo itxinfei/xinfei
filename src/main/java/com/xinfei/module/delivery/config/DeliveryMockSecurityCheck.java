@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 
 /**
  * 配送平台 mock 模式生产启动检查（P0-3b，镜像 {@code PaymentKeySecurityCheck} 的 fail-closed 口径）。

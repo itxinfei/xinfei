@@ -1,7 +1,7 @@
 package com.xinfei.module.dish.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.dish.model.DishEvaluation;
 
 import java.util.List;

@@ -5,9 +5,9 @@ import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import java.util.Collections;
-import javax.servlet.SessionTrackingMode;
+import jakarta.servlet.SessionTrackingMode;
 
 /**
  * <p>

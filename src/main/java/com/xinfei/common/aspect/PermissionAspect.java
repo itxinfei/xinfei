@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -268,7 +268,7 @@ public class PermissionAspect {
                     } finally {
                         try {
                             cursor.close();
-                        } catch (IOException ex) {
+                        } catch (Exception ex) {
                             log.warn("[权限缓存] cursor 关闭异常", ex);
                         }
                     }

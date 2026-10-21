@@ -1,6 +1,6 @@
 package com.xinfei.module.customer.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.customer.model.CsSession;
 import com.xinfei.module.customer.model.CsMessage;
 import com.xinfei.module.customer.model.Complaint;

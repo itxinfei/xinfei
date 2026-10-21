@@ -11,7 +11,7 @@ import com.xinfei.module.delivery.service.RiderEvaluationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
@@ -173,7 +173,7 @@ public class RiderEvaluationTest extends BaseControllerTest {
                         .session(employeeSession()))
                 .andExpect(jsonPath("$.data.records.length()").value(1))
                 .andReturn();
-        long id = new com.fasterxml.jackson.databind.ObjectMapper()
+        long id = new tools.jackson.databind.ObjectMapper()
                 .readTree(r.getResponse().getContentAsString()).path("data").path("records")
                 .get(0).path("id").asLong();
 

@@ -2,7 +2,7 @@ package com.xinfei.module.address.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.common.BaseContext;
 import com.xinfei.module.address.model.AddressBook;
 import com.xinfei.module.address.mapper.AddressBookMapper;

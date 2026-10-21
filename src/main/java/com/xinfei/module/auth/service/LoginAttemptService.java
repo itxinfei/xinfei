@@ -9,7 +9,7 @@ import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 

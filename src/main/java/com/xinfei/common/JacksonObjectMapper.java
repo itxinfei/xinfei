@@ -1,31 +1,33 @@
 package com.xinfei.common;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.ser.std.ToStringSerializer;
+import tools.jackson.databind.ext.javatime.deser.LocalDateDeserializer;
+import tools.jackson.databind.ext.javatime.deser.LocalDateTimeDeserializer;
+import tools.jackson.databind.ext.javatime.deser.LocalTimeDeserializer;
+import tools.jackson.databind.ext.javatime.ser.LocalDateSerializer;
+import tools.jackson.databind.ext.javatime.ser.LocalDateTimeSerializer;
+import tools.jackson.databind.ext.javatime.ser.LocalTimeSerializer;
+
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 /**
- * 对象映射器:基于jackson将Java对象转为json，或者将json转为Java对象
- * 将JSON解析为Java对象的过程称为 [从JSON反序列化Java对象]
- * 从Java对象生成JSON的过程称为 [序列化Java对象到JSON]
+ * 全站统一的 Jackson 约定：Long/BigInteger 序列化为字符串（防前端 JS 精度丢失）、
+ * java.time 统一格式、反序列化遇未知属性不报错。
+ *
+ * <p>Jackson 3 的 mapper 不可变，原先「{@code extends ObjectMapper} + 构造器内 mutate」的写法
+ * 已不成立，改为 builder 工厂 {@link #create()}。</p>
  *
  * @author xinfei
  * @since 2026-07-09
  */
-public class JacksonObjectMapper extends ObjectMapper {
+public final class JacksonObjectMapper {
 
     /**
      * 默认日期格式
@@ -52,15 +54,18 @@ public class JacksonObjectMapper extends ObjectMapper {
      */
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_TIME_FORMAT);
 
+    private JacksonObjectMapper() {
+    }
+
     /**
-     * 构造方法
+     * 构建带全站约定的 ObjectMapper。
+     *
+     * <p>返回类型用 {@link JsonMapper} 而非 {@code ObjectMapper}：Jackson 3 的
+     * {@code JacksonJsonHttpMessageConverter} 构造器要求 JsonMapper。</p>
+     *
+     * @return 配置好的不可变 mapper
      */
-    public JacksonObjectMapper() {
-        super();
-        //反序列化时，未知属性不报异常
-        this.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-
+    public static JsonMapper create() {
         SimpleModule simpleModule = new SimpleModule()
                 .addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DATE_TIME_FORMATTER))
                 .addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter
@@ -74,7 +79,10 @@ public class JacksonObjectMapper extends ObjectMapper {
                         .ofPattern(DEFAULT_DATE_FORMAT)))
                 .addSerializer(LocalTime.class, new LocalTimeSerializer(TIME_FORMATTER));
 
-        //注册功能模块 例如，可以添加自定义序列化器和反序列化器
-        this.registerModule(simpleModule);
+        return JsonMapper.builder()
+                // 反序列化时，未知属性不报异常
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .addModule(simpleModule)
+                .build();
     }
 }

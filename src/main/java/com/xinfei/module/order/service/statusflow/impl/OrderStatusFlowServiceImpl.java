@@ -2,7 +2,7 @@ package com.xinfei.module.order.service.statusflow.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.common.BaseContext;
 import com.xinfei.common.CustomException;
 import com.xinfei.common.event.OrderCancelledEvent;

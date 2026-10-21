@@ -16,7 +16,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
-import org.springdoc.core.customizers.OpenApiCustomiser;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,7 +37,7 @@ import java.util.Map;
  *     <li>定义文档全局信息：项目简介、接入方式、统一响应结构、HTTP 状态码、分页与权限规范。</li>
  *     <li>定义可复用的标准响应组件（{@code components.responses}），
  *         避免 700+ 个接口重复声明同一套错误响应。</li>
- *     <li>通过 {@link OpenApiCustomiser} 对 springdoc 自动生成的文档做统一增强：
+ *     <li>通过 {@link OpenApiCustomizer} 对 springdoc 自动生成的文档做统一增强：
  *         补全缺失的 summary / description、为所有接口挂载标准响应、为分组补充中文说明。</li>
  * </ol>
  *
@@ -284,11 +284,11 @@ public class OpenApiConfig {
      * 已在 Controller 中通过 {@code @Operation} / {@code @ApiResponses} 声明的内容不会被覆盖。
      * </p>
      *
-     * @return OpenApiCustomiser 定制器
+     * @return OpenApiCustomizer 定制器
      */
     @Bean
-    public OpenApiCustomiser xinfeiOpenApiCustomiser() {
-        return new OpenApiCustomiser() {
+    public OpenApiCustomizer xinfeiOpenApiCustomizer() {
+        return new OpenApiCustomizer() {
             /**
              * 处理 customise。
              * @param openApi 参数 openApi

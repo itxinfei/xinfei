@@ -4,8 +4,8 @@ import com.xinfei.common.utils.PageUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.BaseContext;
 import com.xinfei.common.CustomException;
 import com.xinfei.common.LogMaskUtils;
@@ -53,11 +53,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Max;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -333,7 +333,7 @@ public class EmployeeController {
         String content;
         try {
             content = new ObjectMapper().writeValueAsString(badge);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("工牌内容序列化失败: employeeId={}", id, e);
             return R.error("二维码生成失败，请稍后重试");
         }

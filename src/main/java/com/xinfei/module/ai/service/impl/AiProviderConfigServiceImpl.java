@@ -1,9 +1,9 @@
 package com.xinfei.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.ObjectMapperHolder;
 import com.xinfei.common.CustomException;
 import com.xinfei.module.ai.adapter.AiNetworkFailureUtils;
@@ -202,7 +202,7 @@ public class AiProviderConfigServiceImpl extends ServiceImpl<AiProviderConfigMap
             messages.add(msg);
             body.put("messages", messages);
             body.put("max_tokens", 5);
-            String requestBody = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body);
+            String requestBody = new tools.jackson.databind.ObjectMapper().writeValueAsString(body);
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(requestBody.getBytes(StandardCharsets.UTF_8));
@@ -264,7 +264,7 @@ public class AiProviderConfigServiceImpl extends ServiceImpl<AiProviderConfigMap
             body.put("model", config.getModelName());
             body.put("prompt", "ping");
             body.put("max_output_tokens", 5);
-            String requestBody = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body);
+            String requestBody = new tools.jackson.databind.ObjectMapper().writeValueAsString(body);
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(requestBody.getBytes(StandardCharsets.UTF_8));
@@ -325,7 +325,7 @@ public class AiProviderConfigServiceImpl extends ServiceImpl<AiProviderConfigMap
             msg.put("content", "ping");
             messages.add(msg);
             body.put("messages", messages);
-            String requestBody = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body);
+            String requestBody = new tools.jackson.databind.ObjectMapper().writeValueAsString(body);
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(requestBody.getBytes(StandardCharsets.UTF_8));

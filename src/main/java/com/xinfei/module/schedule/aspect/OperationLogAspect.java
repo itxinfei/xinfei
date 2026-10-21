@@ -14,9 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * <p>
@@ -36,7 +37,7 @@ public class OperationLogAspect {
     private OperationLogService operationLogService;
 
     /** JSON序列化工具 */
-    private static final JacksonObjectMapper OBJECT_MAPPER = new JacksonObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = JacksonObjectMapper.create();
 
     /** error_msg 数据库字段上限，留 10 个字符安全余量 */
     private static final int ERROR_MSG_MAX_LENGTH = 490;
@@ -194,14 +195,14 @@ public class OperationLogAspect {
      */
     private String serializeRequestParam(Object arg) {
         if (arg == null
-            || arg instanceof javax.servlet.ServletRequest
-            || arg instanceof javax.servlet.ServletResponse
-            || arg instanceof javax.servlet.http.HttpSession) {
+            || arg instanceof jakarta.servlet.ServletRequest
+            || arg instanceof jakarta.servlet.ServletResponse
+            || arg instanceof jakarta.servlet.http.HttpSession) {
             return null;
         }
         try {
             return OBJECT_MAPPER.writeValueAsString(arg);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("序列化请求参数失败: {}", arg.getClass().getSimpleName());
             return null;
         }

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -203,7 +203,7 @@ class RiderManageControllerTest extends com.xinfei.controller.BaseControllerTest
         for (int i = 0; i + 1 < kv.length; i += 2) {
             m.put((String) kv[i], kv[i + 1]);
         }
-        return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(m);
+        return new tools.jackson.databind.ObjectMapper().writeValueAsString(m);
     }
 
     /** 通过后台接口创建骑手并返回ID */

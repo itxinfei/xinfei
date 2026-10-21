@@ -102,12 +102,12 @@ class UserFavoriteServiceTest {
     void toggle_notFavorited_adds() {
         when(dishMapper.selectById(1L)).thenReturn(dish(1L, "宫保鸡丁", "20.00", 1));
         when(userFavoriteMapper.selectOne(any())).thenReturn(null);
-        when(userFavoriteMapper.insert(any())).thenReturn(1);
+        when(userFavoriteMapper.insert(any(UserFavorite.class))).thenReturn(1);
 
         Map<String, Object> r = favoriteService.toggle(UserFavorite.TYPE_DISH, 1L);
 
         assertTrue((Boolean) r.get("favorited"), "未收藏时切换为已收藏");
-        verify(userFavoriteMapper).insert(any());
+        verify(userFavoriteMapper).insert(any(UserFavorite.class));
     }
 
     @Test

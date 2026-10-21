@@ -13,9 +13,9 @@ import com.xinfei.module.dish.service.DishService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class DishControllerTest extends BaseControllerTest {
 
-    @MockBean
+    @MockitoBean
     private RedisCacheUtil redisCacheUtil;
 
     @Autowired
@@ -103,7 +103,7 @@ public class DishControllerTest extends BaseControllerTest {
         flavors.add(flavor);
         dto.setFlavors(flavors);
 
-        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        tools.jackson.databind.ObjectMapper objectMapper = new tools.jackson.databind.ObjectMapper();
 
         mockMvc.perform(withCsrfToken(mockMvc, post("/dish")
                 .sessionAttr("employee", 1L)
@@ -170,7 +170,7 @@ public class DishControllerTest extends BaseControllerTest {
         flavors.add(flavor);
         dto.setFlavors(flavors);
 
-        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        tools.jackson.databind.ObjectMapper objectMapper = new tools.jackson.databind.ObjectMapper();
 
         mockMvc.perform(withCsrfToken(mockMvc, put("/dish")
                 .sessionAttr("employee", 1L)

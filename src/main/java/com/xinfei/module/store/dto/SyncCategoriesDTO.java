@@ -2,7 +2,7 @@ package com.xinfei.module.store.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 同步分类请求 DTO

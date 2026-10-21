@@ -1,7 +1,7 @@
 package com.xinfei.module.dining.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.dining.dto.MergeTableDTO;
 import com.xinfei.module.dining.dto.OpenTableDTO;
 import com.xinfei.module.dining.dto.SplitBillDTO;

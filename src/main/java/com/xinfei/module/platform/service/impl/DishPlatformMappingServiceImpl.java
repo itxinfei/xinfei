@@ -2,7 +2,7 @@ package com.xinfei.module.platform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.transaction.annotation.Transactional;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
 import com.xinfei.module.platform.mapper.DishPlatformMappingMapper;
 import org.springframework.transaction.annotation.Transactional;

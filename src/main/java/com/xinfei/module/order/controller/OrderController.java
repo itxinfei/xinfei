@@ -33,9 +33,9 @@ import java.util.Map;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Max;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -224,7 +224,7 @@ public class OrderController {
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 (org.springframework.web.context.request.ServletRequestAttributes)
                         org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-        javax.servlet.http.HttpSession session = attrs != null ? attrs.getRequest().getSession(false) : null;
+        jakarta.servlet.http.HttpSession session = attrs != null ? attrs.getRequest().getSession(false) : null;
         boolean isEmployeeSession = session != null && session.getAttribute("employee") != null;
         if (!isEmployeeSession) {
             Long currentUserId = BaseContext.getCurrentId();

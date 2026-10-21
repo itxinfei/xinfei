@@ -1,7 +1,7 @@
 package com.xinfei.module.notification.sse;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.ObjectMapperHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -91,7 +91,7 @@ public class SseEmitterManager {
         String payload;
         try {
             payload = objectMapper.writeValueAsString(data);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("[SSE] 载荷序列化失败 userId={}", userId, e);
             return;
         }

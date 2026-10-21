@@ -8,6 +8,7 @@ import com.xinfei.module.notification.service.NotificationService;
 import com.xinfei.module.order.mapper.OrderMapper;
 import com.xinfei.module.order.model.Orders;
 import com.xinfei.module.urgency.mapper.UrgencyMapper;
+import com.xinfei.module.urgency.model.UrgencyRecord;
 import com.xinfei.module.urgency.service.impl.UrgencyServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,7 +102,7 @@ class CustomerUrgencyTest {
         R<Map<String, Object>> result = urgencyService.customerTrigger(100L, 1L);
 
         assertEquals(Integer.valueOf(1), result.getCode(), "本人待接单订单催单应成功");
-        verify(urgencyMapper).insert(any());
+        verify(urgencyMapper).insert(any(UrgencyRecord.class));
         verify(notificationService).sendSimpleMessage(eq(1),
                 eq(Collections.singletonList("13800138000")),
                 eq("顾客催单提醒"), anyString());
@@ -126,7 +127,7 @@ class CustomerUrgencyTest {
         R<Map<String, Object>> result = urgencyService.customerTrigger(102L, 1L);
 
         assertEquals(Integer.valueOf(0), result.getCode(), "非本人订单应被拦截");
-        verify(urgencyMapper, never()).insert(any());
+        verify(urgencyMapper, never()).insert(any(UrgencyRecord.class));
         verify(notificationService, never()).sendSimpleMessage(
                 org.mockito.ArgumentMatchers.anyInt(), any(), anyString(), anyString());
     }
@@ -138,7 +139,7 @@ class CustomerUrgencyTest {
         R<Map<String, Object>> result = urgencyService.customerTrigger(103L, 1L);
 
         assertEquals(Integer.valueOf(0), result.getCode(), "已完成订单不应催单");
-        verify(urgencyMapper, never()).insert(any());
+        verify(urgencyMapper, never()).insert(any(UrgencyRecord.class));
     }
 
     @Test
@@ -158,7 +159,7 @@ class CustomerUrgencyTest {
         R<Map<String, Object>> result = urgencyService.customerTrigger(105L, 1L);
 
         assertEquals(Integer.valueOf(0), result.getCode(), "超出每日限次应失败");
-        verify(urgencyMapper, never()).insert(any());
+        verify(urgencyMapper, never()).insert(any(UrgencyRecord.class));
         verify(notificationService, never()).sendSimpleMessage(
                 org.mockito.ArgumentMatchers.anyInt(), any(), anyString(), anyString());
     }

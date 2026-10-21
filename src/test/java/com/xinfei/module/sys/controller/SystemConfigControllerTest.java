@@ -7,14 +7,17 @@ import com.xinfei.module.sys.service.SystemConfigService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import com.xinfei.controller.BaseControllerTest;
 import com.xinfei.test.TestDatabaseCleaner;
+
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -35,6 +38,9 @@ public class SystemConfigControllerTest extends BaseControllerTest {
     @Autowired
     private TestDatabaseCleaner cleaner;
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     private static final String ADMIN_BYPASS_ATTRIBUTE = "SUPER_ADMIN";
 
     private Long testConfigId;
@@ -42,6 +48,13 @@ public class SystemConfigControllerTest extends BaseControllerTest {
     @BeforeEach
     void setUp() {
         cleaner.cleanTables("role", "permission", "role_permission", "system_config");
+        // cleanTables 只清 MySQL；@Cacheable("systemConfig") 的值还在 Redis。
+        // 用例经 addTenantConfig/直接改库写入，不走 setConfig 的 @CacheEvict，
+        // 上一轮残留的缓存会被本类命中，导致读到旧值。测试前按前缀清掉该缓存域。
+        Set<String> cacheKeys = stringRedisTemplate.keys("systemConfig::*");
+        if (cacheKeys != null && !cacheKeys.isEmpty()) {
+            stringRedisTemplate.delete(cacheKeys);
+        }
         BaseContext.setCurrentId(1L);
         BaseContext.setCurrentTenantId(999L);
 

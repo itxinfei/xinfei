@@ -1,7 +1,7 @@
 package com.xinfei.module.platform.adapter;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.module.platform.adapter.impl.DouyinAdapter;
 import com.xinfei.module.platform.adapter.impl.ElemeAdapter;
 import com.xinfei.module.platform.adapter.impl.JdAdapter;

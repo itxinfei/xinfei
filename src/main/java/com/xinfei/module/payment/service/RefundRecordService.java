@@ -1,6 +1,6 @@
 package com.xinfei.module.payment.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.payment.model.RefundRecord;
 
 import java.math.BigDecimal;

@@ -2,8 +2,8 @@ package com.xinfei.module.inventory.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.transaction.annotation.Transactional;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 import org.springframework.transaction.annotation.Transactional;
 import com.xinfei.common.BaseContext;
 import org.springframework.transaction.annotation.Transactional;
@@ -494,12 +494,12 @@ public class ReplenishServiceImpl implements ReplenishService {
             } else {
                 json = ObjectMapperHolder.getDefault().writeValueAsString(cached);
             }
-            com.fasterxml.jackson.databind.ObjectMapper mapper = ObjectMapperHolder.getDefault();
+            tools.jackson.databind.ObjectMapper mapper = ObjectMapperHolder.getDefault();
             // 写入侧序列化 List<Map>（JSON 数组），按 List.class 反序列化；
             // 原 readValue(json, Map.class) 对数组必抛 MismatchedInputException 导致缓存永不命中
             return mapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {
             });
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("[智能补货] Redis 缓存反序列化失败，按未命中处理并降级重算：{}", e.getMessage());
             return null;
         } catch (Exception e) {
@@ -530,11 +530,11 @@ public class ReplenishServiceImpl implements ReplenishService {
         }
         String redisKey = buildCacheKey(tenantId, days, replenishCycle);
         try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = ObjectMapperHolder.getDefault();
+            tools.jackson.databind.ObjectMapper mapper = ObjectMapperHolder.getDefault();
             String json = mapper.writeValueAsString(data);
             redisTemplate.opsForValue().set(redisKey, json, CACHE_TTL_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
             log.debug("[智能补货] 补货建议数据已缓存，redisKey={}, size={}", redisKey, data.size());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("[智能补货] JSON 序列化失败，跳过缓存：{}", e.getMessage());
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程

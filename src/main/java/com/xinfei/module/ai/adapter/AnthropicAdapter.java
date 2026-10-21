@@ -1,6 +1,6 @@
 package com.xinfei.module.ai.adapter;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xinfei.module.ai.failover.AiProviderException;
 import com.xinfei.module.ai.model.AIChatResponse;
 import com.xinfei.module.ai.model.AIMessage;

@@ -1,6 +1,6 @@
 package com.xinfei.module.order.dto;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 更新订单状态请求 DTO

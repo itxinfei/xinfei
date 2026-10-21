@@ -1,5 +1,6 @@
 package com.xinfei.module.order.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.xinfei.module.dish.service.DishService;
 import com.xinfei.module.order.model.OrderDetail;
@@ -96,7 +97,7 @@ class OrderStockRefundIdempotentTest {
         order.setStatus(Orders.STATUS_CANCELLED);
         order.setStockRefunded(0);
         when(orderService.getById(1L)).thenReturn(order);
-        when(orderDetailService.list(any())).thenReturn(Collections.singletonList(detail(10L, 2)));
+        when(orderDetailService.list(any(Wrapper.class))).thenReturn(Collections.singletonList(detail(10L, 2)));
         doReturn(stubChain()).when(orderService).lambdaUpdate();
 
         boolean r = service.restoreForOrder(1L);
@@ -123,7 +124,7 @@ class OrderStockRefundIdempotentTest {
         order.setStatus(Orders.STATUS_REFUNDED);
         order.setStockRefunded(0);
         when(orderService.getById(1L)).thenReturn(order);
-        when(orderDetailService.list(any())).thenReturn(Collections.emptyList());
+        when(orderDetailService.list(any(Wrapper.class))).thenReturn(Collections.emptyList());
         doReturn(stubChain()).when(orderService).lambdaUpdate();
 
         boolean r = service.restoreForOrder(1L);

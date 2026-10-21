@@ -1,6 +1,6 @@
 package com.xinfei.module.ai.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.ai.dto.AiAttachmentVO;
 import com.xinfei.module.ai.model.AiAttachment;
 import org.springframework.web.multipart.MultipartFile;

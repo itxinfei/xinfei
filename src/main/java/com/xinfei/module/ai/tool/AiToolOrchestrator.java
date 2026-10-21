@@ -1,7 +1,7 @@
 package com.xinfei.module.ai.tool;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.ObjectMapperHolder;
 import com.xinfei.module.ai.adapter.AbortableStreamCallback;
 import com.xinfei.module.ai.adapter.AiModelAdapter;
@@ -12,7 +12,7 @@ import com.xinfei.module.ai.provider.AiProviderManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 

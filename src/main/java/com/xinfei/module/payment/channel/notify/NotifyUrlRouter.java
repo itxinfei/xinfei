@@ -1,6 +1,6 @@
 package com.xinfei.module.payment.channel.notify;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 回调地址的租户路由工具。

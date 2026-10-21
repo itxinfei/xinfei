@@ -12,7 +12,7 @@ import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 
 /**
  * 会员

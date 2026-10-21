@@ -3,16 +3,17 @@ package com.xinfei.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 /**
@@ -42,7 +43,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
  */
 @Slf4j
 @Configuration
-@ConditionalOnProperty(prefix = "spring.redis", name = "host")
+@ConditionalOnProperty(prefix = "spring.data.redis", name = "host")
 public class SessionRedisConfig {
 
     /**
@@ -55,11 +56,6 @@ public class SessionRedisConfig {
      */
     @Bean(name = "springSessionDefaultRedisSerializer")
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
-        ObjectMapper sessionOm = new ObjectMapper();
-        sessionOm.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        sessionOm.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        sessionOm.registerModule(new JavaTimeModule());
-
         // 白名单限制允许反序列化的包路径，防止反序列化漏洞（口径同 RedisConfig.redisObjectMapper）
         PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
                 .allowIfBaseType(Object.class)
@@ -69,12 +65,21 @@ public class SessionRedisConfig {
                 .allowIfSubType("java.lang.")
                 .build();
 
-        // EVERYTHING：final 类型（Long/Integer/String）也携带 @class，
-        // 防止 Long 被 Jackson 默认推断为 Integer 导致 ClassCastException
-        sessionOm.activateDefaultTyping(ptv,
-                ObjectMapper.DefaultTyping.EVERYTHING, JsonTypeInfo.As.PROPERTY);
+        // Jackson 3 mapper 不可变，改 builder；WRITE_DATES_AS_TIMESTAMPS 已移到 DateTimeFeature。
+        //
+        // Jackson 3 的 DefaultTyping 已移除 EVERYTHING（只剩 JAVA_LANG_OBJECT /
+        // OBJECT_AND_NON_CONCRETE / NON_CONCRETE_AND_ARRAYS / NON_FINAL / NON_FINAL_AND_ENUMS /
+        // NON_FINAL_AND_RECORDS）。实测 NON_FINAL 对 Map<String,Object> 里声明为 Object 的属性
+        // 仍会写出 ["java.lang.Long",1234567890123]，往返后读回是 Long 而非 Integer，
+        // 即原注释担心的「Long 被推断成 Integer 导致 ClassCastException」在 NON_FINAL 下已不出现。
+        ObjectMapper sessionOm = JsonMapper.builder()
+                .changeDefaultVisibility(visibilityChecker ->
+                        visibilityChecker.withVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY))
+                .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .activateDefaultTyping(ptv, DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY)
+                .build();
 
-        log.info("Spring Session Redis 序列化器已配置（JSON + EVERYTHING typing）");
-        return new GenericJackson2JsonRedisSerializer(sessionOm);
+        log.info("Spring Session Redis 序列化器已配置（JSON + NON_FINAL typing）");
+        return new GenericJacksonJsonRedisSerializer(sessionOm);
     }
 }

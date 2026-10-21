@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -66,7 +67,7 @@ class AiPromptTemplateServiceImplTest {
         when(mapper.selectCount(any())).thenReturn(0L);
         when(mapper.updateById(any(AiPromptTemplate.class))).thenReturn(1);
         when(mapper.deleteById(any(java.io.Serializable.class))).thenReturn(1);
-        when(mapper.selectList(any())).thenReturn(new ArrayList<AiPromptTemplate>());
+        when(mapper.selectOne(any(), anyBoolean())).thenReturn(null);
         ReflectionTestUtils.setField(service, "baseMapper", mapper);
     }
 
@@ -274,13 +275,13 @@ class AiPromptTemplateServiceImplTest {
         AiPromptTemplate t = builtin(1L, "quick_order_assistant",
                 "order_assistant", "QUICK");
         t.setQuickQuestions("[\"问题1\",\"问题2\"]");
-        when(mapper.selectList(any())).thenReturn(Collections.singletonList(t));
+        when(mapper.selectOne(any(), anyBoolean())).thenReturn(t);
         assertEquals(Arrays.asList("问题1", "问题2"), service.getQuickQuestions("order_assistant"));
 
         t.setQuickQuestions("坏 JSON");
         assertTrue(service.getQuickQuestions("order_assistant").isEmpty());
 
-        when(mapper.selectList(any())).thenReturn(new ArrayList<AiPromptTemplate>());
+        when(mapper.selectOne(any(), anyBoolean())).thenReturn(null);
         assertTrue(service.getQuickQuestions("order_assistant").isEmpty());
     }
 
@@ -288,12 +289,12 @@ class AiPromptTemplateServiceImplTest {
     void getSystemPromptAndWelcomeFromEffectiveTemplate() {
         AiPromptTemplate sys = builtin(1L, "system_marketing", "marketing", "SYSTEM");
         sys.setContent("系统提示正文");
-        when(mapper.selectList(any())).thenReturn(Collections.singletonList(sys));
+        when(mapper.selectOne(any(), anyBoolean())).thenReturn(sys);
         assertEquals("系统提示正文", service.getSystemPrompt("marketing"));
 
         AiPromptTemplate welcome = builtin(2L, "welcome_marketing", "marketing", "WELCOME");
         welcome.setContent("欢迎正文");
-        when(mapper.selectList(any())).thenReturn(Collections.singletonList(welcome));
+        when(mapper.selectOne(any(), anyBoolean())).thenReturn(welcome);
         assertEquals("欢迎正文", service.getWelcome("marketing"));
     }
 
@@ -302,7 +303,7 @@ class AiPromptTemplateServiceImplTest {
         assertNull(service.getSystemPrompt("nope"));
         assertNull(service.getWelcome(null));
         assertTrue(service.getQuickQuestions(" ").isEmpty());
-        verify(mapper, never()).selectList(any());
+        verify(mapper, never()).selectOne(any(), anyBoolean());
     }
 
     // ==================== 辅助 ====================

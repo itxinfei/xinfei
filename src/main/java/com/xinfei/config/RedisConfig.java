@@ -3,11 +3,12 @@ package com.xinfei.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,12 +17,11 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -39,7 +39,7 @@ import java.lang.reflect.Array;
  * @since 2026-07-09
  */
 @Configuration
-@ConditionalOnProperty(prefix = "spring.redis", name = "host")
+@ConditionalOnProperty(prefix = "spring.data.redis", name = "host")
 @EnableCaching
 public class RedisConfig {
 
@@ -69,13 +69,17 @@ public class RedisConfig {
      * IDEA Endpoints 面板即报“无法检索 health 端点数据”。
      * 设为 @Primary 后 JMX 取到标准 mapper，Redis 侧仍走专用 mapper 互不影响。
      *
-     * @param builder Spring Boot 的 Jackson 构建器（含全部标准定制）
+     * <p>返回类型必须是 {@link JsonMapper} 而非 {@code ObjectMapper}：Boot 4 的
+     * {@code JacksonHttpMessageConvertersConfiguration} 按 {@code JsonMapper} 类型注入并带
+     * {@code @ConditionalOnMissingBean(JsonMapper)}，声明成 ObjectMapper 会让它误判「容器里没有」
+     * 而再建一个 {@code jacksonJsonMapper}，两个 primary 直接导致上下文启动失败。</p>
+     *
      * @return 标准 ObjectMapper
      */
     @Bean
     @Primary
-    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-        return builder.createXmlMapper(false).build();
+    public JsonMapper objectMapper() {
+        return JsonMapper.builder().build();
     }
 
     /**
@@ -89,11 +93,6 @@ public class RedisConfig {
      */
     @Bean
     public ObjectMapper redisObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        om.registerModule(new JavaTimeModule());
-
         // 使用白名单限制允许反序列化的包路径，防止反序列化漏洞
         PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
                 .allowIfBaseType(Object.class)
@@ -104,9 +103,15 @@ public class RedisConfig {
                 .allowIfSubType("java.lang.")
                 .build();
 
-        om.activateDefaultTyping(ptv,
-                ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
-        return om;
+        // Jackson 3 的 mapper 不可变：原「new ObjectMapper() + setVisibility/disable/
+        // activateDefaultTyping」的 mutate 写法改为 builder 链式配置。
+        // WRITE_DATES_AS_TIMESTAMPS 已从 SerializationFeature 移到 DateTimeFeature。
+        return JsonMapper.builder()
+                .changeDefaultVisibility(visibilityChecker ->
+                        visibilityChecker.withVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY))
+                .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .activateDefaultTyping(ptv, DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY)
+                .build();
     }
 
     /**
@@ -123,9 +128,9 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // 使用 GenericJackson2JsonRedisSerializer + 自定义 ObjectMapper
+        // 使用 GenericJacksonJsonRedisSerializer + 自定义 ObjectMapper
         // ObjectMapper 已启用 DefaultTyping 确保反序列化时类型正确
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+        GenericJacksonJsonRedisSerializer jsonSerializer = new GenericJacksonJsonRedisSerializer(objectMapper);
 
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
@@ -152,7 +157,7 @@ public class RedisConfig {
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory,
                                       @Qualifier("redisObjectMapper") ObjectMapper objectMapper) {
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+        GenericJacksonJsonRedisSerializer jsonSerializer = new GenericJacksonJsonRedisSerializer(objectMapper);
 
         // 默认缓存配置：30分钟过期
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()

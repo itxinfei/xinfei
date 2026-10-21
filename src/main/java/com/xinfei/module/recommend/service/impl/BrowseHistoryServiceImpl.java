@@ -1,6 +1,6 @@
 package com.xinfei.module.recommend.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.module.recommend.mapper.BrowseHistoryMapper;
 import com.xinfei.module.recommend.model.BrowseHistory;
 import com.xinfei.module.recommend.service.BrowseHistoryService;

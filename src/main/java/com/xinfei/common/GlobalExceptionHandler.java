@@ -17,8 +17,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import org.springframework.dao.DuplicateKeyException;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -6,8 +6,8 @@ import com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest;
 import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.xinfei.common.LogMaskUtils;
 import com.xinfei.common.CustomException;
 import com.xinfei.common.ObjectMapperHolder;
@@ -104,7 +104,7 @@ public final class SMSUtils {
 		templateParams.put("code", param);
 		try {
 			request.setTemplateParam(OBJECT_MAPPER.writeValueAsString(templateParams));
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			log.error("短信模板参数JSON序列化失败，phone={}, param={}", LogMaskUtils.maskPhone(phoneNumbers), param, e);
 			throw new CustomException("短信参数处理失败");
 		}

@@ -1,6 +1,6 @@
 package com.xinfei.module.dining.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.dining.model.QueueRecord;
 import com.xinfei.module.dining.vo.QueueStatsVO;
 

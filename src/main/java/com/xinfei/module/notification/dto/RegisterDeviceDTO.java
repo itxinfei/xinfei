@@ -1,7 +1,7 @@
 package com.xinfei.module.notification.dto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 注册设备 Token 请求 DTO

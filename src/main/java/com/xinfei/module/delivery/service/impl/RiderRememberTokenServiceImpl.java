@@ -1,6 +1,6 @@
 package com.xinfei.module.delivery.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.module.delivery.mapper.RiderRememberTokenMapper;
 import com.xinfei.module.delivery.model.RiderRememberToken;
 import com.xinfei.module.delivery.service.RiderRememberTokenService;

@@ -1,7 +1,7 @@
 package com.xinfei.module.marketing.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.marketing.model.NewCustomerDiscount;
 import com.xinfei.module.marketing.model.BuyGetFree;
 import com.xinfei.module.marketing.model.FlashSale;

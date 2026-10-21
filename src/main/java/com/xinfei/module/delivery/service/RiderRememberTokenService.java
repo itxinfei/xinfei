@@ -1,6 +1,6 @@
 package com.xinfei.module.delivery.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.module.delivery.model.RiderRememberToken;
 
 /**

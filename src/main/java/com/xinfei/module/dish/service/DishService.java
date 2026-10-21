@@ -1,6 +1,6 @@
 package com.xinfei.module.dish.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.xinfei.dto.DishDto;
 import com.xinfei.module.dish.model.Dish;
 import com.xinfei.module.dish.model.DishFlavor;
