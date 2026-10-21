@@ -1,6 +1,6 @@
 /**
  * 骑手端请求封装：axios 实例 + CSRF 自动带头 + 统一响应/未登录处理。
- * 依赖全局 axios、vant（Vant2 UMD）；CSRF 存取与请求拦截复用 /shared/js/request-core.js。
+ * 依赖全局 axios、vant（Vant4 UMD）；CSRF 存取与请求拦截复用 /shared/js/request-core.js。
  */
 document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>');
 (function (win) {
@@ -10,8 +10,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
   });
 
   function toast(msg) {
-    if (win.vant && typeof win.vant.Toast === 'function') {
-      win.vant.Toast(msg);
+    if (win.vant && typeof win.vant.showToast === 'function') {
+      win.vant.showToast(msg);
     }
   }
 

@@ -14,7 +14,7 @@
   <script src="./../js/base.js?v=20260930"></script>
   <script src="./../js/icon-fallback.js?v=20260917"></script>
   <script src="./../js/common.js?v=20260930b"></script>
-  <link rel="stylesheet" href="../styles/vant.min.css" />
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
   <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
   <link rel="stylesheet" href="../styles/qrcode-order.css?v=20260930" />
@@ -105,7 +105,7 @@
 
     <!-- 购物车弹窗 -->
     <!-- 修改点(2026-09-17)：可访问性——底部弹层补充 dialog 语义（Vant Popup 透传属性到根元素） -->
-    <van-popup v-model="cartDialogVisible" position="bottom" round :style="{ maxHeight: '60vh' }"
+    <van-popup v-model:show="cartDialogVisible" position="bottom" round :style="{ maxHeight: '60vh' }"
                role="dialog" aria-modal="true" aria-label="购物车">
       <div class="cart-popup">
         <div class="cart-popup-header">
@@ -131,7 +131,7 @@
     </van-popup>
 
     <!-- 确认订单弹窗 -->
-    <van-popup v-model="submitDialogVisible" position="bottom" round :style="{ maxHeight: '80vh' }"
+    <van-popup v-model:show="submitDialogVisible" position="bottom" round :style="{ maxHeight: '80vh' }"
                role="dialog" aria-modal="true" aria-label="确认订单">
       <div class="order-popup">
         <div class="order-section">
@@ -181,7 +181,7 @@
     </van-popup>
 
     <!-- 到店支付下单成功：常驻入口弹窗，避免 Toast 消失后用户找不到订单 -->
-    <van-dialog v-model="successDialogVisible" title="下单成功"
+    <van-dialog v-model:show="successDialogVisible" title="下单成功"
                 confirm-button-text="查看订单" cancel-button-text="继续点餐"
                 show-cancel-button :close-on-click-overlay="false"
                 @confirm="viewCreatedOrder" @cancel="continueOrder">
@@ -193,19 +193,20 @@
     </cend-shell>
   </div>
 
-  <script src="../../backend/plugins/vue/vue.js"></script>
+  <script src="../../backend/plugins/vue3/vue.global.js"></script>
   <!-- 本页 common.js 在 <head> 先于 vue.js 加载，故 Vue 就绪后在此补装模板辅助方法 -->
   <script>installXinfeiVueHelpers();</script>
-  <script src="../js/vant.min.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="../../backend/plugins/axios/axios.min.js"></script>
   <script src="../js/request.js?v=20260930"></script>
   <script src="../api/food.js?v=20260917"></script>
   <script src="../api/dining.js?v=20260917"></script>
   <script src="../api/payment.js?v=20260917"></script>
   <script src="../api/order.js?v=20260917"></script>
-  <script src="../js/components-cend.js?v=20260922"></script>
+  <script src="../js/components-cend-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createVantApp({
       el: '#dine-app',
       data: function() {
         return {
@@ -272,10 +273,10 @@
               self.categories = res.data.categories || []
               self.dishes = (res.data.dishes || []).map(function(d) { return Object.assign({}, d, { qty: 0 }) })
             } else {
-              vant.Toast.fail((res && res.msg) || '加载数据失败')
+              vant.showFailToast((res && res.msg) || '加载数据失败')
             }
           }).catch(function() {
-            vant.Toast.fail('加载数据失败')
+            vant.showFailToast('加载数据失败')
           }).finally(function() {
             self.loading = false
           })
@@ -287,7 +288,7 @@
               self.tableInfo = res.data
             }
           }).catch(function() {
-            vant.Toast.fail('加载桌台信息失败')
+            vant.showFailToast('加载桌台信息失败')
           })
         },
         switchCategory: function(catId) {
@@ -295,13 +296,13 @@
         },
         addToCart: function(dish) {
           if (this.isSoldOut(dish)) {
-            vant.Toast.fail('该菜品已售罄')
+            vant.showFailToast('该菜品已售罄')
             return
           }
           var existing = this.cart.find(function(item) { return item.dishId === dish.id })
           if (existing) {
             if (existing.qty >= (dish.stockQty || 999)) {
-              vant.Toast.fail('库存不足')
+              vant.showFailToast('库存不足')
               return
             }
             existing.qty++
@@ -349,11 +350,11 @@
             var dish = this.dishes.find(function(d) { return d.id === item.dishId })
             if (dish) {
               if (this.isSoldOut(dish)) {
-                vant.Toast.fail('该菜品已售罄')
+                vant.showFailToast('该菜品已售罄')
                 return
               }
               if (dish.stockQty != null && item.qty >= dish.stockQty) {
-                vant.Toast.fail('库存不足')
+                vant.showFailToast('库存不足')
                 return
               }
             }
@@ -393,7 +394,7 @@
         clearCart: function() {
           var self = this
           if (!this.cart.length) { this.cartDialogVisible = false; return }
-          vant.Dialog.confirm({
+          vant.showConfirmDialog({
             title: '清空购物车',
             message: '确定清空已选的 ' + this.cartTotal() + ' 件商品吗？'
           }).then(function() {
@@ -404,7 +405,7 @@
         },
         showSubmitDialog: function() {
           if (this.cart.length === 0) {
-            vant.Toast.fail('请先选择菜品')
+            vant.showFailToast('请先选择菜品')
             return
           }
           // 结算需登录：未登录先暂存购物车再跳登录（redirect 回本桌页），登录后恢复，不丢整单
@@ -430,19 +431,19 @@
             }
           }
           if (!this.tableInfo) {
-            vant.Toast.fail('未获取到有效桌台信息，请重新扫描桌上二维码')
+            vant.showFailToast('未获取到有效桌台信息，请重新扫描桌上二维码')
             return
           }
           if (!this.submitForm.contactName.trim()) {
-            vant.Toast.fail('请输入联系人姓名')
+            vant.showFailToast('请输入联系人姓名')
             return
           }
           if (!this.submitForm.contactPhone.trim()) {
-            vant.Toast.fail('请输入手机号')
+            vant.showFailToast('请输入手机号')
             return
           }
           if (!/^1\d{10}$/.test(this.submitForm.contactPhone.trim())) {
-            vant.Toast.fail('请输入正确的手机号')
+            vant.showFailToast('请输入正确的手机号')
             return
           }
 
@@ -505,7 +506,7 @@
               self.successDialogVisible = true
               self.loadTableInfo()
             } else {
-              vant.Toast.fail((res ? res.msg : '') || '下单失败')
+              vant.showFailToast((res ? res.msg : '') || '下单失败')
             }
           }).catch(function(err) {
             // 下单请求本身失败/超时：订单可能已在后端创建。先按本桌+近5分钟回查待付款订单，
@@ -583,11 +584,11 @@
             if (found) {
               self.payCreateFailed()
             } else {
-              vant.Toast.fail('下单失败，请稍后重试')
+              vant.showFailToast('下单失败，请稍后重试')
             }
           }).catch(function(e) {
             console.error('[qrcode-order] 待付款订单回查失败:', e)
-            vant.Toast.fail('下单失败，请稍后重试')
+            vant.showFailToast('下单失败，请稍后重试')
           })
         },
         // 订单时间字符串兼容解析（yyyy-MM-dd HH:mm:ss 在部分浏览器需把 - 换成 /）
@@ -598,7 +599,7 @@
         },
         // 订单已创建但支付未拉起：明确告知"订单已提交"，引导去订单列表续付，杜绝重复下单
         payCreateFailed: function() {
-          vant.Dialog.alert({
+          vant.showDialog({
             title: '支付未完成',
             message: '订单已提交成功，您可稍后在订单列表中找到该订单继续支付。'
           }).then(function() {

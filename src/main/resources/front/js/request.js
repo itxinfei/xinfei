@@ -111,8 +111,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       // silent 请求（后台轮询等）连错误横幅也不弹，由调用方静默处理
       var isSilent = error && error.config && error.config.silent;
       // 修改点：防御性检查vant是否加载
-      if(!isSilent && window.vant && window.vant.Notify){
-        window.vant.Notify({
+      if(!isSilent && window.vant && window.vant.showNotify){
+        window.vant.showNotify({
           message: message,
           type: 'warning',
           duration: 5 * 1000
@@ -139,8 +139,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       var msg = null;
       try { msg = JSON.parse(ev.data); } catch (e) { return; }
       // 实时提醒，点击进入消息中心
-      if (win.vant && win.vant.Notify) {
-        win.vant.Notify({
+      if (win.vant && win.vant.showNotify) {
+        win.vant.showNotify({
           message: msg.title || msg.content || '您有一条新消息',
           type: 'primary',
           duration: 5000,
@@ -232,8 +232,8 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
                 if (!n) { lastNotified = 0; notifiedSession = 0; return; }
                 if (notifiedSession === sid && n <= lastNotified) { return; }
                 notifiedSession = sid; lastNotified = n;
-                if (!win.vant || !win.vant.Notify) { return; }
-                win.vant.Notify({
+                if (!win.vant || !win.vant.showNotify) { return; }
+                win.vant.showNotify({
                   message: '客服发来 ' + n + ' 条新消息',
                   type: 'primary',
                   duration: 5000,

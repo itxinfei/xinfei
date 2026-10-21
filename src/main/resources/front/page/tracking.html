@@ -6,7 +6,7 @@
     <title>配送追踪 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <link rel="stylesheet" href="../styles/tracking.css?v=20260930" />
@@ -164,16 +164,17 @@
         </cend-shell>
     </div>
 
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <!-- C 端跨页面复用组件（必须在 vant 之后、new Vue 之前加载） -->
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../js/common.js?v=20260930b"></script>
     <script src="./../api/tracking.js?v=20260917"></script>
     <script>
-        new Vue({
+        createVantApp({
             el: '#tracking',
             data() {
                 return {
@@ -306,10 +307,10 @@
                     document.addEventListener('visibilitychange', this._onVisibility);
                 } else {
                     this.missingOrder = true;
-                    vant.Toast.fail('缺少订单信息');
+                    vant.showFailToast('缺少订单信息');
                 }
             },
-            beforeDestroy(){
+            beforeUnmount(){
                 if(this._pollTimer) clearInterval(this._pollTimer);
                 if(this._onVisibility) document.removeEventListener('visibilitychange', this._onVisibility);
                 // 销毁地图实例（百度 BMapGL），释放内部事件/图层资源
@@ -374,7 +375,7 @@
                             // 修改点(2026-09-17)：状态变更主动提示（原轮询静默更新，用户完全无感知）
                             const newStatus = res.data ? res.data.status : null;
                             if (prevStatus && newStatus && prevStatus !== newStatus) {
-                                vant.Toast({ message: '配送更新：' + this.statusText, duration: 2500 });
+                                vant.showToast({ message: '配送更新：' + this.statusText, duration: 2500 });
                             }
                             // 修改点(2026-09-17)：终态（已送达/已取消）停止轮询，避免无效请求
                             if (this.isFinalStatus && this._pollTimer) {
@@ -396,12 +397,12 @@
                                 if(this._pollTimer){ clearInterval(this._pollTimer); this._pollTimer = null }
                             } else {
                                 // 后台静默轮询的业务失败不打扰用户，下次轮询自动恢复
-                                vant.Toast.fail(res.msg || '加载配送信息失败');
+                                vant.showFailToast(res.msg || '加载配送信息失败');
                             }
                         }
                     } catch (e) {
                         if (!silent) {
-                            vant.Toast.fail('网络异常，请稍后重试');
+                            vant.showFailToast('网络异常，请稍后重试');
                         }
                     } finally {
                         this._reqInFlight = false;
@@ -520,7 +521,7 @@
                     if (this.trackingData && this.trackingData.riderPhone) {
                         window.location.href = 'tel:' + this.trackingData.riderPhone;
                     } else {
-                        vant.Toast.fail('暂无骑手联系方式');
+                        vant.showFailToast('暂无骑手联系方式');
                     }
                 },
                 goToOrders() {

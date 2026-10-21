@@ -9,7 +9,7 @@
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js?v=20260930"></script>
         <!--引入vant样式-->
-        <link rel="stylesheet" href="../styles/vant.min.css"/>
+        <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
         <!-- 引入样式  -->
         <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
         <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
@@ -87,18 +87,19 @@
          </cend-shell>
         </div>
             <!-- 开发环境版本,包含了有帮助的命令行警告 -->
-            <script src="../../backend/plugins/vue/vue.js"></script>
+            <script src="../../backend/plugins/vue3/vue.global.js"></script>
             <!-- 引入vant -->
-            <script src="./../js/vant.min.js"></script>
+            <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+            <script src="/front/js/app-v3-vant.js?v=3001001"></script>
             <!-- 跨页复用组件（cend-shell/cend-empty），须在 vant 之后、new Vue 之前 -->
-            <script src="../js/components-cend.js?v=20260922"></script>
+            <script src="../js/components-cend-v3.js?v=3001001"></script>
             <script src="./../api/address.js?v=20260917"></script>
             <!-- 引入axios -->
             <script src="../../backend/plugins/axios/axios.min.js"></script>
             <script src="./../js/request.js?v=20260930"></script>
             <script src="./../js/common.js?v=20260930b"></script>
             <script>
-            new Vue({
+            createVantApp({
                 el:"#address",
                 data(){
                     return {
@@ -118,7 +119,7 @@
                     }
                     window.addEventListener('pagehide', this._onPageHide)
                 },
-                beforeDestroy(){
+                beforeUnmount(){
                     if (this._onPageHide) window.removeEventListener('pagehide', this._onPageHide)
                 },
                 methods:{
@@ -144,7 +145,7 @@
                     deleteAddress(item){
                         if(!item || !item.id) return
                         var self = this
-                        vant.Dialog.confirm({
+                        vant.showConfirmDialog({
                             title: '确认删除',
                             message: '删除后无法恢复，确认删除该地址吗？',
                             confirmButtonText: '确认删除',
@@ -158,13 +159,13 @@
                         try {
                             var res = await deleteAddressApi({ids: item.id})
                             if(res.code === 1){
-                                vant.Toast.success('删除成功')
+                                vant.showSuccessToast('删除成功')
                                 this.initData()
                             } else {
-                                vant.Toast.fail(res.msg || '删除失败')
+                                vant.showFailToast(res.msg || '删除失败')
                             }
                         } catch(e) {
-                            vant.Toast.fail('删除失败')
+                            vant.showFailToast('删除失败')
                         }
                     },
                     async initData(){
@@ -175,11 +176,11 @@
                             if(res.code === 1){
                                 this.addressList = res.data || []
                             }else{
-                                vant.Toast.fail(res.msg || '加载地址列表失败');
+                                vant.showFailToast(res.msg || '加载地址列表失败');
                             }
                         } catch(e) {
                             this.loading = false
-                            vant.Toast.fail('加载地址列表失败');
+                            vant.showFailToast('加载地址列表失败');
                         }
                     },
                     async setDefaultAddress(item){
@@ -192,11 +193,11 @@
                             item.isDefault = 1
                             const res = await setDefaultAddressApi({id:item.id})
                             if(res.code !== 1){
-                                vant.Toast.fail(res.msg || '设置默认地址失败');
+                                vant.showFailToast(res.msg || '设置默认地址失败');
                                 this.initData()
                             }
                         } catch(e) {
-                            vant.Toast.fail('设置默认地址失败');
+                            vant.showFailToast('设置默认地址失败');
                             this.initData()
                         } finally {
                             this.settingDefault = false

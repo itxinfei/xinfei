@@ -9,7 +9,7 @@
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js?v=20260930"></script>
         <!-- 引入样式  -->
-        <link rel="stylesheet" href="../styles/vant.min.css" />
+        <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
         <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
         <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
         <!-- 修改点：补充加载 remixicon.css（此前仅加载 fallback，ri-share-line 等图标可能不渲染） -->
@@ -123,19 +123,20 @@
             </cend-shell>
         </div>
         <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-        <script src="../../backend/plugins/vue/vue.js"></script>
+        <script src="../../backend/plugins/vue3/vue.global.js"></script>
         <!-- 引入axios -->
         <script src="../../backend/plugins/axios/axios.min.js"></script>
         <script src="./../js/request.js?v=20260930"></script>
         <script src="./../js/common.js?v=20260930b"></script>
-        <script src="../js/vant.min.js"></script>
+        <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+        <script src="/front/js/app-v3-vant.js?v=3001001"></script>
         <!-- C 端跨页面复用组件（必须在 vant 之后、new Vue 之前加载） -->
-        <script src="../js/components-cend.js?v=20260925"></script>
+        <script src="../js/components-cend-v3.js?v=3001001"></script>
         <!-- 支付结果回查依赖支付发起接口，加载 payment.js -->
         <script src="./../api/payment.js?v=20260917"></script>
         <script src="./../api/order.js?v=20260917"></script>
         <script>
-        new Vue({
+        createVantApp({
             el:"#pay_success",
             data(){
                 return {
@@ -171,7 +172,7 @@
                     var maxRetries = 5
                     var retryDelay = 2000
                     var lastStatus = null
-                    vant.Toast.loading({ message: '支付结果确认中...', duration: 0, forbidClick: false })
+                    vant.showLoadingToast({ message: '支付结果确认中...', duration: 0, forbidClick: false })
                     for(var attempt = 1; attempt <= maxRetries; attempt++){
                         try {
                             const res = await getOrderDetailApi(this.reorderId)
@@ -187,17 +188,17 @@
                                 // 2待接单/3派送中/4已完成/7已分账 均视为支付成功
                                 if (orderStatus === 2 || orderStatus === 3 || orderStatus === 4 || orderStatus === 7) {
                                     this.phase = 'success'
-                                    vant.Toast.success('支付成功')
+                                    vant.showSuccessToast('支付成功')
                                     return
                                 }
                                 if (orderStatus === 5) {
                                     this.phase = 'cancelled'
-                                    vant.Toast.clear()
+                                    vant.closeToast()
                                     return
                                 }
                                 if (orderStatus === 6) {
                                     this.phase = 'refunded'
-                                    vant.Toast.clear()
+                                    vant.closeToast()
                                     return
                                 }
                                 // status=1 待付款：继续轮询等待异步支付回调
@@ -211,7 +212,7 @@
                     }
                     // 轮询结束：仍待付款 → 支付未完成；查不到/出错 → 结果未确认（均不报成功）
                     this.phase = lastStatus === 1 ? 'unpaid' : 'unknown'
-                    vant.Toast.clear()
+                    vant.closeToast()
                 },
                 // 未支付 → 结算页续付（与订单列表「去支付」同源）
                 continuePay(){

@@ -6,7 +6,7 @@
   <title>我的发票 - 心飞外卖</title>
   <link rel="icon" href="./../images/favico.ico">
   <script src="./../js/base.js?v=20260930"></script>
-  <link rel="stylesheet" href="../styles/vant.min.css"/>
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
   <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
   <link rel="stylesheet" href="../styles/my-invoice.css?v=20260930" />
@@ -49,7 +49,7 @@
       <div v-for="item in records" :key="item.id" class="inv-card" @click="goInvoice(item)">
         <div class="card-head">
           <span class="title-name">{{ item.title || '未填写抬头' }}</span>
-          <van-tag :class="'inv-status-tag inv-status-' + item.status" size="medium">{{ statusText(item.status) }}</van-tag>
+          <van-tag :class="'inv-status-tag inv-status-' + item.status" size="default">{{ statusText(item.status) }}</van-tag>
         </div>
         <div class="row">
           <span class="label">订单号</span>
@@ -94,16 +94,17 @@
     </cend-shell>
   </div>
 
-  <script src="../../backend/plugins/vue/vue.js"></script>
-  <script src="./../js/vant.min.js"></script>
+  <script src="../../backend/plugins/vue3/vue.global.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="../../backend/plugins/axios/axios.min.js"></script>
   <script src="./../js/request.js?v=20260930"></script>
   <script src="./../api/main.js?v=20260917"></script>
   <script src="./../js/common.js?v=20260930b"></script>
-  <script src="./../js/components-cend.js?v=20260922"></script>
+  <script src="./../js/components-cend-v3.js?v=3001001"></script>
   <script src="./../api/invoice.js?v=20260917"></script>
   <script>
-    new Vue({
+    createVantApp({
       el: '#invoice-list-app',
       data: function() {
         return {
@@ -145,12 +146,12 @@
               self.total = (res.data && res.data.total) || 0
             } else {
               self.loadError = true
-              vant.Toast.fail(res.msg || '加载发票记录失败')
+              vant.showFailToast(res.msg || '加载发票记录失败')
             }
           }).catch(function(err) {
             if (err.message !== 'NOTLOGIN') {
               self.loadError = true
-              vant.Toast.fail('加载发票记录失败')
+              vant.showFailToast('加载发票记录失败')
             }
           }).finally(function() {
             self.loading = false

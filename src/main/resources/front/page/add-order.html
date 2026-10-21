@@ -9,7 +9,7 @@
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js?v=20260930"></script>
         <!--引入vant样式-->
-        <link rel="stylesheet" href="../styles/vant.min.css"/>
+        <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
         <!-- 引入样式  -->
         <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
         <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
@@ -89,7 +89,7 @@
                 </div>
 
                 <!-- 送达时间选择弹窗（立即配送） -->
-                <van-popup v-model="showTimePicker" position="bottom" :style="{ height: '40%' }" :close-on-click-overlay="true" class="time-picker-popup">
+                <van-popup v-model:show="showTimePicker" position="bottom" :style="{ height: '40%' }" :close-on-click-overlay="true" class="time-picker-popup">
                     <div class="time-picker-title">
                         <span>选择送达时段</span>
                         <span class="time-picker-close" @click="showTimePicker = false">✕</span>
@@ -109,7 +109,7 @@
                 </van-popup>
 
                 <!-- 预约配送：日期时间选择弹窗 -->
-                <van-popup v-model="showSchedulePicker" position="bottom" :style="{ height: '50%' }" :close-on-click-overlay="true" class="schedule-picker-popup">
+                <van-popup v-model:show="showSchedulePicker" position="bottom" :style="{ height: '50%' }" :close-on-click-overlay="true" class="schedule-picker-popup">
                     <div class="time-picker-title">
                         <span>选择预约送达时间</span>
                         <span class="time-picker-close" @click="showSchedulePicker = false">✕</span>
@@ -117,14 +117,14 @@
                     <div class="schedule-picker-body">
                         <div class="schedule-date-row">
                             <span class="schedule-label">日期</span>
-                            <van-datetime-picker
-                                v-model="scheduleDate"
-                                type="date"
+                            <!-- 不带 show-toolbar：本弹窗的「确定」是自绘的 .schedule-confirm-btn，
+                                 Vant4 的 @confirm/@cancel 只在它自己的工具栏里发，挂在这里永远不触发；
+                                 v-model（scheduleDateParts）在点选项时就更新，换算 Date 交给 confirmSchedule -->
+                            <van-date-picker
+                                v-model="scheduleDateParts"
                                 :min-date="minScheduleDate()"
                                 :max-date="maxScheduleDate()"
                                 :formatter="dateFormatter"
-                                @confirm="onScheduleDateConfirm"
-                                @cancel="showSchedulePicker = false"
                             />
                         </div>
                         <div class="schedule-time-row">
@@ -258,7 +258,7 @@
                 </div>
 
             <!-- 优惠券选择弹层 -->
-            <van-popup v-model="couponPopupVisible" position="bottom" round :style="{ maxHeight: '75vh' }"
+            <van-popup v-model:show="couponPopupVisible" position="bottom" round :style="{ maxHeight: '75vh' }"
                        role="dialog" aria-modal="true" aria-label="选择优惠券">
               <div class="coupon-popup">
                 <div class="coupon-popup-header">
@@ -293,7 +293,7 @@
             </van-popup>
 
             <!-- 已选商品清单弹层（点击底部购物车图标展开） -->
-            <van-popup v-model="itemsPopupVisible" position="bottom" round :style="{ maxHeight: '70vh' }"
+            <van-popup v-model:show="itemsPopupVisible" position="bottom" round :style="{ maxHeight: '70vh' }"
                        role="dialog" aria-modal="true" aria-label="已选商品">
               <div class="items-popup">
                 <div class="items-popup-header">
@@ -332,10 +332,11 @@
         </div>
             </cend-shell>
         <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-        <script src="../../backend/plugins/vue/vue.js"></script>
+        <script src="../../backend/plugins/vue3/vue.global.js"></script>
         <!-- 引入vant -->
-        <script src="./../js/vant.min.js"></script>
-        <script src="./../js/components-cend.js?v=20260922"></script>      
+        <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+        <script src="/front/js/app-v3-vant.js?v=3001001"></script>
+        <script src="./../js/components-cend-v3.js?v=3001001"></script>      
         <script src="./../api/address.js?v=20260917"></script>
         <!-- 引入axios -->
         <script src="../../backend/plugins/axios/axios.min.js"></script>
@@ -347,7 +348,7 @@
         <script src="./../api/payment.js?v=20260917"></script>
         <script src="./../api/marketing.js?v=20260921"></script>
         <script>
-            new Vue({
+            createVantApp({
                 el:"#add_order",
                 data(){
                     return {
@@ -411,6 +412,9 @@
                         // 预约配送
                         showSchedulePicker: false,
                         scheduleDate: null,
+                        // Vant4 DatePicker 的 v-model 是字符串数组（['2026','10','21']）；
+                        // 空数组 = 未选，组件按 min-date 起算显示，confirm 时由 v-model 自动回填
+                        scheduleDateParts: [],
                         selectedScheduleSlot: 'LUNCH',
                         // 修改点(2026-09-17 UX)：时段按一天时间顺序排列（原 午餐→晚餐→下午茶→早餐 乱序）
                         scheduleTimeSlots: [
@@ -624,7 +628,7 @@
                         self.startAfterLogin()
                     })
                 },
-                beforeDestroy(){
+                beforeUnmount(){
                     window.removeEventListener('pageshow', this.onPageShow)
                 },
                 methods:{
@@ -642,7 +646,7 @@
                         }
                         this.initData()
                         // bfcache 兜底：从地址页用浏览器"返回"恢复时，重新加载地址并重试配送费
-                        // 修改点(2026-09-28)：具名函数挂实例，beforeDestroy 解绑
+                        // 修改点(2026-09-28)：具名函数挂实例，beforeUnmount 解绑
                         window.addEventListener('pageshow', this.onPageShow)
                     },
                     // bfcache 恢复（pageshow）处理
@@ -689,11 +693,11 @@
                                 const pm = Number(d.payMethod)
                                 this.payMethod = (pm === 2 || pm === 3) ? pm : 2
                             }else{
-                                vant.Toast.fail(res.msg || '订单加载失败，请返回订单列表重试')
+                                vant.showFailToast(res.msg || '订单加载失败，请返回订单列表重试')
                             }
                         }catch(e){
                             console.error('续付订单加载失败:', e)
-                            vant.Toast.fail('订单加载失败，请返回订单列表重试')
+                            vant.showFailToast('订单加载失败，请返回订单列表重试')
                         }
                     },
                     // 返回导航已统一由 cend-shell 处理（2026-09-22）
@@ -820,12 +824,12 @@
                                 this.cartData = res.data || []
                             }else{
                                 this.cartData = []
-                                vant.Toast.fail(res.msg || '加载购物车失败');
+                                vant.showFailToast(res.msg || '加载购物车失败');
                             }
                         } catch(e){
                             console.error('加载购物车失败:', e)
                             this.cartData = []
-                            vant.Toast.fail('加载购物车失败，请稍后重试')
+                            vant.showFailToast('加载购物车失败，请稍后重试')
                         } finally {
                             // 购物车就绪后触发同源结算预览（预览内部再按金额拉可用券）
                             this.maybeLoadPreview()
@@ -847,7 +851,7 @@
                             this.itemsPopupVisible = true
                         }else{
                             // 修改点：空车点击给轻提示，与注释口径一致
-                            vant.Toast('购物车还是空的')
+                            vant.showToast('购物车还是空的')
                         }
                     },
                     // 修改点：加载当前订单金额对应的可用券列表
@@ -918,22 +922,31 @@
                         const now = new Date()
                         return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
                     },
-                    dateFormatter(type, val){
-                        if(type === 'year') return val + '年'
-                        if(type === 'month') return val + '月'
-                        if(type === 'day') return val + '日'
-                        return val
-                    },
-                    onScheduleDateConfirm(val){
-                        this.scheduleDate = val
+                    dateFormatter(type, option){
+                        // Vant4 DatePicker 的 formatter 签名是 (type, option) => option，
+                        // 改的是 option.text 本身（Vant2 是 (type, value) => 显示串）
+                        if(type === 'year') option.text += '年'
+                        if(type === 'month') option.text += '月'
+                        if(type === 'day') option.text += '日'
+                        return option
                     },
                     confirmSchedule(){
+                        // Vant4 的 v-model 是 ['2026','10','28'] 字符串数组，滚动/点选项即时更新；
+                        // 下游 6 处按 Date 语义读 scheduleDate，所以确定时先按选值换算（原来挂在
+                        // picker 自己的 @confirm 上，本弹窗没有它的工具栏，永远不触发 → 预约时间恒空）
+                        if(this.scheduleDateParts && this.scheduleDateParts.length === 3){
+                            this.scheduleDate = new Date(
+                                Number(this.scheduleDateParts[0]),
+                                Number(this.scheduleDateParts[1]) - 1,
+                                Number(this.scheduleDateParts[2])
+                            )
+                        }
                         if(!this.scheduleDate){
-                            vant.Toast.fail('请选择预约日期')
+                            vant.showFailToast('请选择预约日期')
                             return
                         }
                         if(!this.selectedScheduleSlot){
-                            vant.Toast.fail('请选择时段')
+                            vant.showFailToast('请选择时段')
                             return
                         }
                         // 验证预约时间不能早于当前时间
@@ -948,13 +961,13 @@
                                 const parts = startTime.split(':')
                                 const slotStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), Number(parts[0]), Number(parts[1]))
                                 if(slotStart.getTime() <= today.getTime()){
-                                    vant.Toast.fail('预约时间不能早于当前时间')
+                                    vant.showFailToast('预约时间不能早于当前时间')
                                     return
                                 }
                             }
                         }
                         this.showSchedulePicker = false
-                        vant.Toast.success('预约时间已设置')
+                        vant.showSuccessToast('预约时间已设置')
                     },
                     // 修改点(2026-09-17 UX)：生成/复用下单幂等键——同一次下单意图（含网络失败重试、快速双击）
                     // 复用同一键由后端幂等去重；重新进入页面（新的下单意图）才生成新键
@@ -982,7 +995,7 @@
                                         channel: this.payMethod === 2 ? 'WECHAT' : 'ALIPAY'
                                     })
                                     if(!this.redirectAfterPayCreate(payRes, this.reorderId)){
-                                        vant.Toast.fail('支付发起失败，请重试')
+                                        vant.showFailToast('支付发起失败，请重试')
                                     }
                                 }else{
                                     // 货到付款的待付款订单不应走到这里，兜底跳转
@@ -990,28 +1003,28 @@
                                 }
                             }catch(e){
                                 console.error('支付发起失败:', e)
-                                vant.Toast.fail('支付发起失败，请重试')
+                                vant.showFailToast('支付发起失败，请重试')
                             }finally{
                                 this.loading = false
                             }
                             return
                         }
                         if(!this.cartData || this.cartData.length === 0){
-                            vant.Toast.fail('购物车为空，请先添加商品');
+                            vant.showFailToast('购物车为空，请先添加商品');
                             return
                         }
                         // 自提无需收货地址；仅配送模式校验地址（否则无地址用户切自提永远提交不了）
                         if(this.fulfillmentMode === 0 && !this.address.id){
-                            vant.Toast.fail('请先添加收货地址');
+                            vant.showFailToast('请先添加收货地址');
                             return
                         }
                         if(this.feeBlocked){
-                            vant.Toast.fail(this.feeMessage || '当前地址暂不可下单');
+                            vant.showFailToast(this.feeMessage || '当前地址暂不可下单');
                             return
                         }
                         // 预约配送必须先选预约时段；否则 expectDeliveryTime 会静默退化为"尽快送达"
                         if(this.deliveryMode === 1 && !this.scheduleDate){
-                            vant.Toast.fail('请选择预约配送时间');
+                            vant.showFailToast('请选择预约配送时间');
                             return
                         }
                         if(this.loading) return;
@@ -1045,7 +1058,7 @@
                                         // 失效商品：重新拉购物车，并用持续可见的对话框给出路，
                                         // 替代一闪而过的 Toast（用户曾因此以为页面"卡死"）
                                         this.getCartData()
-                                        vant.Dialog.alert({
+                                        vant.showDialog({
                                             title: '商品已失效',
                                             message: failMsg + '，请调整后重新下单',
                                             confirmButtonText: '去购物车'
@@ -1053,7 +1066,7 @@
                                             window.location.href = '/front/index.html'
                                         }).catch(function(){})
                                     }else{
-                                        vant.Toast.fail(failMsg)
+                                        vant.showFailToast(failMsg)
                                     }
                                     return
                                 }
@@ -1062,7 +1075,7 @@
                                 sessionStorage.removeItem('selectedAddressId')
                             } catch (err) {
                                 console.error('提交订单失败:', err)
-                                vant.Toast.fail('提交订单失败，请稍后重试');
+                                vant.showFailToast('提交订单失败，请稍后重试');
                                 return
                             }
                             // 货到付款(6)：下单即完成，直接跳下单成功页
@@ -1115,7 +1128,7 @@
                     },
                     // 订单已创建但支付未拉起：明确告知"订单已提交"，引导去订单列表续付，杜绝误重复下单
                     payCreateFailed(){
-                        vant.Dialog.alert({
+                        vant.showDialog({
                             title: '支付未完成',
                             message: '订单已提交成功，您可稍后在订单列表中找到该订单继续支付。'
                         }).then(()=>{

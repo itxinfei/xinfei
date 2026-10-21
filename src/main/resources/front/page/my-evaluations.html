@@ -7,7 +7,7 @@
     <title>我的评价 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <!-- 修改点：加载 RemixIcon 真字体（emoji 兜底改由 js/icon-fallback.js 按需注入） -->
@@ -189,20 +189,21 @@
 
         <!-- 图片预览 -->
         <!-- 修改点(2026-09-01)：v-model:show 是 Vue3 语法（Vue2 无效）；van-* 禁自闭合 -->
-        <van-image-preview :show.sync="previewShow" :images="previewImages" :start-position="previewIndex"></van-image-preview>
+        <van-image-preview v-model:show="previewShow" :images="previewImages" :start-position="previewIndex"></van-image-preview>
       </cend-shell>
     </div>
 
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../js/common.js?v=20260930b"></script>
     <script src="../api/evaluation.js?v=20260917"></script>
     <script src="./../api/order.js?v=20260917"></script>
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script>
-        new Vue({
+        createVantApp({
             el: '#eval-app',
             data() {
                 return {
@@ -251,7 +252,7 @@
                     }
                 }
             },
-            beforeDestroy() {
+            beforeUnmount() {
                 // 组件卸载时兜底还原，避免异常路径下弹窗销毁后背景仍无法滚动
                 document.body.style.overflow = this._savedBodyOverflow || ''
             },
@@ -306,14 +307,14 @@
                             // 失败即结束自动加载，否则 loading 复位后 van-list 会再次触发 @load 形成重试风暴
                             this.loadError = true
                             this.finished = true
-                            vant.Toast.fail(res.msg || '加载失败')
+                            vant.showFailToast(res.msg || '加载失败')
                         }
                     } catch (err) {
                         // 修改点(2026-09-17 UX)：技术错误细节进 console，用户只见友好文案
                         console.error('[my-evaluations] 加载评价失败:', err)
                         this.loadError = true
                         this.finished = true
-                        vant.Toast.fail('加载失败，请稍后重试')
+                        vant.showFailToast('加载失败，请稍后重试')
                     } finally {
                         this._loadingData = false
                         this.loading = false
@@ -334,7 +335,7 @@
                 // 修改评价（删除后自动引导用户到订单页重新评价）
                 editEvaluation(item) {
                     var self = this;
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '修改评价',
                         message: '修改评价需要先删除当前评价，确认继续吗？',
                         confirmButtonText: '继续修改',
@@ -347,7 +348,7 @@
                             self.loadData();
                             // 修改点(2026-09-18)：原仅 toast 一句"请到订单页重新评价"却不导航，成为死胡同；
                             // 删除成功后主动询问并可一键跳转到订单页
-                            vant.Dialog.confirm({
+                            vant.showConfirmDialog({
                                 title: '原评价已删除',
                                 message: '是否立即前往订单页重新评价？',
                                 confirmButtonText: '去评价',
@@ -356,19 +357,19 @@
                                 window.location.href = '/front/page/order.html';
                             }).catch(function() { /* 用户选择留在本页 */ });
                         } else {
-                            vant.Toast.fail((res && res.msg) || '删除失败');
+                            vant.showFailToast((res && res.msg) || '删除失败');
                         }
                     }).catch(function(e) {
                         // 修改点：用户取消或删除失败——删除失败时给出明确提示，避免静默无反馈
                         if (e && e !== 'cancel' && e !== 'close' && e !== '取消') {
-                            vant.Toast.fail((e && e.msg) || '操作失败，请重试');
+                            vant.showFailToast((e && e.msg) || '操作失败，请重试');
                         }
                     });
                 },
                 // 删除评价
                 async deleteEvaluation(item) {
                     try {
-                        await vant.Dialog.confirm({
+                        await vant.showConfirmDialog({
                             title: '删除评价',
                             message: '确认删除该评价吗？删除后不可恢复。',
                             confirmButtonText: '确认删除',
@@ -378,15 +379,15 @@
                         try {
                             const res = await deleteMyEvaluation({ id: item.id })
                             if (res.code === 1) {
-                                vant.Toast.success('删除成功')
+                                vant.showSuccessToast('删除成功')
                                 this.loadData()
                             } else {
-                                vant.Toast.fail(res.msg || '删除失败')
+                                vant.showFailToast(res.msg || '删除失败')
                             }
                         } catch (err) {
                             // 修改点(2026-09-17 UX)：技术错误细节进 console，用户只见友好文案
                             console.error('[my-evaluations] 删除评价失败:', err)
-                            vant.Toast.fail('删除失败，请稍后重试')
+                            vant.showFailToast('删除失败，请稍后重试')
                         }
                     } catch (e) { /* 用户取消 */ }
                 },
@@ -432,7 +433,7 @@
                     }
                 },
                 onEvalOversize() {
-                    vant.Toast.fail('图片大小不能超过5MB')
+                    vant.showFailToast('图片大小不能超过5MB')
                 },
                 getImageList(images) {
                     if (!images) return []
@@ -591,7 +592,7 @@
                             dishes = this.extractEvaluableDishes(order)
                             orderNo = order.number || ''
                         } else {
-                            vant.Toast.fail('该订单暂无可评价的菜品')
+                            vant.showFailToast('该订单暂无可评价的菜品')
                             return
                         }
                     } else if (this.pendingOrder) {
@@ -609,7 +610,7 @@
                         } catch (e) { /* 保持空 dishes，由 doSubmit 提示 */ }
                     }
                     if (!dishes.length) {
-                        vant.Toast.fail('暂无可评价的菜品')
+                        vant.showFailToast('暂无可评价的菜品')
                         return
                     }
                     this.submitData = { orderId: orderId || this.pendingOrder.id || '', orderNo: orderNo, dishes: dishes, anonymous: false }
@@ -638,7 +639,7 @@
                     const orderId = this.submitData.orderId
                     const dishes = this.submitData.dishes || []
                     if (!orderId) {
-                        vant.Toast.fail('订单信息缺失，请重新进入评价页')
+                        vant.showFailToast('订单信息缺失，请重新进入评价页')
                         return
                     }
                     // 校验每个待提交菜品的评分（已成功提交的无需再评）：就地化，逐个标记缺评的菜
@@ -655,7 +656,7 @@
                         var fl = dishes[j]._fileList || []
                         for (let k = 0; k < fl.length; k++) {
                             if (fl[k].status === 'uploading') {
-                                vant.Toast.fail('图片还在上传，请稍候')
+                                vant.showFailToast('图片还在上传，请稍候')
                                 return
                             }
                         }
@@ -683,7 +684,7 @@
                             try {
                                 const res = await submitEvaluation(payload)
                                 if (res && res.code === 1) {
-                                    this.$set(dish, '_submitted', true)
+                                    dish['_submitted'] = true
                                 } else {
                                     failNames.push(dish.dishName || '菜品')
                                 }
@@ -694,7 +695,7 @@
                         }
                         var remain = dishes.filter(d => !d._submitted).length
                         if (remain === 0) {
-                            vant.Toast.success('评价提交成功，感谢您的反馈')
+                            vant.showSuccessToast('评价提交成功，感谢您的反馈')
                             this.submitVisible = false
                             this.submitData = { orderId: null, dishes: [], anonymous: false }
                             this.loadData()
@@ -703,7 +704,7 @@
                             this.checkPendingEvaluation()
                         } else {
                             var shown = failNames.slice(0, 3).join('、') + (failNames.length > 3 ? ' 等' : '')
-                            vant.Toast.fail('「' + shown + '」提交失败，其余已保存，请重试剩余项')
+                            vant.showFailToast('「' + shown + '」提交失败，其余已保存，请重试剩余项')
                         }
                     } finally {
                         this.submitLoading = false

@@ -9,7 +9,7 @@
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js?v=20260930"></script>
         <!--引入vant样式-->
-        <link rel="stylesheet" href="../styles/vant.min.css"/>
+        <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
         <!-- 引入样式  -->
         <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
         <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
@@ -158,7 +158,7 @@
             </cend-empty>
 
             <!-- 申请售后退款弹窗（Vant2 无 Dialog.prompt，自建 popup 收集原因） -->
-            <van-popup v-model="showRefundDialog" position="bottom" round>
+            <van-popup v-model:show="showRefundDialog" position="bottom" round>
                 <div class="refund-pop">
                     <div class="rp-title">申请售后退款</div>
                     <div class="rp-tip">请简要描述退款原因（如商品质量问题、漏送、错送等），提交后客服将尽快处理。</div>
@@ -173,9 +173,10 @@
             </cend-shell>
         </div>
         <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-        <script src="../../backend/plugins/vue/vue.js"></script>
+        <script src="../../backend/plugins/vue3/vue.global.js"></script>
         <!-- 引入vant组件 -->
-        <script src="./../js/vant.min.js"></script>    
+        <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+        <script src="/front/js/app-v3-vant.js?v=3001001"></script>    
         <!-- 引入axios -->
         <script src="../../backend/plugins/axios/axios.min.js"></script>
         <script src="./../js/request.js?v=20260930"></script>
@@ -183,9 +184,9 @@
         <script src="./../js/common.js?v=20260930b"></script>
         <script src="./../api/order.js?v=20260917"></script>
         <!-- C 端跨页面复用组件（必须在 new Vue 之前加载） -->
-        <script src="./../js/components-cend.js?v=20260922"></script>
+        <script src="./../js/components-cend-v3.js?v=3001001"></script>
         <script>
-        new Vue({
+        createVantApp({
             el:"#order",
             data(){
                 return {
@@ -250,7 +251,7 @@
             },
             mounted(){
                 // 修改点(2026-09-17)：状态Tab滚动粘滞阴影
-                // 修改点(2026-09-28)：scroll 处理具名化挂到实例，beforeDestroy 解绑
+                // 修改点(2026-09-28)：scroll 处理具名化挂到实例，beforeUnmount 解绑
                 var self = this
                 this.$nextTick(function(){
                     var tabs = document.querySelector('#order .status-tabs')
@@ -262,7 +263,7 @@
                     }
                 })
             },
-            beforeDestroy(){
+            beforeUnmount(){
                 if(this._scrollBody){
                     this._scrollBody.removeEventListener('scroll', this.handleTabsScroll)
                     this._scrollBody = null
@@ -273,7 +274,7 @@
                 }
             },
             methods:{
-                // 状态 Tab 粘滞阴影的滚动处理（具名，便于 beforeDestroy 解绑）
+                // 状态 Tab 粘滞阴影的滚动处理（具名，便于 beforeUnmount 解绑）
                 handleTabsScroll(){
                     if(!this._tabsEl || !this._scrollBody) return
                     if(this._scrollBody.scrollTop > 5){
@@ -397,13 +398,13 @@
                                 }, 0)
                             }
                         }else{
-                            vant.Toast.fail(res.msg || '加载订单失败');
+                            vant.showFailToast(res.msg || '加载订单失败');
                         }
                     } catch (err) {
                         // 过期请求异常静默；其余网络错误/接口异常给出提示，避免永卡加载
                         if(seq !== this._reqSeq) return
                         console.error('加载订单列表失败:', err)
-                        vant.Toast.fail('加载订单失败，请稍后重试');
+                        vant.showFailToast('加载订单失败，请稍后重试');
                     } finally {
                         // 过期请求不清在途标志（新一轮请求可能已在途），不复位 loading
                         if(seq === this._reqSeq){
@@ -434,11 +435,11 @@
                                 window.location.href = '/front/index.html'
                             })
                         }else{
-                            vant.Toast.fail(res.msg || '再来一单失败');
+                            vant.showFailToast(res.msg || '再来一单失败');
                         }
                     } catch (e) {
                         console.error('再来一单失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.submitting = false
                     }
@@ -459,9 +460,9 @@
                         ta.select()
                         try {
                             document.execCommand('copy')
-                            vant.Toast.success('链接已复制')
+                            vant.showSuccessToast('链接已复制')
                         } catch(e) {
-                            vant.Toast.fail('分享失败')
+                            vant.showFailToast('分享失败')
                         }
                         document.body.removeChild(ta)
                     }
@@ -472,8 +473,8 @@
                     var no = order.number || order.id
                     if(!no) return
                     no = String(no)
-                    var done = () => vant.Toast.success('订单号已复制')
-                    var fail = () => vant.Toast.fail('复制失败')
+                    var done = () => vant.showSuccessToast('订单号已复制')
+                    var fail = () => vant.showFailToast('复制失败')
                     if(navigator.clipboard && navigator.clipboard.writeText){
                         navigator.clipboard.writeText(no).then(done).catch(() => { this.copyFallback(no, done, fail) })
                     } else {
@@ -526,7 +527,7 @@
                             window.location.href = '/front/page/tracking.html?orderId=' + encodeURIComponent(trackingId)
                         })
                     } else {
-                        vant.Toast.fail('该订单暂无配送追踪信息');
+                        vant.showFailToast('该订单暂无配送追踪信息');
                     }
                 },
                 // 修改点：催单（待接单/配送中可用），按订单维度在飞防重，避免连点刷接口
@@ -539,15 +540,15 @@
                         if(res && res.code === 1){
                             var d = res.data || {}
                             if(d.remainCount !== undefined && d.remainCount !== null){
-                                vant.Toast.success('已通知商家，今日还可催' + d.remainCount + '次')
+                                vant.showSuccessToast('已通知商家，今日还可催' + d.remainCount + '次')
                             }else{
-                                vant.Toast.success('已通知商家，请耐心等待')
+                                vant.showSuccessToast('已通知商家，请耐心等待')
                             }
                         }else{
-                            vant.Toast.fail((res && res.msg) || '催单失败，请稍后重试')
+                            vant.showFailToast((res && res.msg) || '催单失败，请稍后重试')
                         }
                     }).catch(() => {
-                        vant.Toast.fail('网络异常，请稍后重试')
+                        vant.showFailToast('网络异常，请稍后重试')
                     }).finally(() => {
                         this._urgeMap[order.id] = false
                     })
@@ -562,7 +563,7 @@
                 // 修改点：取消订单
                 cancelOrder(order){
                     if(this.submitting) return;
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '取消订单',
                         message: '确定要取消该订单吗？',
                         confirmButtonText: '确定',
@@ -579,12 +580,12 @@
                                 this.finished = false
                                 this.loading = true
                                 this.getList()
-                                vant.Toast.success('订单已取消');
+                                vant.showSuccessToast('订单已取消');
                             }else{
-                                vant.Toast.fail((res && res.msg) || '取消失败');
+                                vant.showFailToast((res && res.msg) || '取消失败');
                             }
                         } catch(e) {
-                            vant.Toast.fail('网络异常，请稍后重试');
+                            vant.showFailToast('网络异常，请稍后重试');
                         } finally {
                             this.submitting = false
                         }
@@ -595,7 +596,7 @@
                 // 修改点：用户确认收货（status=3 → 4）
                 confirmReceipt(order){
                     if(this.submitting) return;
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '确认收货',
                         message: '确认已收到商品？确认后订单将完成。',
                         confirmButtonText: '确认收货',
@@ -605,17 +606,17 @@
                         try {
                             const res = await confirmReceiptApi({ id: order.id })
                             if(res && res.code === 1){
-                                vant.Toast.success('已确认收货');
+                                vant.showSuccessToast('已确认收货');
                                 this.paging.page = 1
                                 this.orderList = []
                                 this.finished = false
                                 this.loading = true
                                 this.getList()
                             }else{
-                                vant.Toast.fail((res && res.msg) || '确认失败');
+                                vant.showFailToast((res && res.msg) || '确认失败');
                             }
                         } catch(e) {
-                            vant.Toast.fail('网络异常，请稍后重试');
+                            vant.showFailToast('网络异常，请稍后重试');
                         } finally {
                             this.submitting = false
                         }
@@ -642,7 +643,7 @@
                         const res = await applyRefundApi({ id: order.id, reason: reason })
                         if(res && res.code === 1){
                             const data = res.data || {}
-                            vant.Toast.success('售后申请已提交：' + (data.refundNo || ''))
+                            vant.showSuccessToast('售后申请已提交：' + (data.refundNo || ''))
                             this.showRefundDialog = false
                             this.paging.page = 1
                             this.orderList = []
@@ -650,10 +651,10 @@
                             this.loading = true
                             this.getList()
                         }else{
-                            vant.Toast.fail((res && res.msg) || '申请失败');
+                            vant.showFailToast((res && res.msg) || '申请失败');
                         }
                     } catch(e) {
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.refundSubmitting = false
                     }

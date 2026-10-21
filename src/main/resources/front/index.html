@@ -11,7 +11,7 @@
     <!--不同屏幕尺寸根字体设置-->
     <script src="./js/base.js?v=20260930"></script>
     <!--引入vant样式-->
-    <link rel="stylesheet" href="styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <!--RemixIcon 图标（C端全站统一用 RemixIcon，禁止 emoji 作图标）-->
     <!-- 修改点：改为加载 RemixIcon 真字体（v4.6.0）。原 fallback 用 emoji 兜底且在其后加载会覆盖真字体，
          导致全站图标渲染为彩色 emoji；现 emoji 兜底改由 js/icon-fallback.js 在字体确认加载失败时动态注入 -->
@@ -293,7 +293,7 @@
       </div>
 
       <!-- ====== 口味选择弹窗 ====== -->
-      <van-dialog v-model="dialogFlavor.show" :show-confirm-button="false" :close-on-click-overlay="true" class="dialogFlavor" ref="flavorDialog">
+      <van-dialog v-model:show="dialogFlavor.show" :show-confirm-button="false" :close-on-click-overlay="true" class="dialogFlavor" ref="flavorDialog">
         <div class="dialogTitle">{{ dialogFlavor.name }}</div>
         <div class="divContent">
           <div v-for="flavor in dialogFlavor.flavors" :key="flavor.id">
@@ -316,7 +316,7 @@
       </van-dialog>
 
       <!-- ====== 购物车弹出面板 ====== -->
-      <van-popup v-model="cartDialogShow" position="bottom" :style="{ height: '50%' }" :close-on-click-overlay="true" class="dialogCart">
+      <van-popup v-model:show="cartDialogShow" position="bottom" :style="{ height: '50%' }" :close-on-click-overlay="true" class="dialogCart">
         <div class="divCartTitle">
           <div class="title">购物车</div>
           <div class="clear" @click="clearCart">
@@ -362,7 +362,7 @@
       </van-popup>
 
       <!-- ====== 菜品详情弹窗 ====== -->
-      <van-dialog v-model="detailsDialog.show"
+      <van-dialog v-model:show="detailsDialog.show"
         :show-confirm-button="false"
         :close-on-click-overlay="true"
         class="detailsDialog"
@@ -424,7 +424,7 @@
       </van-dialog>
 
       <!-- ====== 套餐详情弹窗 ====== -->
-      <van-dialog v-model="setMealDialog.show"
+      <van-dialog v-model:show="setMealDialog.show"
         :show-confirm-button="false"
         :close-on-click-overlay="true"
         class="setMealDetailsDialog"
@@ -469,7 +469,7 @@
       <!-- ====== 菜品/套餐图片大图预览 ====== -->
       <!-- 修改点：复用 my-evaluations.html 权威模式，detailsDialog/setMealDialog 内小图点击放大 -->
       <van-image-preview
-        :show.sync="previewShow"
+        v-model:show="previewShow"
         :images="previewImages"
         :start-position="previewIndex"
         closeable
@@ -480,15 +480,15 @@
       <van-tabbar v-model="activeTab" class="app-tabbar" role="navigation" aria-label="主导航" @change="onTabChange">
         <van-tabbar-item>
           <span>点餐</span>
-          <i slot="icon" class="ri-restaurant-line"></i>
+          <template #icon><i class="ri-restaurant-line"></i></template>
         </van-tabbar-item>
         <van-tabbar-item>
           <span>订单</span>
-          <i slot="icon" class="ri-file-list-line"></i>
+          <template #icon><i class="ri-file-list-line"></i></template>
         </van-tabbar-item>
         <van-tabbar-item>
           <span>我的</span>
-          <i slot="icon" class="ri-user-3-line"></i>
+          <template #icon><i class="ri-user-3-line"></i></template>
         </van-tabbar-item>
       </van-tabbar>
 
@@ -639,9 +639,10 @@
   </div>
 
         <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-        <script src="../backend/plugins/vue/vue.js"></script>
+        <script src="../backend/plugins/vue3/vue.global.js"></script>
         <!-- 引入vant样式 -->
-        <script src="./js/vant.min.js"></script>        
+        <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+        <script src="/front/js/app-v3-vant.js?v=3001001"></script>        
         <!-- 引入axios -->
         <script src="../backend/plugins/axios/axios.min.js"></script>
         <script src="./js/request.js?v=20260930"></script>
@@ -684,7 +685,7 @@
         '甜品饮料': 'ri-cake-2-line',  '商务套餐': 'ri-shopping-bag-3-line',
         '热菜': 'ri-restaurant-line',  '甜品小吃': 'ri-cake-3-line', '招牌套餐': 'ri-gift-line'
       };
-      new Vue({
+      createVantApp({
           el:'#main',
           data(){
             return {
@@ -870,7 +871,7 @@
             // SSE 新消息到达时刷新顶部未读角标
             window.addEventListener('xinfei:new-message', this._onSseNewMessage)
           },
-          beforeDestroy(){
+          beforeUnmount(){
             const panel = this.$refs.dishPanel
             if(panel){
               panel.removeEventListener('scroll', this.onDishPanelScroll)
@@ -952,19 +953,19 @@
                   var ids = this.favoriteIds.filter(removeId)
                   if(favorited){ ids = ids.concat([item.id]) }
                   this.favoriteIds = ids
-                  vant.Toast(favorited ? '已收藏' : '已取消收藏')
+                  vant.showToast(favorited ? '已收藏' : '已取消收藏')
                 }else{
                   this.favoriteIds = wasFav
                     ? this.favoriteIds.concat([item.id])
                     : this.favoriteIds.filter(removeId)
-                  vant.Toast.fail((res && res.msg) || '操作失败')
+                  vant.showFailToast((res && res.msg) || '操作失败')
                 }
               }catch(e){
                 this.favoriteIds = wasFav
                   ? this.favoriteIds.concat([item.id])
                   : this.favoriteIds.filter(removeId)
                 console.warn('[收藏] 切换失败:', e)
-                vant.Toast.fail('操作失败，请稍后重试')
+                vant.showFailToast('操作失败，请稍后重试')
               }finally{
                 this._favLock = null
               }
@@ -1089,7 +1090,7 @@
             startVoiceSearch(){
               var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
               if(!SpeechRecognition){
-                vant.Toast.fail('您的浏览器不支持语音搜索')
+                vant.showFailToast('您的浏览器不支持语音搜索')
                 return
               }
               var recognition = new SpeechRecognition()
@@ -1109,9 +1110,9 @@
               }
               recognition.onerror = (event) => {
                 if(event.error === 'not-allowed'){
-                  vant.Toast.fail('请允许麦克风权限')
+                  vant.showFailToast('请允许麦克风权限')
                 } else if(event.error !== 'aborted'){
-                  vant.Toast.fail('语音识别失败：' + event.error)
+                  vant.showFailToast('语音识别失败：' + event.error)
                 }
               }
             },
@@ -1227,7 +1228,7 @@
                 this.searchDishList = []
                 this.searchMealList = []
                 this.searchFailed = true
-                vant.Toast.fail('搜索失败，请稍后重试')
+                vant.showFailToast('搜索失败，请稍后重试')
               } finally {
                 this.searchLoading = false
               }
@@ -1282,7 +1283,7 @@
             },
             // 修改点：点击公告栏查看公告详情
             showNoticeDetail(){
-              vant.Dialog.alert({
+              vant.showDialog({
                 title: '商家公告',
                 message: this.restaurantInfo.notice || '欢迎光临！本店精选新鲜食材，用心烹饪每一道菜品。',
                 confirmButtonText: '知道了'
@@ -1353,7 +1354,7 @@
                   }
                 }else{
                   this.loadFailed = true
-                  vant.Toast.fail(res[0].msg || '加载分类失败');
+                  vant.showFailToast(res[0].msg || '加载分类失败');
                 }
               }).catch(() => {
                 // 修改点：捕获Promise异常，避免控制台报错，未登录时会自动跳转登录页
@@ -1445,7 +1446,7 @@
               var panel = this.$refs.dishPanel
               if(!panel || typeof IntersectionObserver === 'undefined'){
                 // 浏览器不支持时退化为全量渲染，功能不受影响
-                this.categoryList.forEach(function(cat){ self.$set(self.visibleCats, cat.id, true) })
+                this.categoryList.forEach(function(cat){ self.visibleCats[cat.id] = true })
                 return
               }
               if(this._catObserver) this._catObserver.disconnect()
@@ -1455,7 +1456,7 @@
                   var id = entry.target.getAttribute('data-category-id')
                   if(id == null) return
                   // 一次性渲染：标记可见后取消观察，避免反复挂载/卸载造成滚动抖动
-                  self.$set(self.visibleCats, id, true)
+                  self.visibleCats[id] = true
                   if(self._catObserver) self._catObserver.unobserve(entry.target)
                 })
               }, { root: panel, rootMargin: '400px 0px' })
@@ -1510,7 +1511,7 @@
                       })
                     }
                     // 修改点(2026-09-17)：按分类建索引，供分段虚拟化渲染
-                    this.$set(this.catDishesMap, cat.id, items)
+                    this.catDishesMap[cat.id] = items
                   })
                   // 增量渲染：本批完成即刷新，无需等待剩余分类
                   this.dishList = flat.slice()
@@ -1520,7 +1521,7 @@
               } catch(e){
                 console.error('[index] 加载菜单失败:', e)
                 this.loadFailed = true
-                vant.Toast.fail('加载菜单失败')
+                vant.showFailToast('加载菜单失败')
               } finally {
                 this.loadingAll = false
               }
@@ -1554,7 +1555,7 @@
                   }
                   this.dishList = dishList
                 }else{
-                  vant.Toast.fail(res.msg || '加载菜品失败')
+                  vant.showFailToast(res.msg || '加载菜品失败')
                 }
               } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1580,7 +1581,7 @@
                     }
                     this.dishList = dishList
                 }else{
-                  vant.Toast.fail(res.msg || '加载套餐失败')
+                  vant.showFailToast(res.msg || '加载套餐失败')
                 }
               } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1593,7 +1594,7 @@
                 if(res.code === 1){
                   this.cartData = res.data
                 }else{
-                  vant.Toast.fail(res.msg || '加载购物车失败')
+                  vant.showFailToast(res.msg || '加载购物车失败')
                 }
               } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1601,15 +1602,15 @@
             // 修改点：修复菜品/套餐误判 — item.flavors !== undefined 可靠区分（菜品有flavors字段，套餐无）
             async addCart(item){
               // 停售商品不可加购（UI 已禁用，此处兜底防御）
-              if(item && Number(item.status) === 0){ vant.Toast.fail('该商品已售罄'); return false }
+              if(item && Number(item.status) === 0){ vant.showFailToast('该商品已售罄'); return false }
               // 修改点：按菜品维度防重复提交——同一菜品（含口味）在飞时忽略连点，避免数量异常；
               // 不同菜品各自独立加锁，不再因全局锁静默丢弃用户对其他菜品的快速加购。
               var cartKey = (item.flavors !== undefined ? 'd' : 's') + '_' + item.id + '_' + (item.dishFlavor || '')
               if(this.cartLoadingMap[cartKey]) return false
-              this.$set(this.cartLoadingMap, cartKey, true)
+              this.cartLoadingMap[cartKey] = true
               // 修改点：未登录时跳转登录页
               if(!this.userPhone){
-                this.$set(this.cartLoadingMap, cartKey, false)
+                this.cartLoadingMap[cartKey] = false
                 goLogin()
                 return false
               }
@@ -1640,14 +1641,14 @@
                   this.getCartData()
                   return true
                 }else{
-                  vant.Toast.fail(res.msg || '添加失败')
+                  vant.showFailToast(res.msg || '添加失败')
                   return false
                 }
               } catch(e) {
                 /* 由请求拦截器统一处理（如NOTLOGIN跳转） */
                 return false
               }
-              finally { this.$set(this.cartLoadingMap, cartKey, false) }
+              finally { this.cartLoadingMap[cartKey] = false }
             },
 
             //菜单中减少选中的商品
@@ -1666,7 +1667,7 @@
                       var flavorRecs = this.cartData.filter(function(c){ return c.dishId === item.id })
                       if(flavorRecs.length > 1){
                         this.cartDialogShow = true
-                        vant.Toast('该菜有多个口味，请在购物车中按口味减少')
+                        vant.showToast('该菜有多个口味，请在购物车中按口味减少')
                         return
                       }
                       if(flavorRecs.length === 1){
@@ -1687,7 +1688,7 @@
                     }
                     this.getCartData()
                   }else{
-                    vant.Toast.fail(res.msg || '操作失败')
+                    vant.showFailToast(res.msg || '操作失败')
                   }
                 } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1717,7 +1718,7 @@
                   this.syncCartNumber(item.dishId || item.setmealId, res.data.number, false)
                   this.getCartData()
                 }else{
-                  vant.Toast.fail(res.msg || '操作失败')
+                  vant.showFailToast(res.msg || '操作失败')
                 }
               } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1740,7 +1741,7 @@
                     this.syncCartNumber(item.dishId || item.setmealId, newNum, true)
                     this.getCartData()
                   }else{
-                    vant.Toast.fail(res.msg || '操作失败')
+                    vant.showFailToast(res.msg || '操作失败')
                   }
               } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1775,7 +1776,7 @@
             async clearCart(){
               // 修改点(2026-09-18 UX)：清空不可逆，先二次确认防误触（Vant confirm 取消为 reject）
               try {
-                await vant.Dialog.confirm({
+                await vant.showConfirmDialog({
                   title: '清空购物车',
                   message: '确定要清空已选商品吗？',
                   confirmButtonText: '清空',
@@ -1801,7 +1802,7 @@
                   this.cartData = []
                   this.cartDialogShow = false
                 }else{
-                  vant.Toast.fail(res.msg || '清空失败')
+                  vant.showFailToast(res.msg || '清空失败')
                 }
               } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
             },
@@ -1844,7 +1845,7 @@
                   dishFlavor.push(item.dishFlavor)
                 }else{
                       flag = false
-                      vant.Toast.fail('请选择' + item.name);
+                      vant.showFailToast('请选择' + item.name);
                 }
               })
               if(flag){
@@ -1907,7 +1908,7 @@
                     this.setMealDialog.item = {...item,list:res.data}
                     this.setMealDialog.show = true
                   }else{
-                    vant.Toast.fail(res.msg || '加载套餐详情失败')
+                    vant.showFailToast(res.msg || '加载套餐详情失败')
                   }
                 } catch(e) { /* 由请求拦截器统一处理（如NOTLOGIN跳转） */ }
               }
@@ -1922,10 +1923,10 @@
                 ])
                 // Vue2 无法侦测对对象"新增属性"，必须用 $set 声明响应式字段，否则评价区永不渲染
                 if (statsRes.code === 1) {
-                  this.$set(this.detailsDialog.item, 'evalStats', statsRes.data || {})
+                  this.detailsDialog.item['evalStats'] = statsRes.data || {}
                 }
                 if (listRes.code === 1) {
-                  this.$set(this.detailsDialog.item, 'evalList', listRes.data.records || [])
+                  this.detailsDialog.item['evalList'] = listRes.data.records || []
                 }
               } catch (e) {
                 // 静默失败，不影响菜品详情展示

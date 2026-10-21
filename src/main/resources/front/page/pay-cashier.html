@@ -7,7 +7,7 @@
         <title>在线支付 - 心飞外卖</title>
         <link rel="icon" href="./../images/favico.ico">
         <script src="./../js/base.js?v=20260930"></script>
-        <link rel="stylesheet" href="../styles/vant.min.css" />
+        <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
         <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
         <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
         <link rel="stylesheet" href="../../backend/plugins/remixicon/remixicon.css" />
@@ -155,7 +155,7 @@
             </div>
 
             <!-- 真实支付扫码弹窗：NATIVE 场景展示渠道二维码，支付成功后轮询自动跳转 -->
-            <van-popup v-model="showQrPopup" position="center" round
+            <van-popup v-model:show="showQrPopup" position="center" round
                        :close-on-click-overlay="false" @close="onQrPopupClose"
                        class="qr-pay-popup">
                 <div class="qr-pay-box">
@@ -185,15 +185,16 @@
             </div>
         </div>
 
-        <script src="../../backend/plugins/vue/vue.js"></script>
+        <script src="../../backend/plugins/vue3/vue.global.js"></script>
         <script src="../../backend/plugins/axios/axios.min.js"></script>
         <script src="./../js/request.js?v=20260930"></script>
         <script src="./../js/common.js?v=20260930b"></script>
-        <script src="../js/vant.min.js"></script>
+        <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+        <script src="/front/js/app-v3-vant.js?v=3001001"></script>
         <script src="./../api/payment.js?v=20260918"></script>
         <script src="./../api/order.js?v=20260917"></script>
         <script>
-        new Vue({
+        createVantApp({
             el: '#cashier',
             data: function () {
                 return {
@@ -249,7 +250,7 @@
                 document.addEventListener('visibilitychange', this.handleVisibility);
                 window.addEventListener('pageshow', this.onPageShow);
             },
-            beforeDestroy: function () {
+            beforeUnmount: function () {
                 document.removeEventListener('visibilitychange', this.handleVisibility);
                 window.removeEventListener('pageshow', this.onPageShow);
                 this.stopPolling();
@@ -308,13 +309,13 @@
                         .then(function (res) {
                             if (!res || res.code !== 1 || !res.data) {
                                 self.paying = false;
-                                vant.Toast.fail((res && res.msg) || '支付下单失败，请重试');
+                                vant.showFailToast((res && res.msg) || '支付下单失败，请重试');
                                 return;
                             }
                             var d = res.data;
                             if (!d.success) {
                                 self.paying = false;
-                                vant.Toast.fail(d.errorMsg || '支付下单失败，请重试');
+                                vant.showFailToast(d.errorMsg || '支付下单失败，请重试');
                                 return;
                             }
                             // 以 /pay 回填的权威 tradeNo 为准（URL 上的可能被构造成本人另一订单的单号）
@@ -324,7 +325,7 @@
                             if (!self.tradeNo) {
                                 // 兜底：无单号无法发起回调/轮询（0元单直接确认支付到达此处），停止并提示
                                 self.paying = false;
-                                vant.Toast.fail('支付单创建异常，请刷新后重试');
+                                vant.showFailToast('支付单创建异常，请刷新后重试');
                                 return;
                             }
                             if (d.mockMode) {
@@ -347,11 +348,11 @@
                             } else {
                                 self.stopPolling();
                                 self.paying = false;
-                                vant.Toast.fail('支付渠道响应异常，请重试');
+                                vant.showFailToast('支付渠道响应异常，请重试');
                             }
                         }).catch(function () {
                             self.paying = false;
-                            vant.Toast.fail('网络异常，支付下单失败，请重试');
+                            vant.showFailToast('网络异常，支付下单失败，请重试');
                         });
                 },
                 // 演示环境：构造渠道模拟回调参数，请求 /notify/{channel}（mock-mode 跳过验签直接受理）
@@ -380,11 +381,11 @@
                             window.location.replace('/front/page/pay-success.html?reorderId=' + self.orderId);
                         } else {
                             self.paying = false;
-                            vant.Toast.fail((res && res.msg) || '支付失败，请重试');
+                            vant.showFailToast((res && res.msg) || '支付失败，请重试');
                         }
                     }).catch(function () {
                         self.paying = false;
-                        vant.Toast.fail('网络异常，支付失败，请重试');
+                        vant.showFailToast('网络异常，支付失败，请重试');
                     });
                 },
                 // ============ 真实支付轮询（2s/次，最长 5 分钟）============
@@ -437,14 +438,14 @@
                     this.stopPolling();
                     this.showQrPopup = false;
                     this.paying = false;
-                    vant.Toast.fail(msg);
+                    vant.showFailToast(msg);
                 },
                 handlePollTimeout: function () {
                     this.stopPolling();
                     this.showQrPopup = false;
                     this.paying = false;
                     // 原 Toast 弱提示易错过：改用弹窗明确告知，并提示去订单列表核实
-                    vant.Dialog.alert({
+                    vant.showDialog({
                         title: '等待支付结果超时',
                         message: '如您已完成付款，可在订单列表中查看支付结果。'
                     }).then(function () {}).catch(function () {});

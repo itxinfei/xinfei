@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>抢单大厅</title>
-  <link rel="stylesheet" href="/front/styles/vant.min.css">
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="/shared/styles/tokens.css?v=20260930b">
   <link rel="stylesheet" href="/backend/plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="/rider/css/rider.css?v=20260930e">
@@ -46,17 +46,17 @@
   </main>
   </div>
 
-  <script src="/backend/plugins/vue/vue.js"></script>
+  <script src="/backend/plugins/vue3/vue.global.js"></script>
   <script src="/backend/plugins/axios/axios.min.js"></script>
-  <script src="/front/js/vant.min.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="/rider/js/request.js?v=20260930"></script>
   <script src="/rider/js/api.js"></script>
   <script src="/rider/js/util.js?v=20260930"></script>
   <script src="/rider/js/location.js"></script>
   <script>RiderLocation.start();</script>
   <script>
-    Vue.use(vant);
-    new Vue({
+    createVantApp({
       data: function () {
         return { list: [], refreshing: false, timer: null, grabbingId: null, inflight: false };
       },
@@ -70,7 +70,7 @@
           vm.loadList(true);
         }, 12000);
       },
-      beforeDestroy: function () {
+      beforeUnmount: function () {
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
       },
       created: function () {
@@ -99,7 +99,7 @@
           if (vm.grabbingId !== null) return;  // 请求在飞，防重复点击
           vm.grabbingId = t.id;
           RiderApi.grab(t.id).then(function () {
-            vant.Toast.success('抢单成功');
+            vant.showSuccessToast('抢单成功');
             // 抢到后进入任务详情继续取餐/送达
             setTimeout(function () {
               window.location.href = '/rider/detail.html?id=' + t.id;
@@ -114,7 +114,7 @@
           RiderUtil.back();
         }
       }
-    }).$mount('#app');
+    }).mount('#app');
   </script>
 </body>
 </html>

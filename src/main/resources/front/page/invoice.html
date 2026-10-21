@@ -6,7 +6,7 @@
   <title>开发票 - 心飞外卖</title>
   <link rel="icon" href="./../images/favico.ico">
   <script src="./../js/base.js?v=20260930"></script>
-  <link rel="stylesheet" href="../styles/vant.min.css"/>
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
   <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
   <!-- 修改点：加载 remixicon 图标库（复用 backend 真实字体，front/styles 下 404 占位已删） -->
@@ -31,7 +31,7 @@
       <div class="status-card" v-if="record">
         <div class="status-line">
           <span class="status-title">{{ statusText }}</span>
-          <van-tag :type="tagType" size="medium">{{ statusText }}</van-tag>
+          <van-tag :type="tagType" size="default">{{ statusText }}</van-tag>
         </div>
         <div class="rec-row" v-if="record.invoiceNo">发票号码：<span class="mono">{{ record.invoiceNo }}</span></div>
         <div class="rec-row" v-if="record.invoiceCode">发票代码：<span class="mono">{{ record.invoiceCode }}</span></div>
@@ -65,7 +65,7 @@
         <!-- van-form 内联校验：字段错误直接显示在输入框下方，避免只靠 toast 一闪而过 -->
         <van-form ref="newTitleForm" @submit="saveTitle">
           <!-- 修改点(2026-09-18)：v-model 直绑数字 type 会在框内显示 1/2，改为只读 :value 展示中文 -->
-          <van-field :value="form.type === 1 ? '个人' : '企业'" label="抬头类型" readonly is-link @click="typePickerShow = true"></van-field>
+          <van-field :model-value="form.type === 1 ? '个人' : '企业'" label="抬头类型" readonly is-link @click="typePickerShow = true"></van-field>
           <van-field v-model="form.title" label="抬头名称" placeholder="个人填姓名，企业填公司名称" maxlength="50"
                      :rules="newTitleRules"></van-field>
           <van-field v-model="form.taxNumber" label="税号" placeholder="企业填写纳税人识别号（个人可留空）" maxlength="30"
@@ -80,18 +80,18 @@
     </div>
 
     <!-- 抬头类型选择 -->
-    <van-popup v-model="typePickerShow" position="bottom" round>
+    <van-popup v-model:show="typePickerShow" position="bottom" round>
       <van-picker show-toolbar :columns="typeColumns" @confirm="onTypeConfirm" @cancel="typePickerShow = false"></van-picker>
     </van-popup>
 
     <!-- 编辑抬头弹窗（底部滑出） -->
-    <van-popup v-model="editPopupShow" position="bottom" round :close-on-click-overlay="false">
+    <van-popup v-model:show="editPopupShow" position="bottom" round :close-on-click-overlay="false">
       <div class="edit-popup">
         <div class="edit-popup-title">编辑抬头</div>
         <!-- 编辑弹窗同样走 van-form 内联校验 -->
         <van-form ref="editTitleForm" @submit="saveEditTitle">
           <!-- 修改点(2026-09-18)：编辑弹窗抬头类型同样以中文展示，避免显示原始数字 -->
-          <van-field :value="editForm.type === 1 ? '个人' : '企业'" label="抬头类型" readonly is-link @click="editTypePickerShow = true"></van-field>
+          <van-field :model-value="editForm.type === 1 ? '个人' : '企业'" label="抬头类型" readonly is-link @click="editTypePickerShow = true"></van-field>
           <van-field v-model="editForm.title" label="抬头名称" placeholder="个人填姓名，企业填公司名称" maxlength="50"
                      :rules="editTitleRules"></van-field>
           <van-field v-model="editForm.taxNumber" label="税号" placeholder="企业填写纳税人识别号（个人可留空）" maxlength="30"
@@ -102,23 +102,24 @@
     </van-popup>
 
     <!-- 编辑弹窗内的抬头类型选择 -->
-    <van-popup v-model="editTypePickerShow" position="bottom" round>
+    <van-popup v-model:show="editTypePickerShow" position="bottom" round>
       <van-picker show-toolbar :columns="typeColumns" @confirm="onEditTypeConfirm" @cancel="editTypePickerShow = false"></van-picker>
     </van-popup>
     </cend-shell>
   </div>
 
-  <script src="../../backend/plugins/vue/vue.js"></script>
-  <script src="./../js/vant.min.js"></script>
+  <script src="../../backend/plugins/vue3/vue.global.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="../../backend/plugins/axios/axios.min.js"></script>
   <script src="./../js/request.js?v=20260930"></script>
   <script src="./../api/main.js?v=20260917"></script>
   <script src="./../js/common.js?v=20260930b"></script>
-  <script src="./../js/components-cend.js?v=20260922"></script>
+  <script src="./../js/components-cend-v3.js?v=3001001"></script>
   <script src="./../api/invoice.js?v=20260917"></script>
   <script src="./../api/order.js?v=20260926"></script>
   <script>
-    new Vue({
+    createVantApp({
       el: '#invoice-app',
       data: function() {
         return {
@@ -209,7 +210,7 @@
           this.orderNo = q.orderNo || ''
           this.amountText = q.amount ? Number(q.amount).toFixed(2) : '0.00'
           if (!this.orderId) {
-            vant.Notify({ type: 'warning', message: '参数错误，请从订单页进入' })
+            vant.showNotify({ type: 'warning', message: '参数错误，请从订单页进入' })
             return
           }
           // 订单号/金额以接口回查为准：order-detail 入口只传 orderId，URL 参数仅作兜底
@@ -253,7 +254,7 @@
           return s.indexOf('T') > -1 ? s.replace('T', ' ').substring(0, 19) : s
         },
         viewPdf: function(url) {
-          if (!url) { vant.Toast.fail('暂未上传票面文件'); return }
+          if (!url) { vant.showFailToast('暂未上传票面文件'); return }
           // 本系统上传为相对路径，经 /common/download 鉴权访问；历史外链直接打开
           if (/^https?:\/\//i.test(url)) {
             window.open(url, '_blank', 'noopener,noreferrer')
@@ -269,7 +270,7 @@
               self.record = res.data || null
             }
           }).catch(function(err) {
-            if (err.message !== 'NOTLOGIN') vant.Toast.fail('查询发票失败')
+            if (err.message !== 'NOTLOGIN') vant.showFailToast('查询发票失败')
           })
         },
         // 抬头列表
@@ -291,11 +292,13 @@
               }
             }
           }).catch(function(err) {
-            if (err.message !== 'NOTLOGIN') vant.Toast.fail('加载抬头失败')
+            if (err.message !== 'NOTLOGIN') vant.showFailToast('加载抬头失败')
           })
         },
-        onTypeConfirm: function(picker) {
-          this.form.type = picker.value
+        onTypeConfirm: function({ selectedOptions }) {
+          // Vant4 Picker 的 confirm 回参改成 {selectedValues, selectedOptions, selectedIndexes}，
+          // 取原始 value 要走 selectedOptions[0].value（Vant2 时代是 picker.value）
+          this.form.type = selectedOptions[0].value
           this.typePickerShow = false
         },
         // 打开编辑抬头弹窗
@@ -303,8 +306,8 @@
           this.editForm = { id: t.id, type: t.type === 2 ? 2 : 1, title: t.title || '', taxNumber: t.taxNumber || '' }
           this.editPopupShow = true
         },
-        onEditTypeConfirm: function(picker) {
-          this.editForm.type = picker.value
+        onEditTypeConfirm: function({ selectedOptions }) {
+          this.editForm.type = selectedOptions[0].value
           this.editTypePickerShow = false
         },
         // 保存抬头编辑
@@ -312,7 +315,7 @@
         saveEditTitle: function() {
           var self = this
           if (!this.editForm.id) {
-            vant.Toast.fail('参数错误，请重试')
+            vant.showFailToast('参数错误，请重试')
             return
           }
           var title = (this.editForm.title || '').trim()
@@ -327,14 +330,14 @@
             taxNumber: taxNumber
           }).then(function(res) {
             if (res.code === 1) {
-              vant.Toast.success('已保存')
+              vant.showSuccessToast('已保存')
               self.editPopupShow = false
               self.loadTitles()
             } else {
-              vant.Toast.fail(res.msg || '保存失败')
+              vant.showFailToast(res.msg || '保存失败')
             }
           }).catch(function(err) {
-            if (err.message !== 'NOTLOGIN') vant.Toast.fail('保存失败')
+            if (err.message !== 'NOTLOGIN') vant.showFailToast('保存失败')
           }).finally(function() {
             self.editing = false
           })
@@ -359,16 +362,16 @@
           this.saving = true
           invoiceTitleSaveApi({ type: this.form.type, title: title, taxNumber: taxNumber }).then(function(res) {
             if (res.code === 1) {
-              vant.Toast.success('抬头已保存')
+              vant.showSuccessToast('抬头已保存')
               self.pendingSelect = { title: title, taxNumber: taxNumber }
               self.form.title = ''
               self.form.taxNumber = ''
               self.loadTitles()
             } else {
-              vant.Toast.fail(res.msg || '保存失败')
+              vant.showFailToast(res.msg || '保存失败')
             }
           }).catch(function(err) {
-            if (err.message !== 'NOTLOGIN') vant.Toast.fail('保存失败')
+            if (err.message !== 'NOTLOGIN') vant.showFailToast('保存失败')
           }).finally(function() {
             self.saving = false
           })
@@ -376,7 +379,7 @@
         // 删除抬头
         deleteTitle: function(t) {
           var self = this
-          vant.Dialog.confirm({
+          vant.showConfirmDialog({
             title: '删除抬头',
             message: '确定删除抬头「' + t.title + '」吗？',
             confirmButtonText: '删除',
@@ -384,14 +387,14 @@
           }).then(function() {
             invoiceTitleDeleteApi(t.id).then(function(res) {
               if (res.code === 1) {
-                vant.Toast.success('已删除')
+                vant.showSuccessToast('已删除')
                 if (self.selectedTitleId === t.id) self.selectedTitleId = null
                 self.loadTitles()
               } else {
-                vant.Toast.fail(res.msg || '删除失败')
+                vant.showFailToast(res.msg || '删除失败')
               }
             }).catch(function(err) {
-              if (err.message !== 'NOTLOGIN') vant.Toast.fail('删除失败')
+              if (err.message !== 'NOTLOGIN') vant.showFailToast('删除失败')
             })
           }).catch(function(e) { console.warn('[invoice.html] 用户取消删除抬头:', e) })
         },
@@ -399,12 +402,12 @@
         apply: function() {
           var self = this
           if (!this.selectedTitleId) {
-            vant.Toast.fail('请选择发票抬头')
+            vant.showFailToast('请选择发票抬头')
             return
           }
           var t = this.titles.find(function(x) { return x.id === self.selectedTitleId })
           if (!t) {
-            vant.Toast.fail('抬头不存在，请重新选择')
+            vant.showFailToast('抬头不存在，请重新选择')
             return
           }
           this.submitting = true
@@ -415,7 +418,7 @@
             type: t.type || 1
           }).then(function(res) {
             if (res.code === 1) {
-              vant.Dialog.alert({
+              vant.showDialog({
                 title: '申请成功',
                 message: '发票申请已提交，商家将在 3 个工作日内为您开具。'
               }).then(function() {
@@ -423,10 +426,10 @@
                 self.loadInvoice()
               })
             } else {
-              vant.Toast.fail(res.msg || '申请失败')
+              vant.showFailToast(res.msg || '申请失败')
             }
           }).catch(function(err) {
-            if (err.message !== 'NOTLOGIN') vant.Toast.fail('申请失败')
+            if (err.message !== 'NOTLOGIN') vant.showFailToast('申请失败')
           }).finally(function() {
             self.submitting = false
           })

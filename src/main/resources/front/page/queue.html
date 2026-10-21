@@ -7,7 +7,7 @@
     <title>排队取号 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../../backend/plugins/remixicon/remixicon.css" />
     <script src="./../js/icon-fallback.js?v=20260917"></script>
@@ -50,15 +50,16 @@
       </cend-shell>
     </div>
 
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../js/common.js?v=20260930b"></script>
     <script src="../api/dining.js?v=20260929"></script>
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script>
-        new Vue({
+        createVantApp({
             el: '#queue-app',
             data: function () {
                 return {
@@ -85,7 +86,7 @@
                 // 取号期间 15 秒刷新一次叫号进度
                 this.timer = setInterval(this.loadMy, 15000)
             },
-            beforeDestroy: function () {
+            beforeUnmount: function () {
                 if (this.timer) clearInterval(this.timer)
             },
             methods: {
@@ -109,19 +110,19 @@
                     takeQueue({ seatCount: this.seatCount }).then((function (res) {
                         this.current = res.data
                         this.waitingAhead = 0
-                        vant.Toast.success('取号成功')
+                        vant.showSuccessToast('取号成功')
                     }).bind(this)).finally((function () {
                         this.submitting = false
                     }).bind(this))
                 },
                 confirmCancel: function () {
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '取消排队',
                         message: '确定取消当前排队号码？'
                     }).then((function () {
                         cancelMyQueue(this.current.id).then((function () {
                             this.current = null
-                            vant.Toast.success('已取消排队')
+                            vant.showSuccessToast('已取消排队')
                         }).bind(this))
                     }).bind(this)).catch(function () {})
                 }

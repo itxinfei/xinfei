@@ -7,7 +7,7 @@
     <title>个人中心 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <!-- 修改点：加载 remixicon 图标库，菜单位图 png → ri-* 矢量图标 -->
@@ -284,11 +284,11 @@
 
         <!-- ====== 最新订单菜品图大图预览（对齐美团订单卡片交互） ====== -->
         <!-- 修改点：Vue2 下 van-* 禁自闭合，:show.sync 替代 v-model:show（my-evaluations.html 权威写法） -->
-        <van-image-preview :show.sync="previewShow" :images="previewImages" :start-position="previewIndex"></van-image-preview>
+        <van-image-preview v-model:show="previewShow" :images="previewImages" :start-position="previewIndex"></van-image-preview>
 
         <!-- ====== 编辑资料弹窗（修改点 2026-09-16：昵称 + 性别，复用 PUT /user/info） ====== -->
         <van-dialog
-            v-model="editProfileShow"
+            v-model:show="editProfileShow"
             title="编辑资料"
             show-cancel-button
             confirm-button-text="保存"
@@ -315,33 +315,34 @@
         <van-tabbar v-model="activeTab" class="app-tabbar" @change="onTabChange">
             <van-tabbar-item>
                 <span>点餐</span>
-                <i slot="icon" class="ri-restaurant-line"></i>
+                <template #icon><i class="ri-restaurant-line"></i></template>
             </van-tabbar-item>
             <van-tabbar-item>
                 <span>订单</span>
-                <i slot="icon" class="ri-file-list-line"></i>
+                <template #icon><i class="ri-file-list-line"></i></template>
             </van-tabbar-item>
             <van-tabbar-item>
                 <span>我的</span>
-                <i slot="icon" class="ri-user-3-line"></i>
+                <template #icon><i class="ri-user-3-line"></i></template>
             </van-tabbar-item>
         </van-tabbar>
       </cend-shell>
     </div>
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../api/main.js?v=20260917"></script>
     <script src="./../js/common.js?v=20260930b"></script>
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script src="./../api/order.js?v=20260917"></script>
     <script src="./../api/login.js?v=20260917"></script>
     <script src="./../api/member-center.js?v=20260917"></script>
     <script src="./../api/invoice.js?v=20260917"></script>
     <script src="./../api/recommend.js?v=20260917"></script>
     <script>
-        new Vue({
+        createVantApp({
             el:"#user",
             data: function(){
                 return {
@@ -553,15 +554,15 @@
                             await cartListApi({})
                             window.requestAnimationFrame(function(){ window.location.href = '/front/index.html' })
                         }else{
-                            vant.Toast.fail(res.msg || '再来一单失败');
+                            vant.showFailToast(res.msg || '再来一单失败');
                             this.addOrderLoading = false
                         }
-                    } catch(e) { vant.Toast.fail('再来一单失败'); this.addOrderLoading = false }
+                    } catch(e) { vant.showFailToast('再来一单失败'); this.addOrderLoading = false }
                 },
                 async toPageLogin(){
                     if(this.logoutLoading) return;
                     var self = this
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '确认退出', message: '退出登录后需要重新登录，确认退出吗？',
                         confirmButtonText: '确认退出', confirmButtonColor: cssVar('--color-danger'), cancelButtonText: '取消'
                     }).then(function(){ self.doLogout() }).catch(function(e){ console.warn('[user.html] 用户取消退出登录:', e) })
@@ -582,7 +583,7 @@
                             document.cookie = 'csrfToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
                             window.requestAnimationFrame(function(){ goLogin() })
                         }else{
-                            vant.Toast.fail(res.msg || '退出失败');
+                            vant.showFailToast(res.msg || '退出失败');
                             this.logoutLoading = false
                         }
                     } catch(e) { this.logoutLoading = false }
@@ -621,7 +622,7 @@
                 uploadAndSaveAvatar: function(file){
                     var self = this;
                     var v = self.validateAvatar(file);
-                    if(!v.ok){ vant.Toast(v.msg); return; }
+                    if(!v.ok){ vant.showToast(v.msg); return; }
                     self.prevAvatar = self.userAvatar;
                     self.avatarUploading = true;
                     // 修改点：本地即时预览（不等上传完成即可看到效果）
@@ -640,7 +641,7 @@
                                     if(res && res.code === 1 && res.data){
                                         self.userAvatar = res.data.avatar || up.data;
                                         try { sessionStorage.setItem('userAvatar', self.userAvatar); } catch(e) {}
-                                        vant.Toast.success('头像已更新');
+                                        vant.showSuccessToast('头像已更新');
                                     } else {
                                         throw new Error((res && res.msg) || '更新失败');
                                     }
@@ -649,7 +650,7 @@
                             throw new Error((up && up.msg) || '上传失败');
                         })
                         .catch(function(err){
-                            vant.Toast.fail((err && err.message) ? err.message : '上传失败，请重试');
+                            vant.showFailToast((err && err.message) ? err.message : '上传失败，请重试');
                             self.userAvatar = self.prevAvatar;
                         })
                         .finally(function(){ self.avatarUploading = false; });
@@ -665,7 +666,7 @@
                     var self = this;
                     if(action === 'confirm'){
                         if(!self.editName || !self.editName.trim()){
-                            vant.Toast('昵称不能为空');
+                            vant.showToast('昵称不能为空');
                             done(false);
                             return;
                         }
@@ -683,14 +684,14 @@
                                 self.userGender = res.data.sex !== undefined ? res.data.sex : self.userGender;
                                 try { sessionStorage.setItem('userName', self.userName); } catch(e) {}
                                 if(done) done();
-                                vant.Toast.success('资料已保存');
+                                vant.showSuccessToast('资料已保存');
                             } else {
-                                vant.Toast.fail((res && res.msg) || '保存失败');
+                                vant.showFailToast((res && res.msg) || '保存失败');
                                 if(done) done(false);
                             }
                         })
                         .catch(function(){
-                            vant.Toast.fail('保存失败，请重试');
+                            vant.showFailToast('保存失败，请重试');
                             if(done) done(false);
                         });
                 },

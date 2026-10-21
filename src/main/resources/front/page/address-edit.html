@@ -6,7 +6,7 @@
     <title>编辑地址 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b"/>
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <link rel="stylesheet" href="./../styles/address-edit.css?v=20260930"/>
@@ -211,17 +211,18 @@
     </div>
 
     <!-- JS 依赖：Vue必须在Vant之前加载 -->
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <!-- 跨页复用组件（cend-shell/cend-empty），须在 vant 之后、new Vue 之前 -->
-    <script src="../js/components-cend.js?v=20260922"></script>
+    <script src="../js/components-cend-v3.js?v=3001001"></script>
     <script src="./../js/common.js?v=20260930b"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../api/address.js?v=20260917"></script>
     <script src="./../api/region.js?v=20260917"></script>
     <script>
-    new Vue({
+    createVantApp({
         el: "#address_edit",
         data() {
             return {
@@ -292,8 +293,8 @@
                 this.title = '编辑收货地址'
                 // 手动显示加载状态（用Vant Toast）
                 var toast = null
-                if (window.vant && vant.Toast) {
-                    toast = vant.Toast.loading({ message: '加载中...', duration: 0, forbidClick: true })
+                if (window.vant && vant.showToast) {
+                    toast = vant.showLoadingToast({ message: '加载中...', duration: 0, forbidClick: true })
                 }
                 try {
                     var res = await addressFindOneApi(params.id)
@@ -324,10 +325,10 @@
                         // 用区划 code 逐级反查 region id，恢复省/市/区 id
                         await this.restoreRegionIds()
                     } else {
-                        vant.Toast.fail && vant.Toast.fail(res.msg || '加载失败')
+                        vant.showFailToast && vant.showFailToast(res.msg || '加载失败')
                     }
                 } finally {
-                    if (toast) toast.clear()
+                    if (toast) vant.closeToast()
                 }
             },
 
@@ -401,10 +402,10 @@
                     if (res.code === 1) {
                         this.pickerList = res.data || []
                     } else {
-                        vant.Toast.fail && vant.Toast.fail('加载地区数据失败')
+                        vant.showFailToast && vant.showFailToast('加载地区数据失败')
                     }
                 } catch (e) {
-                    vant.Toast.fail && vant.Toast.fail('网络异常，请重试')
+                    vant.showFailToast && vant.showFailToast('网络异常，请重试')
                 } finally {
                     this.pickerLoading = false
                 }
@@ -541,7 +542,7 @@
                             var chosenId = this.id || (res.data && res.data.id)
                             if (chosenId) sessionStorage.setItem('selectedAddressId', String(chosenId))
                         }
-                        vant.Toast.success && vant.Toast.success('保存成功')
+                        vant.showSuccessToast && vant.showSuccessToast('保存成功')
                         setTimeout(function () {
                             // 修改点：从结算页跳转来时（addressFromCheckout=1），
                             // 保存成功后直接跳回结算页，不再卡在地址列表。
@@ -553,11 +554,11 @@
                         }, 500)
                     } else {
                         this.saving = false
-                        vant.Toast.fail && vant.Toast.fail(res.msg || '保存失败')
+                        vant.showFailToast && vant.showFailToast(res.msg || '保存失败')
                     }
                 } catch (e) {
                     this.saving = false
-                    vant.Toast.fail && vant.Toast.fail('网络异常，请重试')
+                    vant.showFailToast && vant.showFailToast('网络异常，请重试')
                 }
             },
 
@@ -565,8 +566,8 @@
             deleteAddress() {
                 if (this.deleting) return
                 var that = this
-                if (vant && vant.Dialog && vant.Dialog.confirm) {
-                    vant.Dialog.confirm({
+                if (vant && vant.showDialog && vant.showConfirmDialog) {
+                    vant.showConfirmDialog({
                         title: '删除地址',
                         message: '确认删除该收货地址吗？删除后不可恢复。',
                         confirmButtonText: '确认删除',
@@ -583,17 +584,17 @@
                 try {
                     var res = await deleteAddressApi({ ids: this.id })
                     if (res.code === 1) {
-                        vant.Toast.success && vant.Toast.success('已删除')
+                        vant.showSuccessToast && vant.showSuccessToast('已删除')
                         setTimeout(function () {
                             window.location.replace('/front/page/address.html')
                         }, 500)
                     } else {
                         this.deleting = false
-                        vant.Toast.fail && vant.Toast.fail(res.msg || '删除失败')
+                        vant.showFailToast && vant.showFailToast(res.msg || '删除失败')
                     }
                 } catch (e) {
                     this.deleting = false
-                    vant.Toast.fail && vant.Toast.fail('网络异常，请重试')
+                    vant.showFailToast && vant.showFailToast('网络异常，请重试')
                 }
             }
         }

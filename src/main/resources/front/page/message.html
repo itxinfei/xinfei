@@ -7,7 +7,7 @@
     <title>消息中心 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <!-- 修改点：提取内联样式到独立CSS文件 -->
@@ -105,17 +105,18 @@
       </cend-shell>
     </div>
 
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../api/recommend.js?v=20260917"></script>
     <script src="./../api/cs.js?v=20260929"></script>
     <script src="./../js/common.js?v=20260930b"></script>
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script>
         // 修改点：用户消息中心页面 - 允许用户查看、阅读营销消息
-        new Vue({
+        createVantApp({
             el: '#messageApp',
             data: function() {
                 return {
@@ -157,7 +158,7 @@
                 }.bind(this);
                 window.addEventListener('xinfei:new-message', this._onSseNewMessage);
             },
-            beforeDestroy: function() {
+            beforeUnmount: function() {
                 // 修改点：移除 ESC 键监听
                 if (this._handleEscKey) {
                     document.removeEventListener('keydown', this._handleEscKey);
@@ -209,13 +210,13 @@
                             if (self.hasMore) self.page++;
                         } else {
                             if (self.page === 1) self.loadError = true;
-                            vant.Toast.fail((res && res.msg) || '加载消息失败');
+                            vant.showFailToast((res && res.msg) || '加载消息失败');
                         }
                     }).catch(function(err) {
                         console.error('加载消息失败:', err);
                         // 修改点：首屏失败置错误态；翻页失败停留本页，"加载更多"可重试同一页
                         if (self.page === 1) self.loadError = true;
-                        vant.Toast.fail('加载消息失败');
+                        vant.showFailToast('加载消息失败');
                     }).finally(function() {
                         self.loading = false;
                         // 修改点：下拉刷新与实际加载同步
@@ -254,7 +255,7 @@
                             }
                         }).catch(function(err) {
                             console.error('标记已读失败:', err);
-                            vant.Toast.fail('标记已读失败');
+                            vant.showFailToast('标记已读失败');
                         });
                     }
                 },
@@ -309,31 +310,31 @@
                     var self = this;
                     var unreadMsgs = self.messages.filter(function(m) { return m.status === 1; });
                     if (unreadMsgs.length === 0) {
-                        vant.Toast('暂无未读消息');
+                        vant.showToast('暂无未读消息');
                         return;
                     }
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '全部已读',
                         message: '确定将所有未读消息标记为已读？'
                     }).then(function() {
                         // 修改点(2026-09-17)：改为单次批量已读接口（原对每条未读各发一次请求，N+1 且易触发限流）
-                        vant.Toast.loading({ message: '处理中…', forbidClick: true, duration: 0 });
+                        vant.showLoadingToast({ message: '处理中…', forbidClick: true, duration: 0 });
                         return recommendApi.markAllMessagesRead();
                     }).then(function(res) {
-                        vant.Toast.clear();
+                        vant.closeToast();
                         if (res && res.code === 1) {
                             self.messages.forEach(function(m) { if (m.status === 1) { m.status = 2; } });
                             self.unreadCount = 0;
-                            vant.Toast.success('已全部标记为已读');
+                            vant.showSuccessToast('已全部标记为已读');
                         } else {
-                            vant.Toast.fail((res && res.msg) || '标记已读失败');
+                            vant.showFailToast((res && res.msg) || '标记已读失败');
                         }
                     }).catch(function(e) {
-                        vant.Toast.clear();
+                        vant.closeToast();
                         // 用户点取消/遮罩关闭时 vant reject 'cancel'/'close'，属主动放弃，静默不报错
                         if (e === 'cancel' || e === 'close') return;
                         console.error('[message] 批量已读失败:', e);
-                        vant.Toast.fail('操作失败，请稍后重试');
+                        vant.showFailToast('操作失败，请稍后重试');
                     });
                 },
 

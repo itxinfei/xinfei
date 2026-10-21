@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>骑手登录</title>
-  <link rel="stylesheet" href="/front/styles/vant.min.css">
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="/shared/styles/tokens.css?v=20260930b">
   <link rel="stylesheet" href="/backend/plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="/rider/css/rider.css?v=20260930e">
@@ -39,7 +39,7 @@
     </div>
 
     <!-- 忘记密码：手机号 + 短信验证码 + 新密码（Vant2 无 Dialog.prompt，用 popup 自建） -->
-    <van-popup v-model="showForgot" position="bottom" round :style="{ maxHeight: '90%' }">
+    <van-popup v-model:show="showForgot" position="bottom" round :style="{ maxHeight: '90%' }">
       <div class="login-wrap">
         <div class="login-title">重置密码</div>
         <div class="login-sub">验证注册手机号后设置新密码</div>
@@ -70,14 +70,14 @@
   </main>
   </div>
 
-  <script src="/backend/plugins/vue/vue.js"></script>
+  <script src="/backend/plugins/vue3/vue.global.js"></script>
   <script src="/backend/plugins/axios/axios.min.js"></script>
-  <script src="/front/js/vant.min.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="/rider/js/request.js?v=20260930"></script>
   <script src="/rider/js/api.js"></script>
   <script>
-    Vue.use(vant);
-    new Vue({
+    createVantApp({
       data: function () {
         return {
           phone: '', password: '', loading: false, phoneError: '', passwordError: '',
@@ -142,7 +142,7 @@
           }
           vm.codeSending = true;
           RiderApi.sendSmsCode(phone).then(function () {
-            vant.Toast.success('验证码已发送');
+            vant.showSuccessToast('验证码已发送');
             vm.codeCooldown = 60;
             vm.codeTimer = setInterval(function () {
               vm.codeCooldown--;
@@ -168,21 +168,21 @@
             return;
           }
           if (!/^\d{6}$/.test(code)) {
-            vant.Toast.fail('请输入6位验证码');
+            vant.showFailToast('请输入6位验证码');
             return;
           }
           if (pwd.length < 6 || pwd.length > 20) {
-            vant.Toast.fail('新密码长度须为6-20位');
+            vant.showFailToast('新密码长度须为6-20位');
             return;
           }
           if (pwd !== vm.fConfirm) {
-            vant.Toast.fail('两次输入的密码不一致');
+            vant.showFailToast('两次输入的密码不一致');
             return;
           }
           vm.resetLoading = true;
           RiderApi.forgotPassword(phone, code, pwd).then(function () {
             vm.showForgot = false;
-            vant.Toast.success('密码重置成功，请使用新密码登录');
+            vant.showSuccessToast('密码重置成功，请使用新密码登录');
             // 带回手机号，骑手直接输新密码即可登录
             vm.phone = phone;
             vm.password = '';
@@ -193,7 +193,7 @@
           });
         }
       }
-    }).$mount('#app');
+    }).mount('#app');
   </script>
 </body>
 </html>

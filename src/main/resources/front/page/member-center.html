@@ -7,7 +7,7 @@
   <!-- 修改点(2026-09-17 UX)：base.js 移到 head 首位并升样式版本——原在 body 尾部加载，
        首屏先按默认根字号渲染再跳变（FOUC）；全站其余页均在 head 加载 base.js -->
   <script src="../js/base.js?v=20260930"></script>
-  <link rel="stylesheet" href="../styles/vant.min.css">
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="../styles/index.css?v=20260930b">
   <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
   <link rel="stylesheet" href="../styles/member-center.css?v=20260930">
@@ -233,7 +233,7 @@
     </div>
 
     <!-- 在线充值弹层 -->
-    <van-popup v-model="rc.show" position="bottom" round :close-on-click-overlay="!rc.submitting">
+    <van-popup v-model:show="rc.show" position="bottom" round :close-on-click-overlay="!rc.submitting">
       <div class="rc-sheet">
         <div class="rc-sheet-title">会员充值</div>
         <div class="rc-amount-grid">
@@ -263,15 +263,16 @@
     <div class="mc-bottom-spacer"></div>
   </div>
 
-  <script src="../../backend/plugins/vue/vue.js"></script>
-  <script src="../js/vant.min.js"></script>
+  <script src="../../backend/plugins/vue3/vue.global.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="../../backend/plugins/axios/axios.min.js"></script>
   <script src="../js/request.js?v=20260930"></script>
   <script src="../api/member-center.js?v=20260929"></script>
   <script src="../api/payment.js?v=20260929"></script>
   <script src="../api/coupon.js?v=20260917"></script>
   <script>
-    new Vue({
+    createVantApp({
       el: '#member-center',
       data: function() {
         return {
@@ -417,15 +418,15 @@
         },
         // 修改点(2026-09-17 UX)：领取 loading 按券 ID 隔离（原 claimLoading 全局共用，点任意一张禁用所有按钮）
         async doClaim(templateId) {
-          if (!this.memberInfo || !this.memberInfo.member) { vant.Toast.fail('请先成为会员'); return }
+          if (!this.memberInfo || !this.memberInfo.member) { vant.showFailToast('请先成为会员'); return }
           this.claimingId = templateId
           try {
             var res = await claimCouponFront(templateId)
             if (res.code === 1) {
-              vant.Toast.success('领取成功')
+              vant.showSuccessToast('领取成功')
               this.loadCoupons()
-            } else { vant.Toast.fail(res.msg || '领取失败') }
-          } catch(e) { vant.Toast.fail('领取失败') }
+            } else { vant.showFailToast(res.msg || '领取失败') }
+          } catch(e) { vant.showFailToast('领取失败') }
           this.claimingId = null
         },
         activateMember: async function() {
@@ -434,12 +435,12 @@
           try {
             var res = await openMemberApi()
             if (res.code === 1) {
-              vant.Toast.success('会员开通成功')
+              vant.showSuccessToast('会员开通成功')
               this.loadAll()
-            } else { vant.Toast.fail(res.msg || '开通失败') }
+            } else { vant.showFailToast(res.msg || '开通失败') }
           } catch(e) {
             console.warn('[member-center] 开通失败:', e)
-            vant.Toast.fail('网络异常，请稍后重试')
+            vant.showFailToast('网络异常，请稍后重试')
           }
           this.activating = false
         },
@@ -462,7 +463,7 @@
             // 1. 创建 PENDING 充值单
             var create = await createRechargeApi({ amount: amount, paymentMethod: this.rc.paymentMethod })
             if (create.code !== 1) {
-              vant.Toast.fail(create.msg || '提交失败')
+              vant.showFailToast(create.msg || '提交失败')
               this.rc.submitting = false
               return
             }
@@ -472,7 +473,7 @@
             if (pay.code !== 1) {
               // 支付发起失败：充值单仍 PENDING，关闭弹层提示，可走充值记录/门店确认兜底
               this.rc.show = false
-              vant.Toast.fail(pay.msg || '支付发起失败，可稍后在充值记录中查看')
+              vant.showFailToast(pay.msg || '支付发起失败，可稍后在充值记录中查看')
               this.rc.submitting = false
               return
             }
@@ -486,12 +487,12 @@
               window.location.href = p.payUrl
             } else {
               this.rc.show = false
-              vant.Toast.fail('支付渠道响应异常，请稍后在充值记录查看')
+              vant.showFailToast('支付渠道响应异常，请稍后在充值记录查看')
               this.rc.submitting = false
             }
           } catch(e) {
             console.warn('[member-center] 充值支付异常:', e)
-            vant.Toast.fail('网络异常，请稍后重试')
+            vant.showFailToast('网络异常，请稍后重试')
             this.rc.submitting = false
           }
         },
@@ -515,20 +516,20 @@
             var res = await paymentNotifyMockApi(channel, params)
             if (res && res.code === 1) {
               this.rc.show = false
-              vant.Toast.success('充值成功，余额已到账')
+              vant.showSuccessToast('充值成功，余额已到账')
               this.loadAll()
             } else {
               this.rc.show = false
-              vant.Toast.fail((res && res.msg) || '支付确认失败，请稍后在充值记录查看')
+              vant.showFailToast((res && res.msg) || '支付确认失败，请稍后在充值记录查看')
             }
           } catch(e) {
             this.rc.show = false
-            vant.Toast.fail('网络异常，支付确认失败，请稍后在充值记录查看')
+            vant.showFailToast('网络异常，支付确认失败，请稍后在充值记录查看')
           }
           this.rc.submitting = false
         },
         showRules: function() {
-          vant.Dialog.alert({
+          vant.showDialog({
             title: '会员规则',
             // 修改点(2026-09-18)：删除「积分可用于兑换优惠券」——系统无积分兑换功能，属虚假承诺；
             // 积分实际仅用于按门槛自动升级，规则条目重排为 1-4。

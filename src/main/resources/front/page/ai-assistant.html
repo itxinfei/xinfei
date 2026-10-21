@@ -6,7 +6,7 @@
     <title>AI智能点餐助手</title>
     <!-- 修改点：base.js 前置，确保 rem 基准正确计算 -->
     <script src="../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css">
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b">
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <!-- 修改点：补充加载完整 remixicon.css（此前仅加载 fallback，ri-moon-line/ri-menu-line/ri-close-line 等 header 图标不渲染） -->
@@ -113,8 +113,8 @@
             </div>
 
             <!-- 对话消息 -->
-            <template v-for="(msg, idx) in messages">
-                <div :class="'chat-msg ' + msg.role" :key="msg.key || (msg.role + '-' + idx)"
+            <template v-for="(msg, idx) in messages" :key="msg.key || (msg.role + '-' + idx)">
+                <div :class="'chat-msg ' + msg.role"
                      @contextmenu.prevent="showMsgMenu($event, msg)"
                      @touchstart="onMsgTouchStart($event, msg)"
                      @touchend="onMsgTouchEnd"
@@ -294,9 +294,10 @@
     <!-- Scripts -->
     <!-- 修改点：改为相对路径，与其他C端页面（order/user）保持一致。
          绝对路径 /backend/... 在子路径部署时会失效，且在 file:// 下无法解析。 -->
-    <script src="../../backend/plugins/vue/vue.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
-    <script src="../js/vant.min.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <script src="../js/request.js?v=20260930"></script>
     <!-- 公共聊天内核：POST+SSE 客户端 / 安全 Markdown / 消息工厂（与管理后台同一份） -->
     <script src="../../backend/js/ai/ai-chat-core.js?v=20260930"></script>
@@ -304,7 +305,7 @@
     <!-- 修复(2026-09-23 P2-3/P2-4)：引入 common.js 提供 goLogin()/imgPath()；
          须在 vue.js 之后、new Vue 之前，installXinfeiVueHelpers 才能把 imgPath 注入实例 -->
     <script src="../js/common.js?v=20260930b"></script>
-    <script src="../js/components-cend.js?v=20260922"></script>
+    <script src="../js/components-cend-v3.js?v=3001001"></script>
     <script>
     (function() {
         'use strict';
@@ -332,9 +333,9 @@
         }
 
         // ==================== Vue App ====================
-        new Vue({
+        createVantApp({
             el: '#ai-app',
-            data: {
+            data: function () { return {
                 inputText: '',
                 loading: false,
 
@@ -397,7 +398,7 @@
                 msgPressT0: 0,
                 _msgPressEndHandler: null,
                 _scrollQueued: false
-            },
+            }; },
             computed: {
                 currentQuickTips: function() {
                     if (this.currentScene === 'order_assistant'
@@ -490,7 +491,7 @@
                 // 侧边栏手势
                 this.initSwipeGesture();
             },
-            beforeDestroy: function() {
+            beforeUnmount: function() {
                 if (this._handleEscKey) document.removeEventListener('keydown', this._handleEscKey);
                 // 修改点：清理长按计时器与取消监听
                 if (this.msgPressTimer) clearTimeout(this.msgPressTimer);
@@ -508,9 +509,9 @@
                     aiApi.getSceneConfig('order_assistant').then(function(res) {
                         var data = (res && res.code === 1) ? res.data : null;
                         if (!data) return;
-                        if (data.welcome) self.$set(self.sceneConfig, 'welcome', data.welcome);
+                        if (data.welcome) self.sceneConfig['welcome'] = data.welcome;
                         if (data.quickQuestions && data.quickQuestions.length) {
-                            self.$set(self.sceneConfig, 'quickQuestions', data.quickQuestions);
+                            self.sceneConfig['quickQuestions'] = data.quickQuestions;
                         }
                         // 供应商能力（视觉开关）；SSE 首帧还会实时下发覆盖
                         if (data.capabilities) self.capabilities = data.capabilities;
@@ -520,7 +521,7 @@
                 // ==================== 网络检测 ====================
                 checkNetwork: function() {
                     if (!this.isOnline) {
-                        vant.Notify({ type: 'warning', message: '当前处于离线状态，请检查网络', duration: 3000 });
+                        vant.showNotify({ type: 'warning', message: '当前处于离线状态，请检查网络', duration: 3000 });
                         return false;
                     }
                     return true;
@@ -664,7 +665,7 @@
                             if (res && res.code === 1) {
                                 removeLocal();
                             } else {
-                                vant.Notify({ type: 'danger', message: (res && res.msg) || '删除失败' });
+                                vant.showNotify({ type: 'danger', message: (res && res.msg) || '删除失败' });
                             }
                         }).catch(function(e) {
                             console.warn('[ai-assistant] 删除消息失败:', e);
@@ -680,10 +681,10 @@
                     if (!text) return;
                     window.AiChatCore.copyText(text).then(function() {
                         msg.copied = true;
-                        vant.Notify({ type: 'success', message: '已复制到剪贴板', duration: 1500 });
+                        vant.showNotify({ type: 'success', message: '已复制到剪贴板', duration: 1500 });
                         setTimeout(function() { msg.copied = false; }, 2000);
                     }).catch(function() {
-                        vant.Notify({ type: 'warning', message: '复制失败，请长按文本手动复制', duration: 2000 });
+                        vant.showNotify({ type: 'warning', message: '复制失败，请长按文本手动复制', duration: 2000 });
                     });
                 },
 
@@ -816,7 +817,7 @@
                     // 用户主动新建（非 silent）时若 AI 仍在流式回复，阻止切换：
                     // 否则后续 SSE 片段会 push 到新会话造成串台
                     if (!silent && this.loading) {
-                        vant.Toast('AI 正在回复，请先停止当前生成');
+                        vant.showToast('AI 正在回复，请先停止当前生成');
                         return;
                     }
                     var conv = {
@@ -843,7 +844,7 @@
                 },
                 switchConversation: function(id) {
                     if (this.loading) {
-                        vant.Toast('AI 正在回复，请先停止当前生成');
+                        vant.showToast('AI 正在回复，请先停止当前生成');
                         return;
                     }
                     var conv = this.conversations.find(function(c) { return c.id === id; });
@@ -890,7 +891,7 @@
                     var conv = (typeof convOrId === 'object') ? convOrId :
                         this.conversations.find(function(c) { return c.id === convOrId; });
                     if (!conv) return;
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '删除对话',
                         message: '确定要删除这个对话吗？此操作不可恢复。'
                     }).then(function() {
@@ -912,7 +913,7 @@
                             }
                         }
                         self.saveConversations();
-                        vant.Toast.success('对话已删除');
+                        vant.showSuccessToast('对话已删除');
                     }).catch(function(e) {
                         if (e && e.message) console.warn('[ai-assistant.html] 删除对话失败:', e.message);
                     });
@@ -1025,7 +1026,7 @@
                 },
                 clearAllConversations: function() {
                     var self = this;
-                    vant.Dialog.confirm({
+                    vant.showConfirmDialog({
                         title: '清空对话',
                         message: '确定要清空全部对话记录吗？此操作不可恢复。'
                     }).then(function() {
@@ -1041,7 +1042,7 @@
                         self.messages = [];
                         localStorage.removeItem('ai_conversations');
                         self.newConversation(true);
-                        vant.Toast.success('对话已清空');
+                        vant.showSuccessToast('对话已清空');
                     }).catch(function(e) { console.warn('[ai-assistant.html] 清空对话失败:', e); });
                 },
                 switchScene: function(scene) {
@@ -1172,7 +1173,7 @@
                     var sendArgs = arguments;
                     restoreUserSession().then(function(ok) {
                         if (!ok) {
-                            vant.Dialog.confirm({
+                            vant.showConfirmDialog({
                                 title: '未登录',
                                 message: '请先登录后再与助手对话',
                                 confirmButtonText: '去登录'
@@ -1196,7 +1197,7 @@
                     } else {
                         text = this.inputText.trim();
                         if (this.uploadingCount > 0) {
-                            vant.Notify({ type: 'warning', message: '图片正在上传，请稍候', duration: 2000 });
+                            vant.showNotify({ type: 'warning', message: '图片正在上传，请稍候', duration: 2000 });
                             return;
                         }
                         views = this.normalizeAttachments(this.readyAttachments);
@@ -1357,7 +1358,7 @@
 
                 /** P4 工具事件按 name 合并到状态条（running→done/error 保留同一条） */
                 applyToolEvent: function(aiMsg, tool) {
-                    if (!aiMsg.tools) this.$set(aiMsg, 'tools', []);
+                    if (!aiMsg.tools) aiMsg['tools'] = [];
                     var hit = null;
                     for (var i = 0; i < aiMsg.tools.length; i++) {
                         if (aiMsg.tools[i].name === tool.name) { hit = aiMsg.tools[i]; break; }
@@ -1366,9 +1367,9 @@
                         hit = { name: tool.name, label: tool.label || tool.name, status: tool.status, summary: tool.summary || '' };
                         aiMsg.tools.push(hit);
                     } else {
-                        this.$set(hit, 'status', tool.status);
-                        if (tool.label) this.$set(hit, 'label', tool.label);
-                        if (tool.summary) this.$set(hit, 'summary', tool.summary);
+                        hit['status'] = tool.status;
+                        if (tool.label) hit['label'] = tool.label;
+                        if (tool.summary) hit['summary'] = tool.summary;
                     }
                     this.scheduleScroll();
                 },
@@ -1426,11 +1427,11 @@
                 pickImage: function() {
                     if (this.loading) return;
                     if (!this.visionEnabled) {
-                        vant.Notify({ type: 'warning', message: '当前 AI 模型不支持图片', duration: 2000 });
+                        vant.showNotify({ type: 'warning', message: '当前 AI 模型不支持图片', duration: 2000 });
                         return;
                     }
                     if (this.pendingAttachments.length >= 3) {
-                        vant.Notify({ type: 'warning', message: '每条消息最多发送 3 张图片', duration: 2000 });
+                        vant.showNotify({ type: 'warning', message: '每条消息最多发送 3 张图片', duration: 2000 });
                         return;
                     }
                     var input = this.$refs.imageInput;
@@ -1471,12 +1472,12 @@
                     var files = Array.prototype.slice.call(fileList);
                     files.forEach(function(file) {
                         if (self.pendingAttachments.length >= uploader.MAX_IMAGES) {
-                            vant.Notify({ type: 'warning', message: '每条消息最多发送 ' + uploader.MAX_IMAGES + ' 张图片', duration: 2000 });
+                            vant.showNotify({ type: 'warning', message: '每条消息最多发送 ' + uploader.MAX_IMAGES + ' 张图片', duration: 2000 });
                             return;
                         }
                         var check = uploader.validateFile(file);
                         if (!check.ok) {
-                            vant.Notify({ type: 'warning', message: check.message, duration: 2500 });
+                            vant.showNotify({ type: 'warning', message: check.message, duration: 2500 });
                             return;
                         }
                         var item = {
@@ -1489,15 +1490,15 @@
                         uploader.upload(file, self.currentScene).then(function(vo) {
                             // 合并后端权威 VO，保留本地预览地址直到消息发出
                             Object.keys(vo).forEach(function(k) {
-                                self.$set(item, k, vo[k]);
+                                item[k] = vo[k];
                             });
-                            self.$set(item, 'uploading', false);
+                            item['uploading'] = false;
                         }).catch(function(err) {
                             if (err && err.notLogin) {
                                 redirectToLogin();
                                 return;
                             }
-                            vant.Notify({ type: 'danger', message: (err && err.message) || '图片上传失败', duration: 2500 });
+                            vant.showNotify({ type: 'danger', message: (err && err.message) || '图片上传失败', duration: 2500 });
                             self.removePendingItem(item);
                         });
                     });
@@ -1605,11 +1606,11 @@
                     var self = this;
                     var dishId = dish.dishId || dish.id || 0;
                     if (!dishId) {
-                        vant.Notify({ type: 'warning', message: '菜品信息不完整' });
+                        vant.showNotify({ type: 'warning', message: '菜品信息不完整' });
                         return;
                     }
                     if (!sessionStorage.getItem('userId')) {
-                        vant.Dialog.confirm({
+                        vant.showConfirmDialog({
                             title: '未登录',
                             message: '请先登录后再添加购物车',
                             confirmButtonText: '去登录'
@@ -1634,7 +1635,7 @@
                         .then(function(res) {
                             if (res && res.code === 1) {
                                 // 成功提示可点击直达结算页，补齐 AI 加购后的转化出口
-                                var cartNotify = vant.Notify({
+                                var cartNotify = vant.showNotify({
                                     type: 'success',
                                     message: '已添加「' + dish.name + '」到购物车，点击去结算',
                                     duration: 2500,
@@ -1644,12 +1645,12 @@
                                     }
                                 });
                             } else {
-                                vant.Notify({ type: 'warning', message: (res && res.msg) || '添加失败' });
+                                vant.showNotify({ type: 'warning', message: (res && res.msg) || '添加失败' });
                             }
                         })
                         .catch(function(e) {
                             console.warn('[ai-assistant.html] 加购失败:', e);
-                            vant.Notify({ type: 'danger', message: '加购失败，请稍后重试' });
+                            vant.showNotify({ type: 'danger', message: '加购失败，请稍后重试' });
                         })
                         .finally(function() {
                             self._cartLoadingMap[dishId] = false;
@@ -1697,14 +1698,14 @@
                         };
                         this.recognition.onerror = function(event) {
                             self.isRecording = false;
-                            if (event.error === 'not-allowed') vant.Notify({ type: 'warning', message: '请允许麦克风权限' });
+                            if (event.error === 'not-allowed') vant.showNotify({ type: 'warning', message: '请允许麦克风权限' });
                         };
                         this.recognition.onend = function() { self.isRecording = false; };
                     } catch (e) { console.warn('语音初始化失败:', e); }
                 },
                 toggleVoice: function() {
                     if (!this.recognition) {
-                        vant.Notify({ type: 'warning', message: '您的浏览器不支持语音输入' });
+                        vant.showNotify({ type: 'warning', message: '您的浏览器不支持语音输入' });
                         return;
                     }
                     if (this.isRecording) {
@@ -1715,11 +1716,11 @@
                         try {
                             this.recognition.start();
                             this.isRecording = true;
-                            vant.Notify({ type: 'success', message: '请说话...', duration: 2000 });
+                            vant.showNotify({ type: 'success', message: '请说话...', duration: 2000 });
                         } catch (e) {
                             console.warn('语音启动异常:', e);
                             this.isRecording = false;
-                            vant.Notify({ type: 'warning', message: '语音启动中，请稍候再试' });
+                            vant.showNotify({ type: 'warning', message: '语音启动中，请稍候再试' });
                         }
                     }
                 },

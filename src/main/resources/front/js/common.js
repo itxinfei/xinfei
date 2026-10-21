@@ -111,9 +111,7 @@ function restoreUserSession() {
         .catch(function () { return false; });
 }
 
-function installXinfeiVueHelpers(){
-    if (!window.Vue || window.Vue.__xinfeiHelpersInstalled) return;
-    window.Vue.mixin({ methods: {
+var XINFEI_VUE_HELPERS = { methods: {
         imgPath: function (p) { return imgPath(p); },
         imgFallback: imgFallback,
         cssVar: cssVar,
@@ -129,7 +127,16 @@ function installXinfeiVueHelpers(){
                 return !keys.has(key);
             });
         }
-    } });
+    } };
+
+function installXinfeiVueHelpers(){
+    if (!window.Vue || window.Vue.__xinfeiHelpersInstalled) return;
+    // Vue 3 全局构建没有 Vue.mixin（mixin 是 app 级 API），只能导出注册表交给 createVantApp 装
+    if (typeof window.Vue.createApp === 'function') {
+        window.XinfeiGlobalMixinCendV3 = XINFEI_VUE_HELPERS;
+    } else {
+        window.Vue.mixin(XINFEI_VUE_HELPERS);
+    }
     window.Vue.__xinfeiHelpersInstalled = true;
 }
 // common.js 在 vue.js 之后加载的页面：到此 Vue 已就绪，立即安装

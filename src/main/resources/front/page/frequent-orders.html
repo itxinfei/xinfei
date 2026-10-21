@@ -7,7 +7,7 @@
     <title>常购清单 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <link rel="stylesheet" href="../styles/frequent-orders.css?v=20260930" />
@@ -130,10 +130,11 @@
         </cend-shell>
     </div>
 
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <!-- C 端跨页面复用组件（必须在 vant 之后、new Vue 之前加载） -->
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../js/common.js?v=20260930b"></script>
@@ -142,7 +143,7 @@
     <!-- 修改点(2026-09-18)：单菜复购改用购物车 addCartApi，需引入 main.js -->
     <script src="./../api/main.js?v=20260918"></script>
     <script>
-        new Vue({
+        createVantApp({
             el: '#frequent',
             data() {
                 return {
@@ -258,7 +259,7 @@
                     // 修改点(2026-09-18)：原实现调 /order/again 把「整单」加入购物车，
                     // 但卡片是单个菜品、按钮却在该菜品上，用户预期只复购这一道菜。改为调购物车加购单品。
                     if (!item.dishId && !item.setmealId) {
-                        vant.Toast.fail('该菜品暂不支持单独复购');
+                        vant.showFailToast('该菜品暂不支持单独复购');
                         return;
                     }
                     this.submitting = item.key;
@@ -273,13 +274,13 @@
                         };
                         const res = await addCartApi(params);
                         if (res && res.code === 1) {
-                            vant.Toast.success('已加入购物车');
+                            vant.showSuccessToast('已加入购物车');
                         } else {
-                            vant.Toast.fail((res && res.msg) || '添加失败');
+                            vant.showFailToast((res && res.msg) || '添加失败');
                         }
                     } catch (e) {
                         console.error('单菜复购失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.submitting = null;
                     }

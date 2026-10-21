@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>任务详情</title>
-  <link rel="stylesheet" href="/front/styles/vant.min.css">
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="/shared/styles/tokens.css?v=20260930b">
   <link rel="stylesheet" href="/backend/plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="/rider/css/rider.css?v=20260930e">
@@ -88,7 +88,7 @@
       </div>
 
       <!-- 上报异常弹窗（修改点 P0-3） -->
-      <van-popup v-model="showException" position="bottom" round>
+      <van-popup v-model:show="showException" position="bottom" round>
         <div class="exc-pop">
           <div class="exc-title">上报配送异常</div>
           <div class="exc-types">
@@ -107,7 +107,7 @@
       </van-popup>
 
       <!-- 转单弹窗（修改点 P0-3） -->
-      <van-popup v-model="showTransfer" position="bottom" round>
+      <van-popup v-model:show="showTransfer" position="bottom" round>
         <div class="exc-pop">
           <div class="exc-title">转单给其他骑手</div>
           <div class="tr-list" v-if="transferRiders.length">
@@ -129,7 +129,7 @@
       </van-popup>
 
       <!-- 取餐码核销弹窗（P0-6：Vant2 已移除 Dialog.prompt，改用 popup + field 输入） -->
-      <van-popup v-model="showPickupCode" position="bottom" round>
+      <van-popup v-model:show="showPickupCode" position="bottom" round>
         <div class="exc-pop">
           <div class="exc-title">取餐核销</div>
           <div class="pickup-code-tip">请输入门店提供的 6 位取餐码完成核销</div>
@@ -154,17 +154,17 @@
   </main>
   </div>
 
-  <script src="/backend/plugins/vue/vue.js"></script>
+  <script src="/backend/plugins/vue3/vue.global.js"></script>
   <script src="/backend/plugins/axios/axios.min.js"></script>
-  <script src="/front/js/vant.min.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="/rider/js/request.js?v=20260930"></script>
   <script src="/rider/js/api.js"></script>
   <script src="/rider/js/util.js?v=20260930"></script>
   <script src="/rider/js/location.js"></script>
   <script>RiderLocation.start();</script>
   <script>
-    Vue.use(vant);
-    new Vue({
+    createVantApp({
       data: function () {
         return {
           t: null, busy: '', id: '', loadError: false, errorMsg: '', seq: 0, timer: null,
@@ -209,7 +209,7 @@
         // 从外部地图（百度）导航经 bfcache 返回本页时重新拉取
         window.addEventListener('pageshow', vm.onPageShow);
       },
-      beforeDestroy: function () {
+      beforeUnmount: function () {
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
         window.removeEventListener('pageshow', this.onPageShow);
       },
@@ -255,7 +255,7 @@
           if (vm.busy !== '') return;  // 请求在飞，防重复点击
           vm.busy = 'grab';
           RiderApi.grab(vm.t.id).then(function () {
-            vant.Toast.success('抢单成功');
+            vant.showSuccessToast('抢单成功');
             vm.loadDetail();
           }).catch(function () { vm.loadDetail(); }).then(function () { vm.busy = ''; });
         },
@@ -264,7 +264,7 @@
           if (vm.busy !== '') return;
           vm.busy = 'accept';
           RiderApi.accept(vm.t.id).then(function () {
-            vant.Toast.success('已接单');
+            vant.showSuccessToast('已接单');
             vm.loadDetail();
           }).catch(function () { /* 提示已统一 */ }).then(function () { vm.busy = ''; });
         },
@@ -279,18 +279,18 @@
           var vm = this;
           var code = (vm.pickupCodeInput || '').trim();
           if (!/^\d{6}$/.test(code)) {
-            vant.Toast.fail('请输入 6 位数字取餐码');
+            vant.showFailToast('请输入 6 位数字取餐码');
             return;
           }
           vm.pickupSubmitting = true;
           vm.busy = 'pickup';
           RiderApi.pickup(vm.t.id, code).then(function (res) {
             if (res && res.code === 1) {
-              vant.Toast.success('已取餐，请尽快送达');
+              vant.showSuccessToast('已取餐，请尽快送达');
               vm.showPickupCode = false;
               vm.loadDetail();
             } else {
-              vant.Toast.fail((res && res.msg) || '取餐失败');
+              vant.showFailToast((res && res.msg) || '取餐失败');
             }
           }).catch(function () { /* 失败提示已统一 */ }).then(function () {
             vm.pickupSubmitting = false;
@@ -300,11 +300,11 @@
         onDeliver: function () {
           var vm = this;
           if (vm.busy !== '') return;
-          vant.Dialog.confirm({ title: '确认送达', message: '确认已将订单送达顾客手中？' }).then(function () {
+          vant.showConfirmDialog({ title: '确认送达', message: '确认已将订单送达顾客手中？' }).then(function () {
             vm.busy = 'deliver';
             return RiderApi.deliver(vm.t.id);
           }).then(function () {
-            vant.Toast.success('送达完成');
+            vant.showSuccessToast('送达完成');
             vm.loadDetail();
           }).catch(function () { /* 取消或失败 */ }).then(function () { vm.busy = ''; });
         },
@@ -321,16 +321,16 @@
           var vm = this;
           if (vm.excSubmitting) return;
           if (!vm.excDesc || !vm.excDesc.trim()) {
-            vant.Toast.fail('请填写异常描述');
+            vant.showFailToast('请填写异常描述');
             return;
           }
           vm.excSubmitting = true;
           RiderApi.submitException(vm.t.id, vm.excType, vm.excDesc.trim()).then(function (res) {
             if (res && res.code === 1) {
-              vant.Toast.success('已上报，客服将尽快处理');
+              vant.showSuccessToast('已上报，客服将尽快处理');
               vm.showException = false;
             } else {
-              vant.Toast.fail((res && res.msg) || '上报失败');
+              vant.showFailToast((res && res.msg) || '上报失败');
             }
           }).catch(function () { /* 提示已统一 */ }).then(function () {
             vm.excSubmitting = false;
@@ -353,23 +353,23 @@
             if (vm.transferRiders[i].id === vm.transferRiderId) { target = vm.transferRiders[i]; }
           }
           var tip = target ? ('确认把本单转给 ' + target.name + '？') : '确认转单？';
-          vant.Dialog.confirm({ title: '转单', message: tip }).then(function () {
+          vant.showConfirmDialog({ title: '转单', message: tip }).then(function () {
             vm.transferSubmitting = true;
             return RiderApi.transfer(vm.t.id, vm.transferRiderId);
           }).then(function (res) {
             if (res && res.code === 1) {
-              vant.Toast.success('已转单');
+              vant.showSuccessToast('已转单');
               vm.showTransfer = false;
               vm.loadDetail();
             } else {
-              vant.Toast.fail((res && res.msg) || '转单失败');
+              vant.showFailToast((res && res.msg) || '转单失败');
             }
           }).catch(function () { /* 取消或提示已统一 */ }).then(function () {
             vm.transferSubmitting = false;
           });
         }
       }
-    }).$mount('#app');
+    }).mount('#app');
   </script>
 </body>
 </html>

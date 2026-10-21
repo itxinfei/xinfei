@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>消息中心</title>
-  <link rel="stylesheet" href="/front/styles/vant.min.css">
+  <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
   <link rel="stylesheet" href="/shared/styles/tokens.css?v=20260930b">
   <link rel="stylesheet" href="/backend/plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="/rider/css/rider.css?v=20260930e">
@@ -53,15 +53,15 @@
   </main>
   </div>
 
-  <script src="/backend/plugins/vue/vue.js"></script>
+  <script src="/backend/plugins/vue3/vue.global.js"></script>
   <script src="/backend/plugins/axios/axios.min.js"></script>
-  <script src="/front/js/vant.min.js"></script>
+  <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+  <script src="/front/js/app-v3-vant.js?v=3001001"></script>
   <script src="/rider/js/request.js?v=20260930"></script>
   <script src="/rider/js/api.js"></script>
   <script src="/rider/js/util.js?v=20260930"></script>
   <script>
-    Vue.use(vant);
-    new Vue({
+    createVantApp({
       data: function () {
         return { list: [], unread: 0, refreshing: false };
       },
@@ -99,7 +99,7 @@
               m.isRead = 1;
               if (vm.unread > 0) { vm.unread -= 1; }
             } else {
-              vant.Toast.fail((res && res.msg) || '操作失败');
+              vant.showFailToast((res && res.msg) || '操作失败');
             }
           }).catch(function () { /* 提示已统一 */ });
         },
@@ -108,11 +108,11 @@
           if (vm.unread === 0) { return; }
           RiderApi.markAllRead().then(function (res) {
             if (res && res.code === 1) {
-              vant.Toast.success('已全部标记已读');
+              vant.showSuccessToast('已全部标记已读');
               vm.unread = 0;
               vm.load();
             } else {
-              vant.Toast.fail((res && res.msg) || '操作失败');
+              vant.showFailToast((res && res.msg) || '操作失败');
             }
           }).catch(function () { /* 提示已统一 */ });
         },
@@ -124,7 +124,7 @@
           RiderUtil.back();
         }
       }
-    }).$mount('#app');
+    }).mount('#app');
   </script>
 </body>
 </html>

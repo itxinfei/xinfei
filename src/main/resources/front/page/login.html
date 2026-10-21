@@ -7,7 +7,7 @@
         <title>登录 - 心飞外卖</title>
         <link rel="icon" href="./../images/favico.ico">
         <script src="./../js/base.js?v=20260930"></script>
-        <link rel="stylesheet" href="../styles/vant.min.css"/>
+        <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
         <!-- 修改点：本地图标替代CDN remixicon，零外部依赖 -->
         <!-- 修改点：加载 RemixIcon 真字体（emoji 兜底改由 js/icon-fallback.js 按需注入） -->
         <link rel="stylesheet" href="../../backend/plugins/remixicon/remixicon.css" />
@@ -242,13 +242,14 @@
             </div>
         </div>
 
-        <script src="../../backend/plugins/vue/vue.js"></script>
-        <script src="./../js/vant.min.js"></script>
+        <script src="../../backend/plugins/vue3/vue.global.js"></script>
+        <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+        <script src="/front/js/app-v3-vant.js?v=3001001"></script>
         <script src="../../backend/plugins/axios/axios.min.js"></script>
         <script src="./../js/request.js?v=20260930"></script>
         <script src="./../api/login.js?v=20260917"></script>
         <script>
-        new Vue({
+        createVantApp({
             el:"#login",
             data(){
                 return {
@@ -297,7 +298,7 @@
                 // 倒计时按手机号分别持久化（见 syncCountdownForPhone）：
                 // 页面刚打开时手机号为空，不恢复全局倒计时，避免锁住另一个号码的发码按钮
             },
-            beforeDestroy(){
+            beforeUnmount(){
                 if(this.countdownTimer){
                     clearInterval(this.countdownTimer);
                     this.countdownTimer = null;
@@ -374,7 +375,7 @@
                             try { sessionStorage.setItem(dKey, String(deadline)) } catch(e) {}
                             this.startCountdown(deadline, dKey)
                         } else {
-                            vant.Notify({ type:'warning', message: res.msg || '验证码发送失败'});
+                            vant.showNotify({ type:'warning', message: res.msg || '验证码发送失败'});
                         }
                     } catch(e) {
                         // 网络异常提示已由 request.js 拦截器统一 Notify，此处不重复弹
@@ -386,16 +387,16 @@
                 // 修改点：完善登录逻辑 — 错误提示、存储用户完整信息、加载态
                 async btnLogin(){
                     if(!this.form.phone){
-                        vant.Notify({ type:'warning', message:'请输入手机号码'});
+                        vant.showNotify({ type:'warning', message:'请输入手机号码'});
                         return
                     }
                     if(!this.form.code){
-                        vant.Notify({ type:'warning', message:'请输入验证码'});
+                        vant.showNotify({ type:'warning', message:'请输入验证码'});
                         return
                     }
                     // 修改点：增加协议同意校验
                     if(!this.agreed){
-                        vant.Notify({ type:'warning', message:'请先阅读并同意用户协议与隐私政策'});
+                        vant.showNotify({ type:'warning', message:'请先阅读并同意用户协议与隐私政策'});
                         return
                     }
                     if(this.loading) return;
@@ -425,7 +426,7 @@
                                 }
                             })
                         }else{
-                            vant.Notify({ type:'warning', message:res.msg || '登录失败'});
+                            vant.showNotify({ type:'warning', message:res.msg || '登录失败'});
                         }
                     } catch(e) {
                         // 网络异常提示已由 request.js 拦截器统一 Notify，不重复弹

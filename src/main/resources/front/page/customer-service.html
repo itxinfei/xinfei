@@ -7,7 +7,7 @@
     <title>在线客服 - 心飞外卖</title>
     <link rel="icon" href="./../images/favico.ico">
     <script src="./../js/base.js?v=20260930"></script>
-    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <link rel="stylesheet" href="/backend/plugins/vant/index.css?v=3001001">
     <link rel="stylesheet" href="../styles/index.css?v=20260930b" />
     <link rel="stylesheet" href="../styles/skeleton.css?v=20260930" />
     <link rel="stylesheet" href="../styles/cs.css?v=20260930" />
@@ -150,7 +150,7 @@
         </div>
 
         <!-- 关联订单选择 -->
-        <van-popup v-model="orderPickShow" position="bottom" round>
+        <van-popup v-model:show="orderPickShow" position="bottom" round>
             <div class="order-pick-popup">
                 <div class="pop-title">选择关联订单</div>
                 <div class="pop-scroll">
@@ -167,7 +167,7 @@
         </van-popup>
 
         <!-- 我的投诉记录 -->
-        <van-popup v-model="complaintListShow" position="bottom" round>
+        <van-popup v-model:show="complaintListShow" position="bottom" round>
             <div class="order-pick-popup">
                 <div class="pop-title">我的投诉记录</div>
                 <div class="pop-scroll">
@@ -207,7 +207,7 @@
         </van-popup>
 
         <!-- 满意度评价 -->
-        <van-popup v-model="rateShow" position="bottom" round>
+        <van-popup v-model:show="rateShow" position="bottom" round>
             <div class="rate-sheet">
                 <div class="pop-title">评价处理结果</div>
                 <div class="rate-stars">
@@ -226,16 +226,17 @@
       </cend-shell>
     </div>
 
-    <script src="../../backend/plugins/vue/vue.js"></script>
-    <script src="./../js/vant.min.js"></script>
+    <script src="../../backend/plugins/vue3/vue.global.js"></script>
+    <script src="/backend/plugins/vant/vant.min.js?v=3001001"></script>
+    <script src="/front/js/app-v3-vant.js?v=3001001"></script>
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../js/common.js?v=20260930b"></script>
-    <script src="./../js/components-cend.js?v=20260922"></script>
+    <script src="./../js/components-cend-v3.js?v=3001001"></script>
     <script src="./../api/order.js?v=20260917"></script>
     <script src="./../api/cs.js?v=20260929"></script>
     <script>
-        new Vue({
+        createVantApp({
             el: '#csPage',
             data: function () {
                 return {
@@ -296,7 +297,7 @@
                     self.initChat();
                 });
             },
-            beforeDestroy: function () {
+            beforeUnmount: function () {
                 this.stopPolling();
                 document.removeEventListener('visibilitychange', this.onVisibility);
             },
@@ -308,7 +309,7 @@
                 },
                 goBack: function () { goBack(); },
                 previewImage: function (url) {
-                    if (url) { vant.ImagePreview([imgPath(url)]); }
+                    if (url) { vant.showImagePreview([imgPath(url)]); }
                 },
                 onVisibility: function () {
                     if (document.hidden) {
@@ -383,7 +384,7 @@
                     } catch (e) {
                         console.error('[客服] 初始化失败:', e);
                         this.initError = true;
-                        vant.Toast.fail('客服加载失败，请稍后重试');
+                        vant.showFailToast('客服加载失败，请稍后重试');
                     } finally {
                         this.loading = false;
                     }
@@ -402,11 +403,11 @@
                             await this.loadMessages();
                             this.startPolling();
                         } else {
-                            vant.Toast.fail((cr && cr.msg) || '发起咨询失败，请稍后重试');
+                            vant.showFailToast((cr && cr.msg) || '发起咨询失败，请稍后重试');
                         }
                     } catch (e) {
                         console.error('[客服] 重新咨询失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.sending = false;
                     }
@@ -491,11 +492,11 @@
                             this.draft = '';
                             await this.loadMessages();
                         } else {
-                            vant.Toast.fail((res && res.msg) || '发送失败');
+                            vant.showFailToast((res && res.msg) || '发送失败');
                         }
                     } catch (e) {
                         console.error('[客服] 发送失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.sending = false;
                     }
@@ -511,13 +512,13 @@
                     if (!file) { return; }
                     if (!this.activeSession) { return; }
                     if (file.size > 5 * 1024 * 1024) {
-                        vant.Toast.fail('图片大小不能超过5MB');
+                        vant.showFailToast('图片大小不能超过5MB');
                         return;
                     }
                     var fd = new FormData();
                     fd.append('file', file);
                     fd.append('bizType', 'chat');
-                    vant.Toast.loading({ message: '发送中', forbidClick: true, duration: 0 });
+                    vant.showLoadingToast({ message: '发送中', forbidClick: true, duration: 0 });
                     try {
                         var up = await $axios({ url: '/common/upload', method: 'post', data: fd });
                         if (up && up.code === 1 && up.data) {
@@ -527,16 +528,16 @@
                             if (res && res.code === 1) {
                                 await this.loadMessages();
                             } else {
-                                vant.Toast.fail((res && res.msg) || '发送失败');
+                                vant.showFailToast((res && res.msg) || '发送失败');
                             }
                         } else {
-                            vant.Toast.fail((up && up.msg) || '图片上传失败');
+                            vant.showFailToast((up && up.msg) || '图片上传失败');
                         }
                     } catch (e) {
                         console.error('[客服] 图片发送失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
-                        vant.Toast.clear();
+                        vant.closeToast();
                     }
                 },
 
@@ -574,7 +575,7 @@
                     if (fi >= 0) { this.fileList.splice(fi, 1); }
                 },
                 onOversize: function () {
-                    vant.Toast.fail('图片大小不能超过5MB');
+                    vant.showFailToast('图片大小不能超过5MB');
                 },
                 clearOrder: function () {
                     this.form.orderId = null;
@@ -607,18 +608,18 @@
                     if (this.submitting) { return; }
                     var content = (this.form.content || '').trim();
                     if (content.length < 5) {
-                        vant.Toast.fail('请至少填写5个字的详细描述');
+                        vant.showFailToast('请至少填写5个字的详细描述');
                         return;
                     }
                     var urls = [];
                     for (var i = 0; i < this.fileList.length; i++) {
                         var f = this.fileList[i];
                         if (f.status === 'uploading') {
-                            vant.Toast.fail('图片还在上传，请稍候');
+                            vant.showFailToast('图片还在上传，请稍候');
                             return;
                         }
                         if (f.status === 'failed') {
-                            vant.Toast.fail('有图片上传失败，请删除后重试');
+                            vant.showFailToast('有图片上传失败，请删除后重试');
                             return;
                         }
                         if (f.path) { urls.push(f.path); }
@@ -637,15 +638,15 @@
                         }
                         var res = await csCreateComplaint(payload);
                         if (res && res.code === 1) {
-                            vant.Toast.success('投诉已提交，请留意处理进展');
+                            vant.showSuccessToast('投诉已提交，请留意处理进展');
                             this.resetComplaint();
                             this.view = 'chat';
                         } else {
-                            vant.Toast.fail((res && res.msg) || '提交失败');
+                            vant.showFailToast((res && res.msg) || '提交失败');
                         }
                     } catch (e) {
                         console.error('[投诉] 提交失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.submitting = false;
                     }
@@ -663,11 +664,11 @@
                         if (res && res.code === 1) {
                             this.myComplaints = res.data || [];
                         } else {
-                            vant.Toast.fail((res && res.msg) || '加载失败');
+                            vant.showFailToast((res && res.msg) || '加载失败');
                         }
                     } catch (e) {
                         console.error('[投诉记录] 加载失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.complaintListLoading = false;
                     }
@@ -765,17 +766,17 @@
                                 return x.id === this.ratingComplaint.id;
                             }.bind(this));
                             if (target) {
-                                this.$set(target, 'satisfaction', this.rateScore);
-                                this.$set(target, 'userFeedback', (this.rateFeedback || '').trim());
+                                target['satisfaction'] = this.rateScore;
+                                target['userFeedback'] = (this.rateFeedback || '').trim();
                             }
                             this.rateShow = false;
-                            vant.Toast.success('评价已提交');
+                            vant.showSuccessToast('评价已提交');
                         } else {
-                            vant.Toast.fail((res && res.msg) || '评价失败');
+                            vant.showFailToast((res && res.msg) || '评价失败');
                         }
                     } catch (e) {
                         console.error('[投诉评价] 失败:', e);
-                        vant.Toast.fail('网络异常，请稍后重试');
+                        vant.showFailToast('网络异常，请稍后重试');
                     } finally {
                         this.rating = false;
                     }
