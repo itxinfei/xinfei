@@ -53,7 +53,7 @@
                         <!-- 修改点(P1-2 自提)：自提订单醒目展示取餐码，供到店向店员核销 -->
                         <div v-if="isSelfPickup" class="od-row od-pickup-row">
                             <span class="od-label">取餐码</span>
-                            <span class="od-value" style="font-size:;font-weight:700;letter-spacing:;color:var(--color-success);">{{ order.pickupCode }}</span>
+                            <span class="od-value" style="font-size:22rem;font-weight:700;letter-spacing:3rem;color:var(--color-success);">{{ order.pickupCode }}</span>
                         </div>
                         <div v-if="isSelfPickup" class="od-row">
                             <span class="od-label">取餐方式</span>
@@ -700,29 +700,29 @@
 
         <style>
           .rider-eval-tip {
-            display: flex; align-items: center; gap: ; flex-wrap: wrap;
-            margin:   0; padding:  ; border-radius: ;
-            background: var(--bg-hover, #f5f5f5); font-size: ; color: var(--color-text-secondary, #666666);
+            display: flex; align-items: center; gap: 8rem; flex-wrap: wrap;
+            margin: 10rem 14rem 0; padding: 10rem 12rem; border-radius: 10rem;
+            background: var(--bg-hover, #f5f5f5); font-size: 13rem; color: var(--color-text-secondary, #666666);
           }
           .rider-eval-tip .ret-content { color: var(--color-text-primary, #333333); }
-          .rider-eval-pop { padding:   ; }
-          .rider-eval-pop .rep-title { font-size: ; font-weight: 600; color: var(--color-text-primary, #333333); margin-bottom: ; }
-          .rider-eval-pop .rep-rate { display: flex; align-items: center; gap: ; margin-bottom: ; }
-          .rider-eval-pop .rep-label { font-size: ; color: var(--color-text-primary, #333333); }
-          .rider-eval-pop .rep-tags { display: flex; flex-wrap: wrap; gap: ; margin-bottom: ; }
+          .rider-eval-pop { padding: 18rem 16rem 24rem; }
+          .rider-eval-pop .rep-title { font-size: 16rem; font-weight: 600; color: var(--color-text-primary, #333333); margin-bottom: 14rem; }
+          .rider-eval-pop .rep-rate { display: flex; align-items: center; gap: 12rem; margin-bottom: 14rem; }
+          .rider-eval-pop .rep-label { font-size: 14rem; color: var(--color-text-primary, #333333); }
+          .rider-eval-pop .rep-tags { display: flex; flex-wrap: wrap; gap: 10rem; margin-bottom: 14rem; }
           .rider-eval-pop .rep-tag {
-            padding:  ; border-radius: ; font-size: ; cursor: pointer;
+            padding: 5rem 12rem; border-radius: 16rem; font-size: 13rem; cursor: pointer;
             background: var(--bg-hover, #f5f5f5); color: var(--color-text-secondary, #666666);
           }
           .rider-eval-pop .rep-tag.on { background: rgba(255,107,53,0.12); color: var(--color-primary, #ff6b35); }
-          .rider-eval-pop .rep-actions { display: flex; gap: ; margin-top: ; }
+          .rider-eval-pop .rep-actions { display: flex; gap: 12rem; margin-top: 16rem; }
           /* 取消 / 退款原因回执（P0-5） */
           .od-cancel-reason {
-            margin:   0; padding: ; border-radius: ;
+            margin: 10rem 14rem 0; padding: 12rem; border-radius: 10rem;
             background: var(--bg-hover, #f5f5f5);
           }
-          .od-cr-title { font-size: ; color: var(--color-text-secondary, #666666); margin-bottom: ; }
-          .od-cr-text { font-size: ; color: var(--color-text-primary, #333333); line-height: 1.5; }
+          .od-cr-title { font-size: 13rem; color: var(--color-text-secondary, #666666); margin-bottom: 4rem; }
+          .od-cr-text { font-size: 14rem; color: var(--color-text-primary, #333333); line-height: 1.5; }
         </style>
     </body>
 </html>
