@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>团餐预订 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     .gmb-item-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
   </style>
@@ -30,7 +29,7 @@
         :show-refresh="true"
         @refresh="loadData()"
       >
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="departmentId" placeholder="按部门筛选" clearable filterable size="small" class="el-select--narrow-xs" @change="loadData()">
             <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id"></el-option>
           </el-select>
@@ -66,10 +65,10 @@
           <el-tag :type="statusTagType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="openDetail(row)">明细</el-button>
-          <el-button v-if="row.status === 0" type="text" size="small" class="btn-view" @click="doStatus(row, 'confirm')">确认</el-button>
-          <el-button v-if="row.status === 1" type="text" size="small" class="btn-view" @click="doStatus(row, 'complete')">完成</el-button>
-          <el-button v-if="row.status === 0 || row.status === 1" type="text" size="small" class="btn-delete" @click="doStatus(row, 'cancel')">取消</el-button>
+          <el-button text size="small" class="btn-view" @click="openDetail(row)">明细</el-button>
+          <el-button v-if="row.status === 0" text size="small" class="btn-view" @click="doStatus(row, 'confirm')">确认</el-button>
+          <el-button v-if="row.status === 1" text size="small" class="btn-view" @click="doStatus(row, 'complete')">完成</el-button>
+          <el-button v-if="row.status === 0 || row.status === 1" text size="small" class="btn-delete" @click="doStatus(row, 'cancel')">取消</el-button>
         </template>
       </crud-table>
     </main>
@@ -77,7 +76,7 @@
     <!-- 下单弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="团餐下单"
-      :visible.sync="form.visible"
+      v-model="form.visible"
       :submit-loading="submitting"
       size="lg"
       @submit="submitForm"
@@ -96,14 +95,14 @@
           <el-input v-model="form.contactPhone" placeholder="请输入联系电话" maxlength="20"></el-input>
         </el-form-item>
         <el-form-item label="用餐日期" prop="mealDate">
-          <el-date-picker v-model="form.mealDate" type="date" value-format="yyyy-MM-dd"
-            :picker-options="{ disabledDate(d) { return d.getTime() < Date.now() - 86400000 } }"
+          <el-date-picker v-model="form.mealDate" type="date" value-format="YYYY-MM-DD"
+            :disabled-date="(d) => d.getTime() < Date.now() - 86400000"
             placeholder="选择用餐日期"></el-date-picker>
         </el-form-item>
         <el-form-item label="餐段" prop="mealType">
           <el-radio-group v-model="form.mealType">
-            <el-radio label="LUNCH">午餐</el-radio>
-            <el-radio label="DINNER">晚餐</el-radio>
+            <el-radio value="LUNCH">午餐</el-radio>
+            <el-radio value="DINNER">晚餐</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="菜单" prop="items">
@@ -116,10 +115,10 @@
               <el-option v-for="o in itemOptions(it.itemType)" :key="o.id" :label="o.label" :value="o.id"></el-option>
             </el-select>
             <el-input-number v-model="it.quantity" size="small" :min="1" :max="9999" style="width:110px"></el-input-number>
-            <el-button size="small" type="text" class="btn-delete" @click="form.items.splice(idx, 1)"
+            <el-button size="small" text class="btn-delete" @click="form.items.splice(idx, 1)"
               :disabled="form.items.length <= 1">删除</el-button>
           </div>
-          <el-button size="small" type="text" @click="form.items.push({ itemType: 'DISH', itemId: null, quantity: 10 })">
+          <el-button size="small" text @click="form.items.push({ itemType: 'DISH', itemId: null, quantity: 10 })">
             <i class="ri-add-line"></i> 加一条
           </el-button>
         </el-form-item>
@@ -132,7 +131,7 @@
     <!-- 明细弹窗 -->
     <crud-dialog
       title="预订明细"
-      :visible.sync="detailDialog.visible"
+      v-model="detailDialog.visible"
       size="lg"
       :show-submit="false"
       @close="detailDialog.visible = false"
@@ -147,33 +146,36 @@
       </el-descriptions>
       <el-table :data="detailDialog.items" size="small" max-height="320" v-loading="detailDialog.loading">
         <el-table-column prop="itemType" label="类型" width="80" align="center">
-          <template slot-scope="{ row }">{{ row.itemType === 'SETMEAL' ? '套餐' : '菜品' }}</template>
+          <template  #default="{ row }">{{ row.itemType === 'SETMEAL' ? '套餐' : '菜品' }}</template>
         </el-table-column>
         <el-table-column prop="itemName" label="名称" min-width="140"></el-table-column>
         <el-table-column label="单价快照" width="100" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.price || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.price || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column prop="quantity" label="份数" width="80" align="center"></el-table-column>
         <el-table-column label="小计" width="100" align="center">
-          <template slot-scope="{ row }">¥{{ (Number(row.price || 0) * Number(row.quantity || 0)).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ (Number(row.price || 0) * Number(row.quantity || 0)).toFixed(2) }}</template>
         </el-table-column>
       </el-table>
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/dining.js?v=20261006"></script>
   <script src="../../api/sys.js?v=20261006"></script>
   <script src="../../api/food.js?v=20260926"></script>
   <script src="../../api/combo.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#gmb-app',
       data() {
         return {

@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>食材分类管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -27,7 +26,7 @@
         @reset="reset"
         @action="onTableAction"
         @refresh="handleQuery()">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="input.name" placeholder="分类名称" class="el-select--narrow-xs" clearable filterable @change="handleQuery">
             <el-option v-for="(n, index) in filterOptions.names" :key="index" :label="n" :value="n"></el-option>
           </el-select>
@@ -55,8 +54,8 @@
           <span style="color: var(--el-text-regular); font-weight: 500;">{{ row.materialCount || 0 }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(row.id)">删除</el-button>
+          <el-button text size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
+          <el-button text size="small" class="btn-delete" @click="deleteHandle(row.id)">删除</el-button>
         </template>
       </crud-table>
     </main>
@@ -64,7 +63,7 @@
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一弹窗组件替代手写 el-dialog -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="formData.title"
-      :visible.sync="formData.dialogVisible"
+      v-model="formData.dialogVisible"
       :submit-loading="submitting"
       size="sm"
       @submit="submitForm"
@@ -82,16 +81,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#category-app',
       data() {
         return {

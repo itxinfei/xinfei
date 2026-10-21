@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     body { overflow-x: visible; }
     /* ========== C.5 菜品管理（行内编辑） ========== */
@@ -43,7 +42,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
             :cards="statsCards"
-            :active-key.sync="activeFilter"
+            v-model:active-key="activeFilter"
             @card-click="onCardClick"
           ></stat-cards>
 
@@ -85,9 +84,9 @@
                 :src="getImage(row.image)"
                 :preview-src-list="[getImage(row.image)]"
                 alt="菜品图片">
-                <div slot="error" class="image-slot">
+                <template #error><div class="image-slot">
                   <img src="./../../images/noImg.png" class="cell-img" alt="暂无图片">
-                </div>
+                </div></template>
               </el-image>
             </template>
             <!-- 菜品名称列 -->
@@ -135,18 +134,18 @@
             </template>
             <!-- 操作按钮 -->
             <template #actions="{ row }">
-              <el-button type="text" size="small" class="btn-view" @click="addFoodtype(row.id)">修改</el-button>
-              <el-button v-if="row.status == '0'" type="text" size="small" class="btn-success" @click="statusHandle(row)">启售</el-button>
-              <el-button v-else type="text" size="small" class="btn-warning" @click="statusHandle(row)">停售</el-button>
+              <el-button text size="small" class="btn-view" @click="addFoodtype(row.id)">修改</el-button>
+              <el-button v-if="row.status == '0'" text size="small" class="btn-success" @click="statusHandle(row)">启售</el-button>
+              <el-button v-else text size="small" class="btn-warning" @click="statusHandle(row)">停售</el-button>
               <el-dropdown trigger="click"
-                @command="function(cmd){ if(cmd==='stock'){ editStock(row); } else if(cmd==='bom'){ $refs.bomDialog.open(row); } else if(cmd==='delete'){ deleteHandle(row); } }"
-                @click.native.stop>
-                <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-                <el-dropdown-menu slot="dropdown">
+                @command="cmd => { if (cmd==='stock') { editStock(row); } else if (cmd==='bom') { $refs.bomDialog.open(row); } else if (cmd==='delete') { deleteHandle(row); } }"
+                @click.stop>
+                <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+                <template #dropdown><el-dropdown-menu>
                   <el-dropdown-item command="stock">库存</el-dropdown-item>
                   <el-dropdown-item command="bom">配方</el-dropdown-item>
                   <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-                </el-dropdown-menu>
+                </el-dropdown-menu></template>
               </el-dropdown>
             </template>
           </crud-table>
@@ -156,7 +155,7 @@
     <crud-dialog :show-submit="true" :show-cancel="true"
       :size="'xl'"
       :title="dishDialog.title"
-      :visible.sync="dishDialog.visible"
+      v-model="dishDialog.visible"
       :close-on-click-modal="false"
       :submit-loading="submitting"
       custom-class="dish-dialog"
@@ -227,14 +226,14 @@
         <el-form-item label="口味做法:">
           <div class="flavorBox-dialog">
             <div v-if="dishFlavors.length === 0" class="flavor-empty-dialog">
-              <el-button type="text" icon="ri-add-line" @click="addDialogFlavor">添加口味配置</el-button>
+              <el-button text icon="ri-add-line" @click="addDialogFlavor">添加口味配置</el-button>
             </div>
             <div v-else class="flavor-list-dialog">
               <div v-for="(item, index) in dishFlavors" :key="index" class="flavor-item-dialog">
                 <div class="flavor-header-dialog">
                   <span class="flavor-index">{{ index + 1 }}</span>
                   <el-input v-model="item.name" size="small" placeholder="口味名称（如：辣度、温度）" maxlength="10" class="el-input--narrow"></el-input>
-                  <el-button type="text" size="small" class="btn-delete" @click="delDialogFlavor(index)">删除</el-button>
+                  <el-button text size="small" class="btn-delete" @click="delDialogFlavor(index)">删除</el-button>
                 </div>
                 <div class="flavor-tags-dialog">
                   <el-tag v-for="(tag, tIdx) in item.value" :key="tIdx" size="small" closable type="info"
@@ -242,10 +241,10 @@
                   <el-input v-if="item.inputVisible" v-model="item.inputValue" size="small"
                     :ref="'dialogTagInput' + index" style="width: 80px;" maxlength="10"
                     @keyup.enter.native="confirmDialogTag(index)" @blur="confirmDialogTag(index)"></el-input>
-                  <el-button v-else size="small" type="text" icon="ri-add-line" @click="showDialogTagInput(index)">添加标签</el-button>
+                  <el-button v-else size="small" text icon="ri-add-line" @click="showDialogTagInput(index)">添加标签</el-button>
                 </div>
               </div>
-              <el-button type="text" icon="ri-add-line" size="small" @click="addDialogFlavor" style="margin-top: 8px;">添加新口味</el-button>
+              <el-button text icon="ri-add-line" size="small" @click="addDialogFlavor" style="margin-top: 8px;">添加新口味</el-button>
             </div>
           </div>
         </el-form-item>
@@ -256,7 +255,7 @@
     <crud-dialog :show-submit="true" :show-cancel="true"
       :size="'sm'"
       title="批量修改分类"
-      :visible.sync="categoryDialog.visible"
+      v-model="categoryDialog.visible"
       :close-on-click-modal="false"
       @submit="submitBatchCategory"
     >
@@ -276,7 +275,7 @@
     <crud-dialog :show-submit="true" :show-cancel="true"
       :size="'sm'"
       title="编辑库存"
-      :visible.sync="stockDialog.visible"
+      v-model="stockDialog.visible"
       :close-on-click-modal="false"
       @submit="submitStockForm"
     >
@@ -302,20 +301,23 @@
     <food-bom-dialog ref="bomDialog" @saved="refreshAll"></food-bom-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <!-- 修改点(2026-09-24)：配方编辑弹窗独立组件（须在 Vue 实例创建前引入） -->
   <script src="../../js/food-bom-dialog.js?v=20260924"></script>
   <script src="../../api/food.js?v=20260926"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
   <script src="../../api/export.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#food-app',
       // 修改点(2026-09-24)：注册配方编辑弹窗组件（定义于 js/food-bom-dialog.js）
       components: { 'food-bom-dialog': window.FoodBomDialog },
@@ -508,7 +510,7 @@
           if (key === 'price') { row._priceEdit = row.price != null ? String(row.price) : ''; row._priceConfirming = false }
           if (key === 'stock') { row._stockEdit = row.stockQty != null ? String(row.stockQty) : '' }
           this.editingCells = {}
-          this.$set(this.editingCells, key + '-' + row.id, true)
+          this.editingCells[key + '-' + row.id] = true
           var self = this
           this.$nextTick(function() {
             var refs = self.$refs['cell-' + key + '-' + row.id]
@@ -521,7 +523,7 @@
           Object.keys(this.editingCells).forEach(function(k) {
             // 完整 key 精确匹配（key 形如 price-1 / stock-11）：按后缀 '-id' 判断，
             // 避免 indexOf 模糊命中（如 id=1 误删 price-11）
-            if (k.endsWith(suffix)) { self.$delete(self.editingCells, k) }
+            if (k.endsWith(suffix)) { delete self.editingCells[k] }
           })
         },
         buildDishParams: function(row) {

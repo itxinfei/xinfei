@@ -7,8 +7,7 @@
   <title>会员等级 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ========== 等级进阶阶梯 ========== */
     .progression-section { background: var(--bg-surface); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 20px;
@@ -101,15 +100,15 @@
         </template>
         <template #col-sort="{ row }"><span>{{ row.sort != null ? row.sort : '-' }}</span></template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(row.id)">删除</el-button>
+          <el-button text size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
+          <el-button text size="small" class="btn-delete" @click="deleteHandle(row.id)">删除</el-button>
         </template>
       </crud-table>
     </main>
 
     <!-- ===== 弹窗 ===== -->
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一组件替代手写 el-dialog，默认 footer 提供"取消/确定" -->
-    <crud-dialog :show-submit="true" :show-cancel="true" :title="formData.title" :visible.sync="formData.dialogVisible" :submit-loading="submitting" size="md" @submit="submitForm">
+    <crud-dialog :show-submit="true" :show-cancel="true" :title="formData.title" v-model="formData.dialogVisible" :submit-loading="submitting" size="md" @submit="submitForm">
       <el-form label-width="100px" :model="formData" :rules="formRules" ref="levelForm">
         <el-form-item label="等级名称：" prop="name">
           <el-input v-model="formData.name" placeholder="请输入等级名称" maxlength="20"></el-input>
@@ -119,7 +118,7 @@
         </el-form-item>
         <el-form-item label="折扣率：" prop="discount">
           <el-input v-model.number="formData.discount" type="number" placeholder="如 0.85 表示8.5折" min="0" max="1" step="0.01">
-            <template slot="append">折</template>
+            <template  #append>折</template>
           </el-input>
         </el-form-item>
         <el-form-item label="排序：" prop="sort">
@@ -129,16 +128,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/member-center.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#level-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
       mixins: [window.XinfeiListMixin],

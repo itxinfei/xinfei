@@ -7,8 +7,7 @@
   <title>操作日志 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -21,7 +20,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -68,16 +67,19 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/sys.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#log-app',
       data() {
         return {

@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
   <link rel="stylesheet" href="../../plugins/element-ui/index.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 功能样式（非美化）：配置区 + A4 预览弹窗 + 打印分页。 */
 
@@ -91,7 +90,7 @@
 
     <!-- 配置区（打印时隐藏） -->
     <div class="no-print">
-      <el-form :inline="true" size="small" @submit.native.prevent>
+      <el-form :inline="true" size="small" @submit.prevent>
         <el-form-item label="站点地址">
           <el-input v-model="siteUrl" style="width:293px;" placeholder="http://IP:端口，手机需能访问"></el-input>
         </el-form-item>
@@ -103,7 +102,7 @@
       </el-form>
 
       <div v-if="siteWarn" class="site-warn">
-        <i class="el-icon-warning-outline"></i>
+        <i class="ri-error-warning-line"></i>
         站点地址像是本机地址，手机扫码可能打不开；请填电脑的局域网地址（如 http://192.168.x.x:8080）
       </div>
 
@@ -118,9 +117,9 @@
         <!-- 空态复用全站统一 .ds-table-empty（styles/components.css），
              此前走 Element 默认文案：仅一行"暂无数据"、无图标无引导，
              高度 60px，与统一空态 299px 严重不一致 -->
-        <template slot="empty">
+        <template  #empty>
           <div class="ds-table-empty">
-            <i class="el-icon-document" aria-hidden="true"></i>
+            <i class="ri-file-text-line" aria-hidden="true"></i>
             <p>暂无桌台数据</p>
             <p class="ds-table-empty__hint">试试切换上方的区域筛选</p>
           </div>
@@ -128,8 +127,8 @@
       </el-table>
 
       <div class="sel-bar">
-        <el-button type="text" @click="selectFiltered">勾选当前筛选</el-button>
-        <el-button type="text" @click="clearSel">清空勾选</el-button>
+        <el-button text @click="selectFiltered">勾选当前筛选</el-button>
+        <el-button text @click="clearSel">清空勾选</el-button>
         <span class="sel-count">已选 {{ selected.length }} / 当前 {{ filteredTables.length }} 桌</span>
       </div>
 
@@ -137,8 +136,8 @@
         <el-button type="primary" :loading="generating" @click="generate">
           {{ generating ? '生成中…' : '生成并预览' }}
         </el-button>
-        <el-button icon="el-icon-view" @click="openPreview" :disabled="!posters.length">查看预览</el-button>
-        <el-button type="text" @click="clearPosters" :disabled="!posters.length">清空</el-button>
+        <el-button icon="View" @click="openPreview" :disabled="!posters.length">查看预览</el-button>
+        <el-button text @click="clearPosters" :disabled="!posters.length">清空</el-button>
         <span class="action-bar__tip">
           <template v-if="generating">正在生成 {{ progressDone }}/{{ progressTotal }}</template>
           <template v-else-if="posters.length">
@@ -153,24 +152,24 @@
     <!-- 预览弹窗：生成完自动打开，看效果 → 打印 / 下载（统一 crud-dialog，xl=840px） -->
     <crud-dialog
       :title="'桌贴预览 · ' + posters.length + ' 张桌贴 · ' + posterPages.length + ' 张 A4'"
-      :visible.sync="previewVisible"
+      v-model="previewVisible"
       size="xl"
       custom-class="qr-preview-dialog"
       :close-on-click-modal="false">
       <div class="pv-toolbar">
         <el-radio-group v-model="layout" size="small" @change="onLayoutChange">
           <span style="color:var(--text-secondary);font-size:13px;margin-right:8px;">每张纸</span>
-          <el-radio-button :label="1">1</el-radio-button>
-          <el-radio-button :label="2">2</el-radio-button>
-          <el-radio-button :label="4">4</el-radio-button>
-          <el-radio-button :label="6">6</el-radio-button>
-          <el-radio-button :label="9">9</el-radio-button>
+          <el-radio-button :value="1">1</el-radio-button>
+          <el-radio-button :value="2">2</el-radio-button>
+          <el-radio-button :value="4">4</el-radio-button>
+          <el-radio-button :value="6">6</el-radio-button>
+          <el-radio-button :value="9">9</el-radio-button>
         </el-radio-group>
         <span style="color:var(--text-muted);font-size:12px;">切换后实时重排，无需重新生成</span>
       </div>
 
       <div class="pv-stage">
-        <el-button class="pv-nav" icon="el-icon-arrow-left" :disabled="previewIndex === 0"
+        <el-button class="pv-nav" icon="ArrowLeft" :disabled="previewIndex === 0"
                    @click="previewIndex--" aria-label="上一页"></el-button>
         <div class="pv-paper">
           <div class="pv-page" :style="pageGridStyle">
@@ -179,22 +178,22 @@
             </div>
           </div>
         </div>
-        <el-button class="pv-nav" icon="el-icon-arrow-right"
+        <el-button class="pv-nav" icon="ArrowRight"
                    :disabled="previewIndex >= posterPages.length - 1"
                    @click="previewIndex++" aria-label="下一页"></el-button>
       </div>
       <div class="pv-pager">第 {{ previewIndex + 1 }} / {{ posterPages.length }} 张 A4</div>
       <div class="pv-cut-tip">虚线为裁切位置 · 图内已含门店名与桌号</div>
 
-      <span slot="footer" class="dialog-footer is-flex">
-        <el-button type="text" icon="el-icon-download"
+      <template #footer><span class="dialog-footer is-flex">
+        <el-button text icon="Download"
                    @click="downloadPage(previewIndex)">下载本页图片</el-button>
-        <el-button type="text" icon="el-icon-files"
+        <el-button text icon="Files"
                    @click="downloadAll">下载全部图片</el-button>
         <span class="dialog-footer__spacer"></span>
         <el-button @click="previewVisible = false">关闭</el-button>
-        <el-button type="primary" icon="el-icon-printer" @click="doPrint">打 印</el-button>
-      </span>
+        <el-button type="primary" icon="Printer" @click="doPrint">打 印</el-button>
+      </span></template>
     </crud-dialog>
 
     <!-- 打印专用：全部拼版页（屏幕隐藏，打印时输出） -->
@@ -207,18 +206,21 @@
     </div>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
     // 每页数 → 网格列×行（按竖版海报 800×1040，保证不溢出 A4）
     var LAYOUT_GRID = { 1: [1, 1], 2: [1, 2], 4: [2, 2], 6: [2, 3], 9: [3, 3] };
     var SITE_STORE_KEY = 'xinfei_qrcode_site';
     var EXPORT_DPI = 200;                 // 导出 PNG 分辨率（二维码缩小后仍清晰好扫）
 
-    new Vue({
+    createXinfeiApp({
       data: function () {
         return {
           isEmbedded: /[?&]embedded=1/.test(window.location.search),
@@ -455,7 +457,7 @@
           step();
         }
       }
-    }).$mount('#app');
+    }).mount('#app');
   </script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
 </body>

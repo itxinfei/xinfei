@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
     <!-- main.css 已 @import tokens/element 样式/各组件样式，仅额外引 stat-cards 独立产物 -->
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
     <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
     <style>
         body { font-family: var(--font-family-base);
@@ -126,7 +126,7 @@
             <el-tabs v-model="activeTab" @tab-click="onTabClick">
                 <!-- ===== Tab 1：发送短信（双栏穿梭，原样保留） ===== -->
                 <el-tab-pane name="sms">
-                    <span slot="label"><i class="ri-smartphone-line"></i> 发送短信</span>
+                    <template #label><span><i class="ri-smartphone-line"></i> 发送短信</span></template>
                     <div class="tab-pane-body">
                         <div class="user-select-panel">
                             <!-- 左：用户列表 -->
@@ -237,7 +237,7 @@
 
                 <!-- ===== Tab 2：APP推送（双栏穿梭，原样保留） ===== -->
                 <el-tab-pane name="push">
-                    <span slot="label"><i class="ri-notification-3-line"></i> APP推送</span>
+                    <template #label><span><i class="ri-notification-3-line"></i> APP推送</span></template>
                     <div class="tab-pane-body">
                         <div class="user-select-panel">
                             <div class="user-select-left">
@@ -344,7 +344,7 @@
 
                 <!-- ===== Tab 3：发送记录（crud-table） ===== -->
                 <el-tab-pane name="record">
-                    <span slot="label"><i class="ri-file-list-3-line"></i> 发送记录</span>
+                    <template #label><span><i class="ri-file-list-3-line"></i> 发送记录</span></template>
                     <div class="tab-pane-body">
                         <table-bar
                             :search-items="recordSearchItems"
@@ -383,7 +383,7 @@
                                 {{ formatDate(row.createTime) }}
                             </template>
                             <template #actions="{ row }">
-                                <el-button v-if="row.status === 3" type="text" size="small" class="btn-view" @click="resendRecord(row)">重发</el-button>
+                                <el-button v-if="row.status === 3" text size="small" class="btn-view" @click="resendRecord(row)">重发</el-button>
                             </template>
                         </crud-table>
                     </div>
@@ -391,7 +391,7 @@
 
                 <!-- ===== Tab 4：通知模板（crud-table） ===== -->
                 <el-tab-pane name="template">
-                    <span slot="label"><i class="ri-edit-2-line"></i> 通知模板</span>
+                    <template #label><span><i class="ri-edit-2-line"></i> 通知模板</span></template>
                     <div class="tab-pane-body">
                         <table-bar
                             :search-items="templateSearchItems"
@@ -429,11 +429,11 @@
                                 {{ formatDate(row.updateTime) }}
                             </template>
                             <template #actions="{ row }">
-                                <el-button type="text" size="small" class="btn-view" @click="openTemplateModal(row)">编辑</el-button>
-                                <el-button type="text" size="small"
+                                <el-button text size="small" class="btn-view" @click="openTemplateModal(row)">编辑</el-button>
+                                <el-button text size="small"
                                            :class="row.status === 1 ? 'btn-warning' : 'btn-success'"
                                            @click="toggleTemplate(row)">{{ row.status === 1 ? '停用' : '启用' }}</el-button>
-                                <el-button type="text" size="small" class="btn-delete" @click="deleteTemplate(row.id)">删除</el-button>
+                                <el-button text size="small" class="btn-delete" @click="deleteTemplate(row.id)">删除</el-button>
                             </template>
                         </crud-table>
                     </div>
@@ -444,7 +444,7 @@
         <!-- 模板新增/编辑弹窗（crud-dialog + 校验） -->
         <crud-dialog
             :title="templateModal.isEdit ? '编辑通知模板' : '新增通知模板'"
-            :visible.sync="templateModal.show"
+            v-model="templateModal.show"
             size="lg"
             :close-on-click-modal="false"
             :submit-loading="templateModal.saving"
@@ -518,20 +518,23 @@
         </crud-dialog>
     </div>
 
-    <script src="../../plugins/vue/vue.js"></script>
+    <script src="../../plugins/vue3/vue.global.js"></script>
     <!-- 补入 element-ui（原页漏引导致 el-* 不渲染） -->
-    <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+    <script src="../../plugins/element-plus/index.full.min.js"></script>
+    <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+    <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
     <script src="../../plugins/axios/axios.min.js"></script>
     <script src="../../js/request.js?v=20260930"></script>
     <script src="../../js/accessibility-utils.js?v=20260927"></script>
     <script src="../../js/performance-utils.js?v=20260926"></script>
     <script src="../../api/user.js?v=20260926"></script>
-    <script src="../../js/components.js?v=20261002"></script>
+    <script src="../../js/components-v3.js?v=3001001"></script>
+    <script src="../../js/app-v3.js?v=3001001"></script>
     <script src="../../api/notification.js?v=20260926"></script>
     <script>
-        new Vue({
+        createXinfeiApp({
             el: '#app',
-            data: {
+            data: function () { return {
                 // 当前激活 Tab
                 activeTab: 'sms',
 
@@ -587,7 +590,7 @@
                     channel: [{ required: true, message: '请选择发送渠道', trigger: 'change' }],
                     content: [{ required: true, message: '请输入模板内容', trigger: 'blur' }]
                 }
-            },
+            }; },
 
             computed: {
                 statsCards: function () {

@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ========== 支付详情弹窗（全站统一风格：分区标题 + dt 详情网格，对齐 store/list.html 样板） ========== */
     .pay-detail .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -56,7 +55,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -98,8 +97,8 @@
           <el-tag :type="statusTagType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="viewDetail(row)">查看详情</el-button>
-          <el-button v-if="row.status === '成功'" type="text" size="small" class="btn-delete" @click="openRefund(row)">退款</el-button>
+          <el-button text size="small" class="btn-view" @click="viewDetail(row)">查看详情</el-button>
+          <el-button v-if="row.status === '成功'" text size="small" class="btn-delete" @click="openRefund(row)">退款</el-button>
         </template>
       </crud-table>
     </main>
@@ -107,7 +106,7 @@
     <!-- 支付详情弹窗（只读，仅有关闭按钮） -->
     <crud-dialog
       title="支付详情"
-      :visible.sync="detailVisible"
+      v-model="detailVisible"
       size="md"
       :show-submit="false"
       :show-cancel="true"
@@ -156,7 +155,7 @@
     <!-- 退款弹框 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="退款处理"
-      :visible.sync="refundVisible"
+      v-model="refundVisible"
       :submit-loading="submitting"
       size="sm"
       @submit="submitRefund"
@@ -176,13 +175,16 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/payment.js?v=20260926"></script>
   <script>
     // ========== 支付状态常量映射（统一来源） ==========
@@ -200,7 +202,7 @@
       return r
     }
 
-    new Vue({
+    createXinfeiApp({
       el: '#payment-app',
       data: function() {
         return {
@@ -353,16 +355,17 @@
         onSizeChange: function(payload) { this.pageSize = (payload && payload.pageSize !== undefined) ? payload.pageSize : payload; this.page = 1 },
         // 修改点：statusTagType 支持中英文双输入（normalizePayment 后 status 已转中文）
         statusTagType: function(status) {
-          if (!status) return ''
+          if (!status) return undefined
           // 中文直查（normalizePayment 后 status 已是中文）
           const byLabel = { '成功': 'success', '已支付': 'success', '待支付': 'warning', '失败': 'danger', '已退款': 'info' }
           if (byLabel[status]) return byLabel[status]
-          // 兜底：英文 key 查
-          return PAYMENT_STATUS_TAG[(status || '').toUpperCase()] || ''
+          // 兜底：英文 key 查（EP 的 el-tag type 只收 primary/success/info/warning/danger，
+          // 空串会被判为非法值并在控制台报 Invalid prop，UI 2 时代的「默认样式」在 v3 用 undefined 表达）
+          return PAYMENT_STATUS_TAG[(status || '').toUpperCase()] || undefined
         },
         // 修改点：statusLabel 直接返回（normalizePayment 后 status 已是中文）
         statusLabel: function(status) {
-          if (!status) return '-'
+          if (!status) return undefined
           // 已是中文，直接返回
           if (/^[\u4e00-\u9fa5]+$/.test(status)) return status
           // 兜底：英文 key 查映射

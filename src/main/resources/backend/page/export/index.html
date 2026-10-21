@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数据导出 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: var(--bg-page); color: var(--text-primary); font-family: var(--font-family-base); }
@@ -155,8 +154,8 @@
                             range-separator="至"
                             start-placeholder="开始日期"
                             end-placeholder="结束日期"
-                            value-format="yyyy-MM-dd"
-                            :picker-options="{ shortcuts: dateShortcuts }"
+                            value-format="YYYY-MM-DD"
+                            :shortcuts="dateShortcuts"
                             size="small"
                             @change="onOrderRangeChange"
                         ></el-date-picker>
@@ -243,8 +242,8 @@
                             range-separator="至"
                             start-placeholder="开始日期"
                             end-placeholder="结束日期"
-                            value-format="yyyy-MM-dd"
-                            :picker-options="{ shortcuts: dateShortcuts }"
+                            value-format="YYYY-MM-DD"
+                            :shortcuts="dateShortcuts"
                             size="small"
                         ></el-date-picker>
                     </div>
@@ -304,8 +303,8 @@
                                 </td>
                                 <td>
                                     <template v-if="item.status === 'success'">
-                                        <el-button type="text" size="small" icon="ri-download-line" @click="reDownload(item)">重新下载</el-button>
-                                        <el-button type="text" size="small" icon="ri-delete-bin-line" style="color:var(--color-danger);" @click="deleteRecord(index)">删除</el-button>
+                                        <el-button text size="small" icon="ri-download-line" @click="reDownload(item)">重新下载</el-button>
+                                        <el-button text size="small" icon="ri-delete-bin-line" style="color:var(--color-danger);" @click="deleteRecord(index)">删除</el-button>
                                     </template>
                                     <span v-else style="color:var(--text-muted);font-size:var(--font-size-xs);">--</span>
                                 </td>
@@ -318,19 +317,22 @@
       </main>
     </div>
 
-    <script src="../../plugins/vue/vue.js"></script>
+    <script src="../../plugins/vue3/vue.global.js"></script>
     <!-- 修改点(2026-09-15)：补引 element-ui，与全站统一控件（此前页面用原生 input/select + 自写按钮/toast，风格割裂） -->
-    <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+    <script src="../../plugins/element-plus/index.full.min.js"></script>
+    <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+    <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
     <script src="../../plugins/axios/axios.min.js"></script>
     <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
     <script src="../../api/export.js?v=20260926"></script>
     <script>
-        new Vue({
+        createXinfeiApp({
             el: '#main-content',
-            data: {
+            data: function () { return {
                 orderFilter: { dateRange: [], status: '' },
                 orderExport: { loading: false },
 
@@ -345,13 +347,14 @@
                 // 成功导出的 Blob 缓存（用于"重新下载"，与营业日报同机制）
                 blobCache: {},
                 history: [],
-                // 日期快捷项（与营业日报一致）
+                // 日期快捷项（与营业日报同机制）
+                // Element Plus 删掉了 picker-options + picker.$emit('pick')，快捷项改成 value: () => [起, 止]
                 dateShortcuts: [
-                    { text: '今天', onClick: function(picker) { var d = new Date(); picker.$emit('pick', [d, d]); } },
-                    { text: '近7天', onClick: function(picker) { var end = new Date(); var start = new Date(); start.setDate(start.getDate() - 6); picker.$emit('pick', [start, end]); } },
-                    { text: '近30天', onClick: function(picker) { var end = new Date(); var start = new Date(); start.setDate(start.getDate() - 29); picker.$emit('pick', [start, end]); } }
+                    { text: '今天', value: function() { var d = new Date(); return [d, d] } },
+                    { text: '近7天', value: function() { var end = new Date(); var start = new Date(); start.setDate(start.getDate() - 6); return [start, end] } },
+                    { text: '近30天', value: function() { var end = new Date(); var start = new Date(); start.setDate(start.getDate() - 29); return [start, end] } }
                 ]
-            },
+            }; },
             computed: {
                 // 任一导出进行中即展示全屏遮罩
                 anyExporting: function() {

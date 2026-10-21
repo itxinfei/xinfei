@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>行政区划管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
     <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
 </head>
 <body>
@@ -17,7 +16,7 @@
     <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
       <h1 class="sr-only" id="page-title">行政区划管理</h1>
       <!-- 修改点：统计卡片支持点击筛选（点击省份/城市/区县卡片按层级过滤数据，与层级下拉框互斥） -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
       <!-- 修改点：搜索栏使用 <table-bar> 统一组件 -->
       <table-bar
         :search-items="tableSearchItems"
@@ -27,13 +26,15 @@
         @action="onTableAction"
         :show-refresh="true"
         @refresh="fetchData(false)">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="input.name" placeholder="选择地区名称" class="el-select--narrow-xs" clearable filterable size="small"
             :loading="optionsLoading" :no-data-text="optionsLoadError ? '加载失败，点击下拉框重试' : (optionsLoading ? '加载中...' : '暂无数据')" @change="handleQuery" @visible-change="onFilterDropdownVisible" >
             <el-option v-for="n in filterOptions.names" :key="n" :label="n" :value="n"></el-option>
           </el-select>
           <el-select v-model="input.level" placeholder="层级" clearable class="el-select--wide-xs" @change="onLevelChange">
-            <el-option label="全部" :value="null"></el-option>
+            <!-- EP 的 el-option value 只收 String|Number|Boolean|Object，null 会报 Invalid prop；
+                 「全部」用空串表达，查询侧 level || undefined 已把它挡在请求参数之外 -->
+            <el-option label="全部" value=""></el-option>
             <el-option label="省份" :value="1"></el-option>
             <el-option label="城市" :value="2"></el-option>
             <el-option label="区/县" :value="3"></el-option>
@@ -64,12 +65,12 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
-          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && deleteHandle(row.id)" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+          <el-button text size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
+          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && deleteHandle(row.id)" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -78,7 +79,7 @@
     <!-- 修改点：新增/编辑弹窗改用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一组件（内置关闭/重置逻辑，底部按钮统一 medium） -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="formData.title"
-      :visible.sync="formData.dialogVisible"
+      v-model="formData.dialogVisible"
       size="lg"
       :submit-loading="submitLoading"
       @submit="submitForm"
@@ -111,16 +112,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/region.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
 <script>
-    new Vue({
+    createXinfeiApp({
       el: '#region-app',
       // 修改点：引入列表页通用 Mixin，自动获得 page/pageSize/counts/loading 与翻页处理
       mixins: [window.XinfeiListMixin],

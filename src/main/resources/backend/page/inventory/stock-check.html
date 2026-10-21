@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>库存盘点 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ── 展开行摘要条 ── */
     .expand-summary {
@@ -95,7 +94,7 @@
       <h1 class="sr-only" id="page-title">库存盘点</h1>
 
       <!-- 统计卡片 -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
       <!-- 搜索栏 -->
       <table-bar
@@ -106,9 +105,9 @@
         @search="handleQuery"
         @reset="reset"
         @action="onTableAction">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-date-picker v-model="input.dateRange" type="daterange" range-separator="至"
-            start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd"
+            start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD"
             class="el-date-editor--md" @change="handleQuery" size="small"></el-date-picker>
         </template>
       </table-bar>
@@ -176,7 +175,7 @@
             <el-table :data="row.details" stripe class="tableBox sub-table"
               :row-class-name="detailRowClass" aria-label="盘点明细">
               <el-table-column label="食材名称" min-width="160">
-                <template slot-scope="scope">
+                <template  #default="scope">
                   <div class="material-name-cell">
                     <i class="ri-leaf-line" style="color:var(--color-success);margin-right:6px;font-size:14px;"></i>
                     <span>{{ scope.row.materialName || '食材#'+scope.row.materialId }}</span>
@@ -184,20 +183,20 @@
                 </template>
               </el-table-column>
               <el-table-column label="账面数量" width="130" align="right" :header-align="'center'">
-                <template slot-scope="scope"><span class="qty-book">{{ scope.row.bookQty != null ? scope.row.bookQty : '-' }}</span></template>
+                <template  #default="scope"><span class="qty-book">{{ scope.row.bookQty != null ? scope.row.bookQty : '-' }}</span></template>
               </el-table-column>
               <el-table-column label="实际数量" width="130" align="right" :header-align="'center'">
-                <template slot-scope="scope"><span class="qty-actual">{{ scope.row.actualQty != null ? scope.row.actualQty : '-' }}</span></template>
+                <template  #default="scope"><span class="qty-actual">{{ scope.row.actualQty != null ? scope.row.actualQty : '-' }}</span></template>
               </el-table-column>
               <el-table-column label="差异" width="150" align="center" :header-align="'center'">
-                <template slot-scope="scope">
+                <template  #default="scope">
                   <span class="diff-badge" :class="getDiffClass(scope.row)">
                     <i :class="getDiffIcon(scope.row)"></i>{{ formatDiff(scope.row) }}
                   </span>
                 </template>
               </el-table-column>
               <el-table-column label="盈亏状态" width="120" align="center" :header-align="'center'">
-                <template slot-scope="scope">
+                <template  #default="scope">
                   <span class="diff-status-tag" :class="getDiffStatusClass(scope.row)">{{ getDiffStatusLabel(scope.row) }}</span>
                 </template>
               </el-table-column>
@@ -224,24 +223,24 @@
         <template #actions="{ row }">
           <!-- 草稿：编辑盘点项 / 删除 -->
           <template v-if="row.status === 'DRAFT'">
-            <el-button type="text" size="small" class="btn-view" @click="openItemsDialog(row)">
+            <el-button text size="small" class="btn-view" @click="openItemsDialog(row)">
               <i class="ri-list-check-2" style="margin-right:4px;"></i>编辑盘点项
             </el-button>
-            <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
+            <el-button text size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
           </template>
           <!-- 进行中：录入实盘 / 完成盘点 / 删除 -->
           <template v-else-if="row.status === 'IN_PROGRESS'">
-            <el-button type="text" size="small" class="btn-view" @click="openRecordDialog(row)">
+            <el-button text size="small" class="btn-view" @click="openRecordDialog(row)">
               <i class="ri-edit-line" style="margin-right:4px;"></i>录入实盘
             </el-button>
-            <el-button type="text" size="small" class="btn-success" @click="confirmComplete(row)">
+            <el-button text size="small" class="btn-success" @click="confirmComplete(row)">
               <i class="ri-checkbox-circle-line" style="margin-right:4px;"></i>完成盘点
             </el-button>
-            <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
+            <el-button text size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
           </template>
           <!-- 已完成：冲正（回退到进行中，允许重新录入修正） -->
           <template v-else-if="row.status === 'DONE'">
-            <el-button type="text" size="small" class="btn-warning" @click="rollbackHandle(row)" :aria-label="'冲正盘点单 ' + (row.checkNo || '')">
+            <el-button text size="small" class="btn-warning" @click="rollbackHandle(row)" :aria-label="'冲正盘点单 ' + (row.checkNo || '')">
               <i class="ri-refresh-line" style="margin-right:4px;"></i>冲正
             </el-button>
           </template>
@@ -252,7 +251,7 @@
 
     <!-- ═══════ 弹窗1：新增盘点单 ═══════ -->
     <crud-dialog :show-submit="true" :show-cancel="true"
-      title="新增盘点单" :visible.sync="createDialogVisible" size="md"
+      title="新增盘点单" v-model="createDialogVisible" size="md"
       :submit-loading="createSubmitting" :close-on-click-modal="false"
       @submit="submitCreate" @close="createDialogVisible = false">
       <el-form ref="createForm" :model="createForm" :rules="createRules" label-width="100px" size="small">
@@ -273,7 +272,7 @@
 
     <!-- ═══════ 弹窗2：编辑盘点项（选择食材） ═══════ -->
     <crud-dialog :show-submit="true" :show-cancel="true"
-      title="编辑盘点项" :visible.sync="itemsDialogVisible" size="xl"
+      title="编辑盘点项" v-model="itemsDialogVisible" size="xl"
       :submit-loading="itemsSubmitting" :close-on-click-modal="false"
       @submit="submitItems" @close="itemsDialogVisible = false">
       <div class="item-picker">
@@ -284,7 +283,7 @@
             <div v-for="mat in filteredMaterials" :key="mat.id"
               class="item-picker__item" :class="{ selected: isPicked(mat.id) }"
               @click="togglePick(mat)">
-              <el-checkbox :value="isPicked(mat.id)" @click.native.stop.prevent="togglePick(mat)"></el-checkbox>
+              <el-checkbox :value="isPicked(mat.id)" @click.stop.prevent="togglePick(mat)"></el-checkbox>
               <span>{{ mat.name }}</span>
               <span class="stock-info">库存：{{ mat.stockQty || 0 }} {{ mat.unit || '' }}</span>
             </div>
@@ -308,7 +307,7 @@
 
     <!-- ═══════ 弹窗3：录入实盘数量 ═══════ -->
     <crud-dialog :show-submit="true" :show-cancel="true"
-      title="录入实盘数量" :visible.sync="recordDialogVisible" size="lg"
+      title="录入实盘数量" v-model="recordDialogVisible" size="lg"
       :submit-loading="recordSubmitting" :close-on-click-modal="false"
       @submit="submitRecord" @close="recordDialogVisible = false">
       <div v-if="recordItems.length === 0" style="text-align:center;padding:40px;color:var(--text-muted);">
@@ -334,17 +333,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/inventory-helper.js?v=20260922"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#stock-check-app',
       data: function() {
         return {
@@ -477,11 +479,11 @@
           var self = this;
           stockCheckDetails(row.id).then(function(res) {
             if (String(res.code) === '1' && res.data) {
-              self.$set(row, 'details', res.data);
+              row['details'] = res.data;
             } else {
-              self.$set(row, 'details', []);
+              row['details'] = [];
             }
-          }).catch(function() { self.$set(row, 'details', []); });
+          }).catch(function() { row['details'] = []; });
         },
 
         /* ── 筛选/分页 ── */
@@ -644,7 +646,7 @@
               var unitMap = {};
               res.data.forEach(function(m) { unitMap[m.id] = m.unit || ''; });
               self.recordItems.forEach(function(it) {
-                if (!it.unit) self.$set(it, 'unit', unitMap[it.materialId] || '');
+                if (!it.unit) it['unit'] = unitMap[it.materialId] || '';
               });
             }
           });

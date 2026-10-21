@@ -7,8 +7,7 @@
   <title>排班管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <a href="#main-content" class="skip-link">跳转到主内容</a>
@@ -30,7 +29,7 @@
             <el-date-picker
               v-model="scheduleMonth"
               type="month"
-              value-format="yyyy-MM"
+              value-format="YYYY-MM"
               placeholder="选择月份"
               size="small"
               class="schedule-month-picker"
@@ -129,7 +128,7 @@
       </el-row>
 
       <!-- 添加排班弹窗 -->
-      <crud-dialog :show-submit="true" :show-cancel="true" title="添加排班" :visible.sync="dialog.visible" :submit-loading="submitting" size="md" @submit="submitForm">
+      <crud-dialog :show-submit="true" :show-cancel="true" title="添加排班" v-model="dialog.visible" :submit-loading="submitting" size="md" @submit="submitForm">
         <el-form ref="scheduleForm" :model="form" :rules="formRules" label-width="100px" size="small">
           <el-form-item label="员工" prop="employeeId">
             <el-select v-model="form.employeeId" placeholder="请选择员工" clearable>
@@ -137,14 +136,14 @@
             </el-select>
           </el-form-item>
           <el-form-item label="日期" prop="date">
-            <el-date-picker v-model="form.date" type="date" value-format="yyyy-MM-dd" placeholder="选择日期"></el-date-picker>
+            <el-date-picker v-model="form.date" type="date" value-format="YYYY-MM-DD" placeholder="选择日期"></el-date-picker>
           </el-form-item>
           <el-form-item label="班次" prop="shift">
             <el-radio-group v-model="form.shift">
-              <el-radio label="morning">早班 08:00-16:00</el-radio>
-              <el-radio label="noon">中班 12:00-20:00</el-radio>
-              <el-radio label="night">晚班 16:00-24:00</el-radio>
-              <el-radio label="full">全天 08:00-20:00</el-radio>
+              <el-radio value="morning">早班 08:00-16:00</el-radio>
+              <el-radio value="noon">中班 12:00-20:00</el-radio>
+              <el-radio value="night">晚班 16:00-24:00</el-radio>
+              <el-radio value="full">全天 08:00-20:00</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="时间">
@@ -160,20 +159,23 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/attendance.js?v=20260926"></script>
   <script>
     // ===== 班次元信息（全页唯一配色/文案来源，与图例保持一致）=====
     const SHIFT_META = { morning: { label: '早班', tag: 'success' }, noon: { label: '中班', tag: 'info' }, night: { label: '晚班', tag: 'info' }, full: { label: '全天', tag: 'danger' }, rest: { label: '休息', tag: '' } }
     const SHIFT_CODE2KEY = { 0: 'morning', 1: 'noon', 2: 'night', 3: 'full' }
     const SHIFT_KEY2CODE = { morning: 0, noon: 1, night: 2, full: 3 }
-    new Vue({
+    createXinfeiApp({
       el: '#schedule-app',
       data: function () {
         return {

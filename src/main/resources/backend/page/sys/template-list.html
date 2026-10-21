@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ========== 内容预览 ========== */
     .content-preview {
@@ -54,7 +53,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -107,15 +106,15 @@
           <div class="content-preview">{{ row.content }}</div>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="openDialog(row)">编辑</el-button>
-          <el-button type="text" size="small" :class="row.status === 1 ? 'btn-warning' : 'btn-success'" @click="toggleStatus(row)">
+          <el-button text size="small" class="btn-view" @click="openDialog(row)">编辑</el-button>
+          <el-button text size="small" :class="row.status === 1 ? 'btn-warning' : 'btn-success'" @click="toggleStatus(row)">
             {{ row.status === 1 ? '停用' : '启用' }}
           </el-button>
-          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && deleteHandle(row.id)" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && deleteHandle(row.id)" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -124,7 +123,7 @@
     <!-- 编辑弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="formData.title"
-      :visible.sync="formData.dialogVisible"
+      v-model="formData.dialogVisible"
       :submit-loading="submitting"
       size="lg"
       @submit="submitForm"
@@ -157,24 +156,27 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="formData.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">停用</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">停用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/sys.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#template-app',
       data() {
         return {

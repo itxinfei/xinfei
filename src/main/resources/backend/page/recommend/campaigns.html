@@ -6,8 +6,7 @@
     <title>营销活动管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
     <script src="../../plugins/echarts/echarts.min.js"></script>
     <style>
         /* ========== 概览图表 ========== */
@@ -79,7 +78,7 @@
       <h1 class="sr-only" id="page-title">营销活动管理</h1>
 
         <!-- 修改点：使用 <stat-cards> 统一组件，支持点击过滤 -->
-        <stat-cards :cards="statsCards" :active-key.sync="searchStatus" @card-click="onCardClick"></stat-cards>
+        <stat-cards :cards="statsCards" v-model:active-key="searchStatus" @card-click="onCardClick"></stat-cards>
 
         <!-- ========== 概览图表 ========== -->
         <div class="overview-charts">
@@ -108,7 +107,7 @@
           @reset="resetSearch"
           @refresh="loadData()"
           @action="onTableAction">
-          <template slot="search-extra">
+          <template  #search-extra>
             <el-select v-model="searchName" placeholder="选择活动名称" size="small" clearable filterable
               style="width:200px;"
               :loading="optionsLoading" :no-data-text="optionsLoadError ? '加载失败，点击下拉框重试' : (optionsLoading ? '加载中...' : '暂无数据')" @change="loadData" @visible-change="onFilterDropdownVisible">
@@ -129,9 +128,9 @@
         <!-- 批量操作栏：选中行后显示在表格上方，避免滚动到表格底部才能操作 -->
         <div class="batch-bar" v-show="selectedRows.length > 0">
           <span class="batch-bar__count">已选 {{ selectedRows.length }} 项</span>
-          <el-button type="text" size="small" class="btn-delete" @click="batchDelete">批量删除</el-button>
+          <el-button text size="small" class="btn-delete" @click="batchDelete">批量删除</el-button>
           <el-button size="small" type="warning" plain @click="batchPause">批量暂停</el-button>
-          <el-button size="small" type="text" @click="clearSelection">清空选择</el-button>
+          <el-button size="small" text @click="clearSelection">清空选择</el-button>
         </div>
 
         <!-- ========== 表格（统一 crud-table 组件，替代手写 el-table + 独立分页） ========== -->
@@ -174,16 +173,16 @@
             </template>
             <!-- 操作列契约：编辑+主状态流转常显（≤3 元素含「更多」，宽 180），推送/统计/删除收「更多」 -->
             <template #actions="{ row }">
-                <el-button type="text" size="small" class="btn-view" @click="openDialog('edit', row)">编辑</el-button>
-                <el-button type="text" size="small" class="btn-success" v-if="row.status === 0" @click="publishCampaign(row)">发布</el-button>
-                <el-button type="text" size="small" class="btn-warning" v-if="row.status === 1" @click="pauseCampaign(row)">暂停</el-button>
-                <el-dropdown trigger="click" @command="(cmd) => handleRowCommand(cmd, row)" @click.native.stop>
-                    <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-                    <el-dropdown-menu slot="dropdown">
+                <el-button text size="small" class="btn-view" @click="openDialog('edit', row)">编辑</el-button>
+                <el-button text size="small" class="btn-success" v-if="row.status === 0" @click="publishCampaign(row)">发布</el-button>
+                <el-button text size="small" class="btn-warning" v-if="row.status === 1" @click="pauseCampaign(row)">暂停</el-button>
+                <el-dropdown trigger="click" @command="(cmd) => handleRowCommand(cmd, row)" @click.stop>
+                    <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+                    <template #dropdown><el-dropdown-menu>
                         <el-dropdown-item v-if="row.status === 1" command="push" icon="ri-send-plane-line">推送</el-dropdown-item>
                         <el-dropdown-item command="stats" icon="ri-bar-chart-line">活动统计</el-dropdown-item>
                         <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-                    </el-dropdown-menu>
+                    </el-dropdown-menu></template>
                 </el-dropdown>
             </template>
         </crud-table>
@@ -193,7 +192,7 @@
     <!-- ========== 新建/编辑对话框 ========== -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       size="lg"
       :submit-loading="submitting"
       :close-on-click-modal="false"
@@ -235,13 +234,13 @@
             <!-- 修改点：规则输入改为结构化选项 + JSON 校验 -->
             <el-form-item label="活动规则" prop="ruleJson">
                 <el-radio-group v-model="rulePreset" size="small" style="margin-bottom:8px;" @change="onRulePresetChange">
-                    <el-radio-button label="">自定义</el-radio-button>
-                    <el-radio-button label="满减">满减</el-radio-button>
-                    <el-radio-button label="折扣">折扣</el-radio-button>
-                    <el-radio-button label="秒杀">秒杀</el-radio-button>
+                    <el-radio-button value="">自定义</el-radio-button>
+                    <el-radio-button value="满减">满减</el-radio-button>
+                    <el-radio-button value="折扣">折扣</el-radio-button>
+                    <el-radio-button value="秒杀">秒杀</el-radio-button>
                 </el-radio-group>
                 <el-input v-model="form.ruleJson" type="textarea" :rows="3"
-                    :placeholder="rulePreset ? '' : 'JSON格式，如：{"minAmount":50,"discountRate":0.8}'"></el-input>
+                    :placeholder="rulePreset ? '' : 'JSON格式，如：{&quot;minAmount&quot;:50,&quot;discountRate&quot;:0.8}'"></el-input>
                 <div v-if="ruleError" style="font-size:var(--font-size-xs);color:var(--color-danger);margin-top:4px;">{{ ruleError }}</div>
                 <span v-else style="font-size:var(--font-size-xs);color:var(--color-info-text);">格式: {"minAmount":80,"reduceAmount":10} | {"discountRate":0.85} | {"flashPrice":9.9,"flashStock":100}</span>
             </el-form-item>
@@ -249,9 +248,9 @@
                 <!-- 修改点：添加快捷选项 + unlink-panels，优化时间选择体验 -->
                 <el-date-picker v-model="dateRange" type="datetimerange"
                     range-separator="至" start-placeholder="开始" end-placeholder="结束"
-                    value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm"
+                    value-format="YYYY-MM-DD HH:mm:ss" format="YYYY-MM-DD HH:mm"
                     unlink-panels :editable="false"
-                    :picker-options="datePickerOptions" style="width:100%" />
+                    :shortcuts="dateShortcuts" style="width:100%" />
             </el-form-item>
             <el-row :gutter="16">
                 <el-col :span="12" :xs="24">
@@ -273,7 +272,7 @@
     <!-- ========== 推送消息对话框 ========== -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="推送营销消息"
-      :visible.sync="pushDialogVisible"
+      v-model="pushDialogVisible"
       size="md"
       :submit-loading="pushing"
       :close-on-click-modal="false"
@@ -289,10 +288,10 @@
             </el-form-item>
             <el-form-item label="推送方式">
                 <el-radio-group v-model="pushForm.pushType">
-                    <el-radio :label="1">弹窗通知</el-radio>
-                    <el-radio :label="2">站内消息</el-radio>
-                    <el-radio :label="3">短信推送</el-radio>
-                    <el-radio :label="4">优惠券发放</el-radio>
+                    <el-radio :value="1">弹窗通知</el-radio>
+                    <el-radio :value="2">站内消息</el-radio>
+                    <el-radio :value="3">短信推送</el-radio>
+                    <el-radio :value="4">优惠券发放</el-radio>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="预计触达">
@@ -313,7 +312,7 @@
     <!-- ========== 活动统计对话框（只读，仅有关闭按钮） ========== -->
     <crud-dialog
       title="活动效果统计"
-      :visible.sync="statsDialogVisible"
+      v-model="statsDialogVisible"
       size="lg"
       :show-submit="false"
       :show-cancel="true"
@@ -350,8 +349,10 @@
     </crud-dialog>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
 <script src="../../js/accessibility-utils.js?v=20260927"></script>
@@ -359,11 +360,12 @@
 <script src="../../api/recommend.js?v=20260926"></script>
 <script src="../../api/member-center.js?v=20260926"></script>
 <script src="../../api/marketing.js?v=20260926"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script>
   // 图表语义色统一引用全局 window.XinfeiPalette（components.js 从 tokens.css 运行时解析，
   // canvas 无法使用 CSS 变量，XinfeiPalette 为 JS 侧唯一颜色来源）；多色系列数据色保留图表调色板
-  new Vue({
+  createXinfeiApp({
     el: '#app',
     data: function() {
         return {
@@ -396,35 +398,34 @@
             summary: { total: 0, active: 0, draft: 0, ended: 0, paused: 0, totalParticipants: 0, totalPushed: 0 },
             dialogVisible: false, dialogTitle: '新建营销活动', dialogMode: 'create', editId: null, dateRange: [],
             rulePreset: '', ruleError: '',
-            // 修改点：活动时间选择器快捷选项，与通用组件保持一致
-            datePickerOptions: {
-                shortcuts: [{
-                    text: '今天',
-                    onClick: function (picker) {
-                        const s = new Date(); s.setHours(0,0,0,0); const e = new Date(); e.setHours(23,59,59,999)
-                        picker.$emit('pick', [s, e])
-                    }
-                }, {
-                    text: '最近7天',
-                    onClick: function (picker) {
-                        const e = new Date(); e.setHours(23,59,59,999); const s = new Date(); s.setDate(s.getDate()-6); s.setHours(0,0,0,0)
-                        picker.$emit('pick', [s, e])
-                    }
-                }, {
-                    text: '最近30天',
-                    onClick: function (picker) {
-                        const e = new Date(); e.setHours(23,59,59,999); const s = new Date(); s.setDate(s.getDate()-29); s.setHours(0,0,0,0)
-                        picker.$emit('pick', [s, e])
-                    }
-                }, {
-                    text: '本月',
-                    onClick: function (picker) {
-                        const n = new Date(); const s = new Date(n.getFullYear(), n.getMonth(), 1)
-                        const e = new Date(n.getFullYear(), n.getMonth()+1, 0); e.setHours(23,59,59,999)
-                        picker.$emit('pick', [s, e])
-                    }
-                }]
-            },
+            // 活动时间选择器快捷选项，与通用组件保持一致。
+            // Element Plus 删掉了 picker-options + picker.$emit('pick')，快捷项改成 value: () => [起, 止]。
+            dateShortcuts: [{
+                text: '今天',
+                value: function () {
+                    const s = new Date(); s.setHours(0,0,0,0); const e = new Date(); e.setHours(23,59,59,999)
+                    return [s, e]
+                }
+            }, {
+                text: '最近7天',
+                value: function () {
+                    const e = new Date(); e.setHours(23,59,59,999); const s = new Date(); s.setDate(s.getDate()-6); s.setHours(0,0,0,0)
+                    return [s, e]
+                }
+            }, {
+                text: '最近30天',
+                value: function () {
+                    const e = new Date(); e.setHours(23,59,59,999); const s = new Date(); s.setDate(s.getDate()-29); s.setHours(0,0,0,0)
+                    return [s, e]
+                }
+            }, {
+                text: '本月',
+                value: function () {
+                    const n = new Date(); const s = new Date(n.getFullYear(), n.getMonth(), 1)
+                    const e = new Date(n.getFullYear(), n.getMonth()+1, 0); e.setHours(23,59,59,999)
+                    return [s, e]
+                }
+            }],
             pushDialogVisible: false, pushTargetCampaign: null,
             pushForm: { pushType: 1 }, pushPreview: [], pushEstimate: 0,
             couponTemplates: [],
@@ -481,7 +482,7 @@
         this.initOverviewCharts();
         window.addEventListener('resize', this.handleResize);
     },
-    beforeDestroy: function() {
+    beforeUnmount: function() {
         window.removeEventListener('resize', this.handleResize);
         if (this.statusPieChart) this.statusPieChart.dispose();
         if (this.overviewBarChart) this.overviewBarChart.dispose();
@@ -523,8 +524,8 @@
             this.$nextTick(function() {
                 const pieDom = document.getElementById('statusPieChart');
                 const barDom = document.getElementById('overviewBarChart');
-                if (pieDom) self.statusPieChart = echarts.init(pieDom);
-                if (barDom) self.overviewBarChart = echarts.init(barDom);
+                if (pieDom) self.statusPieChart = Vue.markRaw(echarts.init(pieDom));
+                if (barDom) self.overviewBarChart = Vue.markRaw(echarts.init(barDom));
                 self.renderOverviewCharts();
             });
         },
@@ -924,7 +925,7 @@
                 const dom = document.getElementById('campaignStatsChart');
                 if (dom) {
                     if (self.statsChart) self.statsChart.dispose();
-                    self.statsChart = echarts.init(dom);
+                    self.statsChart = Vue.markRaw(echarts.init(dom));
                     self.renderStatsChart();
                 }
             });

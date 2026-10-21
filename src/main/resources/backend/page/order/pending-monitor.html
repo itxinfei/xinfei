@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>未接单监控大屏 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ========== 页面基础布局 ========== */
     body { background: var(--bg-page); margin: 0; }
@@ -105,7 +104,7 @@
             <el-button type="success" size="small" @click="confirmOne(o)" :loading="o._confirming" :aria-label="'接单 ' + (o.orderNo || '')">
               <i class="ri-check-line"></i> 接单
             </el-button>
-            <el-button type="text" size="small" @click="rejectOne(o)" :loading="o._rejecting" :aria-label="'拒绝 ' + (o.orderNo || '')">
+            <el-button text size="small" @click="rejectOne(o)" :loading="o._rejecting" :aria-label="'拒绝 ' + (o.orderNo || '')">
               <i class="ri-close-line"></i> 拒绝
             </el-button>
           </div>
@@ -121,17 +120,20 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/urgency.js?v=20260926"></script>
   <script src="../../api/order.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#app',
       data: function () {
         return {
@@ -151,7 +153,7 @@
         this.loadData()
         this.pollTimer = setInterval(function () { self.loadData() }, 5000)
       },
-      beforeDestroy: function () {
+      beforeUnmount: function () {
         if (this.pollTimer) clearInterval(this.pollTimer)
       },
       computed: {
@@ -259,7 +261,7 @@
         confirmOne: function (o) {
           if (o._confirming) return
           var self = this
-          this.$set(o, '_confirming', true)
+          o['_confirming'] = true
           confirmOrderApi({ id: o.id }).then(function (res) {
             if (res && res.code === 1) {
               XinfeiUI.success('接单成功')
@@ -270,7 +272,7 @@
           }).catch(function (err) {
             XinfeiUI.error('接单请求失败')
             console.warn('[order-monitor] 接单失败:', err)
-          }).finally(function () { self.$set(o, '_confirming', false) })
+          }).finally(function () { o['_confirming'] = false })
         },
         rejectOne: function (o) {
           if (o._rejecting) return
@@ -278,7 +280,7 @@
           XinfeiUI.confirm('确认拒绝订单 #' + this.tail(o.orderNo) + '？拒绝后不可恢复。', '拒绝确认', {
             confirmButtonText: '确认拒绝', cancelButtonText: '取消', type: 'warning'
           }).then(function () {
-            self.$set(o, '_rejecting', true)
+            o['_rejecting'] = true
             rejectOrderApi({ id: o.id }).then(function (res) {
               if (res && res.code === 1) {
                 XinfeiUI.success('已拒绝')
@@ -289,7 +291,7 @@
             }).catch(function (err) {
               XinfeiUI.error('拒绝请求失败')
               console.warn('[order-monitor] 拒绝失败:', err)
-            }).finally(function () { self.$set(o, '_rejecting', false) })
+            }).finally(function () { o['_rejecting'] = false })
           }).catch(function () { /* 用户取消 */ })
         }
       }

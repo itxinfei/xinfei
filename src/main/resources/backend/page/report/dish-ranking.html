@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
   <script src="../../plugins/echarts/echarts.min.js"></script>
   <style>
@@ -66,10 +65,10 @@
         @reset="reset"
         @action="onAction"
       >
-        <template slot="search-extra">
+        <template  #search-extra>
           <!-- 修改点：包装 div 防止日期选择器+数字输入与搜索按钮重叠 -->
           <div class="search-extra-inline">
-            <el-date-picker v-model="dateRange" clearable value-format="yyyy-MM-dd"
+            <el-date-picker v-model="dateRange" clearable value-format="YYYY-MM-DD"
               type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
               size="small"></el-date-picker>
             <el-input-number v-model="limit" :min="5" :max="50" :step="5"
@@ -117,18 +116,21 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/report.js?v=20260926"></script>
   <script src="../../api/category.js?v=20260918"></script>
-  <script src="../../js/components.js?v=20261002"></script>
-  <script src="../../js/chart-panel.js?v=20260926"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script src="../../js/chart-panel-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#report-dish-app',
       data: function() {
         return {
@@ -180,9 +182,7 @@
           if (res && res.code === 1 && res.data) {
             self.categoryOptions = res.data;
             // table-bar 的 select 选项需要 [{label, value}] 格式，用 $set 触发响应式更新
-            self.$set(self.searchConfig[0], 'options',
-              res.data.map(function(c) { return { label: c.name, value: c.id } })
-            );
+            self.searchConfig[0]['options'] = res.data.map(function(c) { return { label: c.name, value: c.id } });
           }
         }).catch(function() {});
       },
@@ -191,8 +191,8 @@
         self.$nextTick(function() {
           const rEl = document.getElementById('rankingChart');
           const tEl = document.getElementById('trendLineChart');
-          if (rEl) self.chart = echarts.init(rEl);
-          if (tEl) self.trendChart = echarts.init(tEl);
+          if (rEl) self.chart = Vue.markRaw(echarts.init(rEl));
+          if (tEl) self.trendChart = Vue.markRaw(echarts.init(tEl));
           self.resizeHandler = function() {
             if (self.chart && !self.chart.isDisposed()) self.chart.resize();
             if (self.trendChart && !self.trendChart.isDisposed()) self.trendChart.resize();
@@ -205,7 +205,7 @@
           self.loadData();
         });
       },
-      beforeDestroy: function() {
+      beforeUnmount: function() {
         if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
         if (this.chart) { try { this.chart.dispose(); } catch(e) {} }
         if (this.trendChart) { try { this.trendChart.dispose(); } catch(e) {} }

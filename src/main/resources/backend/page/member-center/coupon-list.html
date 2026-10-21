@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 8.4.2 三 Tab 合并：券模板（卡片式）/ 发放记录 / 即将到期 —— 全部引用 tokens.css 设计令牌 */
     .coupon-tabs { margin-top: var(--space-4) }
@@ -98,7 +97,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -148,7 +147,7 @@
                 <el-button type="primary" size="small" :disabled="t.status !== 1" @click="openIssue(t)">发放</el-button>
                 <el-button size="small" @click="showEffect(t)">效果</el-button>
                 <el-button size="small" @click="editHandle(t)">修改</el-button>
-                <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(t.id)">删除</el-button>
+                <el-button text size="small" class="btn-delete" @click="deleteHandle(t.id)">删除</el-button>
               </div>
             </div>
           </div>
@@ -305,7 +304,7 @@
     <!-- ===== 新增/编辑弹窗 ===== -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="formData.title"
-      :visible.sync="formData.dialogVisible"
+      v-model="formData.dialogVisible"
       :submit-loading="submitting"
       size="md"
       @submit="submitForm"
@@ -339,8 +338,8 @@
         </el-form-item>
         <el-form-item label="状态：">
           <el-radio-group v-model="formData.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -349,7 +348,7 @@
     <!-- ===== 发券弹窗（8.4.2 券模板详情内发放，不跳页） ===== -->
     <crud-dialog :show-submit="false" :show-cancel="true"
       title="定向发放优惠券"
-      :visible.sync="issueForm.dialogVisible"
+      v-model="issueForm.dialogVisible"
       size="md"
       cancel-text="关 闭"
     >
@@ -440,7 +439,7 @@
     <!-- ===== 效果统计弹窗 ===== -->
     <crud-dialog :show-submit="false" :show-cancel="true"
       title="优惠券效果统计"
-      :visible.sync="effectDialogVisible"
+      v-model="effectDialogVisible"
       size="md"
       cancel-text="关 闭"
     >
@@ -465,7 +464,7 @@
     <!-- ===== 批量延期弹窗 ===== -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="extendForm.title"
-      :visible.sync="extendForm.dialogVisible"
+      v-model="extendForm.dialogVisible"
       :submit-loading="extendLoading"
       size="sm"
       @submit="submitExtend"
@@ -484,17 +483,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/member-center.js?v=20260926"></script>
   <script>
     // 8.4.2 优惠券三 Tab 合并：券模板（卡片式）/ 发放记录 / 即将到期，发券在模板卡内完成不跳页
-    new Vue({
+    createXinfeiApp({
       el: '#coupon-app',
       data: function() {
         // 闭包捕获 Vue 实例，供 conditionRules 自定义 validator 跨访问兄弟字段（区间交叉校验）

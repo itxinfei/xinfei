@@ -7,8 +7,7 @@
   <title>考勤管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <a href="#main-content" class="skip-link">跳转到主内容</a>
@@ -99,7 +98,7 @@
             <el-select v-model="calendarEmployee" placeholder="选择员工" size="small" @change="fetchCalendar">
               <el-option v-for="emp in employeeOptions" :key="emp.id" :label="emp.name" :value="emp.id"></el-option>
             </el-select>
-            <el-date-picker v-model="calendarMonth" type="month" value-format="yyyy-MM" placeholder="选择月份" size="small" @change="fetchCalendar"></el-date-picker>
+            <el-date-picker v-model="calendarMonth" type="month" value-format="YYYY-MM" placeholder="选择月份" size="small" @change="fetchCalendar"></el-date-picker>
           </div>
         </div>
         <div class="calendar-legend">
@@ -133,16 +132,19 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/attendance.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#attendance-app',
       data: function () {
         return {

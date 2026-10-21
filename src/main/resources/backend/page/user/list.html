@@ -9,8 +9,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 详情字段两列栅格：本构建未注册 el-descriptions（2.13+ 组件），手写栅格替代 */
     .usr-detail { display: flex; flex-wrap: wrap; border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
@@ -31,7 +30,7 @@
       
       
       <!-- 修改点：使用 <stat-cards> 统一组件，支持点击过滤 -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
       <!-- 修改点：使用 <table-bar> 统一组件 -->
       <table-bar
@@ -42,7 +41,7 @@
         @action="onAction"
         :show-refresh="true"
         @refresh="fetchData()">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="input.name" placeholder="请选择用户姓名" class="el-select--narrow-xs" clearable filterable size="small"
             :loading="optionsLoading" :no-data-text="optionsLoadError ? '加载失败，点击下拉框重试' : (optionsLoading ? '加载中...' : '暂无数据')" @visible-change="onFilterDropdownVisible">
             <el-option v-for="n in filterOptions.names" :key="n" :label="n" :value="n"></el-option>
@@ -86,23 +85,21 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button
-            type="text"
+          <el-button text
             size="small"
             class="btn-view"
             @click="viewDetail(row)"
           >详情</el-button>
-          <el-button
-            type="text"
+          <el-button text
             size="small"
             :class="row.status == 1 ? 'btn-warning' : 'btn-success'"
             @click="statusHandle(row)"
           >{{ row.status == 1 ? '禁用' : '启用' }}</el-button>
-          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && deleteHandle(row.id)" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && deleteHandle(row.id)" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -111,7 +108,7 @@
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一组件替代手写 el-dialog，默认 footer 提供"取消/确定" -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="statusDialog.title"
-      :visible.sync="statusDialog.visible"
+      v-model="statusDialog.visible"
       :submit-loading="submitting"
       size="sm"
       @submit="confirmStatus"
@@ -123,7 +120,7 @@
     <!-- 用户详情弹窗（只读，仅有关闭按钮） -->
     <crud-dialog :show-submit="false" :show-cancel="true" cancel-text="关闭"
       title="用户详情"
-      :visible.sync="detailDialog.visible"
+      v-model="detailDialog.visible"
       size="md"
       @close="detailDialog.visible = false"
     >
@@ -168,17 +165,20 @@
   </div>
 
   <!-- JS依赖 -->
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/user.js?v=20260926"></script>
   <script src="../../api/export.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#user-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
       mixins: [window.XinfeiListMixin],

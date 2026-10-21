@@ -5,8 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>总部控制台 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
     <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
@@ -236,20 +235,23 @@
     </main>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
 <script src="../../js/accessibility-utils.js?v=20260927"></script>
 <script src="../../js/performance-utils.js?v=20260926"></script>
 <script src="../../api/store.js?v=20260926"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script>
   // 图表语义色统一引用全局 window.XinfeiPalette（components.js 从 tokens.css 运行时解析，
   // canvas 无法使用 CSS 变量，XinfeiPalette 为 JS 侧唯一颜色来源）；多色系列数据色保留图表调色板
-  new Vue({
+  createXinfeiApp({
     el: '#store-dash-app',
-    data: {
+    data: function () { return {
         loading: false,
         dashboard: null,
         barChart: null,
@@ -268,7 +270,7 @@
         rankDetail: [],    // 近7天排行详情（三维数据）
         trendData: null,   // 多店营收趋势
         categoryData: null // 品类销售对比
-    },
+    }; },
     computed: {
         // 单店模式：true 时展示该门店今日概况 + 全门店排行对比（本店高亮）
         isStoreMode() {
@@ -339,7 +341,7 @@
         };
         window.addEventListener('resize', this.resizeHandler);
     },
-    beforeDestroy() {
+    beforeUnmount() {
         if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
         if (this.barChart) this.barChart.dispose();
         if (this.trendChart) this.trendChart.dispose();
@@ -473,7 +475,7 @@
             var stores = self.dashboard.storeRanking.slice(0, self.topN);
             var dom = document.getElementById('storeBarChart');
             if (!dom) return;
-            if (!this.barChart) this.barChart = echarts.init(dom);
+            if (!this.barChart) this.barChart = Vue.markRaw(echarts.init(dom));
             var hasData = stores.length > 0;
             // 门店过多时常显标签会互相压叠，超过 12 家只在 tooltip 中查看数值
             var showLabel = hasData && stores.length <= 12;
@@ -573,7 +575,7 @@
             var data = this.trendData;
             var dom = document.getElementById('trendChart');
             if (!dom) return;
-            if (!this.trendChart) this.trendChart = echarts.init(dom);
+            if (!this.trendChart) this.trendChart = Vue.markRaw(echarts.init(dom));
             if (!data || !data.dates || !data.stores || data.stores.length === 0) {
                 // 空数据/接口失败：显式占位，避免面板永久留白
                 this.trendChart.setOption({
@@ -641,7 +643,7 @@
             var data = this.categoryData;
             var dom = document.getElementById('categoryChart');
             if (!dom) return;
-            if (!this.categoryChart) this.categoryChart = echarts.init(dom);
+            if (!this.categoryChart) this.categoryChart = Vue.markRaw(echarts.init(dom));
             // 空数据/接口失败：显式占位，避免面板永久留白
             if (!data || data.length === 0) {
                 this.categoryChart.setOption({

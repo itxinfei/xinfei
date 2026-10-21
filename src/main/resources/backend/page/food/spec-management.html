@@ -6,7 +6,7 @@
   <title>规格管理 - 心飞外卖</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926">
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926">
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001">
   <style>
     /* ===== 规格管理页专有样式（前缀 spec- 避免污染全局） ===== */
 
@@ -382,7 +382,7 @@
                   <el-option label="禁用" :value="0"></el-option>
                 </el-select>
                 <el-button size="small" icon="ri-edit-line" @click="openGroupDialog(currentGroup)">编辑组</el-button>
-                <el-button type="text" size="small" class="btn-delete" @click="handleDeleteGroup(currentGroup)">删除组</el-button>
+                <el-button text size="small" class="btn-delete" @click="handleDeleteGroup(currentGroup)">删除组</el-button>
                 <el-button type="primary" size="small" icon="ri-add-line" @click="openOptionDialog()">新增选项</el-button>
               </div>
             </div>
@@ -426,13 +426,13 @@
                     v-loading="optionLoading">
                     <el-table-column prop="name" label="选项名称" min-width="160" :align="resolveColAlign({})" :header-align="resolveColAlign({})"></el-table-column>
                     <el-table-column prop="priceAdjust" label="价格调整" width="120" :align="resolveColAlign({ type: 'money' })" :header-align="resolveColAlign({ type: 'money' })">
-                      <template slot-scope="scope">
+                      <template  #default="scope">
                         <span :class="priceAdjustClass(scope.row.priceAdjust)">{{ formatPriceAdjust(scope.row.priceAdjust) }}</span>
                       </template>
                     </el-table-column>
                     <el-table-column prop="sortOrder" label="排序" width="100" :align="resolveColAlign({ type: 'number' })" :header-align="resolveColAlign({ type: 'number' })"></el-table-column>
                     <el-table-column label="状态" width="100" :align="resolveColAlign({})" :header-align="resolveColAlign({})">
-                      <template slot-scope="scope">
+                      <template  #default="scope">
                         <el-switch
                           v-model="scope.row.status"
                           :active-value="1"
@@ -443,10 +443,10 @@
                       </template>
                     </el-table-column>
                     <el-table-column label="操作" width="120" :align="resolveColAlign({})" :header-align="resolveColAlign({})" fixed="right">
-                      <template slot-scope="scope">
+                      <template  #default="scope">
                         <div class="spec-row-actions">
-                          <el-button type="text" size="small" icon="ri-edit-line" @click.stop="openOptionDialog(scope.row)">编辑</el-button>
-                          <el-button type="text" size="small" class="btn-delete" icon="ri-delete-bin-line" @click.stop="handleDeleteOption(scope.row)">删除</el-button>
+                          <el-button text size="small" icon="ri-edit-line" @click.stop="openOptionDialog(scope.row)">编辑</el-button>
+                          <el-button text size="small" class="btn-delete" icon="ri-delete-bin-line" @click.stop="handleDeleteOption(scope.row)">删除</el-button>
                         </div>
                       </template>
                     </el-table-column>
@@ -454,7 +454,7 @@
                   <div class="spec-panel__pager">
                     <el-pagination
                       background
-                      small
+                      size="small"
                       layout="total, sizes, prev, pager, next"
                       :page-sizes="[10, 20, 50]"
                       :total="filteredOptions.length"
@@ -473,15 +473,15 @@
     </div>
 
     <!-- 规格组弹窗 -->
-    <crud-dialog :show-submit="true" :show-cancel="true" :title="groupDialogTitle" :visible.sync="groupDialogVisible" size="md" :submit-loading="submitting" @submit="submitGroupForm">
+    <crud-dialog :show-submit="true" :show-cancel="true" :title="groupDialogTitle" v-model="groupDialogVisible" size="md" :submit-loading="submitting" @submit="submitGroupForm">
       <el-form ref="groupForm" :model="groupForm" :rules="groupRules" label-width="100px">
         <el-form-item label="规格组名称" prop="name">
           <el-input v-model="groupForm.name" placeholder="如：辣度 / 口味 / 杯型" maxlength="20" show-word-limit></el-input>
         </el-form-item>
         <el-form-item label="选择方式" prop="type">
           <el-radio-group v-model="groupForm.type">
-            <el-radio :label="1">单选</el-radio>
-            <el-radio :label="2">多选</el-radio>
+            <el-radio :value="1">单选</el-radio>
+            <el-radio :value="2">多选</el-radio>
           </el-radio-group>
           <div class="spec-dialog-tip">单选：顾客只能选择其中一项；多选：顾客可勾选多项。</div>
         </el-form-item>
@@ -491,8 +491,8 @@
         </el-form-item>
         <el-form-item label="是否必选" prop="required">
           <el-radio-group v-model="groupForm.required">
-            <el-radio :label="1">必选</el-radio>
-            <el-radio :label="0">选填</el-radio>
+            <el-radio :value="1">必选</el-radio>
+            <el-radio :value="0">选填</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="排序" prop="sortOrder">
@@ -501,8 +501,8 @@
         </el-form-item>
         <el-form-item label="启用状态" prop="status">
           <el-radio-group v-model="groupForm.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -512,7 +512,7 @@
     </crud-dialog>
 
     <!-- 规格选项弹窗 -->
-    <crud-dialog :show-submit="true" :show-cancel="true" :title="optionDialogTitle" :visible.sync="optionDialogVisible" size="md" :submit-loading="submitting" @submit="submitOptionForm">
+    <crud-dialog :show-submit="true" :show-cancel="true" :title="optionDialogTitle" v-model="optionDialogVisible" size="md" :submit-loading="submitting" @submit="submitOptionForm">
       <el-form ref="optionForm" :model="optionForm" :rules="optionRules" label-width="100px">
         <el-form-item label="选项名称" prop="name">
           <el-input v-model="optionForm.name" placeholder="如：微辣 / 中辣 / 大杯" maxlength="20" show-word-limit></el-input>
@@ -534,8 +534,8 @@
         </el-form-item>
         <el-form-item label="启用状态" prop="status">
           <el-radio-group v-model="optionForm.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -545,19 +545,22 @@
     </crud-dialog>
   </main>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <!-- 修改点：补引 axios —— request.js 首行即使用全局 axios，缺失会抛错导致
        $axios 永不挂载，本页所有接口请求全部失效 -->
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/dish-spec.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#main-content',
       data: function () {
         var vm = this

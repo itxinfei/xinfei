@@ -7,8 +7,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
     <style>
         /* 布局/容器/工具栏/分页全部走公共样式（consistency.css + table-bar/crud-table），
            本页仅保留表格插槽与弹窗用到的局部类 */
@@ -52,7 +51,7 @@
             
             
             <!-- 修改点：使用 <stat-cards> 统一组件替代手写 HTML，支持点击过滤 -->
-            <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+            <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
             <!-- ===== 搜索 + 操作工具栏（筛选改选即查，批量按钮随勾选启停） ===== -->
             <table-bar
@@ -118,17 +117,17 @@
                     </template>
                     <!-- 操作列契约：详情/编辑/接单状态 3 个常显，看板/切换/同步收「更多」，4 元素 240 档 -->
                     <template #actions="{ row }">
-                        <el-button type="text" size="small" class="btn-view" @click.stop="openDetail(row)">详情</el-button>
-                        <el-button type="text" size="small" class="btn-view" @click.stop="openEditDialog(row)">编辑</el-button>
-                        <el-button v-if="row.pauseOrder === 1" type="text" size="small" class="btn-success" @click.stop="togglePause(row, false)">恢复接单</el-button>
-                        <el-button v-else type="text" size="small" class="btn-warning" @click.stop="togglePause(row, true)">暂停接单</el-button>
-                        <el-dropdown trigger="click" @command="(cmd) => onStoreCommand(cmd, row)" @click.native.stop>
-                            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-                            <el-dropdown-menu slot="dropdown">
+                        <el-button text size="small" class="btn-view" @click.stop="openDetail(row)">详情</el-button>
+                        <el-button text size="small" class="btn-view" @click.stop="openEditDialog(row)">编辑</el-button>
+                        <el-button v-if="row.pauseOrder === 1" text size="small" class="btn-success" @click.stop="togglePause(row, false)">恢复接单</el-button>
+                        <el-button v-else text size="small" class="btn-warning" @click.stop="togglePause(row, true)">暂停接单</el-button>
+                        <el-dropdown trigger="click" @command="(cmd) => onStoreCommand(cmd, row)" @click.stop>
+                            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+                            <template #dropdown><el-dropdown-menu>
                                 <el-dropdown-item command="dashboard" icon="ri-bar-chart-line">门店看板</el-dropdown-item>
                                 <el-dropdown-item command="switch" icon="ri-toggle-line">切换门店</el-dropdown-item>
                                 <el-dropdown-item command="sync" icon="ri-refresh-line">平台同步</el-dropdown-item>
-                            </el-dropdown-menu>
+                            </el-dropdown-menu></template>
                         </el-dropdown>
                     </template>
             </crud-table>
@@ -139,7 +138,7 @@
     <!-- ===== 新建/编辑门店对话框 ===== -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="dialogTitle"
-      :visible.sync="formDialogVisible"
+      v-model="formDialogVisible"
       size="lg"
       :submit-loading="submitting"
       :close-on-click-modal="false"
@@ -262,7 +261,7 @@
     <!-- ===== 门店详情对话框（点击行 / 详情按钮打开，展示完整信息，避免列表列过多；只读，仅有关闭按钮） ===== -->
     <crud-dialog
       title="门店详情"
-      :visible.sync="detailDialogVisible"
+      v-model="detailDialogVisible"
       size="lg"
       :show-submit="false"
       :show-cancel="true"
@@ -330,7 +329,7 @@
     <!-- ===== 数据同步对话框（只读，仅有关闭按钮） ===== -->
     <crud-dialog
       title="数据同步"
-      :visible.sync="syncDialogVisible"
+      v-model="syncDialogVisible"
       size="md"
       :show-submit="false"
       :show-cancel="true"
@@ -360,18 +359,21 @@
     </crud-dialog>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
 <script src="../../js/accessibility-utils.js?v=20260927"></script>
 <script src="../../js/performance-utils.js?v=20260926"></script>
 <script src="../../api/store.js?v=20260926"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script>
-  new Vue({
+  createXinfeiApp({
     el: '#app',
-    data: {
+    data: function () { return {
         loading: false,
         submitting: false,
         exporting: false,
@@ -443,7 +445,7 @@
         syncTargetName: '',
         syncing: { dishes: false, categories: false, setmeals: false },
         syncResult: null
-    },
+    }; },
     computed: {
         dialogTitle: function() { return this.isCreate ? '新建门店' : '编辑门店'; },
         // 修改点：statsCards 统一卡片配置（供 <stat-cards> 组件使用）

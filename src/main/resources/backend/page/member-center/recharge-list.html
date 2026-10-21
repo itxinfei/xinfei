@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ── 图表区域 ── */
     .chart-panels { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -103,13 +102,13 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button v-if="row.status==='PENDING'" type="text" size="small" class="btn-success" @click="confirmRecharge(row)">确认到账</el-button>
+          <el-button v-if="row.status==='PENDING'" text size="small" class="btn-success" @click="confirmRecharge(row)">确认到账</el-button>
         </template>
       </crud-table>
     </main>
 
     <!-- ===== 手动充值弹窗（8.4.3：金额/赠送/支付方式，充值后余额即时更新） ===== -->
-    <crud-dialog :show-submit="true" :show-cancel="true" title="手动充值" :visible.sync="rechargeForm.dialogVisible" :submit-loading="rechargeLoading" size="md" @submit="submitRecharge">
+    <crud-dialog :show-submit="true" :show-cancel="true" title="手动充值" v-model="rechargeForm.dialogVisible" :submit-loading="rechargeLoading" size="md" @submit="submitRecharge">
       <el-form :model="rechargeForm" :rules="rechargeRules" ref="rechargeFormRef" label-width="100px" size="small">
         <el-form-item label="会员手机：" prop="phone">
           <div style="display:flex;gap:8px;width:100%;">
@@ -148,17 +147,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../plugins/echarts/echarts.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/member-center.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#recharge-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
       mixins: [window.XinfeiListMixin],
@@ -227,7 +229,7 @@
       created: function() { this.fetchData(true) },
       mounted: function() { this.$nextTick(function() { this.initCharts() }) },
       // 修改点：页面销毁时移除 resize 监听并释放图表实例，避免监听器与内存泄漏
-      beforeDestroy: function() {
+      beforeUnmount: function() {
         if (this._resizeHandler) {
           window.removeEventListener('resize', this._resizeHandler)
         }
@@ -266,11 +268,11 @@
         /* ── 图表初始化与渲染 ── */
         initCharts: function() {
           var dom1 = document.getElementById('trendChart');
-          if (dom1) this.trendChart = echarts.init(dom1);
+          if (dom1) this.trendChart = Vue.markRaw(echarts.init(dom1));
           var dom2 = document.getElementById('paymentChart');
-          if (dom2) this.paymentChart = echarts.init(dom2);
+          if (dom2) this.paymentChart = Vue.markRaw(echarts.init(dom2));
           const self = this
-          // 修改点：具名处理函数并保存引用，便于 beforeDestroy 中移除监听器，防止页面切换时监听器累积泄漏
+          // 修改点：具名处理函数并保存引用，便于 beforeUnmount 中移除监听器，防止页面切换时监听器累积泄漏
           this._resizeHandler = function() {
             if (self.trendChart) self.trendChart.resize()
             if (self.paymentChart) self.paymentChart.resize()

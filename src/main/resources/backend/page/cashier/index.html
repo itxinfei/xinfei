@@ -5,8 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>收银台 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     html, body {
       height: 100%;
@@ -430,9 +429,9 @@
             </span>
           </div>
           <div class="table-filter-bar">
-            <el-button size="mini" :type="tableFilter===''?'primary':'default'" @click="tableFilter=''">全部</el-button>
-            <el-button size="mini" :type="tableFilter==='OCCUPIED'?'success':'default'" @click="tableFilter='OCCUPIED'">在用</el-button>
-            <el-button size="mini" :type="tableFilter==='FREE'?'info':'default'" @click="tableFilter='FREE'">空闲</el-button>
+            <el-button size="small" :type="tableFilter===''?'primary':'default'" @click="tableFilter=''">全部</el-button>
+            <el-button size="small" :type="tableFilter==='OCCUPIED'?'success':'default'" @click="tableFilter='OCCUPIED'">在用</el-button>
+            <el-button size="small" :type="tableFilter==='FREE'?'info':'default'" @click="tableFilter='FREE'">空闲</el-button>
           </div>
           <div v-if="filteredTables.length===0" style="text-align:center;padding:var(--space-10);color:var(--el-text-secondary);">
             暂无{{ tableFilter==='OCCUPIED'?'在用':'' }}桌台
@@ -470,7 +469,7 @@
           </div>
 
           <div v-if="detailLoading" style="text-align:center;padding:var(--space-10);">
-            <i class="el-icon-loading" style="font-size:24px;color:var(--el-color-primary);"></i>
+            <i class="ri-loader-4-line" style="font-size:24px;color:var(--el-color-primary);"></i>
           </div>
           <div v-else-if="!selectedTable.orders||selectedTable.orders.length===0" class="table-detail" style="text-align:center;padding:var(--space-10);color:var(--el-text-secondary);">
             暂无订单
@@ -479,7 +478,7 @@
             <div v-for="order in selectedTable.orders" :key="order.orderId" class="detail-order">
               <div class="order-title">
                 <span>{{ order.orderNumber }}</span>
-                <el-tag size="mini" :type="order.status===1?'warning':(order.status===3?'info':'success')">{{ orderStatusText(order.status) }}</el-tag>
+                <el-tag size="small" :type="order.status===1?'warning':(order.status===3?'info':'success')">{{ orderStatusText(order.status) }}</el-tag>
                 <span style="margin-left:auto;font-weight:700;color:var(--el-color-danger);">¥{{ formatMoney(order.amount) }}</span>
               </div>
               <div class="detail-items">
@@ -595,14 +594,12 @@
             <div class="coupon-header">
               <span class="coupon-title">优惠券</span>
               <el-button
-                v-if="availableCoupons.length === 0 && !couponLoading"
-                type="text"
-                size="mini"
+                v-if="availableCoupons.length === 0 && !couponLoading" text
+                size="small"
                 disabled>暂无可用券</el-button>
               <el-button
-                v-else-if="availableCoupons.length > 0"
-                type="text"
-                size="mini"
+                v-else-if="availableCoupons.length > 0" text
+                size="small"
                 @click="clearCoupon">不使用优惠券</el-button>
             </div>
             <!-- 修改点：P2-1 骨架屏——优惠券加载态（脉冲骨架替代纯转圈） -->
@@ -694,11 +691,11 @@
             </el-input-number>
             <div class="quick-amounts">
               <span class="quick-label">快捷：</span>
-              <el-button size="mini" plain @click="setActualAmount(Math.ceil(payableAmount))">凑整 ¥{{ Math.ceil(payableAmount) }}</el-button>
-              <el-button size="mini" plain :disabled="payableAmount > 50" @click="setActualAmount(50)">50元</el-button>
-              <el-button size="mini" plain :disabled="payableAmount > 100" @click="setActualAmount(100)">100元</el-button>
-              <el-button size="mini" plain :disabled="payableAmount > 200" @click="setActualAmount(200)">200元</el-button>
-              <el-button size="mini" plain :disabled="payableAmount > 500" @click="setActualAmount(500)">500元</el-button>
+              <el-button size="small" plain @click="setActualAmount(Math.ceil(payableAmount))">凑整 ¥{{ Math.ceil(payableAmount) }}</el-button>
+              <el-button size="small" plain :disabled="payableAmount > 50" @click="setActualAmount(50)">50元</el-button>
+              <el-button size="small" plain :disabled="payableAmount > 100" @click="setActualAmount(100)">100元</el-button>
+              <el-button size="small" plain :disabled="payableAmount > 200" @click="setActualAmount(200)">200元</el-button>
+              <el-button size="small" plain :disabled="payableAmount > 500" @click="setActualAmount(500)">500元</el-button>
             </div>
           </div>
 
@@ -740,13 +737,13 @@
     </div>
 
     <!-- 加菜弹窗：自定义菜品选择网格放默认插槽，统一走 crud-dialog -->
-    <crud-dialog title="加菜" :visible.sync="addItemsVisible" size="lg" :close-on-click-modal="false">
+    <crud-dialog title="加菜" v-model="addItemsVisible" size="lg" :close-on-click-modal="false">
       <div v-if="addItemsLoading" style="text-align:center;padding:var(--space-10);">
-        <i class="el-icon-loading" style="font-size:24px;color:var(--el-color-primary);"></i>
+        <i class="ri-loader-4-line" style="font-size:24px;color:var(--el-color-primary);"></i>
       </div>
       <div v-else>
         <el-input v-model="dishSearch" placeholder="搜索菜品名称" size="small" style="margin-bottom:12px;" clearable>
-          <i slot="prefix" class="ri-search-line"></i>
+          <template #prefix><i class="ri-search-line"></i></template>
         </el-input>
         <div class="add-items-grid">
           <div v-for="d in filteredDishes" :key="d.id" class="dish-pick-card"
@@ -755,9 +752,9 @@
             <div class="dish-name">{{ d.name }}</div>
             <div class="dish-price">¥{{ formatMoney(d.price) }}</div>
             <div class="dish-qty" v-if="addItemsSelection[d.id]" @click.stop>
-              <el-button size="mini" icon="el-icon-minus" circle aria-label="减少数量" @click="adjustDishQty(d.id,-1)"></el-button>
+              <el-button size="small" icon="Minus" circle aria-label="减少数量" @click="adjustDishQty(d.id,-1)"></el-button>
               <span style="min-width:24px;text-align:center;font-weight:600;">{{ addItemsSelection[d.id].qty }}</span>
-              <el-button size="mini" icon="el-icon-plus" circle aria-label="增加数量" @click="adjustDishQty(d.id,1)"></el-button>
+              <el-button size="small" icon="Plus" circle aria-label="增加数量" @click="adjustDishQty(d.id,1)"></el-button>
             </div>
           </div>
         </div>
@@ -767,26 +764,26 @@
           <span style="font-weight:700;color:var(--el-color-danger);">合计 ¥{{ formatMoney(addItemsTotal) }}</span>
         </div>
       </div>
-      <div slot="footer">
+      <template #footer><div>
         <el-button @click="addItemsVisible=false">取消</el-button>
         <el-button type="primary" :loading="addItemsSubmitting" :disabled="Object.keys(addItemsSelection).length===0"
           @click="submitAddItems">确认加菜</el-button>
-      </div>
+      </div></template>
     </crud-dialog>
 
     <!-- 转台弹窗：标准小表单，统一走 crud-dialog（footer 插槽保留未选桌台时禁用确认） -->
-    <crud-dialog title="转台" :visible.sync="showTransferDialog" size="sm">
-      <el-form label-width="80px" @submit.native.prevent>
+    <crud-dialog title="转台" v-model="showTransferDialog" size="sm">
+      <el-form label-width="80px" @submit.prevent>
         <el-form-item label="目标桌台">
           <el-select v-model="transferToTableId" placeholder="选择空闲桌台" style="width:100%;">
             <el-option v-for="t in freeTables" :key="t.id" :label="t.name + '（'+t.seatCount+'人）'" :value="t.id"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer">
+      <template #footer><div>
         <el-button @click="showTransferDialog=false">取消</el-button>
         <el-button type="primary" :loading="transferLoading" :disabled="!transferToTableId" @click="handleTransfer">确认转台</el-button>
-      </div>
+      </div></template>
     </crud-dialog>
 
     <!-- C.1：页内日结条（本日应收/实收/差异 + 一键日结，收敛 daily-settlement） -->
@@ -809,13 +806,16 @@
     </div>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <!-- 修改点：补引 axios —— request.js 首行即使用全局 axios，缺失会抛错导致
        $axios 永不挂载，本页所有接口请求全部失效 -->
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
@@ -825,7 +825,7 @@
   <script src="../../api/dining.js?v=20260918b"></script>
   <script src="../../api/food.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#main-content',
       data() {
         return {
@@ -985,7 +985,7 @@
         // C.1：全局快捷键 Enter=收款（未聚焦输入框时）
         document.addEventListener('keydown', this.onGlobalKeydown)
       },
-      beforeDestroy() {
+      beforeUnmount() {
         if (this.timeTimer) {
           clearInterval(this.timeTimer)
         }
@@ -1328,7 +1328,7 @@
                 var total = res.data.orders
                   .filter(function(o) { return o.status === 1 })
                   .reduce(function(sum, o) { return sum + (Number(o.amount) || 0) }, 0)
-                self.$set(self.tableAmountMap, occupied[i].id, total)
+                self.tableAmountMap[occupied[i].id] = total
               }
             } catch (e) { /* 忽略单桌加载失败 */ }
           }
@@ -1410,9 +1410,9 @@
         },
         toggleDishSelect(dish) {
           if (this.addItemsSelection[dish.id]) {
-            this.$delete(this.addItemsSelection, dish.id)
+            delete this.addItemsSelection[dish.id]
           } else {
-            this.$set(this.addItemsSelection, dish.id, { dishId: dish.id, name: dish.name, price: dish.price, qty: 1 })
+            this.addItemsSelection[dish.id] = { dishId: dish.id, name: dish.name, price: dish.price, qty: 1 }
           }
         },
         adjustDishQty(dishId, delta) {
@@ -1420,7 +1420,7 @@
           if (!item) return
           var newQty = item.qty + delta
           if (newQty <= 0) {
-            this.$delete(this.addItemsSelection, dishId)
+            delete this.addItemsSelection[dishId]
           } else {
             item.qty = newQty
           }

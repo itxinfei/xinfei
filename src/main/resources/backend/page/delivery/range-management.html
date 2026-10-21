@@ -5,8 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>配送范围管理 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
   <style>
     /* 修复（2026-09-20 抖动根因）：html 定高且不产生滚动条，滚动统一由 body 承担。
@@ -135,20 +134,20 @@
       </template>
       <!-- 操作列契约：内置查看 + 编辑常显（3 元素档 180），阶梯规则/启停/删除收「更多」 -->
       <template #actions="{ row }">
-        <el-button type="text" size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
-        <el-dropdown trigger="click" @command="(cmd) => handleRowCommand(cmd, row)" @click.native.stop>
-          <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-          <el-dropdown-menu slot="dropdown">
+        <el-button text size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
+        <el-dropdown trigger="click" @command="(cmd) => handleRowCommand(cmd, row)" @click.stop>
+          <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+          <template #dropdown><el-dropdown-menu>
             <el-dropdown-item command="step" icon="ri-road-map-line">阶梯规则</el-dropdown-item>
             <el-dropdown-item command="toggle" :icon="row.status === 1 ? 'ri-lock-line' : 'ri-lock-unlock-line'">{{ row.status === 1 ? '禁用' : '启用' }}</el-dropdown-item>
             <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-          </el-dropdown-menu>
+          </el-dropdown-menu></template>
         </el-dropdown>
       </template>
     </crud-table>
 
     <!-- 新增/编辑对话框 -->
-    <crud-dialog :title="dialogTitle" :visible.sync="dialogVisible" size="lg" show-close :show-submit="true" :show-cancel="true" :submit-loading="submitLoading" @submit="handleSubmit">
+    <crud-dialog :title="dialogTitle" v-model="dialogVisible" size="lg" show-close :show-submit="true" :show-cancel="true" :submit-loading="submitLoading" @submit="handleSubmit">
       <el-form :model="formData" :rules="rangeTypeRules || formRules" ref="ruleForm" label-width="120px">
         <!-- 双列栅格：大屏两列、小屏单列（CLAUDE.md 7.2 场景C）；条件字段（多边形坐标/配送费类型/免费门槛）与备注保持跨全宽 -->
         <el-row :gutter="20">
@@ -160,8 +159,8 @@
           <el-col :xs="24" :sm="12">
             <el-form-item label="范围类型" prop="rangeType">
               <el-radio-group v-model="formData.rangeType">
-                <el-radio :label="1">圆形范围</el-radio>
-                <el-radio :label="2">多边形范围</el-radio>
+                <el-radio :value="1">圆形范围</el-radio>
+                <el-radio :value="2">多边形范围</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -232,9 +231,9 @@
 
         <el-form-item label="配送费类型" prop="feeType">
           <el-radio-group v-model="formData.feeType">
-            <el-radio :label="1">固定配送费</el-radio>
-            <el-radio :label="2">距离阶梯</el-radio>
-            <el-radio :label="3">基础费+距离费</el-radio>
+            <el-radio :value="1">固定配送费</el-radio>
+            <el-radio :value="2">距离阶梯</el-radio>
+            <el-radio :value="3">基础费+距离费</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -290,7 +289,7 @@
     </crud-dialog>
 
     <!-- 阶梯规则对话框（只读，仅有关闭按钮） -->
-    <crud-dialog title="配送费阶梯规则" :visible.sync="feeStepVisible" size="xl" show-close :show-submit="false" :show-cancel="true" cancel-text="关 闭">
+    <crud-dialog title="配送费阶梯规则" v-model="feeStepVisible" size="xl" show-close :show-submit="false" :show-cancel="true" cancel-text="关 闭">
       <div style="margin-bottom: 16px;">
         <el-button type="primary" size="small" icon="ri-add-line" @click="handleAddFeeStep">新增阶梯</el-button>
       </div>
@@ -301,16 +300,16 @@
         <el-table-column prop="incrementDistance" label="递增距离(米)" width="120" align="center" :header-align="'center'"></el-table-column>
         <el-table-column prop="incrementFee" label="递增费用(元)" width="120" align="center" :header-align="'center'"></el-table-column>
         <el-table-column label="操作" width="150" align="center" :header-align="'center'" fixed="right">
-          <template slot-scope="scope">
-            <el-button type="text" size="small" class="btn-view" @click="handleEditFeeStep(scope.row)">编辑</el-button>
-            <el-button type="text" size="small" class="btn-delete" @click="handleDeleteFeeStep(scope.row)">删除</el-button>
+          <template  #default="scope">
+            <el-button text size="small" class="btn-view" @click="handleEditFeeStep(scope.row)">编辑</el-button>
+            <el-button text size="small" class="btn-delete" @click="handleDeleteFeeStep(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
     </crud-dialog>
 
     <!-- 阶梯规则编辑对话框 -->
-    <crud-dialog :title="feeStepDialogTitle" :visible.sync="feeStepEditVisible" size="md" :show-submit="true" :show-cancel="true" :submit-loading="submitLoading" @submit="handleFeeStepSubmit">
+    <crud-dialog :title="feeStepDialogTitle" v-model="feeStepEditVisible" size="md" :show-submit="true" :show-cancel="true" :submit-loading="submitLoading" @submit="handleFeeStepSubmit">
       <el-form :model="feeStepForm" :rules="feeStepRules" ref="feeStepFormRef" label-width="100px">
         <el-form-item label="起始距离" prop="startDistance">
           <el-input-number v-model="feeStepForm.startDistance" :min="0" style="width: 100%;"></el-input-number>
@@ -331,17 +330,20 @@
     </crud-dialog>
  </main>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/delivery-enhanced.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#main-content',
       data() {
         return {

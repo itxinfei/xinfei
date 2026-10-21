@@ -6,8 +6,7 @@
     <title>AI模型配置 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
     <link rel="stylesheet" href="../../styles/ai-provider.css?v=20260923b" />
 </head>
 <body>
@@ -24,7 +23,7 @@
             v-if="statusData.allExhausted"
             title="全部 AI 供应商均不可用"
             type="error" :closable="false" show-icon class="exhausted-alert">
-            <template slot="default">
+            <template  #default>
                 所有候选均已故障或处于熔断冷却中，新对话将收到兜底提示。请检查各供应商额度/密钥，或将其他可用供应商设为首选。
                 <span v-if="statusData.lastExhaustedTime">最近发生：{{ statusData.lastExhaustedTime }}</span>
             </template>
@@ -104,9 +103,9 @@
                         {{ provider.lastTestResult === 'success' ? ' 测试通过' : ' 测试失败' }}
                     </span>
                     <!-- P2 能力标签（chat 恒具备不展示，仅展示扩展能力） -->
-                    <el-tag v-if="capOn(provider, 'vision')" type="success" size="mini" effect="plain">视觉</el-tag>
-                    <el-tag v-if="capOn(provider, 'tools')" type="warning" size="mini" effect="plain">工具</el-tag>
-                    <el-tag v-if="capOn(provider, 'embedding')" type="info" size="mini" effect="plain">嵌入</el-tag>
+                    <el-tag v-if="capOn(provider, 'vision')" type="success" size="small" effect="plain">视觉</el-tag>
+                    <el-tag v-if="capOn(provider, 'tools')" type="warning" size="small" effect="plain">工具</el-tag>
+                    <el-tag v-if="capOn(provider, 'embedding')" type="info" size="small" effect="plain">嵌入</el-tag>
                 </div>
                 <div class="card-actions">
                     <el-button v-if="!provider.isActive" type="success" size="small"
@@ -114,7 +113,7 @@
                     <el-button v-else type="info" size="small" disabled>首选</el-button>
                     <el-button type="primary" size="small" @click="testProvider(provider.id)">测试</el-button>
                     <el-button size="small" @click="openEditDialog(provider)">编辑</el-button>
-                    <el-button type="text" size="small" class="btn-delete" @click="deleteProvider(provider.id)"
+                    <el-button text size="small" class="btn-delete" @click="deleteProvider(provider.id)"
                                :disabled="provider.isActive">删除</el-button>
                 </div>
             </div>
@@ -122,7 +121,7 @@
     </main>
 
     <!-- 添加/编辑弹窗 -->
-    <crud-dialog size="lg" :show-submit="true" :show-cancel="true" :title="dialogTitle" :visible.sync="dialogVisible"
+    <crud-dialog size="lg" :show-submit="true" :show-cancel="true" :title="dialogTitle" v-model="dialogVisible"
                :show-close="true" :close-on-click-modal="false" :submit-loading="submitting" @submit="submitForm">
         <!-- 修改点：补全 ref/:rules 启用 Element 校验（原仅手写 if 判断，属"假必填"） -->
         <el-form ref="providerForm" :model="form" :rules="providerRules" label-width="100px" size="small" class="dialog-form">
@@ -208,10 +207,10 @@
             <el-divider content-position="left">模型能力</el-divider>
             <el-form-item label="能力开关">
                 <el-checkbox-group v-model="form.capabilityList" class="capability-group">
-                    <el-checkbox label="chat" disabled>文本对话（必选）</el-checkbox>
-                    <el-checkbox label="vision">图片视觉</el-checkbox>
-                    <el-checkbox label="tools">工具调用</el-checkbox>
-                    <el-checkbox label="embedding">向量嵌入</el-checkbox>
+                    <el-checkbox value="chat" disabled>文本对话（必选）</el-checkbox>
+                    <el-checkbox value="vision">图片视觉</el-checkbox>
+                    <el-checkbox value="tools">工具调用</el-checkbox>
+                    <el-checkbox value="embedding">向量嵌入</el-checkbox>
                 </el-checkbox-group>
                 <div class="field-tip">
                     勾选后聊天页按能力开放功能：「图片视觉」开启图片发送入口（模型本身须支持识图，如 GPT-4o、Qwen-VL、GLM-4V）；
@@ -258,13 +257,16 @@
     </crud-dialog>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
 <script src="../../js/accessibility-utils.js?v=20260927"></script>
 <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
 <script src="../../api/ai.js?v=20260921"></script>
 <script>
 (function() {
@@ -285,9 +287,9 @@
         custom:      'ri-settings-3-line'
     };
 
-    new Vue({
+    createXinfeiApp({
         el: '#provider-app',
-        data: {
+        data: function () { return {
             providers: [],
             activeProvider: null,
             // AI 服务健康状态（loadStatus 轮询更新，默认 configured 避免初始误报横幅）
@@ -319,7 +321,7 @@
                 capabilityList: ['chat'],
                 embeddingDimensions: null
             },
-        },
+        }; },
 
         // 校验规则随 form.id 动态生成：apiKey 新增必填、编辑时留空表示沿用原密钥（错误内联，不用 toast）
         computed: {
@@ -365,7 +367,7 @@
             this.statusTimer = setInterval(this.loadStatus, 15000);
         },
 
-        beforeDestroy: function() {
+        beforeUnmount: function() {
             if (this.statusTimer) { clearInterval(this.statusTimer);
             }
         },
@@ -441,7 +443,9 @@
                 if (state === 'open') return 'danger';
                 if (state === 'half-open') return 'warning';
                 if (provider.isActive) return 'success';
-                return '';
+                // EP 的 el-tag type 只收 primary/success/info/warning/danger，空串报 Invalid prop；
+                // UI 2 的默认蓝标签在 v3 用「不传 type」表达（EP 默认值即 primary）
+                return undefined;
             },
 
             // 卡片状态标签文案

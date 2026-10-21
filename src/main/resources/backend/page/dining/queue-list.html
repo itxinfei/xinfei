@@ -7,8 +7,7 @@
   <title>排队叫号 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
   <style>
     /* 修改点（2026-09-15）：筛选+叫号压缩为「单行」工具栏
@@ -81,7 +80,7 @@
       <h1 class="sr-only" id="page-title">排队叫号</h1>
 
       <!-- 修改点：统计卡片支持点击筛选（点击按排队状态过滤数据，与状态下拉框联动） -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
       <!-- 修改点（2026-09-15）：筛选栏与叫号栏合并为一行（窄屏自动堆叠） -->
       <div class="bar-row">
@@ -124,7 +123,7 @@
             <el-option :value="12" label="12人"></el-option>
           </el-select>
         </div>
-        <el-button type="text" size="small" class="call-bar__reset" @click="callSeatCount = null">重置筛选</el-button>
+        <el-button text size="small" class="call-bar__reset" @click="callSeatCount = null">重置筛选</el-button>
         <span class="call-bar__tip" v-if="callSeatCount">按 {{ callSeatCount }} 人桌筛选下一位</span>
         <span class="call-bar__tip" v-else>呼叫等待队列中的下一位顾客</span>
       </div>
@@ -161,10 +160,10 @@
           <span v-if="row.phone">{{ row.phone.substring(0,3) }}****{{ row.phone.substring(7) }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" @click="seatHandle(row)" v-if="row.status === 'CALLED'" class="btn-brand-text" :aria-label="'安排入座 ' + (row.queueNo || '排队记录')">入座</el-button>
-          <el-button type="text" size="small" @click="recallHandle(row)" v-if="row.status === 'CALLED'" :aria-label="'退回等待 ' + (row.queueNo || '')">退回</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="cancelHandle(row.id)" v-if="row.status === 'WAITING' || row.status === 'CALLED'" :aria-label="'取消排队 ' + (row.queueNo || '')">取消</el-button>
-          <el-button type="text" size="small" @click="reactivateHandle(row.id)" v-if="row.status === 'CANCELLED'" :aria-label="'恢复排队 ' + (row.queueNo || '')" class="btn-warning-text">恢复</el-button>
+          <el-button text size="small" @click="seatHandle(row)" v-if="row.status === 'CALLED'" class="btn-brand-text" :aria-label="'安排入座 ' + (row.queueNo || '排队记录')">入座</el-button>
+          <el-button text size="small" @click="recallHandle(row)" v-if="row.status === 'CALLED'" :aria-label="'退回等待 ' + (row.queueNo || '')">退回</el-button>
+          <el-button text size="small" class="btn-delete" @click="cancelHandle(row.id)" v-if="row.status === 'WAITING' || row.status === 'CALLED'" :aria-label="'取消排队 ' + (row.queueNo || '')">取消</el-button>
+          <el-button text size="small" @click="reactivateHandle(row.id)" v-if="row.status === 'CANCELLED'" :aria-label="'恢复排队 ' + (row.queueNo || '')" class="btn-warning-text">恢复</el-button>
         </template>
       </crud-table>
 
@@ -179,7 +178,7 @@
     <!-- 取号弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="取号"
-      :visible.sync="takeForm.dialogVisible"
+      v-model="takeForm.dialogVisible"
       :submit-loading="takeLoading"
       size="sm"
       submit-text="确 定"
@@ -201,7 +200,7 @@
     <!-- 入座弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="安排入座"
-      :visible.sync="seatForm.dialogVisible"
+      v-model="seatForm.dialogVisible"
       :submit-loading="seatLoading"
       size="md"
       submit-text="确 认 入 座"
@@ -244,16 +243,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/dining.js?v=20260918b"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#queue-app',
       data: function() {
         return {

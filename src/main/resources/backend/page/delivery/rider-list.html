@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>骑手管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -28,7 +27,7 @@
         @reset="handleReset"
         @action="onTableAction"
         @refresh="fetchData(true)">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-input
             v-model="keyword"
             placeholder="姓名 / 手机号"
@@ -66,7 +65,7 @@
           <span style="font-weight:500;">{{ row.name }}</span>
         </template>
         <template #col-status="{ row }">
-          <el-tag size="mini" :type="statusTagType(row.status)">{{ statusText(row.status) }}</el-tag>
+          <el-tag size="small" :type="statusTagType(row.status)">{{ statusText(row.status) }}</el-tag>
         </template>
         <template #col-rating="{ row }">
           <span><i class="ri-star-fill" style="color:var(--el-color-warning);"></i> {{ formatRating(row.rating) }}</span>
@@ -75,9 +74,9 @@
           <span>{{ formatTime(row.lastLocationTime) }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="editHandle(row)">编辑</el-button>
-          <el-button type="text" size="small" @click="openResetDialog(row)">重置密码</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
+          <el-button text size="small" class="btn-view" @click="editHandle(row)">编辑</el-button>
+          <el-button text size="small" @click="openResetDialog(row)">重置密码</el-button>
+          <el-button text size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
         </template>
       </crud-table>
     </main>
@@ -85,7 +84,7 @@
     <!-- 新增 / 编辑骑手 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="dialog.title"
-      :visible.sync="dialog.visible"
+      v-model="dialog.visible"
       :submit-loading="submitting"
       size="sm"
       @submit="submitForm">
@@ -99,7 +98,7 @@
         <el-form-item label="初始密码：" v-if="dialog.mode==='add'" prop="password">
           <el-input v-model="form.password" placeholder="6-20 位骑手端登录密码" show-password ></el-input>
         </el-form-item>
-        <el-alert v-if="dialog.mode==='edit'" type="info" :closable="false" size="mini"
+        <el-alert v-if="dialog.mode==='edit'" type="info" :closable="false" size="small"
           title="骑手工作状态、在途单量与位置由骑手端实时上报，此处仅维护账号资料；如需改密码请使用「重置密码」。"
           style="margin-top:4px;"></el-alert>
       </el-form>
@@ -108,7 +107,7 @@
     <!-- 重置密码 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="重置骑手密码"
-      :visible.sync="pwdDialog.visible"
+      v-model="pwdDialog.visible"
       :submit-loading="pwdSubmitting"
       size="sm"
       @submit="submitResetPassword">
@@ -123,16 +122,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/delivery.js?v=20260927"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#rider-app',
       mixins: [window.XinfeiListMixin],
       data() {

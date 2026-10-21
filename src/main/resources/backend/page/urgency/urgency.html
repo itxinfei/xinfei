@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
   <style>
     .urgency-container {
@@ -266,9 +265,9 @@
         <div class="filter-row">
           <span class="filter-row__label">订单状态</span>
           <el-radio-group v-model="filterStatus" size="small" @change="onFilterChange" aria-label="按订单状态筛选">
-            <el-radio-button label="ALL">全部</el-radio-button>
-            <el-radio-button label="COOKING">制作中</el-radio-button>
-            <el-radio-button label="DONE">已完成</el-radio-button>
+            <el-radio-button value="ALL">全部</el-radio-button>
+            <el-radio-button value="COOKING">制作中</el-radio-button>
+            <el-radio-button value="DONE">已完成</el-radio-button>
           </el-radio-group>
           <span class="filter-row__tip">共 {{ filteredOrders.length }} 单</span>
         </div>
@@ -294,28 +293,28 @@
           header-cell-class-name="urgency-table-head"
         >
           <el-table-column prop="orderNo" label="订单号" width="180" align="center" fixed>
-            <template slot-scope="{ row }">
+            <template  #default="{ row }">
               <span style="font-variant-numeric:tabular-nums">{{ row.orderNo || row.orderId }}</span>
             </template>
           </el-table-column>
           <el-table-column prop="tableNo" label="桌号" width="100" align="center" :header-align="'center'" :show-overflow-tooltip="true">
-            <template slot-scope="{ row }">
+            <template  #default="{ row }">
               <span>{{ row.tableNo }}号</span>
             </template>
           </el-table-column>
           <el-table-column label="菜品" min-width="200" align="center">
-            <template slot-scope="{ row }">
+            <template  #default="{ row }">
             <span class="dish-cell" :title="row.displayDishes">{{ row.displayDishes }}</span>
             </template>
           </el-table-column>
           <el-table-column prop="orderTime" label="下单时间" width="140" align="center"></el-table-column>
           <el-table-column label="已等待" width="120" align="center">
-            <template slot-scope="{ row }">
+            <template  #default="{ row }">
               <span class="wait-time" :class="{ overdue: row.isOverdue }">{{ row.countdown }}</span>
             </template>
           </el-table-column>
           <el-table-column label="制作进度" width="160" align="center">
-            <template slot-scope="{ row }">
+            <template  #default="{ row }">
               <el-progress
                 :percentage="row.progress"
                 :stroke-width="12"
@@ -326,14 +325,13 @@
             </template>
           </el-table-column>
           <el-table-column label="状态" width="100" align="center">
-            <template slot-scope="{ row }">
+            <template  #default="{ row }">
               <el-tag :type="statusTagType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="90" align="center" :header-align="'center'" fixed="right">
-            <template slot-scope="{ row }">
-              <el-button
-                type="text"
+            <template  #default="{ row }">
+              <el-button text
                 size="small"
                 class="btn-view"
                 :disabled="row.status === 'DONE'"
@@ -403,7 +401,7 @@
       <!-- 催菜确认弹窗 -->
       <crud-dialog :show-submit="true" :show-cancel="true"
         title="催菜提醒"
-        :visible.sync="urgeDialogVisible"
+        v-model="urgeDialogVisible"
         :submit-loading="urgeLoading"
         size="sm"
         submit-text="发送催单"
@@ -432,13 +430,16 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/urgency.js?v=20260926"></script>
 
   <script>
@@ -447,7 +448,7 @@
      * 超时订单监控：数据源为真实订单（orders）与催单记录（urgency_record），
      * 接口异常时展示空态，不回退假数据
      */
-    new Vue({
+    createXinfeiApp({
       el: '#urgency-app',
       data: function () {
         return {
@@ -496,7 +497,7 @@
         this.loadAllData()
         this.startCountdown()
       },
-      beforeDestroy: function () {
+      beforeUnmount: function () {
         if (this.timerId) {
           clearInterval(this.timerId)
           this.timerId = null

@@ -7,8 +7,7 @@
   <title>区域管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
   </style>
 </head>
@@ -31,7 +30,7 @@
         @reset="reset"
         @action="onTableAction"
         @refresh="fetchData(false)">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="input" placeholder="请选择区域名称" class="el-select--narrow-xs" clearable filterable size="small"
             :loading="optionsLoading"
             :no-data-text="optionsLoadError ? '加载失败，点击下拉框重试' : (optionsLoading ? '加载中...' : '暂无数据')"
@@ -64,8 +63,8 @@
           <span style="font-weight:500;">{{ row.name }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(row.id)">删除</el-button>
+          <el-button text size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
+          <el-button text size="small" class="btn-delete" @click="deleteHandle(row.id)">删除</el-button>
         </template>
       </crud-table>
     </main>
@@ -73,7 +72,7 @@
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一组件替代手写 el-dialog -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="dialog.title"
-      :visible.sync="dialog.visible"
+      v-model="dialog.visible"
       :submit-loading="submitting"
       size="sm"
       @submit="submitForm"
@@ -89,16 +88,19 @@
       </el-form>
     </crud-dialog>
   </div>
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/dining.js?v=20260918b"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-      new Vue({
+      createXinfeiApp({
         el: '#area-app',
         // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
         mixins: [window.XinfeiListMixin],

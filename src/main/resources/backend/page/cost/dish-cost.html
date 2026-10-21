@@ -7,8 +7,7 @@
   <title>菜品成本管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <!-- ==================== 菜品成本管理 ==================== -->
   <!-- 功能说明：核算单菜品的食材/人工/其他成本与售价，计算毛利率，支持新增/编辑/删除 -->
   <style>
@@ -65,13 +64,13 @@
           </span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="handleDelete(row)">删除</el-button>
+          <el-button text size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
+          <el-button text size="small" class="btn-delete" @click="handleDelete(row)">删除</el-button>
         </template>
       </crud-table>
 
     <!-- 新增/编辑弹窗：选择菜品后自动带出BOM成本，手动填写人工/其他成本与售价 -->
-    <crud-dialog :show-submit="true" :show-cancel="true" :title="dialogTitle" :visible.sync="dialogVisible" size="lg" @submit="handleSubmit">
+    <crud-dialog :show-submit="true" :show-cancel="true" :title="dialogTitle" v-model="dialogVisible" size="lg" @submit="handleSubmit">
       <el-form :model="formData" :rules="formRules" ref="costForm" label-width="100px">
         <!-- 双列栅格：大屏两列、小屏单列（CLAUDE.md 7.2 场景C）；菜品远程搜索独占一行，备注跨全宽 -->
         <el-form-item label="菜品" prop="dishId">
@@ -124,7 +123,7 @@
 
     <!-- 修改点：批量导入弹窗 -->
     <crud-dialog
-      :visible.sync="importDialogVisible"
+      v-model="importDialogVisible"
       title="批量导入菜品成本"
       size="lg"
       :show-submit="true"
@@ -133,10 +132,10 @@
       @submit="submitImport"
     >
       <el-alert type="info" :closable="false" style="margin-bottom:16px;">
-        <div slot="title">
+        <template #title><div>
           粘贴 CSV 格式数据，第一行为表头。支持列名：<b>菜品名称, 食材成本, 人工成本, 其他成本, 售价, 备注</b>
           <br/>示例：<code>菜品名称,食材成本,人工成本,其他成本,售价,备注</code>
-        </div>
+        </div></template>
       </el-alert>
       <el-input type="textarea" v-model="importCsvText" :rows="12" placeholder="菜品名称,食材成本,人工成本,其他成本,售价,备注&#10;宫保鸡丁,8.50,2.00,1.00,28.00,&#10;鱼香肉丝,7.00,2.00,0.50,25.00,热销"></el-input>
     </crud-dialog>
@@ -144,18 +143,21 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/cost.js?v=20260926"></script>
   <script src="../../api/food.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#app',
       data() {
         return {

@@ -15,8 +15,7 @@
   <meta name="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>店铺设置 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 页面局部样式：仅布局与尺寸，颜色一律走设计令牌 */
     .shop-settings-card { max-width: 640px; }
@@ -37,9 +36,9 @@
       <h1 class="sr-only" id="page-title">店铺设置</h1>
 
       <el-card class="shop-settings-card" shadow="never">
-        <div slot="header" class="card-header-title">
+        <template #header><div class="card-header-title">
           店铺设置<span class="header-tip">保存后，C 端顾客端首页的店名 / Logo / 公告 / 营业时间即时生效</span>
-        </div>
+        </div></template>
 
         <el-form ref="settingsForm" :model="form" :rules="formRules" label-width="100px" v-loading="loading">
           <el-form-item label="店铺名称:" prop="name">
@@ -61,7 +60,7 @@
               <i v-else class="ri-add-line logo-uploader-icon" role="img" aria-label="上传店铺Logo"></i>
             </el-upload>
             <!-- 修改点(2026-10-17)：新增「恢复默认」入口——此前 Logo 一旦上传无法撤销，提示文案的默认态不可达 -->
-            <el-button v-if="form.logo" type="text" size="small" style="margin-left: 12px;" @click="clearLogo">恢复默认</el-button>
+            <el-button v-if="form.logo" text size="small" style="margin-left: 12px;" @click="clearLogo">恢复默认</el-button>
             <div class="form-tip">点击上传图片；不上传时顾客端显示系统默认 Logo</div>
           </el-form-item>
 
@@ -82,15 +81,18 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../api/store.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#shop-settings-app',
       data() {
         return {

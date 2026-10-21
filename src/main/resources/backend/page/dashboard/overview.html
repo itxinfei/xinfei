@@ -7,8 +7,7 @@
   <title>数据概览 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
   <!-- 性能优化：ECharts(~1MB)改为 preload 提前并行下载，运行时动态注入，不再阻塞首屏渲染 -->
@@ -511,9 +510,9 @@
             <span><i class="ri-line-chart-line" aria-hidden="true"></i> 近{{ trendDays }}日订单与营收趋势</span>
             <!-- 修改点：趋势图时间范围切换 -->
             <el-radio-group v-model="trendDays" size="small" @change="switchTrendDays" style="margin-left:12px;">
-              <el-radio-button :label="7">7天</el-radio-button>
-              <el-radio-button :label="14">14天</el-radio-button>
-              <el-radio-button :label="30">30天</el-radio-button>
+              <el-radio-button :value="7">7天</el-radio-button>
+              <el-radio-button :value="14">14天</el-radio-button>
+              <el-radio-button :value="30">30天</el-radio-button>
             </el-radio-group>
           </div>
           <div class="chart-box" id="trendChart" v-show="!echartsLoadFailed" role="img" :aria-label="'近' + trendDays + '日订单与营收趋势图表'"></div>
@@ -612,7 +611,7 @@
 
     <!-- 修改点：营收目标设置弹窗 -->
     <crud-dialog
-      :visible.sync="targetDialogVisible"
+      v-model="targetDialogVisible"
       title="设置营收目标"
       size="sm"
       :show-submit="true"
@@ -631,15 +630,18 @@
   </div>
 
   <!-- JS依赖 -->
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
   <script src="../../api/dashboard.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
 
   <script>
     // ========== ECharts 按需懒加载（性能优化核心） ==========
@@ -660,7 +662,7 @@
       return _echartsPromise;
     }
 
-    new Vue({
+    createXinfeiApp({
       el: '#dashboard-app',
       data() {
         return {
@@ -760,7 +762,7 @@
         };
         window.addEventListener('resize', this._resizeHandler);
       },
-      beforeDestroy() {
+      beforeUnmount() {
         // 修改点：解绑resize事件
         if (this._resizeHandler) {
           window.removeEventListener('resize', this._resizeHandler);
@@ -949,7 +951,7 @@
           const dom = document.getElementById('trendChart');
           if (!dom) return;
           if (!this.trendChart) {
-            this.trendChart = echarts.init(dom);
+            this.trendChart = Vue.markRaw(echarts.init(dom));
           }
           const dates = this.trend.map(t => t.date);
           const orders = this.trend.map(t => t.orderCount || 0);
@@ -1098,7 +1100,7 @@
           const dom = document.getElementById('statusChart');
           if (!dom) return;
           if (!this.statusChart) {
-            this.statusChart = echarts.init(dom);
+            this.statusChart = Vue.markRaw(echarts.init(dom));
           }
           const statusData = [];
           const colorPalette = [

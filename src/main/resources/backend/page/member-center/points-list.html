@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ---- 图表区 ---- */
     .chart-panels { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -99,7 +98,7 @@
     </main>
 
     <!-- ===== 积分调整弹窗（8.4.3：发放/扣减/说明） ===== -->
-    <crud-dialog :show-submit="true" :show-cancel="true" title="积分调整" :visible.sync="adjustForm.dialogVisible" :submit-loading="adjustLoading" size="md" @submit="submitAdjust">
+    <crud-dialog :show-submit="true" :show-cancel="true" title="积分调整" v-model="adjustForm.dialogVisible" :submit-loading="adjustLoading" size="md" @submit="submitAdjust">
       <el-form :model="adjustForm" :rules="adjustRules" ref="adjustFormRef" label-width="100px" size="small">
         <el-form-item label="会员手机：" prop="phone">
           <div style="display:flex;gap:8px;width:100%;">
@@ -118,8 +117,8 @@
           </el-form-item>
           <el-form-item label="调整方式：" prop="adjustType">
             <el-radio-group v-model="adjustForm.adjustType" @change="onAdjustTypeChange">
-              <el-radio-button label="IN">发放</el-radio-button>
-              <el-radio-button label="OUT">扣减</el-radio-button>
+              <el-radio-button value="IN">发放</el-radio-button>
+              <el-radio-button value="OUT">扣减</el-radio-button>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="积分数量：" prop="points">
@@ -138,17 +137,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../plugins/echarts/echarts.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/member-center.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#points-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
       mixins: [window.XinfeiListMixin],
@@ -213,7 +215,7 @@
       created: function() { this.fetchData(true) },
       mounted: function() { this.$nextTick(function() { this.initCharts() }) },
       // 修改点：页面销毁时移除 resize 监听并释放图表实例，避免监听器与内存泄漏
-      beforeDestroy: function() {
+      beforeUnmount: function() {
         if (this._resizeHandler) {
           window.removeEventListener('resize', this._resizeHandler)
         }
@@ -249,10 +251,10 @@
         /* ── 图表初始化与渲染 ── */
         initCharts: function() {
           var dom1 = document.getElementById('trendChart');
-          if (dom1) this.trendChart = echarts.init(dom1);
+          if (dom1) this.trendChart = Vue.markRaw(echarts.init(dom1));
           var dom2 = document.getElementById('pieChart');
-          if (dom2) this.pieChart = echarts.init(dom2);
-          // 修改点：具名处理函数并保存引用，便于 beforeDestroy 中移除监听器，防止页面切换时监听器累积泄漏
+          if (dom2) this.pieChart = Vue.markRaw(echarts.init(dom2));
+          // 修改点：具名处理函数并保存引用，便于 beforeUnmount 中移除监听器，防止页面切换时监听器累积泄漏
           this._resizeHandler = function() {
             if (this.trendChart) this.trendChart.resize()
             if (this.pieChart) this.pieChart.resize()

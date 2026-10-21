@@ -9,8 +9,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
 <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -25,7 +24,7 @@
     ============================================================ -->
     <stat-cards
       :cards="statsCards"
-      :active-key.sync="activeStatus"
+      v-model:active-key="activeStatus"
       @card-click="onStatCardClick"
     ></stat-cards>
 
@@ -95,9 +94,9 @@
       </template>
       <!-- 行操作按钮 -->
       <template #actions="{ row }">
-        <el-button type="text" size="small" class="btn-view" @click="openPurchases(row)">采购记录</el-button>
-        <el-button type="text" size="small" class="btn-view" @click="openEdit(row)">修改</el-button>
-        <el-button type="text" size="small" class="btn-delete" @click="handleDelete(row.id)">删除</el-button>
+        <el-button text size="small" class="btn-view" @click="openPurchases(row)">采购记录</el-button>
+        <el-button text size="small" class="btn-view" @click="openEdit(row)">修改</el-button>
+        <el-button text size="small" class="btn-delete" @click="handleDelete(row.id)">删除</el-button>
       </template>
     </crud-table>
 
@@ -109,7 +108,7 @@
    ============================================================ -->
   <crud-dialog :show-submit="true" :show-cancel="true"
     :title="dialogTitle"
-    :visible.sync="dialogVisible"
+    v-model="dialogVisible"
     :submit-loading="submitting"
     size="lg"
     @submit="submitForm"
@@ -133,8 +132,8 @@
       </el-form-item>
       <el-form-item label="状态：">
         <el-radio-group v-model="formData.status">
-          <el-radio label="1">启用</el-radio>
-          <el-radio label="0">禁用</el-radio>
+          <el-radio value="1">启用</el-radio>
+          <el-radio value="0">禁用</el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>
@@ -145,7 +144,7 @@
    ============================================================ -->
   <crud-dialog
     title="采购记录"
-    :visible.sync="purchaseDialog.visible"
+    v-model="purchaseDialog.visible"
     size="lg"
     :show-submit="false"
     :show-cancel="true"
@@ -158,15 +157,15 @@
     <el-table v-else :data="purchaseList" stripe border size="small" v-loading="purchaseLoading">
       <el-table-column prop="orderNo" label="采购单号" min-width="160" align="center"></el-table-column>
       <el-table-column prop="totalAmount" label="金额" width="110" align="center">
-        <template slot-scope="s">¥{{ formatMoney(s.row.totalAmount) }}</template>
+        <template  #default="s">¥{{ formatMoney(s.row.totalAmount) }}</template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="110" align="center">
-        <template slot-scope="s">
+        <template  #default="s">
           <el-tag :type="purchaseStatusTagType(s.row.status)" size="small">{{ purchaseStatusText(s.row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createdTime" label="下单时间" width="160" align="center">
-        <template slot-scope="s">{{ formatDate(s.row.createdTime) }}</template>
+        <template  #default="s">{{ formatDate(s.row.createdTime) }}</template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="120" align="center"></el-table-column>
     </el-table>
@@ -175,23 +174,26 @@
       layout="total, prev, pager"
       :total="purchaseTotal"
       :page-size="purchasePageSize"
-      :current-page.sync="purchasePageNum"
+      v-model:current-page="purchasePageNum"
       @current-change="onPurchasePageChange">
     </el-pagination>
   </crud-dialog>
 
 </div>
   <!-- 引入依赖 -->
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#supplier-app',
       data() {
         return {
@@ -381,7 +383,7 @@
           const tb = this.$refs.tableBar
           if (tb) {
             tb.searchItems.forEach(item => {
-              this.$set(tb.searchValues, item.field, item.type === 'date' || item.type === 'daterange' ? [] : '')
+              tb.searchValues[item.field] = item.type === 'date' || item.type === 'daterange' ? [] : ''
             })
           }
           this.searchParams = {}

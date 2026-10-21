@@ -5,8 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>骑手提现审核 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260928" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260928" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     html, body { height: 100%; margin: 0; padding: 0; background: var(--el-bg-subtle); }
     html { overflow: hidden; }
@@ -49,9 +48,9 @@
           <el-tag :type="statusTag(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button v-if="row.status === 'PENDING'" type="text" size="small" class="btn-success"
+          <el-button v-if="row.status === 'PENDING'" text size="small" class="btn-success"
                      @click="openReview(row, true)">通过</el-button>
-          <el-button v-if="row.status === 'PENDING'" type="text" size="small"
+          <el-button v-if="row.status === 'PENDING'" text size="small"
                      class="btn-delete" @click="openReview(row, false)">驳回</el-button>
           <span v-if="row.status !== 'PENDING'" class="el-text--secondary">已处理</span>
         </template>
@@ -60,7 +59,7 @@
 
     <crud-dialog
       :title="reviewApprove ? '通过提现' : '驳回提现'"
-      :visible.sync="reviewVisible"
+      v-model="reviewVisible"
       size="sm"
       :submit-loading="submitting"
       :submit-text="reviewApprove ? '确认通过' : '确认驳回'"
@@ -76,18 +75,21 @@
     </crud-dialog>
   </main>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/common.js?v=20260928"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
     function fmt(v) {
       if (v == null) return '0.00';
       return Number(v).toFixed(2);
     }
-    new Vue({
+    createXinfeiApp({
       el: '#main-content',
       data: function () {
         return {

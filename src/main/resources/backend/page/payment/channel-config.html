@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>支付渠道配置 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
 </head>
 <body>
@@ -16,7 +16,7 @@
   <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
     <h1 class="sr-only" id="page-title">支付渠道配置</h1>
     <!-- 统计卡片：点击 全部/微信/支付宝/已启用 快速筛选 -->
-    <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+    <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
     <!-- 工具栏：添加渠道 -->
     <table-bar
@@ -60,16 +60,16 @@
         </template>
         <!-- 操作列：编辑 / 测连通 / 启停 / 更多-删除 -->
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="openEdit(row)">编辑</el-button>
-          <el-button type="text" size="small" class="text-info" :loading="testingId === row.id" @click="testConnection(row)">测连通</el-button>
-          <el-button type="text" size="small" :class="row.enabled === 1 ? 'btn-warning' : 'btn-success'" @click="toggle(row)">
+          <el-button text size="small" class="btn-view" @click="openEdit(row)">编辑</el-button>
+          <el-button text size="small" class="text-info" :loading="testingId === row.id" @click="testConnection(row)">测连通</el-button>
+          <el-button text size="small" :class="row.enabled === 1 ? 'btn-warning' : 'btn-success'" @click="toggle(row)">
             {{ row.enabled === 1 ? '停用' : '启用' }}
           </el-button>
-          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && remove(row)" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+          <el-dropdown trigger="click" @command="(cmd) => cmd === 'delete' && remove(row)" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -78,7 +78,7 @@
   <!-- 新增/编辑对话框 -->
   <crud-dialog :show-submit="true" :show-cancel="true"
     :title="dialogTitle"
-    :visible.sync="dialogVisible"
+    v-model="dialogVisible"
     size="xl"
     :close-on-click-modal="false"
     :submit-loading="submitting"
@@ -174,14 +174,17 @@
   </crud-dialog>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script src="../../api/payment.js?v=20260921"></script>
 <script>
-  new Vue({
+  createXinfeiApp({
     el: '#payment-channel-app',
     // 列表通用 Mixin：提供 page/pageSize/counts/loading 与翻页处理
     mixins: [window.XinfeiListMixin],

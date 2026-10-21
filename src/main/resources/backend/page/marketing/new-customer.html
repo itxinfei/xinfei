@@ -7,8 +7,7 @@
   <title>新客优惠管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <!-- ==================== 新客优惠管理 ==================== -->
   <!-- 功能说明：管理新客专享优惠活动，支持固定金额/按比例两种优惠类型，含起送金额/有效天数/启用禁用 -->
 </head>
@@ -20,7 +19,7 @@
       <!-- 统计卡片：全部/已启用/已禁用，点击可筛选 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -77,11 +76,11 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
-          <el-button type="text" size="small" :class="row.status === 1 ? 'btn-warning' : 'btn-success'" @click="handleToggleStatus(row)">
+          <el-button text size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
+          <el-button text size="small" :class="row.status === 1 ? 'btn-warning' : 'btn-success'" @click="handleToggleStatus(row)">
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="handleDelete(row)">删除</el-button>
+          <el-button text size="small" class="btn-delete" @click="handleDelete(row)">删除</el-button>
         </template>
       </crud-table>
     </main>
@@ -90,7 +89,7 @@
     <crud-dialog :show-submit="true" :show-cancel="true"
       :size="'md'"
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       :close-on-click-modal="false"
       :submit-loading="submitLoading"
       @submit="handleSubmit"
@@ -101,8 +100,8 @@
         </el-form-item>
         <el-form-item label="优惠类型" prop="discountType">
           <el-radio-group v-model="formData.discountType">
-            <el-radio :label="1">固定金额</el-radio>
-            <el-radio :label="2">按比例</el-radio>
+            <el-radio :value="1">固定金额</el-radio>
+            <el-radio :value="2">按比例</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item :label="formData.discountType === 1 ? '优惠金额(元)' : '优惠比例(%)'" prop="discountValue">
@@ -136,17 +135,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/marketing.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#app',
       data: function() {
         return {

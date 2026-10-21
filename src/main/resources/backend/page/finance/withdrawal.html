@@ -5,8 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>提现管理 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <!-- ==================== 提现管理 ==================== -->
   <!-- 功能说明：审核商家提现申请，支持查看/审核/打款/取消操作，统计总申请/待审核/已打款/总金额 -->
   <style>
@@ -90,15 +89,15 @@
       </template>
       <!-- 操作按钮 -->
       <template #actions="{ row }">
-        <el-button type="text" size="small" @click="handleView(row)">查看</el-button>
-        <el-button v-if="row.status === 0" type="text" size="small" @click="handleReview(row)">审核</el-button>
-        <el-button v-if="row.status === 1" type="text" size="small" class="btn-success" @click="handlePayment(row)">打款</el-button>
-        <el-button v-if="row.status === 0" type="text" size="small" class="btn-warning" @click="handleCancel(row)">取消</el-button>
+        <el-button text size="small" @click="handleView(row)">查看</el-button>
+        <el-button v-if="row.status === 0" text size="small" @click="handleReview(row)">审核</el-button>
+        <el-button v-if="row.status === 1" text size="small" class="btn-success" @click="handlePayment(row)">打款</el-button>
+        <el-button v-if="row.status === 0" text size="small" class="btn-warning" @click="handleCancel(row)">取消</el-button>
       </template>
     </crud-table>
 
     <!-- 详情弹窗：只读展示申请编号/申请人/金额/方式/账户/状态/时间/审核备注 -->
-    <crud-dialog :show-cancel="true" title="申请详情" :visible.sync="detailDialogVisible" size="md" :show-submit="false" cancel-text="关 闭">
+    <crud-dialog :show-cancel="true" title="申请详情" v-model="detailDialogVisible" size="md" :show-submit="false" cancel-text="关 闭">
       <div v-if="detailRow" class="withdraw-detail">
         <div class="dt-item"><span class="dt-label">申请编号</span><span class="dt-value">{{ detailRow.applicationNo }}</span></div>
         <div class="dt-item"><span class="dt-label">申请人</span><span class="dt-value">{{ detailRow.applicantName }}</span></div>
@@ -114,16 +113,16 @@
     </crud-dialog>
 
     <!-- 申请提现弹窗：填写金额/方式/收款账户/收款人/备注 -->
-    <crud-dialog :show-submit="true" :show-cancel="true" title="申请提现" :visible.sync="addDialogVisible" size="md" :submit-loading="submitLoading" @submit="handleAddSubmit">
+    <crud-dialog :show-submit="true" :show-cancel="true" title="申请提现" v-model="addDialogVisible" size="md" :submit-loading="submitLoading" @submit="handleAddSubmit">
       <el-form :model="addForm" :rules="addRules" ref="addForm" label-width="100px">
         <el-form-item label="提现金额" prop="amount">
           <el-input-number v-model="addForm.amount" :precision="2" :min="1" style="width: 100%;"></el-input-number>
         </el-form-item>
         <el-form-item label="提现方式" prop="withdrawMethod">
           <el-radio-group v-model="addForm.withdrawMethod">
-            <el-radio :label="1">银行卡</el-radio>
-            <el-radio :label="2">支付宝</el-radio>
-            <el-radio :label="3">微信</el-radio>
+            <el-radio :value="1">银行卡</el-radio>
+            <el-radio :value="2">支付宝</el-radio>
+            <el-radio :value="3">微信</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="收款账户" prop="receiveAccount">
@@ -139,7 +138,7 @@
     </crud-dialog>
 
     <!-- 审核弹窗：选择通过/拒绝 + 填写审核备注 -->
-    <crud-dialog :show-submit="true" :show-cancel="true" title="审核提现申请" :visible.sync="reviewDialogVisible" size="md" :submit-loading="submitLoading" @submit="handleReviewSubmit">
+    <crud-dialog :show-submit="true" :show-cancel="true" title="审核提现申请" v-model="reviewDialogVisible" size="md" :submit-loading="submitLoading" @submit="handleReviewSubmit">
       <el-form :model="reviewForm" :rules="reviewRules" ref="reviewFormRef" label-width="100px">
         <el-form-item label="申请编号">
           <span>{{ reviewForm.applicationNo }}</span>
@@ -149,8 +148,8 @@
         </el-form-item>
         <el-form-item label="审核结果" prop="status">
           <el-radio-group v-model="reviewForm.status" @change="onReviewStatusChange">
-            <el-radio :label="1">通过</el-radio>
-            <el-radio :label="3">拒绝</el-radio>
+            <el-radio :value="1">通过</el-radio>
+            <el-radio :value="3">拒绝</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核备注" prop="remark">
@@ -160,7 +159,7 @@
     </crud-dialog>
 
     <!-- 打款确认弹窗：确认金额 + 填写打款流水号 -->
-    <crud-dialog :show-submit="true" :show-cancel="true" title="确认打款" :visible.sync="paymentDialogVisible" size="md" :submit-loading="submitLoading" @submit="handlePaymentSubmit">
+    <crud-dialog :show-submit="true" :show-cancel="true" title="确认打款" v-model="paymentDialogVisible" size="md" :submit-loading="submitLoading" @submit="handlePaymentSubmit">
       <el-form :model="paymentForm" :rules="paymentRules" ref="paymentFormRef" label-width="100px">
         <el-form-item label="申请编号">
           <span>{{ paymentForm.applicationNo }}</span>
@@ -175,19 +174,22 @@
     </crud-dialog>
  </main>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <!-- 修改点：补引 axios —— request.js 首行即使用全局 axios，缺失会抛错导致
        $axios 永不挂载，本页所有接口请求全部失效 -->
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/finance.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#main-content',
       data() {
         return {

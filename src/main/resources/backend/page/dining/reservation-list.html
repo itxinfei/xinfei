@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>预约管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260916" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260916" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 详情字段两列栅格：本构建未注册 el-descriptions（2.13+ 组件），手写栅格替代 */
     .rsv-detail { display: flex; flex-wrap: wrap; border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
@@ -26,7 +25,7 @@
       <!-- 统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -67,19 +66,19 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="viewHandle(row)">详情</el-button>
-          <el-button type="text" size="small" class="btn-view" @click="editHandle(row)"
+          <el-button text size="small" class="btn-view" @click="viewHandle(row)">详情</el-button>
+          <el-button text size="small" class="btn-view" @click="editHandle(row)"
             v-if="row.status === 'PENDING' || row.status === 'CONFIRMED'">编辑</el-button>
-          <el-button type="text" size="small" class="btn-success" @click="confirmHandle(row.id)"
+          <el-button text size="small" class="btn-success" @click="confirmHandle(row.id)"
             v-if="row.status === 'PENDING'">确认</el-button>
-          <el-button type="text" size="small" class="btn-success" @click="arriveHandle(row.id)"
+          <el-button text size="small" class="btn-success" @click="arriveHandle(row.id)"
             v-if="row.status === 'CONFIRMED'">到店</el-button>
-          <el-dropdown v-if="row.status !== 'ARRIVED'" trigger="click" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item v-if="row.status !== 'CANCELLED'" @click.native="cancelHandle(row.id)">取消</el-dropdown-item>
-              <el-dropdown-item v-if="row.status === 'CANCELLED'" @click.native="deleteHandle(row.id)" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+          <el-dropdown v-if="row.status !== 'ARRIVED'" trigger="click" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
+              <el-dropdown-item v-if="row.status !== 'CANCELLED'" @click="cancelHandle(row.id)">取消</el-dropdown-item>
+              <el-dropdown-item v-if="row.status === 'CANCELLED'" @click="deleteHandle(row.id)" style="color:var(--color-danger);">删除</el-dropdown-item>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -88,7 +87,7 @@
     <!-- 新增/编辑弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="dialog.title"
-      :visible.sync="dialog.visible"
+      v-model="dialog.visible"
       :submit-loading="submitting"
       size="md"
       @submit="submitForm"
@@ -113,8 +112,8 @@
                 v-model="form.reservedTime"
                 type="datetime"
                 placeholder="选择预订时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                :picker-options="datePickerOptions"
+                value-format="YYYY-MM-DD HH:mm:ss"
+                :disabled-date="disablePastDate"
                 style="width:100%"
               />
             </el-form-item>
@@ -147,7 +146,7 @@
     <!-- 详情查看弹窗（只读，仅有关闭按钮） -->
     <crud-dialog :show-submit="false" :show-cancel="true" cancel-text="关闭"
       title="预订详情"
-      :visible.sync="detailVisible"
+      v-model="detailVisible"
       size="md"
     >
       <div v-if="detailData" class="rsv-detail">
@@ -195,16 +194,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260916"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/dining.js?v=20260918b"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#reservation-app',
       data() {
         return {
@@ -234,12 +236,6 @@
           },
           // 桌台选项
           tableList: [],
-          // 日期选择器：禁选过去时间
-          datePickerOptions: {
-            disabledDate: function(date) {
-              return date.getTime() < Date.now() - 86400000
-            }
-          },
           // 搜索配置
           searchConfig: [
             { type: 'input', field: 'customerName', placeholder: '请输入客户姓名', width: '200px' },
@@ -295,6 +291,10 @@
         }
       },
       methods: {
+        /* ── 日期选择器：禁选过去时间（EP 用 disabled-date 独立 prop，picker-options 已删除） ── */
+        disablePastDate: function(date) {
+          return date.getTime() < Date.now() - 86400000
+        },
         /* ── 状态映射 ── */
         statusLabel: function(status) {
           var map = { PENDING: '待确认', CONFIRMED: '已确认', ARRIVED: '已到店', CANCELLED: '已取消' }

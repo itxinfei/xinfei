@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>发票管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 发票号码等等宽数字，便于核对 */
     .inv-no { font-variant-numeric: tabular-nums; }
@@ -35,7 +34,7 @@
       <!-- 数据统计卡片：点击切换状态筛选 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -83,9 +82,9 @@
         </template>
         <template #actions="{ row }">
           <div class="inv-actions">
-            <el-button v-if="row.status == 1" type="text" size="small" class="btn-view" @click="openIssueDialog(row)">开具</el-button>
-            <el-button v-if="row.status == 2 && row.invoiceUrl" type="text" size="small" class="btn-view" @click="openInvoiceUrl(row.invoiceUrl)">查看票面</el-button>
-            <el-button v-if="row.status == 2" type="text" size="small" class="btn-delete" @click="voidHandle(row)">作废</el-button>
+            <el-button v-if="row.status == 1" text size="small" class="btn-view" @click="openIssueDialog(row)">开具</el-button>
+            <el-button v-if="row.status == 2 && row.invoiceUrl" text size="small" class="btn-view" @click="openInvoiceUrl(row.invoiceUrl)">查看票面</el-button>
+            <el-button v-if="row.status == 2" text size="small" class="btn-delete" @click="voidHandle(row)">作废</el-button>
           </div>
         </template>
       </crud-table>
@@ -94,7 +93,7 @@
     <!-- 开具发票弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="开具发票"
-      :visible.sync="issueDialogVisible"
+      v-model="issueDialogVisible"
       :submit-loading="submitting"
       size="md"
       @submit="submitIssue"
@@ -128,7 +127,7 @@
           </el-upload>
           <div v-if="issueForm.invoiceUrl" class="inv-pdf-name">
             <i class="ri-file-pdf-2-line"></i>{{ pdfFileName }}
-            <el-button type="text" size="mini" @click="removePdf">移除</el-button>
+            <el-button text size="small" @click="removePdf">移除</el-button>
           </div>
           <div v-else class="inv-pdf-hint">选传：电子发票票面 PDF，不超过 5MB</div>
         </el-form-item>
@@ -137,16 +136,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/invoice.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#invoice-app',
       data: function() {
         return {

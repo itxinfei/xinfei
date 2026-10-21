@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>餐补管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     .grant-tabs { margin-bottom: 4px; }
   </style>
@@ -33,7 +32,7 @@
         :show-refresh="true"
         @refresh="loadData()"
       >
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="departmentId" placeholder="按部门筛选" clearable size="small" class="el-select--narrow-xs" @change="onSearch(lastSearch)">
             <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id"></el-option>
           </el-select>
@@ -71,8 +70,8 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="openGrant(row)">发放</el-button>
-          <el-button type="text" size="small" class="btn-view" @click="openRecords(row)">流水</el-button>
+          <el-button text size="small" class="btn-view" @click="openGrant(row)">发放</el-button>
+          <el-button text size="small" class="btn-view" @click="openRecords(row)">流水</el-button>
         </template>
       </crud-table>
     </main>
@@ -80,7 +79,7 @@
     <!-- 发放弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="grantForm.title"
-      :visible.sync="grantForm.visible"
+      v-model="grantForm.visible"
       :submit-loading="grantSubmitting"
       size="sm"
       @submit="submitGrant"
@@ -89,8 +88,8 @@
       <el-form ref="grantFormRef" :model="grantForm" :rules="grantRules" label-width="100px" size="small">
         <el-form-item label="发放对象">
           <el-radio-group v-model="grantForm.mode" class="grant-tabs" :disabled="grantForm.lockTarget">
-            <el-radio label="user">单个用户</el-radio>
-            <el-radio label="department">按部门</el-radio>
+            <el-radio value="user">单个用户</el-radio>
+            <el-radio value="department">按部门</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="grantForm.mode === 'user'" label="用户" prop="userId">
@@ -114,45 +113,45 @@
     <!-- 流水弹窗 -->
     <crud-dialog
       :title="recordForm.title"
-      :visible.sync="recordForm.visible"
+      v-model="recordForm.visible"
       size="lg"
       :show-submit="false"
       @close="recordForm.visible = false"
     >
       <el-table :data="recordForm.rows" size="small" max-height="380" v-loading="recordForm.loading">
         <el-table-column prop="createTime" label="时间" width="150">
-          <template slot-scope="{ row }">{{ (row.createTime || '').replace('T', ' ').substring(0, 19) }}</template>
+          <template  #default="{ row }">{{ (row.createTime || '').replace('T', ' ').substring(0, 19) }}</template>
         </el-table-column>
         <el-table-column prop="recordType" label="类型" width="80" align="center">
-          <template slot-scope="{ row }">
+          <template  #default="{ row }">
             <el-tag size="small" :type="recordTagType(row.recordType)">{{ recordLabel(row.recordType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="amount" label="金额" width="90" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.amount || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.amount || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column prop="balanceAfter" label="交易后余额" width="100" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.balanceAfter || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.balanceAfter || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column prop="orderId" label="关联订单" width="90" align="center">
-          <template slot-scope="{ row }">{{ row.orderId || '-' }}</template>
+          <template  #default="{ row }">{{ row.orderId || '-' }}</template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="120">
-          <template slot-scope="{ row }">{{ row.remark || '-' }}</template>
+          <template  #default="{ row }">{{ row.remark || '-' }}</template>
         </el-table-column>
       </el-table>
     </crud-dialog>
     <!-- 部门对账弹窗：日期范围聚合预览 + Excel 导出 -->
     <crud-dialog
       title="部门对账"
-      :visible.sync="reconDialog.visible"
+      v-model="reconDialog.visible"
       size="lg"
       :show-submit="false"
       @close="reconDialog.visible = false"
     >
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <el-date-picker v-model="reconDialog.range" type="daterange" size="small"
-          value-format="yyyy-MM-dd" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+          value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
           :clearable="false"></el-date-picker>
         <el-button size="small" type="primary" :loading="reconDialog.loading" @click="loadRecon">查询</el-button>
         <el-button size="small" :disabled="!reconDialog.rows.length" @click="exportRecon">
@@ -163,16 +162,16 @@
         <el-table-column prop="departmentName" label="部门" min-width="110"></el-table-column>
         <el-table-column prop="orderCount" label="订单数" width="80" align="center"></el-table-column>
         <el-table-column label="订单金额" width="110" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.orderAmount || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.orderAmount || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column label="餐补发放" width="110" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.subsidyGranted || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.subsidyGranted || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column label="餐补核销" width="110" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.subsidyUsed || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.subsidyUsed || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column label="企业自付" width="130" align="center">
-          <template slot-scope="{ row }">¥{{ Number(row.selfPay || 0).toFixed(2) }}</template>
+          <template  #default="{ row }">¥{{ Number(row.selfPay || 0).toFixed(2) }}</template>
         </el-table-column>
       </el-table>
       <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">
@@ -181,17 +180,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/subsidy.js?v=20261006"></script>
   <script src="../../api/sys.js?v=20261006"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#subsidy-app',
       data() {
         return {

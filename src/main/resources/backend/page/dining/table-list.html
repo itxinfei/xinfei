@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 卡片视图切换 */
     .table-grid-toggle { display: flex; align-items: center; gap: 8px; }
@@ -98,7 +97,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -158,18 +157,18 @@
           </template>
           <!-- 操作列契约：状态主操作常显（≤3），其余收「更多」下拉 -->
           <template #actions="{ row }">
-            <el-button v-if="row.status === 'FREE'" type="text" size="small" class="btn-view" @click="openTableHandle(row)">开台</el-button>
-            <el-button v-if="row.status === 'OCCUPIED'" type="text" size="small" class="btn-view" @click="checkoutHandle(row)">结账</el-button>
-            <el-button v-if="row.status !== 'FREE' && row.status !== 'OCCUPIED'" type="text" size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
-            <el-dropdown trigger="click" @command="(cmd) => onTableCommand(cmd, row)" @click.native.stop>
-              <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-              <el-dropdown-menu slot="dropdown">
+            <el-button v-if="row.status === 'FREE'" text size="small" class="btn-view" @click="openTableHandle(row)">开台</el-button>
+            <el-button v-if="row.status === 'OCCUPIED'" text size="small" class="btn-view" @click="checkoutHandle(row)">结账</el-button>
+            <el-button v-if="row.status !== 'FREE' && row.status !== 'OCCUPIED'" text size="small" class="btn-view" @click="editHandle(row)">修改</el-button>
+            <el-dropdown trigger="click" @command="(cmd) => onTableCommand(cmd, row)" @click.stop>
+              <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+              <template #dropdown><el-dropdown-menu>
                 <el-dropdown-item v-if="row.status === 'OCCUPIED'" command="addDish" icon="ri-restaurant-line">加菜</el-dropdown-item>
                 <el-dropdown-item v-if="row.status === 'OCCUPIED'" command="transfer" icon="ri-arrow-left-right-line">转台</el-dropdown-item>
                 <el-dropdown-item v-if="row.status === 'FREE' || row.status === 'OCCUPIED'" command="edit" icon="ri-edit-line">修改</el-dropdown-item>
                 <el-dropdown-item command="qrcode" icon="ri-qr-code-line">二维码</el-dropdown-item>
                 <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-              </el-dropdown-menu>
+              </el-dropdown-menu></template>
             </el-dropdown>
           </template>
         </crud-table>
@@ -188,22 +187,22 @@
               <span>状态：<strong>{{ statusLabels[row.status] || row.status }}</strong></span>
             </div>
             <div class="card-actions">
-              <el-button v-if="row.status === 'FREE'" type="text" size="small" class="btn-view" @click.stop="openTableHandle(row)">开台</el-button>
-              <el-button v-if="row.status === 'OCCUPIED'" type="text" size="small" class="btn-view" @click.stop="addDishHandle(row)">加菜</el-button>
-              <el-button v-if="row.status === 'OCCUPIED'" type="text" size="small" class="btn-view" @click.stop="transferHandle(row)">转台</el-button>
-              <el-button v-if="row.status === 'OCCUPIED'" type="text" size="small" class="btn-view" @click.stop="checkoutHandle(row)">结账</el-button>
-              <el-button type="text" size="small" @click.stop="editHandle(row)">修改</el-button>
-              <el-button type="text" size="small" @click.stop="showQrcode(row)">二维码</el-button>
-              <el-dropdown trigger="click" @command="(val) => quickChangeStatus(row, val)" @click.native.stop>
-                <el-button type="text" size="small">切换状态</el-button>
-                <el-dropdown-menu slot="dropdown">
+              <el-button v-if="row.status === 'FREE'" text size="small" class="btn-view" @click.stop="openTableHandle(row)">开台</el-button>
+              <el-button v-if="row.status === 'OCCUPIED'" text size="small" class="btn-view" @click.stop="addDishHandle(row)">加菜</el-button>
+              <el-button v-if="row.status === 'OCCUPIED'" text size="small" class="btn-view" @click.stop="transferHandle(row)">转台</el-button>
+              <el-button v-if="row.status === 'OCCUPIED'" text size="small" class="btn-view" @click.stop="checkoutHandle(row)">结账</el-button>
+              <el-button text size="small" @click.stop="editHandle(row)">修改</el-button>
+              <el-button text size="small" @click.stop="showQrcode(row)">二维码</el-button>
+              <el-dropdown trigger="click" @command="(val) => quickChangeStatus(row, val)" @click.stop>
+                <el-button text size="small">切换状态</el-button>
+                <template #dropdown><el-dropdown-menu>
                   <el-dropdown-item command="FREE" :disabled="!canTransition(row.status, 'FREE')">设为空闲</el-dropdown-item>
                   <el-dropdown-item command="OCCUPIED" :disabled="!canTransition(row.status, 'OCCUPIED')">设为占用</el-dropdown-item>
                   <el-dropdown-item command="RESERVED" :disabled="!canTransition(row.status, 'RESERVED')">设为预留</el-dropdown-item>
                   <el-dropdown-item command="CLEANING" :disabled="!canTransition(row.status, 'CLEANING')">设为清洁中</el-dropdown-item>
-                </el-dropdown-menu>
+                </el-dropdown-menu></template>
               </el-dropdown>
-              <el-button type="text" size="small" class="btn-delete" @click.stop="deleteHandle(row.id)">删除</el-button>
+              <el-button text size="small" class="btn-delete" @click.stop="deleteHandle(row.id)">删除</el-button>
             </div>
           </div>
         </div>
@@ -219,7 +218,7 @@
         layout="total, sizes, prev, pager, next, jumper"
         :total="counts"
         @size-change="handleSizeChange"
-        :current-page.sync="page"
+        v-model:current-page="page"
         @current-change="handleCurrentChange"
       ></el-pagination>
 
@@ -271,7 +270,7 @@
                 <el-button v-if="mapSelected.status === 'OCCUPIED'" type="primary" size="small" plain @click="transferHandle(mapSelected)">转台</el-button>
                 <el-button size="small" @click="editHandle(mapSelected)">修改</el-button>
                 <el-button size="small" @click="showQrcode(mapSelected)">二维码</el-button>
-                <el-button type="text" size="small" class="btn-delete" @click="deleteHandle(mapSelected.id)">删除</el-button>
+                <el-button text size="small" class="btn-delete" @click="deleteHandle(mapSelected.id)">删除</el-button>
               </div>
             </template>
             <div v-else class="map-detail__empty">点击桌号查看详情与快捷操作</div>
@@ -283,7 +282,7 @@
     <!-- 新增/编辑弹窗 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="dialog.title"
-      :visible.sync="dialog.visible"
+      v-model="dialog.visible"
       :submit-loading="submitting"
       size="md"
       show-close
@@ -320,7 +319,7 @@
     </crud-dialog>
 
     <!-- 二维码弹窗 -->
-    <crud-dialog title="桌台二维码" :visible.sync="qrcodeDialog.visible" :close-on-click-modal="true" center :show-submit="false" :show-cancel="true" cancel-text="关闭" size="sm">
+    <crud-dialog title="桌台二维码" v-model="qrcodeDialog.visible" :close-on-click-modal="true" center :show-submit="false" :show-cancel="true" cancel-text="关闭" size="sm">
       <div class="qrcode-content">
         <div class="qrcode-title">桌台：{{ qrcodeDialog.tableName }}</div>
         <div class="qrcode-subtitle">编号：{{ qrcodeDialog.tableId }}</div>
@@ -343,7 +342,7 @@
     </crud-dialog>
 
     <!-- 开台弹窗 -->
-    <crud-dialog title="开台" :visible.sync="openDialog.visible" size="sm" show-close :show-submit="true" :show-cancel="true" :submit-loading="openDialog.loading" @submit="submitOpen">
+    <crud-dialog title="开台" v-model="openDialog.visible" size="sm" show-close :show-submit="true" :show-cancel="true" :submit-loading="openDialog.loading" @submit="submitOpen">
       <el-form :model="openForm" label-width="100px" size="small">
         <el-form-item label="桌台">
           <el-input :value="openDialog.tableName" disabled ></el-input>
@@ -358,7 +357,7 @@
     </crud-dialog>
 
     <!-- 转台弹窗 -->
-    <crud-dialog title="转台" :visible.sync="transferDialog.visible" size="sm" show-close :show-submit="true" :show-cancel="true" :submit-loading="transferDialog.loading" @submit="submitTransfer">
+    <crud-dialog title="转台" v-model="transferDialog.visible" size="sm" show-close :show-submit="true" :show-cancel="true" :submit-loading="transferDialog.loading" @submit="submitTransfer">
       <el-form :model="transferForm" label-width="100px" size="small">
         <el-form-item label="原桌台">
           <el-input :value="transferDialog.fromName" disabled ></el-input>
@@ -372,30 +371,33 @@
     </crud-dialog>
 
     <!-- 修改点(2026-09-16)：结账改为页内弹窗（iframe 嵌入收银台），不再 window.open 新窗口 -->
-    <crud-dialog title="收银结账" :visible.sync="checkoutDialogVisible" size="fullscreen"
+    <crud-dialog title="收银结账" v-model="checkoutDialogVisible" size="fullscreen"
                  :close-on-click-modal="false" :show-submit="false" :show-cancel="false">
       <iframe v-if="checkoutDialogVisible" :src="cashierFrameUrl"
               style="width:100%;height:78vh;border:0;display:block;"></iframe>
     </crud-dialog>
 
     <!-- 桌贴打印弹窗（iframe 承载原打印中心；iframe 内 window.print 只打印海报，不卷入主页） -->
-    <crud-dialog title="桌贴二维码打印" :visible.sync="posterDialogVisible" size="fullscreen"
+    <crud-dialog title="桌贴二维码打印" v-model="posterDialogVisible" size="fullscreen"
                  :close-on-click-modal="false" :show-submit="false" :show-cancel="false">
       <iframe v-if="posterDialogVisible" :src="posterFrameUrl"
               style="width:100%;height:80vh;border:0;display:block;"></iframe>
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/dining.js?v=20260918b"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#table-app',
       data: function() {
         return {
@@ -505,10 +507,11 @@
         // 修改点：30秒定时轮询桌台状态，扫码下单/收银结账后自动刷新，无需手动操作
         var self = this
         this._pollTimer = setInterval(function() { self.init(false) }, 30000)
-        this.$on('hook:beforeDestroy', function() {
-          window.removeEventListener('message', self.onCashierMessage)
-          if (self._pollTimer) { clearInterval(self._pollTimer); self._pollTimer = null }
-        })
+      },
+      // Vue 2 的 this.$on('hook:beforeUnmount') 在 Vue 3 已删除（$on/$off/$once 一并移除），改直接声明同名生命周期钩子
+      beforeUnmount: function() {
+        window.removeEventListener('message', this.onCashierMessage)
+        if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null }
       },
       methods: {
         // 最低消费：半角 ¥ + 千分位两位小数（XinfeiFormat 内部 Number 转换，字符串价格也不崩）

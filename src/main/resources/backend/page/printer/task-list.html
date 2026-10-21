@@ -7,8 +7,7 @@
   <title>打印记录 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 任务详情弹窗（只读）：label 灰底固定宽、value 随右；打印报文灰底可滚动 */
     .task-detail__row { margin-bottom: var(--space-3); }
@@ -54,7 +53,7 @@
     <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
       <h1 class="sr-only" id="page-title">打印记录</h1>
       <!-- 数据统计卡片 -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
       <!-- 筛选 + 操作 -->
       <table-bar
         :search-items="tableSearchItems"
@@ -64,7 +63,7 @@
         @reset="reset"
         @action="onTableAction"
         @refresh="fetchData(false)">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-input v-model="query.orderId" placeholder="订单ID" class="el-select--narrow-xs" clearable size="small"
             @keyup.enter.native="search"></el-input>
           <el-select v-model="query.taskType" placeholder="类型" class="el-select--narrow-xs" clearable size="small"
@@ -88,7 +87,7 @@
             range-separator="至"
             start-placeholder="开始时间"
             end-placeholder="结束时间"
-            value-format="yyyy-MM-dd HH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
             class="el-select--wide-sm"
             size="small"
             clearable
@@ -121,14 +120,14 @@
           <span v-else>-</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="showDetail(row)">查看</el-button>
-          <el-button v-if="row.orderId" type="text" size="small" class="btn-view" @click="reprint(row)">补打</el-button>
+          <el-button text size="small" class="btn-view" @click="showDetail(row)">查看</el-button>
+          <el-button v-if="row.orderId" text size="small" class="btn-view" @click="reprint(row)">补打</el-button>
         </template>
       </crud-table>
     </main>
 
     <!-- 任务详情弹窗（只读，仅有关闭按钮） -->
-    <crud-dialog :title="dialog.title" :visible.sync="dialog.visible" size="lg" :show-submit="false" :show-cancel="true" cancel-text="关 闭">
+    <crud-dialog :title="dialog.title" v-model="dialog.visible" size="lg" :show-submit="false" :show-cancel="true" cancel-text="关 闭">
       <div class="task-detail">
         <el-row :gutter="16" class="task-detail__row">
           <el-col :span="8" :xs="24" :sm="12"><span class="task-detail__label">任务ID：</span>{{ dialog.row.id }}</el-col>
@@ -154,17 +153,20 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/printer.js?v=20260921"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/print-util.js?v=20260921"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#printer-task-app',
       mixins: [window.XinfeiListMixin],
       data() {

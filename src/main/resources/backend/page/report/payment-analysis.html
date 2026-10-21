@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
   <script src="../../plugins/echarts/echarts.min.js"></script>
   <style>
@@ -124,16 +123,19 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/report.js?v=20260926"></script>
   <script src="../../api/payment.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
-  <script src="../../js/chart-panel.js?v=20260926"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script src="../../js/chart-panel-v3.js?v=3001001"></script>
   <script>
     const CHANNEL_LABEL = { wechat: '微信支付', alipay: '支付宝', balance: '线下/其他', other: '其他渠道' };
     // 支付渠道配色：统一走 XinfeiPalette（微信绿/支付宝蓝已收录为调色板字段），canvas 中禁止写 hex
@@ -145,7 +147,7 @@
     };
 
     (function() {
-      new Vue({
+      createXinfeiApp({
         el: '#report-payment-app',
         data: function() {
           return {
@@ -205,7 +207,7 @@
             var initChart = function(id) {
               const el = document.getElementById(id);
               if (!el) { console.warn('[payment] 图表容器未找到:', id); return null; }
-              return echarts.init(el);
+              return Vue.markRaw(echarts.init(el));
             };
             self.pieChart = initChart('pieChart');
             self.barChart = initChart('barChart');
@@ -226,7 +228,7 @@
             self.loadData();
           });
         },
-        beforeDestroy: function() {
+        beforeUnmount: function() {
           if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
           [this.pieChart, this.barChart, this.trendChart, this.refundChart].forEach(function(ch) {
             if (ch) try { ch.dispose(); } catch(e) {}
@@ -380,7 +382,15 @@
               .map(function(k) { const item = data[k] || {}; return { key: k, channel: CHANNEL_LABEL[k],
                 transactionCount: item.count || 0, amount: item.amount != null ? item.amount : null }; });
           },
-          calcPercent: function(count) { if (!this.totalCount) return 0; return Math.round(count / this.totalCount * 100); },
+          // 占比给 el-progress 用：EP 的 percentage 只收 0~100 的数字，
+          // 渲染早期 row 字段还没到位时 count 会是 undefined，Math.round(NaN) 直接触发 Invalid prop，
+          // 所以这里先强制成数并夹回区间。
+          calcPercent: function(count) {
+            var t = this.totalCount;
+            if (!t) return 0;
+            var p = Math.round(((Number(count) || 0) / t) * 100);
+            return p < 0 ? 0 : (p > 100 ? 100 : p);
+          },
           channelProgressColor: function(key) { return CHANNEL_COLOR[key] || XinfeiPalette.textSecondary; },
           renderCharts: function() {
             // 修改点：渲染前 resize 确保容器尺寸正确

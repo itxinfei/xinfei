@@ -7,8 +7,7 @@
   <title>买赠活动管理 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <!-- ==================== 买赠活动管理 ==================== -->
   <!-- 功能说明：管理买赠促销活动，支持按菜品/套餐/全场设置买X赠Y规则，含起送金额/每单限次/活动时段 -->
 </head>
@@ -20,7 +19,7 @@
       <!-- 统计卡片：全部/进行中/已暂停/已结束，点击可筛选 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -79,11 +78,11 @@
           <span>{{ row.usageCount || 0 }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
-          <el-button type="text" size="small" :class="row.status === 1 ? 'btn-warning' : 'btn-success'" @click="handleToggleStatus(row)" :disabled="row.status === 0 || row.status === 3">
+          <el-button text size="small" class="btn-view" @click="handleEdit(row)">编辑</el-button>
+          <el-button text size="small" :class="row.status === 1 ? 'btn-warning' : 'btn-success'" @click="handleToggleStatus(row)" :disabled="row.status === 0 || row.status === 3">
             {{ row.status === 1 ? '暂停' : '启用' }}
           </el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="handleDelete(row)">删除</el-button>
+          <el-button text size="small" class="btn-delete" @click="handleDelete(row)">删除</el-button>
         </template>
       </crud-table>
     </main>
@@ -92,7 +91,7 @@
     <crud-dialog :show-submit="true" :show-cancel="true"
       :size="'lg'"
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       :close-on-click-modal="false"
       :submit-loading="submitLoading"
       @submit="handleSubmit"
@@ -138,7 +137,7 @@
             range-separator="至"
             start-placeholder="开始时间"
             end-placeholder="结束时间"
-            :picker-options="{ shortcuts: dateShortcuts }"
+            :shortcuts="dateShortcuts"
             style="width: 100%;">
           </el-date-picker>
         </el-form-item>
@@ -147,28 +146,31 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="formData.status">
-            <el-radio :label="0">草稿</el-radio>
-            <el-radio :label="1">进行中</el-radio>
-            <el-radio :label="2">暂停</el-radio>
-            <el-radio :label="3">结束</el-radio>
+            <el-radio :value="0">草稿</el-radio>
+            <el-radio :value="1">进行中</el-radio>
+            <el-radio :value="2">暂停</el-radio>
+            <el-radio :value="3">结束</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/marketing.js?v=20260926"></script>
   <script src="../../api/food.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#app',
       data: function() {
         return {
@@ -204,9 +206,10 @@
           dialogVisible: false,
           dialogTitle: '新增买赠活动',
           submitLoading: false,
+          // Element Plus 删掉了 picker-options + picker.$emit('pick')，快捷项改成 value: () => [起, 止]
           dateShortcuts: [
-            { text: '未来 1 周', onClick: function(picker) { const start = new Date(); const end = new Date(); end.setTime(start.getTime() + 7 * 24 * 60 * 60 * 1000); picker.$emit('pick', [start, end]) } },
-            { text: '未来 3 天', onClick: function(picker) { const start = new Date(); const end = new Date(); end.setTime(start.getTime() + 3 * 24 * 60 * 60 * 1000); picker.$emit('pick', [start, end]) } }
+            { text: '未来 1 周', value: function() { const start = new Date(); const end = new Date(); end.setTime(start.getTime() + 7 * 24 * 60 * 60 * 1000); return [start, end] } },
+            { text: '未来 3 天', value: function() { const start = new Date(); const end = new Date(); end.setTime(start.getTime() + 3 * 24 * 60 * 60 * 1000); return [start, end] } }
           ],
           formData: {
             id: null,

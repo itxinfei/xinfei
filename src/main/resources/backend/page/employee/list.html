@@ -8,8 +8,7 @@
   <!-- 引入样式 -->
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* ===== 电子工牌弹窗（原内联 px 样式收口；字号/间距/圆角走令牌） ===== */
     .badge-wrap { text-align: center; }
@@ -37,7 +36,7 @@
       <h1 class="sr-only" id="page-title">员工管理</h1>
       <!-- ========== 数据统计卡片（统一组件） ========== -->
       <!-- 修改点：使用 <stat-cards> 统一组件替代手写 HTML -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
       <!-- 修改点：使用 <table-bar> 统一组件替代手写 HTML -->
       <table-bar
@@ -48,7 +47,7 @@
         @reset="reset"
         @action="onTableAction"
         @refresh="fetchData(false)">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="input" placeholder="请选择员工姓名" class="el-select--narrow-xs" clearable filterable size="small"
             :loading="optionsLoading" :no-data-text="optionsLoadError ? '加载失败，点击下拉框重试' : (optionsLoading ? '加载中...' : '暂无数据')" @visible-change="onFilterDropdownVisible">
             <el-option v-for="n in filterOptions.names" :key="n" :label="n" :value="n"></el-option>
@@ -97,30 +96,27 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button
-            type="text"
+          <el-button text
             size="small"
             class="btn-view"
             @click="viewMemberHandle(row.id)"
           >查看</el-button>
-          <el-button
-            type="text"
+          <el-button text
             size="small"
             class="btn-view"
             @click="addMemberHandle(row.id)"
           >编辑</el-button>
-          <el-button
-            type="text"
+          <el-button text
             size="small"
             :class="row.status == '1' ? 'btn-warning' : 'btn-success'"
             @click="statusHandle(row)"
           >{{ row.status == '1' ? '禁用' : '启用' }}</el-button>
-          <el-dropdown trigger="click" @command="(cmd) => { if (cmd === 'badge') { openBadge(row); } else if (cmd === 'delete') { deleteHandle(row); } }" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+          <el-dropdown trigger="click" @command="(cmd) => { if (cmd === 'badge') { openBadge(row); } else if (cmd === 'delete') { deleteHandle(row); } }" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <el-dropdown-item command="badge" icon="ri-id-card-line">工牌</el-dropdown-item>
               <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -130,7 +126,7 @@
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一组件替代手写 el-dialog，footer 插槽保留"保存并继续添加" -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       :title="memberDialog.title"
-      :visible.sync="memberDialog.visible"
+      v-model="memberDialog.visible"
       size="md"
       :close-on-click-modal="false"
     >
@@ -151,8 +147,8 @@
         </el-form-item>
         <el-form-item label="性别:" prop="sex">
           <el-radio-group v-model="memberForm.sex" :disabled="memberDialog.actionType === 'view'">
-            <el-radio label="男">男</el-radio>
-            <el-radio label="女">女</el-radio>
+            <el-radio value="男">男</el-radio>
+            <el-radio value="女">女</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="身份证号:" prop="idNumber">
@@ -184,7 +180,7 @@
     <!-- 电子工牌弹窗：身份信息 + 工号二维码（后端生成 base64） -->
     <crud-dialog
       title="电子工牌"
-      :visible.sync="badgeDialog.visible"
+      v-model="badgeDialog.visible"
       size="sm"
       :show-submit="false"
       :close-on-click-modal="false"
@@ -222,7 +218,7 @@
     </crud-dialog>
 
     <!-- 批量导入员工：下载模板 → 选文件自动上传 → 展示初始密码与失败明细 -->
-    <crud-dialog title="批量导入员工" :visible.sync="importDialog.visible" size="md"
+    <crud-dialog title="批量导入员工" v-model="importDialog.visible" size="md"
       show-close :show-submit="false" :show-cancel="true" cancel-text="关 闭"
       @close="onImportDialogClose">
       <ol style="margin: 0 0 var(--space-3); padding-left: var(--space-5); color: var(--text-secondary); font-size: var(--font-size-base); line-height: 1.8;">
@@ -255,14 +251,14 @@
           <el-table-column prop="username" label="账号" width="140" align="center" :header-align="'center'"></el-table-column>
           <el-table-column prop="name" label="姓名" width="120" align="center" :header-align="'center'"></el-table-column>
           <el-table-column prop="password" label="初始密码" align="center" :header-align="'center'">
-            <template slot-scope="scope">
+            <template  #default="scope">
               <span style="font-family: monospace; letter-spacing: 1px;">{{ scope.row.password }}</span>
             </template>
           </el-table-column>
         </el-table>
         <el-table v-if="importResult.failures && importResult.failures.length" :data="importResult.failures" size="small" border stripe style="width: 100%; margin-top: var(--space-2);" max-height="200">
           <el-table-column label="Excel 行号" width="100" align="center" :header-align="'center'">
-            <template slot-scope="scope">{{ scope.row.row || '—' }}</template>
+            <template  #default="scope">{{ scope.row.row || '—' }}</template>
           </el-table-column>
           <el-table-column prop="username" label="账号" width="140" align="center" :header-align="'center'"></el-table-column>
           <el-table-column prop="reason" label="失败原因" align="center" :header-align="'center'"></el-table-column>
@@ -271,9 +267,11 @@
     </crud-dialog>
   </div>
     <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-    <script src="../../plugins/vue/vue.js"></script>
+    <script src="../../plugins/vue3/vue.global.js"></script>
     <!-- 引入组件库 -->
-    <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+    <script src="../../plugins/element-plus/index.full.min.js"></script>
+    <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+    <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
     <!-- 引入axios -->
     <script src="../../plugins/axios/axios.min.js"></script>
     <script src="../../js/request.js?v=20260930"></script>
@@ -283,9 +281,10 @@
     <script src="../../api/sys.js?v=20261006"></script>
     <script src="../../api/export.js?v=20260926"></script>
     <script src="../../js/validate.js?v=20260926"></script>
-    <script src="../../js/components.js?v=20261002"></script>
+    <script src="../../js/components-v3.js?v=3001001"></script>
+    <script src="../../js/app-v3.js?v=3001001"></script>
     <script>
-      new Vue({
+      createXinfeiApp({
         el: '#employee-app',
       // 修改点：引入列表页通用 Mixin，自动提供分页(page/pageSize/counts/loading)与翻页处理
       mixins: [window.XinfeiListMixin],

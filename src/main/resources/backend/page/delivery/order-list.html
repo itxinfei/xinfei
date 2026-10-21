@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -20,7 +19,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -70,19 +69,19 @@
           <el-tag v-else size="small">{{ statusLabelMap[row.status] || '未知状态' }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" @click="showDetail(row)">详情</el-button>
-          <el-button type="text" size="small" class="btn-success" :disabled="row._acting" @click="acceptOrder(row)" v-if="row.status === 'PENDING'">接单</el-button>
-          <el-button type="text" size="small" class="btn-success" :disabled="row._acting" @click="statusChange(row, 'PICKING')" v-if="row.status === 'ACCEPTED'">取餐</el-button>
-          <el-button type="text" size="small" class="btn-success" :disabled="row._acting" @click="statusChange(row, 'DELIVERING')" v-if="row.status === 'PICKING'">配送</el-button>
-          <el-button type="text" size="small" class="btn-success" :disabled="row._acting" @click="statusChange(row, 'DELIVERED')" v-if="row.status === 'DELIVERING'">送达</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="cancelOrder(row)" v-if="row.status !== 'DELIVERED' && row.status !== 'CANCELLED'">取消</el-button>
+          <el-button text size="small" @click="showDetail(row)">详情</el-button>
+          <el-button text size="small" class="btn-success" :disabled="row._acting" @click="acceptOrder(row)" v-if="row.status === 'PENDING'">接单</el-button>
+          <el-button text size="small" class="btn-success" :disabled="row._acting" @click="statusChange(row, 'PICKING')" v-if="row.status === 'ACCEPTED'">取餐</el-button>
+          <el-button text size="small" class="btn-success" :disabled="row._acting" @click="statusChange(row, 'DELIVERING')" v-if="row.status === 'PICKING'">配送</el-button>
+          <el-button text size="small" class="btn-success" :disabled="row._acting" @click="statusChange(row, 'DELIVERED')" v-if="row.status === 'DELIVERING'">送达</el-button>
+          <el-button text size="small" class="btn-delete" @click="cancelOrder(row)" v-if="row.status !== 'DELIVERED' && row.status !== 'CANCELLED'">取消</el-button>
         </template>
       </crud-table>
 
       <!-- 订单详情弹窗 -->
       <crud-dialog
         title="订单详情"
-        :visible.sync="detailVisible"
+        v-model="detailVisible"
         size="md"
         :show-submit="false"
         :show-cancel="true"
@@ -129,7 +128,7 @@
       <!-- 取消原因弹窗 -->
       <crud-dialog :show-submit="true" :show-cancel="true"
         title="取消订单"
-        :visible.sync="cancelVisible"
+        v-model="cancelVisible"
         size="sm"
         :submit-loading="cancelLoading"
         :close-on-click-modal="false"
@@ -155,7 +154,7 @@
       <!-- 同步平台选择弹窗 -->
       <crud-dialog
         title="选择同步平台"
-        :visible.sync="syncDialogVisible"
+        v-model="syncDialogVisible"
         size="sm"
         @submit="confirmSync"
         @close="cancelSync"
@@ -173,16 +172,19 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/delivery.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#delivery-app',
       data: function() {
         return {
@@ -404,8 +406,8 @@
           const self = this
           // 行级防重：confirm + 请求期间锁定该行，避免重复接单
           if (row._acting) return
-          self.$set(row, '_acting', true)
-          var clear = function () { self.$set(row, '_acting', false) }
+          row['_acting'] = true
+          var clear = function () { row['_acting'] = false }
           XinfeiUI.confirm(
             '确认接单【' + row.platformOrderId + '】？接单后将通知平台。',
             '确认接单',
@@ -424,8 +426,8 @@
           const self = this
           // 行级防重：confirm + 请求期间锁定该行
           if (row._acting) return
-          self.$set(row, '_acting', true)
-          var clear = function () { self.$set(row, '_acting', false) }
+          row['_acting'] = true
+          var clear = function () { row['_acting'] = false }
           const label = this.statusLabelMap[targetStatus] || targetStatus
           const confirmText = '确认将【' + row.platformOrderId + '】状态更新为"' + label + '"？'
           XinfeiUI.confirm(confirmText, '状态更新', {

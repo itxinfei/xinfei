@@ -6,8 +6,7 @@
   <title>商品平台映射 - 心飞外卖管理端</title>
   <!-- 修改点：补入 main.css 统一样式入口（原缺失导致全局样式与响应式断点失效） -->
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
 </head>
 <body>
@@ -18,7 +17,7 @@
   <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
     <h1 class="sr-only" id="page-title">商品平台映射管理</h1>
     <!-- 统一布局：统计卡片置顶（支持点击筛选：总数/已上架/已下架按状态过滤） -->
-    <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+    <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
     <!-- 搜索 + 工具栏 -->
     <table-bar
@@ -70,21 +69,24 @@
           <span class="ds-money">{{ formatPrice(row.price) }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button v-if="row.status !== 1" type="text" size="small" class="btn-success" @click="syncDish(row, 'on_shelf')">上架</el-button>
-          <el-button v-if="row.status === 1" type="text" size="small" class="btn-warning" @click="syncDish(row, 'off_shelf')">下架</el-button>
+          <el-button v-if="row.status !== 1" text size="small" class="btn-success" @click="syncDish(row, 'on_shelf')">上架</el-button>
+          <el-button v-if="row.status === 1" text size="small" class="btn-warning" @click="syncDish(row, 'off_shelf')">下架</el-button>
         </template>
       </crud-table>
   </main>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script src="../../api/platform.js?v=20260926"></script>
 <script>
-  new Vue({
+  createXinfeiApp({
     el: '#dish-mapping-app',
     mixins: [window.XinfeiListMixin],
     data() {

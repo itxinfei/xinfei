@@ -48,8 +48,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>列表页模板 - 心飞外卖管理端</title>
 
-    <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -63,7 +62,7 @@
 
       <!-- ① 统计卡片（按需）：cards 配置见 components.js 的 stat-cards -->
       <!--
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick" />
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick" />
       -->
 
       <!-- ② 搜索 + 操作栏：searchItems / actions 配置化，无需手写表单 -->
@@ -103,13 +102,13 @@
           本例「编辑 + 更多」= 2 元素 → 120；若只有 2~3 个高频操作，也可不收下拉直接常显。
         -->
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="onEdit(row)">编辑</el-button>
-          <el-dropdown trigger="click" @command="(cmd) => onRowCommand(cmd, row)" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+          <el-button text size="small" class="btn-view" @click="onEdit(row)">编辑</el-button>
+          <el-dropdown trigger="click" @command="(cmd) => onRowCommand(cmd, row)" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <!-- 危险项标红；继续加项时常用在前、删除收尾 -->
               <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -118,7 +117,7 @@
     <!-- ④ 增改弹窗：crud-dialog 自带关闭/重置，底部取消/确定（确定触发 submit） -->
     <crud-dialog
       :title="form.title"
-      :visible.sync="form.visible"
+      v-model="form.visible"
       size="lg"
       :submit-loading="submitLoading"
       @submit="onSubmit"
@@ -133,14 +132,17 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <!-- <script src="../../api/xxx.js?v=20260926"></script>  接入你的 API -->
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
 <script>
     // ⑤ 状态枚举注册（消除各页重复定义 statusMap/typeMap）
     window.XinfeiStatus.register('demo',
@@ -148,7 +150,7 @@
       { 1: 'success', 0: 'info' }
     )
 
-    new Vue({
+    createXinfeiApp({
       el: '#template-app',
       // ⑥ 列表页通用 Mixin：自动提供 page/pageSize/counts/loading 与翻页处理
       mixins: [window.XinfeiListMixin],

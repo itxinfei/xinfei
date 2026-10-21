@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>知识库 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -18,7 +17,7 @@
       <h1 class="sr-only" id="page-title">AI 知识库</h1>
 
       <!-- ========== 状态统计卡片（统一 stat-cards 组件） ========== -->
-      <stat-cards :cards="statsCards" :active-key.sync="activeFilter" @card-click="onCardClick"></stat-cards>
+      <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick"></stat-cards>
 
       <!-- ========== 搜索与操作（统一 table-bar 组件） ========== -->
       <table-bar
@@ -68,9 +67,9 @@
           <el-tag v-else :type="statusTagType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="openEdit(row)">修改</el-button>
-          <el-button type="text" size="small" class="btn-success" @click="onReindex(row)">重建索引</el-button>
-          <el-button type="text" size="small" class="btn-delete" @click="onDelete(row)">删除</el-button>
+          <el-button text size="small" class="btn-view" @click="openEdit(row)">修改</el-button>
+          <el-button text size="small" class="btn-success" @click="onReindex(row)">重建索引</el-button>
+          <el-button text size="small" class="btn-delete" @click="onDelete(row)">删除</el-button>
         </template>
       </crud-table>
     </main>
@@ -78,7 +77,7 @@
     <!-- ========== 新增/编辑弹窗（统一 crud-dialog 组件，lg 宽） ========== -->
     <crud-dialog
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       size="lg"
       :submit-loading="submitting"
       :close-on-click-modal="false"
@@ -96,8 +95,8 @@
           <el-col :xs="24" :sm="12">
             <el-form-item label="文档类型：" prop="docType">
               <el-radio-group v-model="form.docType">
-                <el-radio label="FAQ">FAQ 问答</el-radio>
-                <el-radio label="TEXT">知识文本</el-radio>
+                <el-radio value="FAQ">FAQ 问答</el-radio>
+                <el-radio value="TEXT">知识文本</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -126,14 +125,17 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../api/ai.js?v=20260924"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#knowledge-app',
       mixins: [window.XinfeiListMixin],
       data() {

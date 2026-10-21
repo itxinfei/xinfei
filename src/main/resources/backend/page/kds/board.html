@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>后厨出餐大屏 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <!-- a11y 工具上移到 head：仅依赖原生 API，需先于页面内容与业务脚本加载 -->
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <!-- ==================== 后厨出餐大屏 ==================== -->
@@ -133,7 +132,7 @@
             <div class="ticket__ops">
               <el-button type="primary" size="small" :disabled="t._acting" @click="act('start',t)">开始制作</el-button>
               <el-button size="small" :disabled="t._acting" @click="act('urgent',t)">{{ t.urgent===1 ? '取消加急' : '加急' }}</el-button>
-              <el-button type="text" size="small" :disabled="t._acting" @click="act('cancel',t)">取消</el-button>
+              <el-button text size="small" :disabled="t._acting" @click="act('cancel',t)">取消</el-button>
             </div>
           </div>
           <div class="col-empty" v-if="!board.pending.length">暂无待制作工单</div>
@@ -158,7 +157,7 @@
             <div class="ticket__ops">
               <el-button type="success" size="small" :disabled="t._acting" @click="act('ready',t)">制作完成 · 叫号</el-button>
               <el-button size="small" :disabled="t._acting" @click="act('urgent',t)">{{ t.urgent===1 ? '取消加急' : '加急' }}</el-button>
-              <el-button type="text" size="small" :disabled="t._acting" @click="act('cancel',t)">取消</el-button>
+              <el-button text size="small" :disabled="t._acting" @click="act('cancel',t)">取消</el-button>
             </div>
           </div>
           <div class="col-empty" v-if="!board.cooking.length">暂无制作中工单</div>
@@ -189,14 +188,17 @@
   </div>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script src="../../api/kds.js?v=20260926"></script>
 <script>
-  new Vue({
+  createXinfeiApp({
     el: '#app',
     data: function () {
       return {
@@ -223,7 +225,7 @@
       // 每 10 秒自动刷新看板（只读，不拉单；拉新走独立「刷新拉单」按钮 loadData(true)）
       this.pollTimer = setInterval(function () { if (self.autoRefresh) self.loadData(false) }, 10000)
     },
-    beforeDestroy: function () {
+    beforeUnmount: function () {
       if (this.pollTimer) clearInterval(this.pollTimer)
       if (this.clockTimer) clearInterval(this.clockTimer)
       try { speechSynthesis.cancel() } catch (e) {}
@@ -300,15 +302,15 @@
         var run = function () {
           // 行级防重守卫：同一工单在请求未返回前禁止再次提交，避免快速双击并发 start/ready/finish/cancel
           if (t._acting) return
-          self.$set(t, '_acting', true)
+          t['_acting'] = true
           var p
           if (action === 'start') p = window.kdsApi.start(t.id)
           else if (action === 'ready') p = window.kdsApi.ready(t.id)
           else if (action === 'finish') p = window.kdsApi.finish(t.id)
           else if (action === 'cancel') p = window.kdsApi.cancel(t.id)
           else if (action === 'urgent') p = window.kdsApi.toggleUrgent(t.id)
-          if (!p) { self.$set(t, '_acting', false); return }
-          var clear = function () { self.$set(t, '_acting', false) }
+          if (!p) { t['_acting'] = false; return }
+          var clear = function () { t['_acting'] = false }
           p.then(function (res) {
             if (res && String(res.code) === '1') {
               if (action === 'ready') { XinfeiUI.success('已叫号：' + self.tail(t.orderNo)); self.speak('请' + self.tail(t.orderNo) + '号取餐') }

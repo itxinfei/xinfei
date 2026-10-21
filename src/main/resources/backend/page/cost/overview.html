@@ -5,8 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>成本核算 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
   <script src="../../plugins/echarts/echarts.min.js"></script>
@@ -135,11 +134,14 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
@@ -148,7 +150,7 @@
     // 颜色调色板已由 js/components.js 的全局 window.XinfeiPalette 提供（运行时从 tokens.css 读取），
     // 本页不再定义本地调色板，消除重复并保证与设计令牌一致。
 
-    new Vue({
+    createXinfeiApp({
       el: '#app',
       data() {
         return {
@@ -232,9 +234,9 @@
         this.initCharts()
         this.fetchData()
       },
-      // 修改点：补 beforeDestroy 清理 —— 原先 resize 监听与 echarts 实例从不释放，
+      // 修改点：补 beforeUnmount 清理 —— 原先 resize 监听与 echarts 实例从不释放，
       // 切换页面后监听器残留、图表实例泄漏（多次进入会累积）
-      beforeDestroy() {
+      beforeUnmount() {
         if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler)
         const charts = [this.trendChart, this.structureChart, this.rankingChart]
         charts.forEach(function(ch) {
@@ -256,13 +258,13 @@
         /* ── 图表初始化与数据加载 ── */
         initCharts() {
           var dom1 = document.getElementById('trendChart');
-          if (dom1) this.trendChart = echarts.init(dom1);
+          if (dom1) this.trendChart = Vue.markRaw(echarts.init(dom1));
           var dom2 = document.getElementById('structureChart');
-          if (dom2) this.structureChart = echarts.init(dom2);
+          if (dom2) this.structureChart = Vue.markRaw(echarts.init(dom2));
           var dom3 = document.getElementById('rankingChart');
-          if (dom3) this.rankingChart = echarts.init(dom3);
+          if (dom3) this.rankingChart = Vue.markRaw(echarts.init(dom3));
           
-          // 修改点：把回调存为 this.resizeHandler，否则 beforeDestroy 无法解绑（匿名函数无引用）
+          // 修改点：把回调存为 this.resizeHandler，否则 beforeUnmount 无法解绑（匿名函数无引用）
           this.resizeHandler = () => {
             const charts = [this.trendChart, this.structureChart, this.rankingChart]
             charts.forEach(function(ch) {

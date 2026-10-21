@@ -7,8 +7,7 @@
   <title>租户管理 - 心飞外卖管理端</title>
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
 <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -57,13 +56,13 @@
         </span>
       </template>
       <template #col-packageName="{ row }">
-        <el-tag v-if="row.packageName" size="mini">{{ row.packageName }}</el-tag>
+        <el-tag v-if="row.packageName" size="small">{{ row.packageName }}</el-tag>
         <span v-else style="color:var(--text-muted);">-</span>
       </template>
       <template #col-expireTime="{ row }">
         <template v-if="row.expireTime">
           <span>{{ row.expireTime }}</span>
-          <el-tag v-if="isExpired(row.expireTime)" type="danger" size="mini" style="margin-left:4px;">已过期</el-tag>
+          <el-tag v-if="isExpired(row.expireTime)" type="danger" size="small" style="margin-left:4px;">已过期</el-tag>
         </template>
         <span v-else style="color:var(--text-muted);">-</span>
       </template>
@@ -73,14 +72,13 @@
         </el-tag>
       </template>
       <template #actions="{ row }">
-        <el-button type="text" size="small" @click="openEdit(row)">编辑</el-button>
+        <el-button text size="small" @click="openEdit(row)">编辑</el-button>
         <el-button
-          v-if="row.status === 1"
-          type="text"
+          v-if="row.status === 1" text
           size="small"
           class="btn-delete"
           @click="toggleStatus(row, 0)">禁用</el-button>
-        <el-button v-else type="text" size="small" @click="toggleStatus(row, 1)">启用</el-button>
+        <el-button v-else text size="small" @click="toggleStatus(row, 1)">启用</el-button>
       </template>
     </crud-table>
   </main>
@@ -88,7 +86,7 @@
   <!-- 编辑租户弹窗：基本信息 + 套餐到期 + Logo/营业执照单图 -->
   <crud-dialog
     title="编辑租户"
-    :visible.sync="dialogVisible"
+    v-model="dialogVisible"
     size="md"
     :submit-loading="submitting"
     :close-on-click-modal="false"
@@ -115,7 +113,7 @@
         <el-date-picker
           v-model="formData.expireTime"
           type="datetime"
-          value-format="yyyy-MM-dd HH:mm:ss"
+          value-format="YYYY-MM-DD HH:mm:ss"
           placeholder="选择套餐到期时间（可选）"
           style="width:100%;">
         </el-date-picker>
@@ -130,16 +128,19 @@
   </crud-dialog>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
 <script src="../../js/accessibility-utils.js?v=20260927"></script>
 <script src="../../js/performance-utils.js?v=20260926"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script src="../../api/tenant.js?v=20260922"></script>
 <script>
-  new Vue({
+  createXinfeiApp({
     el: '#tenant-app',
     data() {
       return {

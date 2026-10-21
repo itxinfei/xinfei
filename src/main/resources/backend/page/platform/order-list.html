@@ -6,8 +6,7 @@
   <title>平台订单 - 心飞外卖管理端</title>
   <!-- 修改点：补入 main.css 统一样式入口（原缺失导致全局样式与响应式断点失效） -->
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
 </head>
 <body>
@@ -55,17 +54,17 @@
         </template>
         <!-- 操作列契约：查看+主流转常显（≤3），拒单/取消等否定操作收「更多」 -->
         <template #actions="{ row }">
-          <el-button type="text" size="small" class="btn-view" @click="openDetail(row)">查看</el-button>
-          <el-button v-if="row.status === 2" type="text" size="small" class="btn-success" @click="pushStatus(row, 'accept')">接单</el-button>
-          <el-button v-if="row.status === 3" type="text" size="small" class="btn-success" @click="pushStatus(row, 'prepare')">出餐</el-button>
-          <el-button v-if="row.status === 3" type="text" size="small" class="btn-success" @click="pushStatus(row, 'complete')">完成</el-button>
+          <el-button text size="small" class="btn-view" @click="openDetail(row)">查看</el-button>
+          <el-button v-if="row.status === 2" text size="small" class="btn-success" @click="pushStatus(row, 'accept')">接单</el-button>
+          <el-button v-if="row.status === 3" text size="small" class="btn-success" @click="pushStatus(row, 'prepare')">出餐</el-button>
+          <el-button v-if="row.status === 3" text size="small" class="btn-success" @click="pushStatus(row, 'complete')">完成</el-button>
           <el-dropdown v-if="row.status === 2 || row.status === 3" trigger="click"
-            @command="(cmd) => pushStatus(row, cmd)" @click.native.stop>
-            <el-button type="text" size="small" class="text-info">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
+            @command="(cmd) => pushStatus(row, cmd)" @click.stop>
+            <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
+            <template #dropdown><el-dropdown-menu>
               <el-dropdown-item v-if="row.status === 2" command="reject" icon="ri-close-line" style="color:var(--color-danger);">拒单</el-dropdown-item>
               <el-dropdown-item v-if="row.status === 3" command="cancel" icon="ri-close-circle-line" style="color:var(--color-danger);">取消</el-dropdown-item>
-            </el-dropdown-menu>
+            </el-dropdown-menu></template>
           </el-dropdown>
         </template>
       </crud-table>
@@ -74,7 +73,7 @@
   <!-- 订单详情弹窗（只读，仅有关闭按钮） -->
   <crud-dialog
     title="平台订单详情"
-    :visible.sync="detailVisible"
+    v-model="detailVisible"
     size="lg"
     :show-submit="false"
     :show-cancel="true"
@@ -134,7 +133,7 @@
   <!-- 即时拉单弹窗 -->
   <crud-dialog :show-submit="true" :show-cancel="true"
     title="即时拉单"
-    :visible.sync="pullVisible"
+    v-model="pullVisible"
     size="sm"
     :submit-loading="pulling"
     submit-text="开始拉取"
@@ -163,15 +162,18 @@
   </crud-dialog>
 </div>
 
-<script src="../../plugins/vue/vue.js"></script>
-<script src="../../plugins/element-ui/index.js?v=20260915"></script>
+<script src="../../plugins/vue3/vue.global.js"></script>
+<script src="../../plugins/element-plus/index.full.min.js"></script>
+<script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+<script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
 <script src="../../plugins/axios/axios.min.js"></script>
 <script src="../../js/request.js?v=20260930"></script>
-<script src="../../js/components.js?v=20261002"></script>
+<script src="../../js/components-v3.js?v=3001001"></script>
+<script src="../../js/app-v3.js?v=3001001"></script>
 <script src="../../api/order.js?v=20260926"></script>
 <script src="../../api/platform.js?v=20260926"></script>
 <script>
-  new Vue({
+  createXinfeiApp({
     el: '#platform-order-app',
     mixins: [window.XinfeiListMixin],
     data() {

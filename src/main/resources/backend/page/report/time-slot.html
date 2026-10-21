@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
   <script src="../../plugins/echarts/echarts.min.js"></script>
   <style>
@@ -101,20 +100,23 @@
     </main>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/report.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
-  <script src="../../js/chart-panel.js?v=20260926"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script src="../../js/chart-panel-v3.js?v=3001001"></script>
   <script>
     (function() {
       // 修改点：颜色统一走 window.XinfeiPalette（单一来源），不再硬编码 hex
       const COLORS = [XinfeiPalette.brand600, XinfeiPalette.success, XinfeiPalette.warning, XinfeiPalette.danger, XinfeiPalette.linkBlue, XinfeiPalette.seriesViolet, XinfeiPalette.emerald, XinfeiPalette.orange500];
-      new Vue({
+      createXinfeiApp({
         el: '#report-timeslot-app',
         data: function() {
           return {
@@ -165,7 +167,7 @@
             self.loadData();
           });
         },
-        beforeDestroy: function() {
+        beforeUnmount: function() {
           if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
           if (this.observer) this.observer.disconnect();
           [this.barChart, this.pieChart, this.heatmapChart].forEach(function(ch) {
@@ -187,7 +189,7 @@
             var tryInit = function(id, key) {
               const el = document.getElementById(id);
               if (!el) { console.warn('[time-slot] 图表容器未找到:', id); return null; }
-              const ch = echarts.init(el);
+              const ch = Vue.markRaw(echarts.init(el));
               // 修改点：延迟手动 resize 确保父子容器尺寸稳定后再渲染
               setTimeout(function() { if (ch && !ch.isDisposed()) ch.resize(); }, 300);
               return ch;
@@ -278,8 +280,10 @@
           },
           calcPercent: function(count) {
             const t = this.totalCount; if (!t) return 0;
-            // 修改点：Number 包裹，避免 toFixed 字符串触发 el-progress percentage 类型告警
-            return Number((count / t * 100).toFixed(1));
+            // 修改点：count 在渲染早期可能是 undefined，NaN 进 el-progress 会报 Invalid prop
+            //（EP 的 percentage 只收 0~100 的数字），所以先强制成数再夹回区间。
+            const p = Number((((Number(count) || 0) / t) * 100).toFixed(1));
+            return p < 0 ? 0 : (p > 100 ? 100 : p);
           },
           formatMoney: function(val) { return window.XinfeiFormat.formatMoney(val) },
           slotHeatColor: function(row) {

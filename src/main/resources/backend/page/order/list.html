@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260921" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <style>
     /* 内部备注编辑行（原详情弹窗内联样式收口；间距走令牌） */
     .od-kv--top { align-items: flex-start; }
@@ -32,7 +31,7 @@
       <!-- 数据统计卡片 -->
       <stat-cards
         :cards="statsCards"
-        :active-key.sync="activeFilter"
+        v-model:active-key="activeFilter"
         @card-click="onCardClick"
       ></stat-cards>
 
@@ -79,19 +78,19 @@
           <span>¥{{ formatMoney(row.amount) }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button type="text" size="small" @click="goDetail(row)" class="btn-view">查看</el-button>
-          <el-button type="text" size="small" @click="printReceipt(row)" class="btn-view">打印</el-button>
+          <el-button text size="small" @click="goDetail(row)" class="btn-view">查看</el-button>
+          <el-button text size="small" @click="printReceipt(row)" class="btn-view">打印</el-button>
           <!-- 派单（指派骑手）仅外卖单；堂食/自提单无骑手配送环节 -->
-          <el-button v-if="row.status === 2 && !row.riderId && !isEatInOrder(row) && !isSelfPickupOrder(row)" type="text" size="small" @click="openDispatch(row)" class="btn-success">派单</el-button>
+          <el-button v-if="row.status === 2 && !row.riderId && !isEatInOrder(row) && !isSelfPickupOrder(row)" text size="small" @click="openDispatch(row)" class="btn-success">派单</el-button>
           <!-- 堂食：待接单→开始制作；自提：接单制作；外卖：待接单→派送 -->
-          <el-button v-if="row.status === 2" type="text" size="small" @click="advanceStatus(row)" class="btn-success">{{ isEatInOrder(row) ? '开始制作' : (isSelfPickupOrder(row) ? '接单制作' : '派送') }}</el-button>
+          <el-button v-if="row.status === 2" text size="small" @click="advanceStatus(row)" class="btn-success">{{ isEatInOrder(row) ? '开始制作' : (isSelfPickupOrder(row) ? '接单制作' : '派送') }}</el-button>
           <!-- 待接单：商家拒单（自动退款/回库存） -->
-          <el-button v-if="row.status === 2" type="text" size="small" class="btn-delete" @click="rejectOrderRow(row)">拒单</el-button>
+          <el-button v-if="row.status === 2" text size="small" class="btn-delete" @click="rejectOrderRow(row)">拒单</el-button>
           <!-- 堂食：制作中→上菜完成(释放桌台)；自提：核销取餐码；外卖：配送中→确认送达 -->
-          <el-button v-if="row.status === 3 && !isSelfPickupOrder(row)" type="text" size="small" @click="advanceStatus(row)" class="btn-success">{{ isEatInOrder(row) ? '上菜完成' : '完成' }}</el-button>
-          <el-button v-if="row.status === 3 && isSelfPickupOrder(row)" type="text" size="small" @click="openVerify(row)" class="btn-success">核销取餐</el-button>
-          <el-button v-if="row.status === 4" type="text" size="small" class="btn-delete" @click="openRefund(row)">退款</el-button>
-          <el-button v-if="row.status === 2 || row.status === 3" type="text" size="small" class="btn-warning" @click="cancelOrder(row)">取消</el-button>
+          <el-button v-if="row.status === 3 && !isSelfPickupOrder(row)" text size="small" @click="advanceStatus(row)" class="btn-success">{{ isEatInOrder(row) ? '上菜完成' : '完成' }}</el-button>
+          <el-button v-if="row.status === 3 && isSelfPickupOrder(row)" text size="small" @click="openVerify(row)" class="btn-success">核销取餐</el-button>
+          <el-button v-if="row.status === 4" text size="small" class="btn-delete" @click="openRefund(row)">退款</el-button>
+          <el-button v-if="row.status === 2 || row.status === 3" text size="small" class="btn-warning" @click="cancelOrder(row)">取消</el-button>
         </template>
       </crud-table>
     </main>
@@ -99,7 +98,7 @@
     <!-- 订单详情弹窗（只读，仅有关闭按钮） -->
     <crud-dialog
       title="订单详情"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       size="xl"
       :show-submit="false"
       :show-cancel="true"
@@ -114,7 +113,7 @@
             <span class="od-header-label">订单号</span>
             <span class="od-header-no">{{ diaForm.number || '-' }}</span>
           </div>
-          <el-tag :type="getOrderTagType(diaForm)" size="medium" effect="dark" class="od-header-status">
+          <el-tag :type="getOrderTagType(diaForm)" size="default" effect="dark" class="od-header-status">
             {{ getOrderType(diaForm) }}
           </el-tag>
         </div>
@@ -210,7 +209,7 @@
     <!-- 退款弹框 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="订单退款"
-      :visible.sync="refundVisible"
+      v-model="refundVisible"
       size="sm"
       :submit-loading="refundLoading"
       submit-text="确认退款"
@@ -242,7 +241,7 @@
     <!-- 店长派单弹窗：选择骑手 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="订单派单"
-      :visible.sync="dispatchVisible"
+      v-model="dispatchVisible"
       size="sm"
       :submit-loading="dispatchLoading"
       submit-text="确认派单"
@@ -273,7 +272,7 @@
     <!-- 自提核销弹窗：输入顾客取餐码 -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="自提核销"
-      :visible.sync="verifyVisible"
+      v-model="verifyVisible"
       size="sm"
       :submit-loading="verifyLoading"
       submit-text="确认核销"
@@ -291,7 +290,7 @@
     <!-- 商家取消弹窗：填写取消原因（已支付订单将按此原因自动退款） -->
     <crud-dialog :show-submit="true" :show-cancel="true"
       title="取消订单"
-      :visible.sync="cancelDiaVisible"
+      v-model="cancelDiaVisible"
       size="sm"
       :submit-loading="cancelDiaLoading"
       submit-text="确认取消"
@@ -307,13 +306,16 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/print-util.js?v=20260921"></script>
   <script src="../../api/order.js?v=20260926"></script>
   <script src="../../api/delivery.js?v=20260924"></script>
@@ -329,7 +331,7 @@
       '4': '已完成', '5': '已取消', '6': '已退款'
     }
 
-    new Vue({
+    createXinfeiApp({
       el: '#order-app',
       data: function() {
         return {

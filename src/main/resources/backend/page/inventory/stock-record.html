@@ -8,8 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -36,11 +35,11 @@
         @reset="reset"
         @action="onAction"
         @refresh="handleQuery()">
-        <template slot="search-extra">
+        <template  #search-extra>
           <el-select v-model="input.materialId" placeholder="食材" class="el-select--narrow" clearable filterable @change="handleQuery">
             <el-option v-for="item in materialOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
           </el-select>
-          <el-date-picker v-model="input.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd" class="el-date-editor--md" @change="handleQuery" size="small"></el-date-picker>
+          <el-date-picker v-model="input.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" class="el-date-editor--md" @change="handleQuery" size="small"></el-date-picker>
         </template>
       </table-bar>
 
@@ -87,7 +86,7 @@
     <crud-dialog :show-submit="true" :show-cancel="true"
       :size="'md'"
       :title="flowDialog.title"
-      :visible.sync="flowDialog.visible"
+      v-model="flowDialog.visible"
       :submit-loading="flowSubmitting"
       :close-on-click-modal="false"
       @submit="submitFlow"
@@ -119,16 +118,19 @@
     </crud-dialog>
   </div>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#stock-record-app',
       data() {
         return {

@@ -7,8 +7,7 @@
   <title>销售报表 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/tokens.css?v=20260926" />
-    <link rel="stylesheet" href="../../styles/main.css?v=20260926" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
   <script src="../../plugins/echarts/echarts.min.js"></script>
   <style>
     /* ========== 页面基础布局 ========== */
@@ -92,27 +91,27 @@
       @reset="resetForm"
       @action="onAction"
     >
-      <template slot="search-extra">
+      <template  #search-extra>
         <el-radio-group v-model="reportType" @change="handleTypeChange" size="small">
-          <el-radio-button label="weekly">周报</el-radio-button>
-          <el-radio-button label="monthly">月报</el-radio-button>
-          <el-radio-button label="yearly">年报</el-radio-button>
+          <el-radio-button value="weekly">周报</el-radio-button>
+          <el-radio-button value="monthly">月报</el-radio-button>
+          <el-radio-button value="yearly">年报</el-radio-button>
         </el-radio-group>
 
         <template v-if="reportType === 'weekly'">
-          <el-date-picker v-model="year" type="year" value-format="yyyy" size="small" style="width: 100px" placeholder="年份"></el-date-picker>
+          <el-date-picker v-model="year" type="year" value-format="YYYY" size="small" style="width: 100px" placeholder="年份"></el-date-picker>
           <el-input-number v-model="week" :min="1" :max="53" size="small" style="width: 100px" placeholder="周数"></el-input-number>
         </template>
 
         <template v-if="reportType === 'monthly'">
-          <el-date-picker v-model="year" type="year" value-format="yyyy" size="small" style="width: 100px;" placeholder="年份"></el-date-picker>
+          <el-date-picker v-model="year" type="year" value-format="YYYY" size="small" style="width: 100px;" placeholder="年份"></el-date-picker>
           <el-select v-model="month" size="small" style="width: 80px;" placeholder="月份">
             <el-option v-for="i in 12" :key="i" :label="i + '月'" :value="i"></el-option>
           </el-select>
         </template>
 
         <template v-if="reportType === 'yearly'">
-          <el-date-picker v-model="year" type="year" value-format="yyyy" size="small" style="width: 100px;" placeholder="年份"></el-date-picker>
+          <el-date-picker v-model="year" type="year" value-format="YYYY" size="small" style="width: 100px;" placeholder="年份"></el-date-picker>
         </template>
       </template>
     </table-bar>
@@ -145,19 +144,22 @@
     </crud-table>
  </main>
 
-  <script src="../../plugins/vue/vue.js"></script>
-  <script src="../../plugins/element-ui/index.js?v=20260915"></script>
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
   <!-- 修改点：补引 axios —— request.js 首行即使用全局 axios，缺失会抛错导致
        $axios 永不挂载，本页所有接口请求全部失效 -->
   <script src="../../plugins/axios/axios.min.js"></script>
   <script src="../../js/request.js?v=20260930"></script>
-  <script src="../../js/components.js?v=20261002"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
   <script src="../../api/report-enhanced.js?v=20260926"></script>
   <script>
-    new Vue({
+    createXinfeiApp({
       el: '#main-content',
       data() {
         const now = new Date()
@@ -195,7 +197,7 @@
         this.fetchData()
       },
       // 修改点：补清理，避免 resize 监听残留与 echarts 实例泄漏
-      beforeDestroy() {
+      beforeUnmount() {
         if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler)
         ;[this.revenueChart, this.orderChart].forEach(function(ch) {
           if (ch && !ch.isDisposed()) { try { ch.dispose() } catch (e) {} }
@@ -234,11 +236,11 @@
         /* ========== 图表初始化 ========== */
         initCharts() {
           var dom1 = document.getElementById('revenueChart');
-          if (dom1) this.revenueChart = echarts.init(dom1);
+          if (dom1) this.revenueChart = Vue.markRaw(echarts.init(dom1));
           var dom2 = document.getElementById('orderChart');
-          if (dom2) this.orderChart = echarts.init(dom2);
+          if (dom2) this.orderChart = Vue.markRaw(echarts.init(dom2));
 
-          // 修改点：存引用以便 beforeDestroy 解绑（匿名函数无法 removeEventListener）
+          // 修改点：存引用以便 beforeUnmount 解绑（匿名函数无法 removeEventListener）
           this.resizeHandler = () => {
             const charts = [this.revenueChart, this.orderChart]
             charts.forEach(function(ch) { if (ch && !ch.isDisposed()) ch.resize() })
