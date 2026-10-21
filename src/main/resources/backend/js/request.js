@@ -187,11 +187,26 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
      规范（前端二次审查 2026-07-17）：所有页面的 toast / loading / confirm /
      notify 必须经由本模块，禁止在业务页混用 this.$message / ElMessage /
      Notification 直写，确保提示样式与交互反馈一致、可统一管控。
-     优先走 Vue.prototype.$message 等原型方法，缺失时降级 window.ELEMENT。 */
+     优先走 Vue.prototype.$message 等原型方法，缺失时降级 window.ELEMENT；
+     Vue 3 页面（Element Plus）既没有 Vue.prototype，也没有 window.ELEMENT，
+     故再兜一层 window.ElementPlus 的 ElMessage / ElMessageBox / ElNotification / ElLoading。 */
   (function (global) {
     'use strict';
     function getVue() {
       return global.Vue || (global.top && global.top.Vue);
+    }
+    var EP = function () { return global.ElementPlus || null; };
+    /** Element Plus 全局构建下各反馈能力的等价入口 */
+    function epFallback(name) {
+      var ep = EP();
+      if (!ep) return null;
+      switch (name) {
+        case '$message': return ep.ElMessage || null;
+        case '$notify': return ep.ElNotification || null;
+        case '$loading': return (ep.ElLoading && ep.ElLoading.service) || null;
+        case '$confirm': return (ep.ElMessageBox && ep.ElMessageBox.confirm) || null;
+        default: return null;
+      }
     }
     function callMethod(name, fallback) {
       var Vue = getVue();
@@ -201,6 +216,10 @@ document.write('<script src="/shared/js/request-core.js?v=20260930"><\/script>')
       }
       if (typeof fallback === 'function') {
         return fallback.apply(null, args);
+      }
+      var ep = epFallback(name);
+      if (typeof ep === 'function') {
+        return ep.apply(null, args);
       }
       return null;
     }
