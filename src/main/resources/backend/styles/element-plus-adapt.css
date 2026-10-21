@@ -1,0 +1,26 @@
+/* ============================================================
+ * Element Plus DOM 适配层 —— 只在 main-v3.css（Vue 3 链）末尾加载
+ * ============================================================
+ * 这里放的不是主题，是「EP 换了 DOM 结构后，v2 时代写下的定位规则失配」的补丁。
+ * 必须排在 consistency.css 之后：要覆盖的都是 !important 规则，只能靠后来者胜。
+ * ============================================================ */
+
+/* 弹窗居中
+ * page.css 的居中方案是 UI2 专属的：
+ *   .el-dialog__wrapper:not([style*="display: none"]) { display:flex; align-items:center; justify-content:center }
+ *   .el-dialog:not(.is-fullscreen) { margin: 0 !important }
+ * Element Plus 把 .el-dialog__wrapper 换成了 .el-overlay-dialog，第一条永远不匹配，
+ * 第二条却仍然匹配，把 EP 自带的 margin: var(--el-dialog-margin-top) auto 50px 一起压掉，
+ * 结果弹窗贴到视口左上角（实测 rect.x=0 / y=0）。
+ *
+ * 这里按 EP 的 DOM 复刻 v2 的「水平+垂直居中」：容器给 flex，子项用 auto 外边距吸收剩余空间。
+ * 不用 align-items:center —— 弹窗高于视口时它会把顶部裁到滚不上去；
+ * auto 外边距在剩余空间为负时归 0，配合 .el-overlay-dialog 的 overflow:auto 正常滚动。
+ * （EP 自己的 is-align-center 只写 margin:auto 不改容器 display，实测不产生垂直居中，勿用。） */
+.el-overlay-dialog {
+  display: flex;
+  align-items: flex-start;
+}
+.el-dialog:not(.is-fullscreen) {
+  margin: auto !important;
+}

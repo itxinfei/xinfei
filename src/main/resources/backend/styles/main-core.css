@@ -1,0 +1,30 @@
+/* ============================================================
+ * 键盘聚焦可见环（WCAG 2.4.7）—— v2 与 v3 样式链共用的自有规则
+ * ------------------------------------------------------------
+ * 从 main.css 原样迁出，使 main.css 变成纯 @import 清单：
+ * Vue 3 迁移期需要一条不含 common-el.css（Element UI 2 覆写层）的平行链
+ * main-v3.css，两条链都必须带上本文件，故抽出单源，避免规则复制两份各自漂移。
+ * ============================================================ */
+
+/* 必须 !important：组件库里 `.el-input__inner { outline: 0 }`、`.el-submenu__title:focus
+   { outline: 0 }` 等规则的特异性不低于 :focus-visible，且部分在引入顺序上更靠后，
+   正常层叠会被静默压掉——实测内容页的输入框、可点击统计卡片此前聚焦时完全没有焦点环。
+   三个子属性分开声明而非用 outline 简写：简写里一旦某个值解析失败（例如变量缺失），
+   整条声明都会失效，分开写能保证至少宽度与样式始终生效。
+   注意：这里独立成文件而非放进 design-system.css，因为该文件经 @import 链下发在部分页面未生效。
+   :not(.el-dialog) —— Element Plus 的焦点管理会把焦点移到弹窗面板本身（.el-dialog 带
+   tabindex="-1"），UI2 时代弹窗面板不可聚焦，所以这条规则在 v3 链上会给整个弹窗套一圈金环，
+   并把 .unified-dialog 自己的浮层投影一起用 box-shadow !important 顶掉（实测）。
+   弹窗不是可操作控件，焦点环应留给其中的输入框与按钮。
+   写成 :where(:focus-visible) 是为了让排除项带来的特异性仍保持 0-1-0，
+   与改前等价；直接 :focus-visible:not(.el-dialog) 会抬到 0-2-0，可能压过原先压不过的规则。 */
+:where(:focus-visible):not(.el-dialog) {
+  outline-style: solid !important;
+  outline-width: 2px !important;
+  outline-color: var(--color-brand-600, #e6ae00) !important;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+  /* 兜底：el-input__inner 等组件会把 outline 压成 0 且 !important 也压不住，
+     再用一层 box-shadow 光环保证键盘焦点始终看得见 */
+  box-shadow: 0 0 0 2px var(--color-brand-600, #e6ae00) !important;
+}

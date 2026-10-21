@@ -1,0 +1,59 @@
+/* ============================================================
+ * 统一样式入口 —— Vue 3 / Element Plus 链（迁移期与 main.css 并存）
+ * ============================================================
+ * 与 main.css 的唯一差别：不加载 Element UI 2 的两层手抄副本
+ * （common-base-ui2.css = theme-chalk 编译产物、common-el.css = 1672 条 .el-* 覆写），
+ *   类名与 DOM 结构均绑定 UI 2，Element Plus 下大部分选择器已不存在；
+ *   品牌主题改由 element-plus/index.css + tokens.css + element-theme.css
+ *   三层的 CSS 变量承担，残余真需的覆写在迁移收口时逐条分诊回填。
+ *
+ * 顺序即契约，勿调换：
+ *   1. element-plus/index.css  必须最先——它的 :root 变量要由后面的 tokens 覆盖
+ *   2. tokens.css              设计令牌单源（47 个 --el-* 令牌在此定义，12 个与 EP 同名）
+ *   3. element-theme.css       只补 tokens 没有对应物的 EP 变量，不得重复声明同名者
+ *   4..n 与 main.css 一致的业务层
+ *
+ * 页面侧引用本文件时不要再单独 <link> tokens.css（本链已含），避免出现两份顺序。
+ * ============================================================ */
+
+/* Element Plus 官方样式基座 */
+@import "../plugins/element-plus/index.css";
+
+/* 设计令牌（必须紧随 EP 之后，才能覆盖 EP 的默认蓝主题） */
+@import "tokens.css";
+
+/* 令牌 → EP 变量的补全映射 */
+@import "element-theme.css";
+
+/* 设计系统基础层 */
+@import "design-system.css";
+
+/* 通用层：common.css 的 v3 拆链（跳过 common-base-ui2.css 与 common-el.css 两层 UI 2 副本） */
+@import "common-base.css";
+/* 统一弹窗壳：EP 的 el-dialog__* DOM 类名与 UI 2 一致，这块在 v3 链里必须保留，
+   位置对齐 v2 链中它在 common-el.css 顶部（紧随 common-base）的原有级联顺序 */
+@import "unified-dialog.css";
+@import "common-fixes.css";
+
+/* 页面级样式 */
+@import "page.css";
+
+/* 组件样式 */
+@import "components.css";
+
+/* 统一组件样式 */
+@import "unified-components.css";
+@import "form-fixes.css";
+
+/* 统计卡片组件样式（<stat-cards>/<stat-card> 依赖，必须随本链全局加载，
+   否则统计卡片渲染为无样式纯文字） */
+@import "components-stats-card.css";
+
+/* 全局一致性层（最后加载，覆盖 page.css 等历史漂移：字体/背景/容器/表头/分页） */
+@import "consistency.css";
+
+/* 键盘焦点环（v2/v3 共用单源，从 main.css 迁出） */
+@import "main-core.css";
+
+/* EP DOM 适配层：覆盖 v2 时代绑定 .el-dialog__wrapper 的定位规则，必须最后加载 */
+@import "element-plus-adapt.css";

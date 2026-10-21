@@ -1,0 +1,75 @@
+/* ============================================================
+ * Element Plus 主题映射层（design tokens → EP 变量）
+ * ============================================================
+ * 加载顺序硬约束（main-v3.css 里保证）：
+ *   element-plus/index.css  →  tokens.css  →  本文件
+ * 原因：tokens.css 有 47 个令牌复用 `--el-` 前缀，其中 12 个与 EP 官方变量**同名**
+ * （--el-color-primary / --el-color-success / --el-color-warning / --el-color-danger /
+ *  --el-color-info / --el-color-primary-light-5 / --el-color-primary-light-7 /
+ *  --el-text-color-regular / --el-text-color-secondary / --el-border-color /
+ *  --el-fill-color-blank / --el-fill-color-light）。
+ * 同名者由后加载者胜出：EP 必须最先，tokens 才能把品牌色盖进去；
+ * 本文件最后，负责补齐 tokens 没有对应物的 EP 变量（主色梯度、圆角、字号、阴影、
+ * 背景与文本的其余档位）。不要在本文件里重复声明上面 12 个，否则会静默推翻 tokens。
+ * ============================================================ */
+
+:root {
+  /* ---------- 主色梯度：EP 用 light-3/5/7/8/9 + dark-2 做 hover/disabled/active ----------
+     以 color-mix 从 --el-color-primary（品牌金 #c99200，见 tokens.css）派生，
+     不写死 hex，保持令牌单源。 */
+  --el-color-primary-light-3: color-mix(in srgb, var(--el-color-primary), var(--el-bg-white) 30%);
+  --el-color-primary-light-5: color-mix(in srgb, var(--el-color-primary), var(--el-bg-white) 50%);
+  --el-color-primary-light-7: color-mix(in srgb, var(--el-color-primary), var(--el-bg-white) 70%);
+  --el-color-primary-light-8: color-mix(in srgb, var(--el-color-primary), var(--el-bg-white) 80%);
+  --el-color-primary-light-9: color-mix(in srgb, var(--el-color-primary), var(--el-bg-white) 90%);
+  --el-color-primary-dark-2: color-mix(in srgb, var(--el-color-primary), black 20%);
+
+  /* EP 另有 error 别名（部分组件用 --el-color-error 而非 danger） */
+  --el-color-error: var(--el-color-danger);
+  --el-color-error-light-3: var(--el-color-primary-light-3);
+  --el-color-error-light-5: var(--el-color-primary-light-5);
+  --el-color-error-light-7: var(--el-color-primary-light-7);
+  --el-color-error-light-8: var(--el-color-primary-light-8);
+  --el-color-error-light-9: color-mix(in srgb, var(--el-color-danger), var(--el-bg-white) 90%);
+  --el-color-success-light-9: color-mix(in srgb, var(--el-color-success), var(--el-bg-white) 90%);
+  --el-color-warning-light-9: color-mix(in srgb, var(--el-color-warning), var(--el-bg-white) 90%);
+  --el-color-info-light-9: color-mix(in srgb, var(--el-color-info), var(--el-bg-white) 90%);
+
+  /* ---------- 背景 ---------- */
+  --el-bg-color: var(--bg-surface);
+  --el-bg-color-page: var(--bg-page);
+  --el-bg-color-overlay: var(--el-bg-white);
+
+  /* ---------- 文本：补 tokens 未覆盖的 placeholder / disabled ---------- */
+  --el-text-color-primary: var(--el-text-primary);
+  --el-text-color-placeholder: var(--text-muted);
+  --el-text-color-disabled: color-mix(in srgb, var(--text-muted), var(--el-bg-white) 50%);
+
+  /* ---------- 边框：补 dark / darker / extra-light 档 ---------- */
+  --el-border-color-light: var(--border-subtle);
+  --el-border-color-lighter: var(--border-default);
+  --el-border-color-extra-light: color-mix(in srgb, var(--border-default), var(--el-bg-white) 50%);
+  --el-border-color-dark: var(--border-strong);
+  --el-border-color-darker: var(--border-strong);
+
+  /* ---------- 圆角 / 字号：tokens 用的是无前缀名，这里桥给 EP ---------- */
+  --el-border-radius-base: var(--border-radius-base);
+  --el-border-radius-small: 2px;
+  --el-border-radius-round: 999px;
+  --el-font-size-base: var(--font-size-base);
+  --el-font-size-small: var(--font-size-sm);
+  --el-font-size-extra-small: var(--font-size-xs);
+  --el-font-size-large: var(--font-size-lg);
+  --el-font-family: var(--font-family, inherit);
+
+  /* ---------- 阴影 ---------- */
+  --el-box-shadow-lighter: var(--shadow-sm);
+  --el-box-shadow-light: var(--shadow-md);
+  --el-box-shadow: var(--shadow-lg);
+  --el-box-shadow-dark: var(--shadow-xl);
+
+  /* ---------- 组件级：弹窗与抽屉用设计系统的浮层阴影 ---------- */
+  --el-dialog-box-shadow: var(--shadow-overlay);
+  --el-dialog-border-radius: var(--border-radius-card);
+  --el-card-border-radius: var(--border-radius-card);
+}

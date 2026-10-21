@@ -1,0 +1,137 @@
+/* =============================================
+   unified-dialog —— 统一弹窗壳样式（v2/v3 两条样式链共用）
+   ------------------------------------------------------------
+   原先内联在 common-el.css 顶部。Element Plus 的弹窗 DOM 类名
+   （el-dialog__header/body/footer/headerbtn/close）与 UI 2 一致，
+   这块在 v3 链里照样有效；而 common-el.css 其余部分是 1600+ 条
+   绑定 UI 2 的 .el-* 覆写，v3 链整体不加载它。
+   故单独成文件，让 main.css 与 main-v3.css 都能引到。
+   ============================================= */
+
+/* =============================================
+   统一弹窗基础样式（所有 el-dialog 加 class="unified-dialog"）
+   ============================================= */
+
+/* 弹窗主体 */
+.unified-dialog {
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden;
+}
+.unified-dialog .el-dialog__header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--el-bg-page);
+  margin-right: 0;
+}
+.unified-dialog .el-dialog__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--el-text-primary);
+  line-height: 1.4;
+}
+.unified-dialog .el-dialog__headerbtn {
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.unified-dialog .el-dialog__headerbtn:hover {
+  background: var(--el-bg-subtle);
+}
+.unified-dialog .el-dialog__headerbtn .el-dialog__close {
+  font-size: var(--font-size-lg);
+  color: var(--color-info);
+  font-weight: 600;
+}
+.unified-dialog .el-dialog__headerbtn:hover .el-dialog__close {
+  color: var(--el-text-regular);
+}
+.unified-dialog .el-dialog__body {
+  padding: 20px 24px;
+  font-size: 14px;
+  color: var(--el-text-regular);
+  line-height: 1.6;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.unified-dialog .el-dialog__footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--el-bg-page);
+  text-align: right;
+}
+.unified-dialog .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.unified-dialog .dialog-footer .el-button {
+  min-width: 80px;
+}
+
+/* 遮罩层 */
+.unified-dialog + .v-modal,
+.el-overlay.is-dialog {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.dialog-fade-enter-active {
+  -webkit-animation: dialog-fade-in 0.3s;
+  animation: dialog-fade-in 0.3s;
+}
+.dialog-fade-leave-active {
+  -webkit-animation: dialog-fade-out 0.3s;
+  animation: dialog-fade-out 0.3s;
+}
+@-webkit-keyframes dialog-fade-in {
+  0% {
+    -webkit-transform: translate3d(0, -20px, 0);
+    transform: translate3d(0, -20px, 0);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+@keyframes dialog-fade-in {
+  0% {
+    -webkit-transform: translate3d(0, -20px, 0);
+    transform: translate3d(0, -20px, 0);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+@-webkit-keyframes dialog-fade-out {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translate3d(0, -20px, 0);
+    transform: translate3d(0, -20px, 0);
+    opacity: 0;
+  }
+}
+@keyframes dialog-fade-out {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translate3d(0, -20px, 0);
+    transform: translate3d(0, -20px, 0);
+    opacity: 0;
+  }
+}
