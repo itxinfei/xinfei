@@ -63,8 +63,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 智能补货服务实现
  * <p>
- * 核心算法：加权日均消耗 + 安全库存 + 补货周期 - 当前库存
+ * 核心算法：加权日均消耗 × 趋势因子 + 安全库存 + 补货周期 - 当前库存
  * - 加权日均消耗：近7天 weight=1.5，其余 weight=1.0
+ * - 趋势因子（O-20）：近7天日均 / 前7天日均（8~14天前），夹在 [0.3, 2.0]；
+ *   任一窗口无数据时为 1（无趋势信息沿用基础速率），需求上行/下行不再按平推错配
  * - 安全库存：日均消耗 × 2（应急2天）
  * - 建议采购量：日均消耗 × 补货周期 + 安全库存 - 当前库存
  * </p>
@@ -94,6 +96,15 @@ public class ReplenishServiceImpl implements ReplenishService {
 
     /** 其余天权重 */
     private static final BigDecimal WEIGHT_NORMAL = new BigDecimal("1.0");
+
+    /** 趋势因子下限：需求骤降时最多下调至基础速率的 30%（防止单周异常清零误杀补货） */
+    private static final BigDecimal TREND_FLOOR = new BigDecimal("0.3");
+
+    /** 趋势因子上限：需求上行时最多上调至基础速率的 2 倍（防止短期脉冲过度囤货） */
+    private static final BigDecimal TREND_CAP = new BigDecimal("2.0");
+
+    /** 趋势对比窗口：近 7 天 vs 前 7 天（8~14 天前） */
+    private static final int TREND_WINDOW_DAYS = 7;
 
     /** 统计天数默认值 */
     private static final int DEFAULT_DAYS = 30;
@@ -295,8 +306,14 @@ public class ReplenishServiceImpl implements ReplenishService {
         for (Material m : allMaterials) {
             BigDecimal stockQty = m.getStockQty() != null ? m.getStockQty() : BigDecimal.ZERO;
             List<StockRecord> materialRecords = outRecordsByMaterial.get(m.getId());
-            BigDecimal dailyUsage = weightedDailyUsageFromRecords(
-                    materialRecords != null ? materialRecords : new ArrayList<StockRecord>(), now);
+            Map<String, BigDecimal> dailyOutMap = aggregateDailyOut(
+                    materialRecords != null ? materialRecords : new ArrayList<StockRecord>());
+            // 日均消耗 = 加权基础速率 × 趋势因子（O-20：需求上行/下行不再按平推错配）
+            BigDecimal dailyUsage = weightedDailyUsage(dailyOutMap, now);
+            BigDecimal trendRatio = trendRatio(dailyOutMap, now);
+            if (trendRatio.compareTo(BigDecimal.ONE) != 0) {
+                dailyUsage = dailyUsage.multiply(trendRatio).setScale(4, RoundingMode.HALF_UP);
+            }
 
             // 安全库存 = 日均消耗 × 2
             BigDecimal safetyStock = dailyUsage.multiply(SAFETY_STOCK_DAYS).setScale(2, RoundingMode.HALF_UP);
@@ -325,6 +342,8 @@ public class ReplenishServiceImpl implements ReplenishService {
             item.put("unit", m.getUnit());
             item.put("stockQty", stockQty);
             item.put("dailyUsage", dailyUsage);
+            // 口径透明（O-20）：趋势因子随建议输出，前端可标注「按需求趋势已上/下调」
+            item.put("trendRatio", trendRatio);
             item.put("safetyStock", safetyStock);
             item.put("estimatedDays", estimatedDays);
             item.put("urgency", urgency);
@@ -378,12 +397,21 @@ public class ReplenishServiceImpl implements ReplenishService {
      * @return 加权日均消耗
      */
     private BigDecimal weightedDailyUsageFromRecords(List<StockRecord> records, LocalDateTime now) {
-        if (CollectionUtils.isEmpty(records)) {
-            return BigDecimal.ZERO;
-        }
+        return weightedDailyUsage(aggregateDailyOut(records), now);
+    }
 
-        // 按天汇总出库量：key=日期字符串(yyyy-MM-dd), value=当天出库总量
+    /**
+     * 按天汇总出库流水：key=日期字符串(yyyy-MM-dd), value=当天出库总量。
+     * <p>包级静态纯函数，供趋势因子单测直接构造输入。</p>
+     *
+     * @param records 出库流水（可为 null/空，返回空 Map）
+     * @return 按天汇总 Map
+     */
+    static Map<String, BigDecimal> aggregateDailyOut(List<StockRecord> records) {
         Map<String, BigDecimal> dailyOutMap = new HashMap<String, BigDecimal>();
+        if (CollectionUtils.isEmpty(records)) {
+            return dailyOutMap;
+        }
         for (StockRecord r : records) {
             LocalDateTime createdTime = r.getCreatedTime();
             if (createdTime == null || r.getQty() == null) {
@@ -398,13 +426,17 @@ public class ReplenishServiceImpl implements ReplenishService {
             BigDecimal qty = r.getQty() != null ? r.getQty() : BigDecimal.ZERO;
             dailyOutMap.put(dateKey, existing.add(qty));
         }
+        return dailyOutMap;
+    }
 
-        if (dailyOutMap.isEmpty()) {
+    /**
+     * 基于按天汇总 Map 计算加权日均消耗（近7天 weight=1.5，其余 weight=1.0）。
+     */
+    private BigDecimal weightedDailyUsage(Map<String, BigDecimal> dailyOutMap, LocalDateTime now) {
+        if (dailyOutMap == null || dailyOutMap.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        // 计算加权日均消耗
-        // 近7天 weight=1.5，其余 weight=1.0
         BigDecimal totalWeighted = BigDecimal.ZERO;
         BigDecimal totalWeight = BigDecimal.ZERO;
 
@@ -428,6 +460,77 @@ public class ReplenishServiceImpl implements ReplenishService {
         log.debug("[智能补货] 加权日均消耗={}, 加权总量={}, 权重总量={}",
                 weightedDailyUsage, totalWeighted, totalWeight);
         return weightedDailyUsage;
+    }
+
+    /**
+     * 近 7 天日均出库（趋势因子分子）。
+     * <p>窗口内无任何数据返回 null（区分「零消耗」与「无数据」，前者参与趋势、后者不参与）。</p>
+     */
+    static BigDecimal recentDailyAvg(Map<String, BigDecimal> dailyOutMap, LocalDateTime now) {
+        return windowDailyAvg(dailyOutMap, now, 0, TREND_WINDOW_DAYS);
+    }
+
+    /**
+     * 前 7 天（8~14 天前）日均出库（趋势因子分母）。窗口内无任何数据返回 null。
+     */
+    static BigDecimal priorDailyAvg(Map<String, BigDecimal> dailyOutMap, LocalDateTime now) {
+        return windowDailyAvg(dailyOutMap, now, TREND_WINDOW_DAYS + 1, TREND_WINDOW_DAYS * 2);
+    }
+
+    /**
+     * 计算指定天数区间 [minDaysAgo, maxDaysAgo) 的日均出库；窗口内无数据返回 null。
+     */
+    private static BigDecimal windowDailyAvg(Map<String, BigDecimal> dailyOutMap, LocalDateTime now,
+            int minDaysAgo, int maxDaysAgo) {
+        if (dailyOutMap == null || dailyOutMap.isEmpty()) {
+            return null;
+        }
+        BigDecimal total = BigDecimal.ZERO;
+        int dataDays = 0;
+        for (Map.Entry<String, BigDecimal> entry : dailyOutMap.entrySet()) {
+            int daysAgo = calcDaysAgoStatic(entry.getKey(), now);
+            if (daysAgo >= minDaysAgo && daysAgo <= maxDaysAgo) {
+                total = total.add(entry.getValue());
+                dataDays += 1;
+            }
+        }
+        // 窗口内没有任何出库日：无数据（null），不与「零消耗」混淆
+        if (dataDays == 0) {
+            return null;
+        }
+        return total.divide(new BigDecimal(dataDays), 4, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 趋势因子（O-20）：近 7 天日均 / 前 7 天日均，夹在 [0.3, 2.0]。
+     * <p>无趋势信息（任一窗口无数据）返回 1；前窗有数据但零消耗且近窗有消耗，
+     * 视为新品/新菜上行，按上限放大。</p>
+     */
+    static BigDecimal trendRatio(Map<String, BigDecimal> dailyOutMap, LocalDateTime now) {
+        BigDecimal recent = recentDailyAvg(dailyOutMap, now);
+        BigDecimal prior = priorDailyAvg(dailyOutMap, now);
+        if (recent == null || prior == null) {
+            return BigDecimal.ONE;
+        }
+        if (prior.compareTo(BigDecimal.ZERO) <= 0) {
+            return recent.compareTo(BigDecimal.ZERO) > 0 ? TREND_CAP : BigDecimal.ONE;
+        }
+        BigDecimal ratio = recent.divide(prior, 4, RoundingMode.HALF_UP);
+        if (ratio.compareTo(TREND_FLOOR) < 0) {
+            return TREND_FLOOR;
+        }
+        if (ratio.compareTo(TREND_CAP) > 0) {
+            return TREND_CAP;
+        }
+        return ratio;
+    }
+
+    /** 静态版天数差（与实例方法 calcDaysAgo 同口径，供纯函数使用） */
+    private static int calcDaysAgoStatic(String dateKey, LocalDateTime now) {
+        java.time.LocalDate today = now.toLocalDate();
+        java.time.LocalDate target = java.time.LocalDate.parse(dateKey);
+        long diff = java.time.temporal.ChronoUnit.DAYS.between(target, today);
+        return diff >= 0 ? (int) diff : 0;
     }
 
     /**
@@ -645,7 +748,7 @@ public class ReplenishServiceImpl implements ReplenishService {
     /**
      * 格式化 LocalDate 为 yyyy-MM-dd 字符串（JDK 1.8 兼容）
      */
-    private String formatLocalDate(java.time.LocalDate date) {
+    private static String formatLocalDate(java.time.LocalDate date) {
         return String.valueOf(date); // JDK 1.8 的 LocalDate.toString() 已返回 yyyy-MM-dd
     }
 
