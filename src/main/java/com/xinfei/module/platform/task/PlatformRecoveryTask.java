@@ -113,19 +113,34 @@ public class PlatformRecoveryTask {
     }
 
     /**
-     * 恢复单个平台：重新拉取订单、同步状态
+     * 恢复单个平台：重新拉取异常期间的订单
+     * <p>O-14 修复：原实现把 {@code LocalDateTime.toString()}（ISO 带 T 与毫秒）直接拼进平台
+     * API 的 beginTime/endTime，格式与拉单链路要求的 {@code yyyy-MM-dd HH:mm:ss} 不一致，
+     * 恢复拉单实际收不到单（TODO 的真实含义）。现与 {@code PlatformOrderPullController} 同格式，
+     * 且窗口从固定 5 分钟扩到 30 分钟：异常持续多轮时，中间轮次的订单靠窗口重叠 +
+     * {@code persistOrders} 按 platformOrderId 的唯一键去重兜底（多拉幂等、漏拉丢单）。</p>
      */
     private void recoverPlatform(PlatformConfig config) {
         try {
-            log.info("[平台恢复] 开始恢复: platformType={}", config.getPlatformType());
-            // TODO: 重新拉取最近 5 分钟的订单
-            String beginTime = java.time.LocalDateTime.now().minusMinutes(5).toString();
-            String endTime = java.time.LocalDateTime.now().toString();
-            platformSyncService.pullOrders(config, beginTime, endTime);
-            log.info("[平台恢复] 恢复成功: platformType={}", config.getPlatformType());
+            log.info("[平台恢复] 开始恢复拉单: platformType={}", config.getPlatformType());
+            String[] window = recoveryWindow(java.time.LocalDateTime.now());
+            List<com.xinfei.module.platform.adapter.PlatformOrder> pulled =
+                    platformSyncService.pullOrders(config, window[0], window[1]);
+            log.info("[平台恢复] 恢复拉单完成: platformType={}, 拉取 {} 单, 窗口 [{}, {}]",
+                    config.getPlatformType(), pulled == null ? 0 : pulled.size(), window[0], window[1]);
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
             log.error("[平台恢复] 恢复失败: platformType={}", config.getPlatformType(), e);
         }
+    }
+
+    /**
+     * 计算恢复拉单时间窗（包级静态便于单测）：[now-30min, now]，格式 yyyy-MM-dd HH:mm:ss。
+     * <p>两次取值基于同一 now，避免 begin/end 各自取当前时间造成窗口漂移。</p>
+     */
+    static String[] recoveryWindow(java.time.LocalDateTime now) {
+        java.time.format.DateTimeFormatter fmt =
+                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return new String[]{now.minusMinutes(30).format(fmt), now.format(fmt)};
     }
 }

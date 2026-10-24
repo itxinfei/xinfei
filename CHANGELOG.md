@@ -2,6 +2,11 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 平台对接 / 测试基建 | 恢复拉单修复（O-14，P1 全清）+ 全量回归排障
+- O-14：`PlatformRecoveryTask.recoverPlatform` 根因修复——原实现形式上已调 `pullOrders`，但把 `LocalDateTime.toString()`（ISO 带 T/毫秒）拼进平台 API 时间参数，与拉单链路 `yyyy-MM-dd HH:mm:ss` 口径不一致导致恢复实际拉不到单；现同格式化 + 窗口扩为 30 分钟（窗口重叠 + platformOrderId 唯一键去重幂等兜底）+ 起止同源防漂移 + 日志带拉取数。`PlatformRecoveryTaskTest` 3 例（格式回归守卫/全链透传/总开关）全绿。**至此 P1 清单 O-06~O-16 全部完成。**
+- 全量回归（1112 用例）排障：2 个真实失败为 `DashboardTodoAndHourlyControllerTest` 夹具缺口（未清其他测试残留的租户 999 待退记录致 pendingRefund 计数被污染），已补 `cleanByCondition` 精准清理（保种子 ID）；226 个 context 连坐错误定位为**全量跑期间并行执行其他 mvn 命令导致 target/classes 并发写**（类加载撞上类文件替换 → PermissionServiceImpl 偶发缺失雪崩），单跑全绿验证代码无回归——教训：全量跑期间禁止并行任何 mvn。
+- 开发者：AI
+
 ## 2026-10-24 | 会员 / 支付 / 营销 / 小程序 | 付费券包（对标 O-18 一期：打包售卖 + 支付自动发券）
 - 数据结构（V11 迁移 + schema-member 夹具同步）：`coupon_package`（名称/售价/面值合计/状态/排序）+ `coupon_package_item`（包内券模板，一期每模板限一张）+ `coupon_package_order`（购买单，orderNo 唯一，状态 0 待支付/1 已支付已发券/2 已关闭）。
 - 后端：`CouponPackageService`（adminPage/saveWithItems 含同模板重复拒绝/上下架/删除、listPublished、createOrder 幂等复用待支付单、deliverPaid CAS+拆包发券）；管理端 `/coupon-package` CRUD；顾客端 `/api/coupon-package`（list 匿名/buy/my）；支付走新 `CouponPackagePaymentController`（`/api/payment/coupon-package/pay`，与 RechargePaymentController 同构，JSAPI openid 从登录档案取）；`PaymentOrder.BIZ_COUPON_PACKAGE` 回调分支：deliverPaid 失败抛异常回滚支付单状态供回调重试，购买单缺失/已关闭走与充值同口径的 afterCommit 自动全额退款。

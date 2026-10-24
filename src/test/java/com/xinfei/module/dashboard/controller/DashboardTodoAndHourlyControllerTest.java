@@ -38,8 +38,16 @@ public class DashboardTodoAndHourlyControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private com.xinfei.test.TestDatabaseCleaner cleaner;
+
     @BeforeEach
     void setUp() {
+        // 单库隔离：清掉其他测试类留在租户 999 的待退/处理中退款记录（全量跑数据污染源，
+        // 2026-10-24 全量回归实测 pendingRefund 被污染为 2）；种子记录（99101/99102）由
+        // @Sql 在本方法之前种入，此处 NOT IN 保种子——@Sql 先于 @BeforeEach 执行
+        cleaner.cleanByCondition("refund_record",
+                "tenant_id = 999 AND status IN ('pending', 'processing') AND id NOT IN (99101, 99102)");
         BaseContext.setCurrentId(1L);
         BaseContext.setCurrentTenantId(999L);
     }
