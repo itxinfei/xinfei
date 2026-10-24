@@ -121,3 +121,6 @@ nul
 # 实际值放 .env / 环境注入。新克隆须按 application*.yml 的 ${ENV} 占位符自行准备这两份。
 src/main/resources/application-dev.yml
 src/main/resources/application-prod.yml
+
+# 浏览器自动化会话临时目录
+.playwright-mcp/
