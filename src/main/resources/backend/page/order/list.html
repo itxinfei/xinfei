@@ -10,6 +10,21 @@
 
   <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
   <style>
+    /* O-19 离线韧性：断网横幅（与收银台同款） */
+    .offline-banner {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 10px 14px;
+      margin-bottom: var(--space-3);
+      background: var(--el-color-warning-light-9, #fdf6ec);
+      border: 1px solid var(--el-color-warning, #e6a23c);
+      border-radius: var(--radius-md);
+      color: var(--el-color-warning-dark-2, #b88230);
+      font-size: var(--font-size-sm);
+      line-height: 1.5;
+    }
+    .offline-banner i { font-size: 18px; flex-shrink: 0; }
     /* 内部备注编辑行（原详情弹窗内联样式收口；间距走令牌） */
     .od-kv--top { align-items: flex-start; }
     /* 修改点(P0-6)：取餐码醒目展示，便于店员报码 */
@@ -27,6 +42,12 @@
     <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
       <!-- 修改点：视觉隐藏的页面主标题，供屏幕阅读器播报（页头已移除，配合 main 的 aria-labelledby） -->
       <h1 class="sr-only" id="page-title">订单明细</h1>
+
+      <!-- O-19 离线韧性：断网横幅（接单/拒单等操作在离线时会失败，提前告知） -->
+      <div v-if="offline" class="offline-banner" role="alert">
+        <i class="ri-wifi-off-line"></i>
+        网络已断开：接单、拒单等操作将无法提交，恢复联网后请刷新列表再操作。
+      </div>
 
       <!-- 数据统计卡片 -->
       <stat-cards
@@ -383,6 +404,8 @@
           lastSearch: {},
           // 勾选行 ID（跨翻页保留）；为空时导出按当前筛选
           selectedIds: [],
+          // O-19 离线韧性：断网状态（online/offline 事件驱动）
+          offline: typeof navigator !== 'undefined' && navigator.onLine === false,
           // 修改点：枚举字典（订单状态等），由后端 /api/meta/enums 下发；
           // 下方 ORDER_STATUS_FALLBACK 为兜底常量，接口失败时仍能正确显示
           enums: {},
@@ -488,7 +511,21 @@
         this.init()
         this.loadEnums()
       },
+      mounted() {
+        // O-19 离线韧性：断网横幅监听
+        window.addEventListener('online', this.onNetChange)
+        window.addEventListener('offline', this.onNetChange)
+        this.offline = navigator.onLine === false
+      },
+      beforeUnmount() {
+        window.removeEventListener('online', this.onNetChange)
+        window.removeEventListener('offline', this.onNetChange)
+      },
       methods: {
+        // O-19：浏览器联网状态切换
+        onNetChange() {
+          this.offline = navigator.onLine === false
+        },
         // 修改点：拉取后端枚举字典（订单状态唯一真源），失败时静默使用本地兜底常量
         loadEnums: function() {
           const self = this

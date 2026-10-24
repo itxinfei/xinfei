@@ -7,6 +7,24 @@
   <title>收银台 - 心飞外卖管理端</title>
     <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
   <style>
+    /* O-19 离线韧性：断网横幅（与页面顶对齐，不随滚动消失用 sticky） */
+    .offline-banner {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 10px 14px;
+      margin-bottom: var(--space-3);
+      background: var(--el-color-warning-light-9, #fdf6ec);
+      border: 1px solid var(--el-color-warning, #e6a23c);
+      border-radius: var(--radius-md);
+      color: var(--el-color-warning-dark-2, #b88230);
+      font-size: var(--font-size-sm);
+      line-height: 1.5;
+    }
+    .offline-banner i { font-size: 18px; flex-shrink: 0; }
     html, body {
       height: 100%;
       margin: 0;
@@ -407,6 +425,11 @@
   <!-- 修改点(2026-10-17)：主地标统一为 aria-labelledby + sr-only 标题（原 aria-label="页面主要内容" 无信息量） -->
   <div id="main-content" class="cashier-container" role="main" aria-labelledby="page-title">
     <h1 class="sr-only" id="page-title">收银台</h1>
+    <!-- O-19 离线韧性：断网横幅（浏览器 online/offline 事件驱动，恢复自动隐藏） -->
+    <div v-if="offline" class="offline-banner" role="alert">
+      <i class="ri-wifi-off-line"></i>
+      网络已断开：收款与日结将无法提交。已填写的收款信息已本地留存，恢复联网后请核对后重新提交。
+    </div>
     <!-- 头部统计（统一 stat-cards 组件） -->
     <div class="cashier-header">
       <div class="cashier-title">
@@ -837,6 +860,9 @@
           },
           pendingOrders: [],
           selectedOrder: null,
+          // O-19 离线韧性：断网状态（online/offline 事件驱动）+ 收款草稿（提交失败时本地留存）
+          offline: typeof navigator !== 'undefined' && navigator.onLine === false,
+          draftRestored: false,
           payType: 1,
           actualAmount: 0,
           remark: '',
@@ -984,12 +1010,19 @@
       mounted() {
         // C.1：全局快捷键 Enter=收款（未聚焦输入框时）
         document.addEventListener('keydown', this.onGlobalKeydown)
+        // O-19 离线韧性：断网横幅监听 + 上次失败收款草稿恢复
+        window.addEventListener('online', this.onNetChange)
+        window.addEventListener('offline', this.onNetChange)
+        this.offline = navigator.onLine === false
+        this.restoreDraft()
       },
       beforeUnmount() {
         if (this.timeTimer) {
           clearInterval(this.timeTimer)
         }
         document.removeEventListener('keydown', this.onGlobalKeydown)
+        window.removeEventListener('online', this.onNetChange)
+        window.removeEventListener('offline', this.onNetChange)
       },
       methods: {
         /* ── 工具方法 ── */
@@ -1208,12 +1241,54 @@
           return '满减券 · ' + cond
         },
         /* ── 收款与日结 ── */
+        // O-19 离线韧性：浏览器联网状态切换
+        onNetChange() {
+          this.offline = navigator.onLine === false
+        },
+        // O-19：收款提交失败（网络异常等）时本地留存已填信息，刷新/重进后恢复
+        DRAFT_KEY: 'cashier:payment-draft',
+        saveDraft(orderNumber) {
+          try {
+            localStorage.setItem(this.DRAFT_KEY, JSON.stringify({
+              orderNumber: orderNumber,
+              payType: this.payType,
+              actualAmount: this.actualAmount,
+              remark: this.remark,
+              savedAt: Date.now()
+            }))
+          } catch (e) { /* 存储不可用静默跳过 */ }
+        },
+        clearDraft() {
+          try { localStorage.removeItem(this.DRAFT_KEY) } catch (e) { /* 同上 */ }
+        },
+        restoreDraft() {
+          try {
+            var raw = localStorage.getItem(this.DRAFT_KEY)
+            if (!raw) return
+            var draft = JSON.parse(raw)
+            // 72h 内的草稿才恢复，防陈旧数据误导
+            if (!draft || !draft.orderNumber || Date.now() - (draft.savedAt || 0) > 72 * 3600 * 1000) {
+              this.clearDraft()
+              return
+            }
+            this.payType = draft.payType || 1
+            this.actualAmount = Number(draft.actualAmount || 0)
+            this.remark = draft.remark || ''
+            this.draftRestored = true
+            XinfeiUI.info('已恢复未完成收款的已填信息（订单 ' + draft.orderNumber + '），请核实后重新提交')
+          } catch (e) { /* 草稿损坏则忽略 */ }
+        },
         async handlePayment() {
           if (!this.selectedOrder) {
             XinfeiUI.warning('请先选择订单')
             return
           }
           if (this.submitLoading) return
+          // O-19：离线守卫——断网时前端先行拦截，避免店员面对含糊的失败
+          if (this.offline) {
+            this.saveDraft(this.selectedOrder.number)
+            XinfeiUI.error('当前处于离线状态，无法收款。已填写信息已留存，恢复网络后会自动带出。')
+            return
 
           // C.1：现金大额（>200 元）收款二次确认
           if (this.payType === 1 && this.actualAmount > 200) {
@@ -1270,6 +1345,7 @@
             const res = await cashPayment(params)
             if (res.code === 1) {
               XinfeiUI.success('收款成功')
+              this.clearDraft()
               // 修改点(2026-09-16)：若收银台在弹窗 iframe 内，通知父页关闭弹窗
               if (window.parent !== window) {
                 window.parent.postMessage({ type: 'cashier-success', orderId: this.selectedOrder ? this.selectedOrder.id : null }, '*')
@@ -1280,7 +1356,11 @@
               XinfeiUI.error(res.msg || '收款失败')
             }
           } catch (err) {
-            XinfeiUI.error('收款失败')
+            // O-19：网络异常导致提交失败——留存已填信息（含订单号），恢复联网后自动带出
+            if (this.selectedOrder) {
+              this.saveDraft(this.selectedOrder.number)
+            }
+            XinfeiUI.error('收款失败：网络异常或服务不可用。已填写信息已留存，恢复后请核对重新提交。')
           } finally {
             this.submitLoading = false
           }
