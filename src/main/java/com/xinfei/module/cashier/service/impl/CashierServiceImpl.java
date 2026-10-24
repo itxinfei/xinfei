@@ -51,6 +51,11 @@ import com.xinfei.module.member.model.Member;
 import com.xinfei.module.member.model.MemberLevel;
 import com.xinfei.module.member.service.MemberLevelService;
 import com.xinfei.module.member.service.MemberService;
+import com.xinfei.module.cashier.mapper.CashierShiftMapper;
+import com.xinfei.module.cashier.model.CashierShift;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xinfei.common.ObjectMapperHolder;
+import com.xinfei.common.utils.PageUtils;
 
 /**
  * 收银服务实现
@@ -64,6 +69,9 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
 
     @Autowired
     private CashierRecordMapper cashierRecordMapper;
+
+    @Autowired
+    private CashierShiftMapper cashierShiftMapper;
 
     @Autowired
     private DailySettlementMapper dailySettlementMapper;
@@ -1604,6 +1612,49 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
         result.put("totalChange", totalChange.setScale(2, java.math.RoundingMode.HALF_UP));
         result.put("byPayType", new ArrayList<>(byPayType.values()));
         return result;
+    }
+
+    /**
+     * 确认交班（O-29）：复用 shiftSummary 同口径聚合，快照落一条交班台账。
+     * 台账是「交班时点的对账快照」——落库后即使后续发生退款/改账，本班历史不变。
+     */
+    @Override
+    public CashierShift closeShift(Long cashierId, String remark) {
+        Map<String, Object> summary = shiftSummary(cashierId);
+        CashierShift shift = new CashierShift();
+        shift.setEmployeeId(cashierId);
+        shift.setEmployeeName(summary.get("cashierName") != null
+                ? String.valueOf(summary.get("cashierName")) : "未知收银员");
+        shift.setShiftDate(LocalDate.now());
+        shift.setCloseTime(LocalDateTime.now());
+        shift.setOrderCount((Integer) summary.getOrDefault("totalCount", 0));
+        shift.setTotalAmount((BigDecimal) summary.getOrDefault("totalAmount", BigDecimal.ZERO));
+        shift.setChangeAmount((BigDecimal) summary.getOrDefault("totalChange", BigDecimal.ZERO));
+        Object byPayType = summary.get("byPayType");
+        shift.setPayMethodSummary(byPayType == null ? null
+                : ObjectMapperHolder.getDefault().writeValueAsString(byPayType));
+        if (remark != null && !remark.trim().isEmpty()) {
+            shift.setRemark(remark.trim().length() > 200 ? remark.trim().substring(0, 200) : remark.trim());
+        }
+        cashierShiftMapper.insert(shift);
+        log.info("[交班台账] 落库: id={}, employeeId={}, date={}, count={}, total={}",
+                shift.getId(), cashierId, shift.getShiftDate(), shift.getOrderCount(), shift.getTotalAmount());
+        return shift;
+    }
+
+    @Override
+    public Page<CashierShift> pageShifts(int page, int pageSize, Long employeeId, String shiftDate) {
+        LambdaQueryWrapper<CashierShift> qw = new LambdaQueryWrapper<>();
+        qw.eq(employeeId != null, CashierShift::getEmployeeId, employeeId);
+        if (shiftDate != null && !shiftDate.trim().isEmpty()) {
+            try {
+                qw.eq(CashierShift::getShiftDate, LocalDate.parse(shiftDate.trim()));
+            } catch (Exception e) {
+                throw new CustomException("日期格式有误，请使用 yyyy-MM-dd");
+            }
+        }
+        qw.orderByDesc(CashierShift::getCloseTime);
+        return cashierShiftMapper.selectPage(PageUtils.of(page, pageSize), qw);
     }
 }
 

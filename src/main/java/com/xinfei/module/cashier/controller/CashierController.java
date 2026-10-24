@@ -54,7 +54,7 @@ public class CashierController {
     /**
      * 交班对账汇总（O-22）：当日 + 当前收银员的收款聚合。
      * <p>口径：cashier_record 当日 00:00 起、本人名下全部收款记录（含撤销态记录按 is_deleted 过滤），
-     * 按支付方式分组统计笔数/实收；供「交班对账」弹窗展示，不落交班台账（登记为后续增强）。</p>
+     * 按支付方式分组统计笔数/实收；供「交班对账」弹窗展示。O-29 后弹窗内可「确认交班」落台账。</p>
      *
      * @return 当日本人收款汇总（cashierName/date/totalCount/totalAmount/byPayType）
      */
@@ -64,6 +64,38 @@ public class CashierController {
     @Operation(summary = "交班对账汇总", description = "当日当前收银员的收款笔数/总额/按支付方式分布")
     public R<Map<String, Object>> shiftSummary() {
         return R.success(cashierService.shiftSummary(BaseContext.getCurrentId()));
+    }
+
+    /**
+     * 确认交班（O-29）：按 shift-summary 同口径聚合并落一条交班台账快照。
+     * <p>幂等说明：台账是时点快照而非状态机——同一班次重复点击会落多条记录，
+     * 由前端二次确认文案提示；不做唯一键约束（当日多次临时交班是合法场景）。</p>
+     *
+     * @param body 可选 remark（差额说明等，≤200 字）
+     * @return 已落库的台账记录
+     */
+    @PostMapping("/shift/close")
+    @RequireEmployee
+    @RateLimit(maxRequestsPerSecond = 2)
+    @Operation(summary = "确认交班", description = "聚合当日+本人收款快照落交班台账，返回台账记录")
+    public R<com.xinfei.module.cashier.model.CashierShift> closeShift(
+            @RequestBody(required = false) Map<String, String> body) {
+        String remark = body == null ? null : body.get("remark");
+        return R.success(cashierService.closeShift(BaseContext.getCurrentId(), remark));
+    }
+
+    /**
+     * 交班台账分页（O-29）：租户内历史，交班时间倒序，支持收银员/日期过滤。
+     */
+    @GetMapping("/shift/page")
+    @RequireEmployee
+    @Operation(summary = "交班台账", description = "租户内交班历史分页，支持收银员与日期过滤")
+    public R<com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.xinfei.module.cashier.model.CashierShift>> shiftPage(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String shiftDate) {
+        return R.success(cashierService.pageShifts(page, pageSize, employeeId, shiftDate));
     }
 
     // ==================== 收银记录管理 ====================

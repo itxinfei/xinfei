@@ -25,3 +25,7 @@ const getCashierTrend = (params) => $axios({ url: '/cashier/trend', method: 'get
 const getDailySettlementSummary = (params) => $axios({ url: '/cashier/settlement/summary', method: 'get', params })
 // 交班对账汇总（O-22）：当日当前收银员的收款聚合
 const getShiftSummary = () => $axios({ url: '/cashier/shift-summary', method: 'get' })
+
+// O-29 交班台账：确认交班（落快照）+ 历史分页
+const closeCashierShift = (remark) => $axios({ url: '/cashier/shift/close', method: 'post', data: { remark: remark || '' } })
+const pageCashierShifts = (params) => $axios({ url: '/cashier/shift/page', method: 'get', params })

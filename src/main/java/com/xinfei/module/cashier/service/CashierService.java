@@ -209,5 +209,25 @@ public interface CashierService extends IService<CashierRecord> {
      * @return cashierName/date/totalCount/totalAmount/byPayType 列表
      */
     Map<String, Object> shiftSummary(Long cashierId);
+
+    /**
+     * 确认交班（O-29）：按 shiftSummary 同口径聚合当日+本人收款，快照落一条交班台账。
+     *
+     * @param cashierId 收银员员工ID（当前登录）
+     * @param remark 交班备注（差额说明等，可空）
+     * @return 已落库的台账记录
+     */
+    com.xinfei.module.cashier.model.CashierShift closeShift(Long cashierId, String remark);
+
+    /**
+     * 交班台账分页（O-29）：租户内历史，按交班时间倒序。
+     *
+     * @param page 页码（1 起）
+     * @param pageSize 每页条数（上限 100）
+     * @param employeeId 收银员过滤（可空）
+     * @param shiftDate 日期过滤 yyyy-MM-dd（可空，精确匹配 shift_date）
+     */
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.xinfei.module.cashier.model.CashierShift> pageShifts(
+            int page, int pageSize, Long employeeId, String shiftDate);
 }
 

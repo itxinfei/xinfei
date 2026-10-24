@@ -837,9 +837,10 @@
       </el-button>
     </div>
 
-    <!-- O-22 交班对账弹窗：当日本人收款汇总（笔数/总额/各支付方式/找零） -->
+    <!-- O-22 交班对账弹窗：当日本人收款汇总（笔数/总额/各支付方式/找零）；O-29 起可确认交班落台账 -->
     <crud-dialog title="交班对账" v-model="shiftDialogVisible" size="md"
-      :close-on-click-modal="false" :show-submit="false" cancel-text="关 闭">
+      :close-on-click-modal="false" :show-submit="true" submit-text="确认交班并记录"
+      :submit-loading="shiftClosing" @submit="confirmCloseShift">
       <div v-loading="shiftLoading">
         <div class="shift-summary" v-if="shiftData">
           <div class="shift-row"><span>收银员</span><b>{{ shiftData.cashierName || '-' }}</b></div>
@@ -858,7 +859,25 @@
             <template #default="s">¥{{ formatMoney(s.row.amount) }}</template>
           </el-table-column>
         </el-table>
-        <div class="shift-tip">口径：当日 00:00 起本人名下全部收款记录；现金收款已含找零，找零合计单列。确认无误后请完成当日日结。</div>
+        <!-- O-29：交班备注（差额说明等） -->
+        <el-input v-model="shiftRemark" type="textarea" :rows="2" maxlength="200" show-word-limit
+          placeholder="交班备注（可选）：差额说明、异常情况等" style="margin-top: 12px;" aria-label="交班备注"></el-input>
+        <div class="shift-tip">口径：当日 00:00 起本人名下全部收款记录；现金收款已含找零，找零合计单列。台账为交班时点快照，重复交班会落多条记录。</div>
+
+        <!-- O-29：最近交班台账 -->
+        <div v-if="(shiftRecords || []).length" style="margin-top: 12px;">
+          <div style="font-weight:600;margin-bottom:6px;">最近交班台账</div>
+          <el-table :data="shiftRecords" size="small" stripe aria-label="最近交班台账">
+            <el-table-column label="交班时间" align="center">
+              <template #default="s">{{ (s.row.closeTime || '').replace('T', ' ').substring(0, 19) }}</template>
+            </el-table-column>
+            <el-table-column prop="orderCount" label="笔数" width="70" align="center"></el-table-column>
+            <el-table-column label="总额" align="center">
+              <template #default="s">¥{{ formatMoney(s.row.totalAmount) }}</template>
+            </el-table-column>
+            <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip></el-table-column>
+          </el-table>
+        </div>
       </div>
     </crud-dialog>
   </div>
@@ -876,7 +895,7 @@
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
-  <script src="../../api/cashier.js?v=20261024"></script>
+  <script src="../../api/cashier.js?v=20261024b"></script>
   <script src="../../api/order.js?v=20260926"></script>
   <script src="../../api/member-center.js?v=20260926"></script>
   <script src="../../api/dining.js?v=20260918b"></script>
@@ -900,6 +919,10 @@
           shiftDialogVisible: false,
           shiftLoading: false,
           shiftData: null,
+          // O-29 交班台账：备注 / 确认中 / 最近台账
+          shiftRemark: '',
+          shiftClosing: false,
+          shiftRecords: [],
           payType: 1,
           actualAmount: 0,
           remark: '',
@@ -1281,12 +1304,39 @@
         openShiftDialog() {
           this.shiftDialogVisible = true
           this.shiftLoading = true
+          this.shiftRemark = ''
           const self = this
           getShiftSummary().then(function (res) {
             if (String(res.code) === '1') { self.shiftData = res.data }
             else { XinfeiUI.error(res.msg || '交班汇总加载失败') }
           }).catch(function () { XinfeiUI.error('网络异常，请稍后重试') })
             .finally(function () { self.shiftLoading = false })
+          // O-29：最近交班台账
+          this.loadShiftRecords()
+        },
+        // O-29：确认交班——按当前汇总快照落台账（时点快照，重复交班落多条）
+        confirmCloseShift() {
+          const self = this
+          if (self.shiftClosing) return
+          XinfeiUI.confirm('台账为交班时点快照，同一班次重复交班会落多条记录。确认交班并记录？', '确认交班', {
+            confirmButtonText: '确认交班', cancelButtonText: '取消', type: 'warning'
+          }).then(function () {
+            self.shiftClosing = true
+            closeCashierShift(self.shiftRemark).then(function (res) {
+              if (String(res.code) === '1') {
+                XinfeiUI.success('交班已记录：本班 ' + (res.data.orderCount || 0) + ' 笔 / ¥' + self.formatMoney(res.data.totalAmount))
+                self.shiftRemark = ''
+                self.loadShiftRecords()
+              } else { XinfeiUI.error(res.msg || '交班记录失败') }
+            }).catch(function (err) { XinfeiUI.error('交班记录失败：' + (err.message || err)) })
+              .finally(function () { self.shiftClosing = false })
+          }).catch(function () { /* 用户取消 */ })
+        },
+        loadShiftRecords() {
+          const self = this
+          pageCashierShifts({ page: 1, pageSize: 5 }).then(function (res) {
+            if (String(res.code) === '1' && res.data) { self.shiftRecords = res.data.records || [] }
+          }).catch(function () { /* 台账加载失败不打断对账主流程 */ })
         },
         payTypeLabel(t) {
           const map = { 1: '现金', 2: '微信', 3: '支付宝', 4: '银行卡', 5: '会员储值', 0: '其他' }

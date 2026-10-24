@@ -2,6 +2,12 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 收银 / 工程纪律 | 交班台账落库（O-29）+ 依赖审计误报修正与首次清零
+- **O-29 交班台账**：V16 新表 `cashier_shift`（员工/日期/交班时间/笔数/总额/找零/支付方式分布JSON/备注）；`POST /cashier/shift/close` **复用 shiftSummary 同一聚合函数**落时点快照（台账与对账弹窗数字天然一致；时点快照语义——落库后退款/改账不影响本班历史，重复交班落多条不设唯一键，前端确认文案提示）；`GET /cashier/shift/page` 台账分页（收银员/日期过滤）。收银台「交班对账」弹窗升级：备注输入（≤200 字）+「确认交班并记录」二次确认 + 弹窗内最近 5 条台账。测试 `CashierShiftIntegrationTest` 5 例全绿（空班全零/实收口径/分页倒序/按人过滤/非法日期 422）+ 收银回归绿；8081 E2E 全链（备注→确认→弹条→台账表实时出现）。
+- **依赖审计首次 0 ERROR / 0 WARNING**：三类误报修正——① 命名空间对象用法（`sysApi.menuAccess()` 被裸调用判定漏掉）；② 回调引用（`const refApi = cond ? fnA : fnB`，category/list 实测）；③ 对象键位前导逗号误判（`categoryOptions: []` 被当使用，产生 4 假 ERROR）。按全页全文核对后移除 7 个零引用 include（ai/provider-config、cashier/index、kds/board、payment/channel-config、platform×3），支付渠道页清理后浏览器抽查正常。
+- 接口文档同步：cashier 模块 2 Controller / 21 端点（补记 O-17 提成 2 端点与 shift 4 端点），总口径 41/117/901（ctrl-scan 实测）。
+- 开发者：AI
+
 ## 2026-10-24 | 后台 UX / 权限 | 按钮级权限前端联动（O-27）+ 待办台跳转闭环核查（O-28）
 - **O-27 按钮级权限**：壳层把 /sys/menu/access 的权限快照写入 sessionStorage（同源 iframe 共享，页面零额外请求）；新增 `js/perm.js`（XinfeiPerm 助手 + v-perm 指令，SUPER_ADMIN 恒放行、session 无数据 fail-open——后端仍是真拦截点）；app-v3 增加共享指令注册口 XinfeiDirectivesV3 并把 XinfeiPerm 挂 globalProperties（**Vue 3 模板沙箱不允许访问 window 全局，漏挂会整页渲染空白——实测踩坑**）。口径盘点：36 处 @RequiresPermission 集中在 5 控制器，platform:manage/payment:manage 连查询端点都拦（整页级），其余为操作级；**细粒度键均不在权限字典（仅 10 个菜单级键），等效仅超管可用——前端照实镜像**。接入：整页级=菜单项补 perm 字段（壳层 allow() 早已支持只是没人用）×4 项；按钮级=通知页发送 Tab×2+重发、评价页审核/回复、地区页新增/修改/批量删除/删除。**双角色 E2E**：超管全可见；店长 4 菜单项隐藏、Ctrl+K 搜不到、通知页仅剩 2 Tab、地区页三按钮全隐；快照随登录切换正确。未做（登记）：细粒度键入典+角色授权 UI。
 - **O-28 待办台闭环**：逐卡核查 5 张待办卡——待退款卡**断链修复**（原指向已被 O-21④ 摘除的 payment/order-list.html，改跳订单列表）；库存预警卡升级为 `material-list.html?warning=1` 直达（页面新增参数：加载后自动展开预警弹窗，实测 ✓）；待接单/配送中卡确认 order/list 原生支持 ?status= 预筛；待评价卡保持原样（登记待定目标：C 端口径与后台评价管理不同域）。
