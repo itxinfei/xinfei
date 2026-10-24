@@ -377,6 +377,33 @@
               style="width:100%;height:78vh;border:0;display:block;"></iframe>
     </crud-dialog>
 
+    <!-- O-21 二期：区域管理弹窗（原独立页 area-list.html 并入） -->
+    <crud-dialog title="区域管理" v-model="areaDialogVisible" size="md"
+      :close-on-click-modal="false" :show-submit="false" cancel-text="关 闭">
+      <el-form :model="areaForm" label-width="80px" size="small" @submit.prevent>
+        <el-form-item label="区域名称">
+          <el-input v-model="areaForm.name" placeholder="请输入区域名称" maxlength="32" style="width: 60%;"></el-input>
+        </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="areaForm.sort" :min="0" :max="9999" style="width: 30%;"></el-input-number>
+          <el-button type="primary" size="small" style="margin-left: 12px;" @click="areaSave">
+            {{ areaForm.id ? '保存修改' : '添加区域' }}
+          </el-button>
+          <el-button v-if="areaForm.id" size="small" @click="areaReset">取消编辑</el-button>
+        </el-form-item>
+      </el-form>
+      <el-table :data="areaList" size="small" stripe aria-label="区域列表">
+        <el-table-column prop="name" label="区域名称" min-width="120" align="center"></el-table-column>
+        <el-table-column prop="sort" label="排序" width="70" align="center"></el-table-column>
+        <el-table-column label="操作" width="130" align="center">
+          <template #default="s">
+            <el-button text size="small" class="btn-view" @click="areaEdit(s.row)">编辑</el-button>
+            <el-button text size="small" class="btn-delete" @click="areaDelete(s.row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </crud-dialog>
+
     <!-- 桌贴打印弹窗（iframe 承载原打印中心；iframe 内 window.print 只打印海报，不卷入主页） -->
     <crud-dialog title="桌贴二维码打印" v-model="posterDialogVisible" size="fullscreen"
                  :close-on-click-modal="false" :show-submit="false" :show-cancel="false">
@@ -406,6 +433,9 @@
           checkoutDialogVisible: false, // 修改点(2026-09-16)：结账弹窗显隐
           cashierFrameUrl: '', // 修改点：弹窗内 iframe 加载的收银台地址
           posterDialogVisible: false, // 桌贴打印弹窗显隐
+          // O-21 二期：区域管理弹窗（原独立页并入）
+          areaDialogVisible: false,
+          areaForm: { id: null, name: '', sort: 0 },
           posterFrameUrl: '', // 弹窗内 iframe 加载的二维码打印中心地址
           areaList: [],
           counts: 0,
@@ -439,7 +469,8 @@
           // 操作按钮
           actionConfig: [
             { key: 'add', text: '+ 新增桌台', type: 'primary' },
-            { key: 'printPoster', text: '打印桌贴' }
+            { key: 'printPoster', text: '打印桌贴' },
+            { key: 'area', text: '区域管理', type: 'default' }
           ],
           // 缓存搜索参数
           lastSearch: {},
@@ -604,6 +635,42 @@
         onAction: function(payload) {
           if (payload.key === 'add') { this.addHandle() }
           else if (payload.key === 'printPoster') { this.openPosterDialog() }
+          else if (payload.key === 'area') { this.openAreaDialog() }
+        },
+        /* ── 区域管理（O-21 二期：原独立页并入本页弹窗）── */
+        openAreaDialog: function() {
+          this.areaDialogVisible = true
+          this.loadAreaList()
+        },
+        areaEdit: function(row) {
+          this.areaForm = { id: row.id, name: row.name, sort: row.sort || 0 }
+        },
+        areaReset: function() {
+          this.areaForm = { id: null, name: '', sort: 0 }
+        },
+        areaSave: function() {
+          const self = this
+          if (!this.areaForm.name || !this.areaForm.name.trim()) { XinfeiUI.warning('请输入区域名称'); return }
+          const req = this.areaForm.id ? updateArea(this.areaForm) : addArea(this.areaForm)
+          req.then(function(res) {
+            if (res.code === 1) {
+              XinfeiUI.success(self.areaForm.id ? '更新成功' : '新增成功')
+              self.areaReset()
+              self.loadAreaList()
+            } else { XinfeiUI.error(res.msg || '操作失败') }
+          }).catch(function() { XinfeiUI.error('操作失败') })
+        },
+        areaDelete: function(id) {
+          const self = this
+          XinfeiUI.confirm('确定删除该区域吗？区域下有桌台时将被拒绝。', '删除确认', { type: 'warning' }).then(function() {
+            deleteArea(id).then(function(res) {
+              if (res.code === 1) {
+                XinfeiUI.success('删除成功')
+                if (self.areaForm.id === id) self.areaReset()
+                self.loadAreaList()
+              } else { XinfeiUI.error(res.msg || '删除失败') }
+            }).catch(function() { XinfeiUI.error('操作失败') })
+          }).catch(function() {})
         },
         // 弹窗承载二维码打印中心：iframe 内打印只作用于该 frame，不影响后台主页
         openPosterDialog: function() {
