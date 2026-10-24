@@ -143,3 +143,9 @@
 - 注意：`rider` 表复用既有 `rating` 列，评价数改为查询派生（避免真实 MySQL 表迁移）；`rider_evaluation` 表由 `schema-rider.sql` 自动建表。
 - 开发者：AI
 
+
+## 2026-10-24 | 安全 / 配置 | 地图服务配置勘误与泄露事件闭环
+- 事件：Gitee 公开仓库 git 历史含初始提交（ad5e826）遗留的高德地图 key（application-dev.yml，3cbb41f「配置去密」已移出跟踪，234 star/159 fork 公开可还原）。定性：该 key 属瑞吉遗留死配置——`xinfei.geo.amap` 全代码零消费（地理编码实际由 `GeoUtils` 走百度地图 `xinfei.map.baidu.server-ak`），且用户确认该 key 已过期，历史泄露无实害，**事件闭环，无需历史重写**（159 fork 均持旧历史，重写无意义）。
+- 清理：本地 application-dev.yml 移除死配置块（误导源），替换为百度 AK 占位说明。注意：当前百度 AK 为空 → 地址转经纬度（geocode）处于优雅降级态（返回 null），申请到百度地图 server AK 后填入 dev.yml 的 `xinfei.map.baidu.server-ak` 即恢复配送范围距离判定能力。
+- 关键结论供后续会话参考：本项目地图服务=百度（非高德）；全历史扫描确认唯一泄露过的真实密钥即此过期高德 key，微信 app-secret 历史值均为空占位符。
+- 开发者：AI
