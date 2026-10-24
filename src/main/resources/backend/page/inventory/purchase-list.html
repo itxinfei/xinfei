@@ -424,7 +424,7 @@
       <!-- ===== 收货录入态：只列待收明细，默认填满剩余，改完直接确认 ===== -->
       <template v-else>
         <div class="rx-tip">登记本次实际收货数量，确认后库存自动增加；剩余为 <b>0</b> 的食材已收齐，不再列出。</div>
-        <el-table :data="rxRows" border size="small" class="detail-dialog__table" style="width:100%;">
+        <el-table :data="rxRows" border size="small" class="detail-dialog__table" style="width:100%;" empty-text="暂无待收明细">
           <el-table-column prop="materialName" label="食材名称" min-width="200" align="center" :header-align="'center'" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column prop="unit" label="单位" width="70" align="center" :header-align="'center'">
             <template  #default="scope">{{ scope.row.unit || '—' }}</template>

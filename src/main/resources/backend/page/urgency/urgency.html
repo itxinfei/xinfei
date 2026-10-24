@@ -285,7 +285,7 @@
         <el-table
           v-else-if="filteredOrders.length > 0"
           v-loading="tableLoading"
-          :data="filteredOrders"
+          :data="filteredOrders" empty-text="暂无订单"
           :row-class-name="tableRowClassName"
           style="width:100%"
           class="urgency-table"

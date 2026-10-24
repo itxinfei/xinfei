@@ -119,7 +119,7 @@
       </el-form>
 
       <div class="po-detail__items-title">菜品明细</div>
-      <el-table :data="detail.orderDetails || []" size="small" border class="po-detail__table">
+      <el-table :data="detail.orderDetails || []" empty-text="暂无相关记录，试试调整筛选条件" size="small" border class="po-detail__table">
         <el-table-column prop="name" label="菜品" min-width="140" align="center"></el-table-column>
         <el-table-column prop="dishFlavor" label="规格" min-width="120" align="center"></el-table-column>
         <el-table-column prop="number" label="数量" width="100" align="center" :header-align="'center'" :show-overflow-tooltip="true"></el-table-column>

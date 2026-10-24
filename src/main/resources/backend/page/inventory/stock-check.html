@@ -172,7 +172,7 @@
                 style="width:64px;height:64px;object-fit:cover;margin-right:8px;border:1px solid var(--border-default);border-radius:var(--radius-sm);cursor:pointer;vertical-align:middle;">
               </el-image>
             </div>
-            <el-table :data="row.details" stripe class="tableBox sub-table"
+            <el-table :data="row.details" stripe class="tableBox sub-table" empty-text="暂无明细"
               :row-class-name="detailRowClass" aria-label="盘点明细">
               <el-table-column label="食材名称" min-width="160">
                 <template  #default="scope">

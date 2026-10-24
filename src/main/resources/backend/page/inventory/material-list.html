@@ -174,7 +174,7 @@
           <el-button v-if="catForm.id" size="small" @click="catReset">取消编辑</el-button>
         </el-form-item>
       </el-form>
-      <el-table class="tableBox" :data="catList" size="small" stripe aria-label="食材分类列表">
+      <el-table class="tableBox" :data="catList" empty-text="暂无分类，点击「分类管理」新增" size="small" stripe aria-label="食材分类列表">
         <el-table-column prop="name" label="分类名称" min-width="120" align="center"></el-table-column>
         <el-table-column prop="sort" label="排序" width="70" align="center"></el-table-column>
         <el-table-column prop="materialCount" label="食材数量" width="90" align="center"></el-table-column>
@@ -188,7 +188,7 @@
     </crud-dialog>
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一弹窗组件替代手写 el-dialog（仅展示，隐藏确认按钮） -->
     <crud-dialog :show-cancel="true" title="库存预警" v-model="warningDialogVisible" size="lg" :show-submit="false" cancel-text="关 闭">
-      <el-table aria-label="数据表格" :data="warningData" stripe class="tableBox">
+      <el-table aria-label="数据表格" :data="warningData" empty-text="暂无相关记录，试试调整筛选条件" stripe class="tableBox">
         <el-table-column prop="name" label="食材名称" min-width="160" align="center"></el-table-column>
         <el-table-column label="食材分类" width="140" align="center" :header-align="'center'" :show-overflow-tooltip="true">
           <template  #default="scope">{{ scope.row.categoryName }}</template>

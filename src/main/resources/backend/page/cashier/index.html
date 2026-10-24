@@ -849,7 +849,7 @@
           <div class="shift-row"><span>收款总额</span><b class="shift-amount">¥{{ formatMoney(shiftData.totalAmount) }}</b></div>
           <div class="shift-row"><span>其中找零</span><b>¥{{ formatMoney(shiftData.totalChange) }}</b></div>
         </div>
-        <el-table class="tableBox" v-if="shiftData && (shiftData.byPayType || []).length" :data="shiftData.byPayType" size="small" stripe
+        <el-table class="tableBox" v-if="shiftData && (shiftData.byPayType || []).length" :data="shiftData.byPayType" empty-text="暂无相关记录，试试调整筛选条件" size="small" stripe
           style="margin-top: 12px;" aria-label="按支付方式分布">
           <el-table-column label="支付方式" align="center">
             <template #default="s">{{ payTypeLabel(s.row.payType) }}</template>
@@ -867,7 +867,7 @@
         <!-- O-29：最近交班台账 -->
         <div v-if="(shiftRecords || []).length" style="margin-top: 12px;">
           <div style="font-weight:600;margin-bottom:6px;">最近交班台账</div>
-          <el-table class="tableBox" :data="shiftRecords" size="small" stripe aria-label="最近交班台账">
+          <el-table class="tableBox" :data="shiftRecords" empty-text="暂无交班台账，完成交班后在此显示" size="small" stripe aria-label="最近交班台账">
             <el-table-column label="交班时间" align="center">
               <template #default="s">{{ (s.row.closeTime || '').replace('T', ' ').substring(0, 19) }}</template>
             </el-table-column>

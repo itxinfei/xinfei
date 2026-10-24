@@ -165,7 +165,7 @@
       :close-on-click-modal="false">
       <el-table
         v-loading="historyLoading"
-        :data="historyList"
+        :data="historyList" empty-text="暂无历史记录"
         size="small"
         max-height="380">
         <el-table-column prop="version" label="版本" width="70" align="center">

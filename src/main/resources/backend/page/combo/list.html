@@ -286,7 +286,7 @@
           <div v-if="comboDishTable.length != 0" class="content">
             <div class="addBut addBut-mb" role="button" tabindex="0" @click="openDishSelectDialog" @keydown.enter="openDishSelectDialog" aria-label="添加菜品">+ 添加菜品</div>
             <div class="table">
-              <el-table aria-label="数据表格" :data="comboDishTable" border size="small" class="tableBox">
+              <el-table aria-label="数据表格" :data="comboDishTable" empty-text="尚未选择菜品，请在上方搜索添加" border size="small" class="tableBox">
                 <el-table-column prop="name" label="名称" width="180" align="center"></el-table-column>
                 <el-table-column prop="price" label="原价" width="180" align="center">
                   <template  #default="scope">¥{{ formatMoney(scope.row.price) }}</template>
@@ -437,7 +437,7 @@
           :title="costData.missingDishCount + ' 个菜品暂无成本记录，按 ¥0 计入合计'"
           style="margin: 10px 0;"
         ></el-alert>
-        <el-table class="tableBox" :data="costData.items || []" size="small" border>
+        <el-table class="tableBox" :data="costData.items || []" empty-text="暂无相关记录，试试调整筛选条件" size="small" border>
           <el-table-column prop="name" label="菜品" min-width="140" align="center"></el-table-column>
           <el-table-column prop="copies" label="份数" width="70" align="center"></el-table-column>
           <el-table-column label="单位成本" width="120" align="center">

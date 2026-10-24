@@ -144,7 +144,7 @@
         <el-descriptions-item label="电话">{{ detailDialog.booking.contactPhone }}</el-descriptions-item>
         <el-descriptions-item label="总金额">¥{{ Number(detailDialog.booking.totalAmount || 0).toFixed(2) }}</el-descriptions-item>
       </el-descriptions>
-      <el-table class="tableBox" :data="detailDialog.items" size="small" max-height="320" v-loading="detailDialog.loading">
+      <el-table class="tableBox" :data="detailDialog.items" empty-text="暂无团餐明细" size="small" max-height="320" v-loading="detailDialog.loading">
         <el-table-column prop="itemType" label="类型" width="80" align="center">
           <template  #default="{ row }">{{ row.itemType === 'SETMEAL' ? '套餐' : '菜品' }}</template>
         </el-table-column>

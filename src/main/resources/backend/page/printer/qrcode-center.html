@@ -105,7 +105,7 @@
         站点地址像是本机地址，手机扫码可能打不开；请填电脑的局域网地址（如 http://192.168.x.x:8080）
       </div>
 
-      <el-table class="tableBox" :data="filteredTables" ref="table" border stripe max-height="380"
+      <el-table class="tableBox" :data="filteredTables" ref="table" empty-text="暂无桌台，试试调整筛选" border stripe max-height="380"
                 v-loading="tablesLoading"
                 element-loading-text="桌台加载中"
                 @selection-change="onSelectionChange" style="margin-bottom:10px;">
