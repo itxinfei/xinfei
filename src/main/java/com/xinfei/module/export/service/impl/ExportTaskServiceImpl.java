@@ -47,6 +47,9 @@ public class ExportTaskServiceImpl implements ExportTaskService {
     /** 终态任务文件保留期：超过后清扫任务删文件 + 逻辑删除记录 */
     private static final int RETENTION_DAYS = 7;
 
+    /** params_json 上限（text 列，V15）：1000 个勾选 ID 序列化约 8KB，留足余量并防滥用 */
+    private static final int MAX_PARAMS_JSON_LENGTH = 60000;
+
     private static final DateTimeFormatter MONTH_DIR_FMT = DateTimeFormatter.ofPattern("yyyyMM");
     private static final DateTimeFormatter FILE_STAMP_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -55,6 +58,7 @@ public class ExportTaskServiceImpl implements ExportTaskService {
             ExportTask.TYPE_ORDERS, "订单数据",
             ExportTask.TYPE_DISHES, "菜品数据",
             ExportTask.TYPE_EMPLOYEES, "员工数据",
+            ExportTask.TYPE_USERS, "用户数据",
             ExportTask.TYPE_REPORT, "经营报表");
 
     @Resource
@@ -95,7 +99,7 @@ public class ExportTaskServiceImpl implements ExportTaskService {
         task.setEmployeeId(employeeId);
         task.setEmployeeName(emp != null && emp.getName() != null ? emp.getName() : "未知员工");
 
-        // 参数清洗：空值丢弃；序列化后限长（params_json varchar(1000)）
+        // 参数清洗：空值丢弃；序列化后限长（params_json text，防滥用封顶）
         Map<String, String> cleaned = new LinkedHashMap<>();
         if (params != null) {
             for (Map.Entry<String, String> e : params.entrySet()) {
@@ -105,7 +109,7 @@ public class ExportTaskServiceImpl implements ExportTaskService {
             }
         }
         String json = cleaned.isEmpty() ? null : objectMapper.writeValueAsString(cleaned);
-        if (json != null && json.length() > 1000) {
+        if (json != null && json.length() > MAX_PARAMS_JSON_LENGTH) {
             throw new CustomException("导出参数过长，请缩小筛选范围");
         }
         task.setParamsJson(json);
@@ -263,6 +267,7 @@ public class ExportTaskServiceImpl implements ExportTaskService {
             case ExportTask.TYPE_ORDERS -> exportDataService.orders(format, params);
             case ExportTask.TYPE_DISHES -> exportDataService.dishes(format, params);
             case ExportTask.TYPE_EMPLOYEES -> exportDataService.employees(format, params);
+            case ExportTask.TYPE_USERS -> exportDataService.users(format, params);
             case ExportTask.TYPE_REPORT -> exportDataService.report(format, params);
             default -> throw new CustomException("不支持的导出类型");
         };

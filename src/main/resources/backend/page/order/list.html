@@ -376,7 +376,7 @@
   <script src="../../api/delivery.js?v=20260924"></script>
   <script src="../../api/printer.js?v=20260921"></script>
   <script src="../../api/payment.js?v=20260926"></script>
-  <script src="../../api/export.js?v=20260926"></script>
+  <script src="../../api/export-task.js?v=20261024"></script>
   <script src="../../api/meta.js?v=20260926"></script>
   <script>
     // 订单状态兜底常量（与后端 com.xinfei.enums.OrderStatus 严格一致，1 基）
@@ -953,11 +953,10 @@
           }
           const params = { ids: this.selectedIds.join(',') }
           try {
-            const ext = format === 'excel' ? 'xlsx' : 'pdf'
-            const apiCall = format === 'excel' ? exportApi.exportOrdersExcel(params) : exportApi.exportOrdersPdf(params)
-            await exportApi.downloadFile(apiCall, '订单数据.' + ext)
-            XinfeiUI.success('已导出选中的 ' + this.selectedIds.length + ' 条订单')
-          } catch (err) { XinfeiUI.error('导出失败：' + (err.message || err)) }
+            // O-25：导出走异步任务（生成完成后在顶栏「导出中心」下载）
+            await createExportTask({ taskType: 'orders', fileFormat: format, params: params })
+            XinfeiUI.success('已提交 ' + this.selectedIds.length + ' 条订单的导出任务，完成后可点顶部「导出中心」下载')
+          } catch (err) { XinfeiUI.error('导出任务提交失败：' + (err.message || err)) }
         }
       }
     })

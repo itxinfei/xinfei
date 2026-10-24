@@ -33,6 +33,8 @@ public class ExportTask implements Serializable {
     public static final String TYPE_DISHES = "dishes";
     /** 任务类型：员工数据 */
     public static final String TYPE_EMPLOYEES = "employees";
+    /** 任务类型：C端用户数据 */
+    public static final String TYPE_USERS = "users";
     /** 任务类型：经营报表 */
     public static final String TYPE_REPORT = "report";
 

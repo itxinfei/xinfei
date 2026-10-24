@@ -131,6 +131,10 @@
               </div>
             </div>
             <div class="topbar-right">
+              <button class="palette-trigger" @click="openExportCenter" title="导出任务中心：提交异步导出、下载完成的文件" aria-label="导出中心">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span class="palette-trigger-text">导出中心</span>
+              </button>
               <button class="palette-trigger" @click="openPalette" title="搜索菜单（Ctrl+K）" aria-label="搜索菜单">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <span class="palette-trigger-text">搜索菜单</span>
@@ -180,6 +184,8 @@
           </div>
         </div>
       </div>
+    <!-- 全局导出任务中心（O-25：各列表页提交的异步导出任务在此查看/下载） -->
+    <export-task-center ref="exportCenter"></export-task-center>
     <!-- 全局菜单检索命令面板（Ctrl+K） -->
     <div v-if="paletteOpen" class="palette-overlay" @click.self="closePalette">
       <div class="palette" role="dialog" aria-modal="true" aria-label="菜单快速跳转">
@@ -219,6 +225,8 @@
     <script src="./api/store.js?v=20261003"></script>
     <script src="js/components-v3.js?v=3001001"></script>
     <script src="js/app-v3.js?v=3001001"></script>
+    <script src="./api/export-task.js?v=20261024"></script>
+    <script src="js/export-task-center.js?v=20261024b"></script>
     <script>
 
       createXinfeiApp({
@@ -599,6 +607,11 @@
             }).catch(function (err) {
               console.warn('[index] 店铺品牌加载失败，使用默认品牌:', err)
             })
+          },
+          /* ── 全局导出任务中心（O-25） ── */
+          openExportCenter() {
+            const center = this.$refs.exportCenter
+            if (center) center.open()
           },
           /* ── 全局菜单检索命令面板 ── */
           openPalette() {

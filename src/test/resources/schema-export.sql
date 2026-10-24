@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS export_task (
   employee_name varchar(64) NULL DEFAULT NULL COMMENT '发起员工姓名（冗余快照）',
   task_type varchar(32) NOT NULL COMMENT '任务类型 orders/dishes/employees/report',
   file_format varchar(16) NOT NULL COMMENT '文件格式 excel/pdf',
-  params_json varchar(1000) NULL DEFAULT NULL COMMENT '查询参数JSON',
+  params_json text NULL COMMENT '查询参数JSON',
   status tinyint NOT NULL DEFAULT 0 COMMENT '状态 0:排队中 1:生成中 2:已完成 3:失败',
   file_name varchar(255) NULL DEFAULT NULL COMMENT '下载文件名（完成时写入）',
   file_size bigint NULL DEFAULT NULL COMMENT '文件大小（字节）',

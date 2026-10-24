@@ -150,6 +150,18 @@ public class ExportTaskIntegrationTest extends BaseControllerTest {
     }
 
     @Test
+    @DisplayName("users 类型：创建→执行→文件名含「用户数据」")
+    void usersTypeFlow() {
+        ExportTask task = exportTaskService.create(ExportTask.TYPE_USERS, ExportTask.FORMAT_EXCEL, Map.of());
+        exportTaskService.execute(task.getId());
+        ExportTask done = exportTaskMapper.selectById(task.getId());
+        assertNotNull(done);
+        assertEquals(ExportTask.STATUS_SUCCESS, done.getStatus(),
+                "用户导出（空数据）应成功: " + done.getErrorMsg());
+        assertTrue(done.getFileName().startsWith("用户数据"), "下载文件名应含类型中文: " + done.getFileName());
+    }
+
+    @Test
     @DisplayName("API：非法类型被拒绝")
     void apiRejectsUnknownType() throws Exception {
         mockMvc.perform(withCsrfToken(mockMvc, post("/export/tasks"))

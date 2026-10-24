@@ -21,6 +21,7 @@
     { value: 'orders', label: '订单数据', needRange: true, needStatus: true },
     { value: 'dishes', label: '菜品数据', needRange: false, needStatus: false },
     { value: 'employees', label: '员工数据', needRange: false, needStatus: false },
+    { value: 'users', label: '用户数据', needRange: false, needStatus: false },
     { value: 'report', label: '经营报表', needRange: true, needStatus: false }
   ]
 

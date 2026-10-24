@@ -561,7 +561,10 @@
           const q = this.daily.queryDate
           if (this.daily.loading || !q || q.length < 2 || !q[0] || !q[1]) return false
           const d = this.daily.dailyData || {}
+          const rs = this.daily.rangeSummary
+          // 区间任一口径有数据即可导出：原页只看开始日单日日报，区间有单也禁用属误限
           return (Number(d.totalOrders) || 0) > 0 || (Number(d.totalAmount) || 0) > 0
+            || (rs && ((Number(rs.totalOrders) || 0) > 0 || (Number(rs.totalAmount) || 0) > 0))
         },
         dailyActions() {
           const dis = !this.dailyCanExport || this.daily.exporting

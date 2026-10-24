@@ -284,7 +284,7 @@
   <script src="../../js/performance-utils.js?v=20260926"></script>
     <script src="../../api/employee.js?v=20260922"></script>
     <script src="../../api/sys.js?v=20261006"></script>
-    <script src="../../api/export.js?v=20260926"></script>
+    <script src="../../api/export-task.js?v=20261024"></script>
     <script src="../../js/validate.js?v=20260926"></script>
     <script src="../../js/components-v3.js?v=3001001"></script>
     <script src="../../js/app-v3.js?v=3001001"></script>
@@ -738,14 +738,11 @@
             }
             const params = { ids: this.selectedIds.join(',') }
             try {
-              const ext = format === 'excel' ? 'xlsx' : 'pdf'
-              const apiCall = format === 'excel'
-                ? exportApi.exportEmployeesExcel(params)
-                : exportApi.exportEmployeesPdf(params)
-              await exportApi.downloadFile(apiCall, '员工数据.' + ext)
-              XinfeiUI.success('已导出选中的 ' + this.selectedIds.length + ' 名员工')
+              // O-25：导出走异步任务（生成完成后在顶栏「导出中心」下载）
+              await createExportTask({ taskType: 'employees', fileFormat: format, params: params })
+              XinfeiUI.success('已提交 ' + this.selectedIds.length + ' 名员工的导出任务，完成后可点顶部「导出中心」下载')
             } catch (err) {
-              XinfeiUI.error('导出失败：' + (err.message || err))
+              XinfeiUI.error('导出任务提交失败：' + (err.message || err))
             }
           },
 

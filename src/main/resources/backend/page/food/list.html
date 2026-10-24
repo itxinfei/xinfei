@@ -315,7 +315,7 @@
   <script src="../../js/food-bom-dialog.js?v=20261022"></script>
   <script src="../../api/food.js?v=20260926"></script>
   <script src="../../api/inventory.js?v=20260926"></script>
-  <script src="../../api/export.js?v=20260926"></script>
+  <script src="../../api/export-task.js?v=20261024"></script>
   <script>
     createXinfeiApp({
       el: '#food-app',
@@ -812,11 +812,10 @@
           }
           var params = { ids: this.checkList.join(',') }
           try {
-            var ext = format === 'excel' ? 'xlsx' : 'pdf'
-            var apiCall = format === 'excel' ? exportApi.exportDishesExcel(params) : exportApi.exportDishesPdf(params)
-            await exportApi.downloadFile(apiCall, '菜品数据.' + ext)
-            XinfeiUI.success('已导出选中的 ' + this.checkList.length + ' 个菜品')
-          } catch (err) { XinfeiUI.error('导出失败：' + (err.message || err)) }
+            // O-25：导出走异步任务（生成完成后在顶栏「导出中心」下载）
+            await createExportTask({ taskType: 'dishes', fileFormat: format, params: params })
+            XinfeiUI.success('已提交 ' + this.checkList.length + ' 个菜品的导出任务，完成后可点顶部「导出中心」下载')
+          } catch (err) { XinfeiUI.error('导出任务提交失败：' + (err.message || err)) }
         },
         // 修改点(2026-09-24)：配方编辑方法（editBOM/loadBOMItems/addBOMItem/delBOMItem/
         // onMaterialChange/submitBOM 等）已迁移至独立组件 js/food-bom-dialog.js，

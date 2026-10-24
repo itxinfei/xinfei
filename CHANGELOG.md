@@ -2,6 +2,15 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 导出 / 工程纪律 | O-25 收尾：全站导出任务化 + 两道静态审计脚本
+- **同步导出全量任务化**：订单/菜品/员工/用户 4 个列表页的「导出Excel/PDF」由同步 blob 下载改走 `/export/tasks` 任务通道（勾选行 ids 经 params_json 透传；后端补 `TYPE_USERS` 类型分发）。V15 迁移：`export_task.params_json` 扩容 text（1000 个勾选 ID 序列化 ~8KB，varchar(1000) 容不下，与同步导出 GET URL 历史容量对齐），服务端限长校验同步放宽至 60KB 防滥用。
+- **壳层全局「导出中心」**：顶栏新增入口（弹窗组件挂壳层 Vue 应用）——列表页提交任务后无需回经营报表页即可查看/下载；导出中心补「用户数据」类型。
+- **管理页修正**：经营报表「导出 Excel/PDF」可用性改区间口径（原只看开始日单日数据，区间有单也禁用属误限）。
+- **两道静态审计脚本入库**（scripts/，与 lint-ui-conventions 同惯例）：① `audit-page-deps.js`——页面→api 隐式依赖检查（漏引 include = ERROR，本会话报表合并时曾漏引 api/category.js 实测踩坑）+ 未使用 include 提醒 + 菜单可达性，当前 0 ERROR/26 WARN（人工确认类）；② `docs-audit.js`——后台页面清单 vs page/ 目录互查 + 模块与接口.md 头部口径 vs ctrl-scan 实测，首跑即抓到 4 处漂移（dining/area-list、inventory/category-list、payment/order-list 合并后未回改，employee/commission 漏登记）已全部修正。
+- 修正 AGENTS/约束引用的 `.codebuddy/memory/MEMORY.md` 失效问题（本机建档为速查索引层，.gitignore 维持本机不入库）。
+- 验证：`ExportTaskIntegrationTest` 7 例全绿；8081 实后端浏览器实测（订单勾选导出 ids 透传生成成功、users/PDF 任务成功、壳层导出中心可达）；audit-page-deps 0 ERROR、docs-audit 0 ERROR。
+- 开发者：AI
+
 ## 2026-10-24 | 报表 / 导出 | 报表合并收尾（O-21 二期⑤）+ 异步导出任务中心（O-25）+ UI 紧凑化补登记（O-24）
 - **O-21 二期⑤ 报表 5→2**：新建 `page/report/management.html`「经营报表」五 Tab 全内置——营业日报/销售报表/菜品排行/时段分析/支付分析 13 个 ECharts 实例逐页忠实移植（el-tabs lazy 懒挂载 + 首次激活加载 + 重激活 resize，日报骨架屏/排行 Top3 趋势/时段热力图/支付退款面板全部保留原口径）；评价管理保持独立。git rm 旧页 6 个（5 报表页 + export/index.html），菜单 数据报表 7→2，导出中心并入页内工具栏「导出中心」弹窗。8081 实后端浏览器实测：五 Tab 全挂载 13/13 canvas、带真实数据渲染、全 Tab 图表与查询正常。
 - **O-25 异步导出任务中心**：V14 新表 `export_task`（状态机 0排队→1生成→2完成/3失败）；`ExportDataService` 把 ExportController 数据构建逻辑原样抽取、同步/异步共用单一口径；`POST /export/tasks`（限流 5/s）→ `exportTaskExecutor`（core1/max2/queue100 + TaskDecorator 传租户上下文）异步生成落盘（`xinfei.export.dir` 默认 {user.dir}/data/exports，非静态伺服，仅鉴权下载端点读出）→ 任务中心轮询/下载/删除；`ExportTaskCleanupTask` 就绪+每日 03:30 分布式锁清扫（卡死 1h 标失败、终态 7 天保留期清文件）。前端新组件 `js/export-task-center.js`（原导出中心 4 卡片收编为快捷导出表单 + 任务列表弹窗，3s 轮询）；日报导出 Excel/PDF 改走任务通道。
