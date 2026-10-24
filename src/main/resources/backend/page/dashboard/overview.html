@@ -758,9 +758,11 @@
           // 待评价：已完成且仍有未评价商品的订单数（后端口径与 C 端一致）
           list.push({ key: 'evaluation', icon: 'ri-star-line', label: '待评价', count: ov.pendingEvaluation || 0, url: 'page/report/evaluation-list.html' })
           // 待退款：退款申请待审核/处理中（refund_record pending/processing）
-          list.push({ key: 'refund', icon: 'ri-refund-2-line', label: '待退款', count: ov.pendingRefund || 0, url: 'page/payment/order-list.html' })
+          // 修改点（O-28）：原指向 page/payment/order-list.html——该页已由 O-21 二期④并入订单明细页弹窗并摘除，断链；改跳订单列表（退款入口所在）
+          list.push({ key: 'refund', icon: 'ri-refund-2-line', label: '待退款', count: ov.pendingRefund || 0, url: 'page/order/list.html' })
           const invCount = (this.inventoryAlert && this.inventoryAlert.lowStockCount) || 0
-          list.push({ key: 'inventory', icon: 'ri-error-warning-line', label: '库存预警', count: invCount, url: 'page/inventory/material-list.html' })
+          // 修改点（O-28）：material-list 支持 ?warning=1 自动展开库存预警弹窗，直达「看到→处理」
+          list.push({ key: 'inventory', icon: 'ri-error-warning-line', label: '库存预警', count: invCount, url: 'page/inventory/material-list.html?warning=1' })
           return list
         },
         todoTotal: function() {

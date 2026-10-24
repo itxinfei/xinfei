@@ -174,7 +174,7 @@
               </el-input>
               <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
                 <el-button size="small" @click="collapseReply(row)">取 消</el-button>
-                <el-button type="primary" size="small" :loading="row._replying" @click="submitInlineReply(row)">发 布 回 复</el-button>
+                <el-button type="primary" size="small" :loading="row._replying" v-perm="'evaluation:reply'" @click="submitInlineReply(row)">发 布 回 复</el-button>
               </div>
             </div>
           </div>
@@ -213,9 +213,9 @@
         <template #actions="{ row }">
           <div class="action-btns">
             <el-button text size="small" class="btn-view" @click="viewDetail(row)">查看</el-button>
-            <el-button v-if="row.status === 0" text size="small" class="btn-success" @click="handleAudit(row, 1)">通过</el-button>
-            <el-button v-if="row.status === 0" text size="small" class="btn-delete" @click="handleAudit(row, 2)">拒绝</el-button>
-            <el-button v-if="!row.replyContent" text size="small" class="btn-view" @click="openInlineReply(row)">回复</el-button>
+            <el-button v-if="row.status === 0" v-perm="'evaluation:audit'" text size="small" class="btn-success" @click="handleAudit(row, 1)">通过</el-button>
+            <el-button v-if="row.status === 0" v-perm="'evaluation:audit'" text size="small" class="btn-delete" @click="handleAudit(row, 2)">拒绝</el-button>
+            <el-button v-if="!row.replyContent" v-perm="'evaluation:reply'" text size="small" class="btn-view" @click="openInlineReply(row)">回复</el-button>
           </div>
         </template>
       </crud-table>
@@ -260,7 +260,7 @@
         </div>
       </div>
       <template #footer>
-        <el-button v-if="detailData.status === 0" type="success" size="default" @click="handleAudit(detailData, 1); closeDetail()">审 核 通 过</el-button>
+            <el-button v-if="detailData.status === 0" v-perm="'evaluation:audit'" type="success" size="default" @click="handleAudit(detailData, 1); closeDetail()">审 核 通 过</el-button>
       </template>
     </crud-dialog>
 
@@ -290,7 +290,8 @@
   <script src="../../api/evaluation.js?v=20260926"></script>
   <script src="../../js/chart-panel-v3.js?v=3001001"></script>
   <script src="../../js/components-v3.js?v=3001001"></script>
-  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script src="../../js/perm.js?v=20261024"></script>
+  <script src="../../js/app-v3.js?v=3001002"></script>
   <script>
     // 修改点：使用 IIFE 避免全局变量污染，重命名 Vue 方法避免与JS API函数名冲突
     (function() {

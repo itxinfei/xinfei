@@ -224,7 +224,8 @@
     <script src="./api/employee.js?v=20260922"></script>
     <script src="./api/store.js?v=20261003"></script>
     <script src="js/components-v3.js?v=3001001"></script>
-    <script src="js/app-v3.js?v=3001001"></script>
+    <script src="js/perm.js?v=20261024"></script>
+    <script src="js/app-v3.js?v=3001002"></script>
     <script src="./api/export-task.js?v=20261024"></script>
     <script src="js/export-task-center.js?v=20261024b"></script>
     <script src="js/employee-sse.js?v=20261024b"></script>
@@ -272,7 +273,7 @@
                 { id: '3-7', name: '出餐大屏', url: 'page/kds/board.html', icon: 'ri-tv-line' },
                 { id: '3-3', name: '紧急催菜', url: 'page/urgency/urgency.html', icon: 'ri-alarm-warning-line' },
                 
-                { id: '3-8', name: '支付渠道配置', url: 'page/payment/channel-config.html', icon: 'ri-bank-card-line' },
+                { id: '3-8', name: '支付渠道配置', url: 'page/payment/channel-config.html', icon: 'ri-bank-card-line', perm: 'payment:manage' },
                 { id: '3-5', name: '收银台', url: 'page/cashier/index.html', icon: 'ri-money-cny-circle-line' },
                 { id: '3-6', name: '收银日结', url: 'page/cashier/daily-settlement.html', icon: 'ri-calendar-check-line' },
                 { id: '3-9', name: '打印记录', url: 'page/printer/task-list.html', icon: 'ri-file-history-line' },
@@ -299,8 +300,8 @@
               /* ──12. 外卖平台对接（3 项，原「配送平台」拆分）── */
               { id: '12', name: '外卖平台对接', icon: 'ri-store-3-line', children: [
                 { id: '12-1', name: '平台订单', url: 'page/platform/order-list.html', icon: 'ri-list-check-2' },
-                { id: '12-2', name: '商品映射', url: 'page/platform/dish-mapping.html', icon: 'ri-price-tag-3-line' },
-                { id: '12-3', name: '平台配置', url: 'page/platform/config.html', icon: 'ri-settings-3-line' },
+                { id: '12-2', name: '商品映射', url: 'page/platform/dish-mapping.html', icon: 'ri-price-tag-3-line', perm: 'platform:manage' },
+                { id: '12-3', name: '平台配置', url: 'page/platform/config.html', icon: 'ri-settings-3-line', perm: 'platform:manage' },
               ]},
 
               /* ──10. 库存管理（O-21 二期：食材分类并入食材管理页弹窗，6 项）── */
@@ -335,7 +336,7 @@
                     导出中心摘菜单并入经营报表页工具栏弹窗，O-25 异步导出任务中心）── */
               { id: '7', name: '数据报表', icon: 'ri-bar-chart-line', children: [
                 { id: '7-1', name: '经营报表', url: 'page/report/management.html?v=20261024', icon: 'ri-bar-chart-grouped-line' },
-                { id: '7-2', name: '评价管理', url: 'page/report/evaluation-list.html', icon: 'ri-star-line' },
+                { id: '7-2', name: '评价管理', url: 'page/report/evaluation-list.html', icon: 'ri-star-line', perm: 'evaluation:view' },
               ]},
 
               /* ──8. 财务管理（骑手评价/异常挪履约配送，O-21）── */
@@ -567,6 +568,15 @@
                 self.roleKey = d.roleKey || ''
                 self.isSuperAdmin = !!d.isSuperAdmin
                 self.permSet = new Set(d.permissions || [])
+                // O-27：权限快照同步给 iframe 页面（同源共享同标签页 sessionStorage），
+                // 供 js/perm.js 的 XinfeiPerm/v-perm 做按钮级显隐；失败不影响菜单过滤
+                try {
+                  sessionStorage.setItem('xinfei:perm', JSON.stringify({
+                    roleKey: self.roleKey,
+                    isSuperAdmin: self.isSuperAdmin,
+                    perms: Array.from(self.permSet)
+                  }))
+                } catch (e) { /* 隐私模式等场景静默降级为 fail-open */ }
               }
             }).catch(function (err) {
               console.warn('[index] 菜单权限加载失败，菜单不做角色收敛:', err)

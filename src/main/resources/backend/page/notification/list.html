@@ -125,7 +125,7 @@
             <!-- Tab 切换（el-tabs 替代原手写 .tabs） -->
             <el-tabs v-model="activeTab" @tab-click="onTabClick">
                 <!-- ===== Tab 1：发送短信（双栏穿梭，原样保留） ===== -->
-                <el-tab-pane name="sms">
+                <el-tab-pane name="sms" v-if="XinfeiPerm.has('notification:send')">
                     <template #label><span><i class="ri-smartphone-line"></i> 发送短信</span></template>
                     <div class="tab-pane-body">
                         <div class="user-select-panel">
@@ -236,7 +236,7 @@
                 </el-tab-pane>
 
                 <!-- ===== Tab 2：APP推送（双栏穿梭，原样保留） ===== -->
-                <el-tab-pane name="push">
+                <el-tab-pane name="push" v-if="XinfeiPerm.has('notification:send')">
                     <template #label><span><i class="ri-notification-3-line"></i> APP推送</span></template>
                     <div class="tab-pane-body">
                         <div class="user-select-panel">
@@ -383,7 +383,7 @@
                                 {{ formatDate(row.createTime) }}
                             </template>
                             <template #actions="{ row }">
-                                <el-button v-if="row.status === 3" text size="small" class="btn-view" @click="resendRecord(row)">重发</el-button>
+                                <el-button v-if="row.status === 3" v-perm="'notification:send'" text size="small" class="btn-view" @click="resendRecord(row)">重发</el-button>
                             </template>
                         </crud-table>
                     </div>
@@ -529,7 +529,8 @@
     <script src="../../js/performance-utils.js?v=20260926"></script>
     <script src="../../api/user.js?v=20260926"></script>
     <script src="../../js/components-v3.js?v=3001001"></script>
-    <script src="../../js/app-v3.js?v=3001001"></script>
+    <script src="../../js/perm.js?v=20261024"></script>
+    <script src="../../js/app-v3.js?v=3001002"></script>
     <script src="../../api/notification.js?v=20260926"></script>
     <script>
         createXinfeiApp({

@@ -38,6 +38,15 @@
     Object.keys(comps).forEach(function (name) { app.component(name, comps[name]) })
   }
 
+  /* 共享指令注册口（O-27 按钮级权限联动引入）：js/perm.js 等把指令定义挂在
+     window.XinfeiDirectivesV3，这里统一 app.directive() 注册（与组件注册同构，
+     「有则复用、无则新建」的注册表模式，加载先后顺序无关） */
+  function registerSharedDirectives (app) {
+    var dirs = window.XinfeiDirectivesV3
+    if (!dirs) return
+    Object.keys(dirs).forEach(function (name) { app.directive(name, dirs[name]) })
+  }
+
   /* 全局格式化 mixin（formatMoney / formatDate / xinfeiStatusText …）。
      Vue 3 没有原型挂法，只能 app.mixin() 在这里补注册；
      漏了的话所有页面模板里的 this.formatMoney 会变成 undefined 静默报错。 */
@@ -59,6 +68,12 @@
     registerGlobalMixin(app)
     registerIcons(app)
     registerSharedComponents(app)
+    registerSharedDirectives(app)
+
+    /* O-27：把 XinfeiPerm 挂到 globalProperties——Vue 3 模板表达式沙箱不允许访问
+       window 全局，模板里 v-if="XinfeiPerm.has(...)" 不挂这里会解析成 undefined
+       并在渲染期抛错（实测整页空白）；JS 侧仍可直接用 window.XinfeiPerm */
+    if (window.XinfeiPerm) app.config.globalProperties.XinfeiPerm = window.XinfeiPerm
 
     if (selector) app.mount(selector)
     return app
