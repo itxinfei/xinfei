@@ -2,6 +2,14 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 前端清理 | 死文件清零（O-32，用户要求清理旧/多余代码）
+- 新增资产引用审计：CSS 以 main-v3.css @import 链 + 页面直链双向可达性判定；js/api 以文件名引用计数（排除自身、含脚本间引用）。
+- **git rm 5 个死文件**：`js/emoji-to-icon.js`、`api/export.js`（同步导出前端已全量迁任务通道，无页面引用；后端同步端点保留为对外 API）、`api/kds.js`、`api/platform.js`（include 移除后整体失联）、`plugins/vant/index.css`（后台目录里的 Vant CSS，小程序端有独立副本）。
+- 门禁加固：audit-page-deps.js 新增「死文件检测」（api/js 无页面且无脚本引用 → WARNING），今后死文件在门禁现身。
+- 验证：三门禁全绿（依赖审计 0/0、UI 规范 0/0、文档对账 0 ERROR）；受影响三页（kds 看板/平台配置/订单列表）浏览器抽查正常挂载。**刻意不做**：活 CSS 内 Element UI 2 死规则手术式清理（误删风险大于收益，登记不动）、后端同步导出端点删除、仓库根旧 AI 工具目录（非页面代码）。
+- 另：app-v3.js 全站缓存版本 3001001→3001002（68 页，506e56f）；67 页运行时体检三症状（框中框/表格缺列/表单折行）0 命中，用户如仍见旧渲染请 Ctrl+F5 强刷。
+- 开发者：AI
+
 ## 2026-10-24 | 登录页 | 输入框「框中框」修复（O-31，用户反馈）
 - **根因**：登录页自定义 `.inp-wrap` 外框内的 Element Plus 输入框，边框画在 `.el-input__wrapper`（inset box-shadow）上，而 login.css「去边框/背景」规则写的是 Element UI 2 时代的 `.el-input__inner`——EP 下不命中，wrapper 自带描边 + 浅底在外框内又画一层框（聚焦时内外两层尤其明显）。
 - **修复**：`.inp-wrap` 内 wrapper 完全透明化（box-shadow/background/padding 归零，含 hover 与 is-focus），视觉只保留外层一处边框；顺带修 `.inp-wrap.ok` 同优先级覆盖 `.on` 导致**有内容的聚焦框永远灰色无反馈**——ok 收敛为 `:not(.on)`，聚焦色优先于校验通过色。
