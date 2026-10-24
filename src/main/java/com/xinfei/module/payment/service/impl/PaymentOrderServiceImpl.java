@@ -93,6 +93,10 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
     @Autowired
     private com.xinfei.module.payment.service.RefundRecordService refundRecordService;
 
+    /** 付费券包（O-18）：支付成功拆包发券 */
+    @Autowired
+    private com.xinfei.module.member.service.CouponPackageService couponPackageService;
+
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -396,6 +400,23 @@ public class PaymentOrderServiceImpl extends ServiceImpl<PaymentOrderMapper, Pay
                 boolean credited = rechargeRecordService.handleRechargePaid(po.getOrderId(), tradeNo,
                         channelTradeNo);
                 if (!credited) {
+                    registerAutoRefundOnUncreditableRecharge(po);
+                }
+                return;
+            }
+            // O-18：bizType=COUPON_PACKAGE 的支付单联动拆包发券，不进订单逻辑。
+            // 发券失败（同模板已领/库存不足）时事务回滚支付单状态供回调重试；购买单缺失/已关闭
+            // 走与充值同口径的 afterCommit 自动全额退款兜底
+            if (PaymentOrder.BIZ_COUPON_PACKAGE.equals(po.getBizType())) {
+                boolean delivered;
+                try {
+                    delivered = couponPackageService.deliverPaid(po.getOrderId());
+                } catch (Exception e) {
+                    log.error("[券包] 发券失败，支付事务回滚待回调重试: purchaseOrderId={}, err={}",
+                            po.getOrderId(), e.getMessage(), e);
+                    throw e;
+                }
+                if (!delivered) {
                     registerAutoRefundOnUncreditableRecharge(po);
                 }
                 return;

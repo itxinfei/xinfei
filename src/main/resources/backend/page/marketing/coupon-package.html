@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>付费券包 - 心飞外卖管理端</title>
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
+  <style>
+    .pkg-caliber { margin-top: 14px; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); font-size: var(--font-size-xs); color: var(--text-muted); line-height: 1.7; }
+    .pkg-item-tag { margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">跳转到主内容</a>
+
+  <div class="dashboard-container" id="pkg-app">
+    <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">付费券包</h1>
+
+      <table-bar
+        :search-items="searchItems"
+        :actions="actions"
+        :show-refresh="true"
+        @search="onSearch"
+        @reset="onReset"
+        @action="onAction"
+        @refresh="fetchData"
+      ></table-bar>
+
+      <crud-table
+        :data="tableData"
+        :columns="columns"
+        :loading="loading"
+        :page="page"
+        :page-size="pageSize"
+        :total="counts"
+        row-key="id"
+        :show-actions="true"
+        :actions-width="240"
+        empty-hint="暂无券包，点击上方「新增」创建第一个券包"
+        aria-label="券包列表"
+        @page-change="onPageChange"
+        @size-change="onSizeChange"
+      >
+        <template #col-price="{ row }">
+          <span style="color:var(--color-danger);font-weight:600;">¥{{ formatMoney(row.price) }}</span>
+        </template>
+        <template #col-originalValue="{ row }">
+          <span style="color:var(--text-muted);text-decoration:line-through;">¥{{ formatMoney(row.originalValue) }}</span>
+        </template>
+        <template #col-items="{ row }">
+          <el-tag v-for="it in (row.items || [])" :key="it.templateId" size="small" type="warning" class="pkg-item-tag">
+            {{ it.templateName }}（{{ it.templateSummary }}）
+          </el-tag>
+          <span v-if="!(row.items && row.items.length)" style="color:var(--text-muted);">-</span>
+        </template>
+        <template #col-status="{ row }">
+          <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">{{ row.status === 1 ? '上架' : '下架' }}</el-tag>
+        </template>
+        <template #actions="{ row }">
+          <el-button text size="small" class="btn-view" @click="onEdit(row)">编辑</el-button>
+          <el-button v-if="row.status === 0" text size="small" class="btn-success" @click="onStatus(row, 1)">上架</el-button>
+          <el-button v-else text size="small" class="btn-warning" @click="onStatus(row, 0)">下架</el-button>
+          <el-button text size="small" class="btn-delete" @click="onDelete(row)">删除</el-button>
+        </template>
+      </crud-table>
+
+      <div class="pkg-caliber">
+        口径说明：券包在顾客端展示为打包售卖的优惠券组合；一期限制「包内每模板限一张」
+        （同一顾客对同一模板只能持有一张券，是既有防重领约束）；顾客支付成功后自动逐张发券，
+        任一张发放失败（已领过/已领完）会整体回滚并自动全额退款。改券包不影响已售出的券。
+      </div>
+    </main>
+
+    <!-- 新增/编辑弹窗 -->
+    <crud-dialog
+      :title="form.id ? '编辑券包' : '新增券包'"
+      v-model="dialogVisible"
+      size="lg"
+      :submit-loading="submitting"
+      @submit="onSubmit"
+    >
+      <el-form ref="pkgForm" :model="form" :rules="formRules" label-width="110px">
+        <el-form-item label="券包名称：" prop="name">
+          <el-input v-model="form.name" placeholder="如：尝鲜5券包" maxlength="64"></el-input>
+        </el-form-item>
+        <el-form-item label="售价（元）：" prop="price">
+          <el-input-number v-model="form.price" :min="0.01" :max="99999" :precision="2" :step="1" style="width:100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="面值合计（元）：">
+          <el-input-number v-model="form.originalValue" :min="0" :max="99999" :precision="2" :step="1" style="width:100%" placeholder="包内券面值合计（展示划线价）"></el-input-number>
+        </el-form-item>
+        <el-form-item label="描述：">
+          <el-input v-model="form.description" type="textarea" :rows="2" maxlength="200" placeholder="展示在顾客端购买页"></el-input>
+        </el-form-item>
+        <el-form-item label="排序：">
+          <el-input-number v-model="form.sort" :min="0" :max="9999" :step="1" style="width:100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="包内券：" prop="templateIds">
+          <el-select v-model="form.templateIds" multiple filterable placeholder="选择券模板（每模板限一张）" style="width:100%">
+            <el-option v-for="t in templates" :key="t.id" :label="t.name + '（' + templateSummary(t) + '，剩余' + (t.remainCount == null ? '-' : t.remainCount) + '）'" :value="t.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </crud-dialog>
+  </div>
+
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
+  <script src="../../plugins/axios/axios.min.js"></script>
+  <script src="../../js/request.js?v=20260930"></script>
+  <script src="../../api/coupon-package.js?v=20261024"></script>
+  <script src="../../api/member-center.js?v=20261024"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script>
+    createXinfeiApp({
+      el: '#pkg-app',
+      mixins: [window.XinfeiListMixin],
+      data() {
+        return {
+          searchItems: [
+            { type: 'input', field: 'name', placeholder: '券包名称', width: '200px' },
+            { type: 'select', field: 'status', placeholder: '全部状态', width: '130px', options: [
+              { label: '上架', value: 1 }, { label: '下架', value: 0 }
+            ] }
+          ],
+          actions: [
+            { key: 'add', text: '新增', type: 'primary', icon: 'ri-add-line' }
+          ],
+          filters: { name: '', status: '' },
+          columns: [
+            { prop: 'id', label: 'ID', width: 70, align: 'center' },
+            { prop: 'name', label: '名称', minWidth: 130 },
+            { prop: 'price', label: '售价', width: 100, align: 'center', slot: true },
+            { prop: 'originalValue', label: '面值合计', width: 110, align: 'center', slot: true },
+            { prop: 'items', label: '包内券', minWidth: 220, slot: true },
+            { prop: 'status', label: '状态', width: 80, align: 'center', slot: true },
+            { prop: 'sort', label: '排序', width: 70, align: 'center' },
+            { prop: 'updateTime', label: '更新时间', width: 170, align: 'center' }
+          ],
+          dialogVisible: false,
+          submitting: false,
+          templates: [],
+          form: this.emptyForm(),
+          formRules: {
+            name: [{ required: true, message: '请输入券包名称', trigger: 'blur' }],
+            price: [{ required: true, message: '请填写售价', trigger: 'blur' }],
+            templateIds: [{ type: 'array', required: true, message: '至少选择一张券', trigger: 'change' }]
+          }
+        }
+      },
+      mounted() {
+        this.fetchData()
+        this.loadTemplates()
+      },
+      methods: {
+        emptyForm() {
+          return { id: null, name: '', price: null, originalValue: null, description: '', sort: 0, templateIds: [] }
+        },
+        templateSummary(t) {
+          if (t.type === 'DISCOUNT' && t.discountRate != null) return t.discountRate + '折'
+          const cond = t.conditionAmount != null ? '满' + t.conditionAmount : '无门槛'
+          const off = t.discountAmount != null ? '减' + t.discountAmount : ''
+          return cond + off
+        },
+        loadTemplates() {
+          couponTemplatePage({ page: 1, pageSize: 100, status: 1 }).then(res => {
+            if (res && res.code === 1) {
+              this.templates = (res.data && res.data.records) || []
+            }
+          }).catch(() => { this.templates = [] })
+        },
+        fetchData() {
+          this.loading = true
+          couponPackagePage({
+            page: this.page, pageSize: this.pageSize,
+            name: this.filters.name || undefined,
+            status: this.filters.status === '' ? undefined : this.filters.status
+          }).then(res => {
+            if (res && res.code === 1) {
+              this.tableData = (res.data && res.data.records) || []
+              this.counts = (res.data && res.data.total) || 0
+            } else {
+              this.tableData = []; this.counts = 0
+            }
+          }).catch(() => { this.tableData = []; this.counts = 0 })
+            .finally(() => { this.loading = false })
+        },
+        onSearch(values) {
+          const v = values || {}
+          this.filters = { name: v.name || '', status: v.status === undefined ? '' : v.status }
+          this.page = 1
+          this.fetchData()
+        },
+        onReset() {
+          this.filters = { name: '', status: '' }
+          this.page = 1
+          this.fetchData()
+        },
+        onAction(payload) {
+          if (payload.key === 'add') this.onEdit(null)
+        },
+        onEdit(row) {
+          this.form = row
+            ? {
+                id: row.id,
+                name: row.name,
+                price: Number(row.price),
+                originalValue: row.originalValue != null ? Number(row.originalValue) : null,
+                description: row.description || '',
+                sort: row.sort || 0,
+                templateIds: (row.items || []).map(i => i.templateId)
+              }
+            : this.emptyForm()
+          this.dialogVisible = true
+        },
+        onSubmit() {
+          this.$refs.pkgForm.validate(valid => {
+            if (!valid) return
+            this.submitting = true
+            const payload = {
+              id: this.form.id,
+              name: this.form.name,
+              price: this.form.price,
+              originalValue: this.form.originalValue,
+              description: this.form.description,
+              sort: this.form.sort,
+              items: this.form.templateIds.map(tid => ({ templateId: tid }))
+            }
+            saveCouponPackage(payload).then(res => {
+              if (res && res.code === 1) {
+                XinfeiUI.success('券包已保存（默认下架，确认无误后上架）')
+                this.dialogVisible = false
+                this.fetchData()
+              } else {
+                XinfeiUI.error((res && res.msg) || '保存失败')
+              }
+            }).catch(() => {}).finally(() => { this.submitting = false })
+          })
+        },
+        onStatus(row, status) {
+          couponPackageStatus(row.id, status).then(res => {
+            if (res && res.code === 1) {
+              XinfeiUI.success(status === 1 ? '已上架' : '已下架')
+              this.fetchData()
+            } else {
+              XinfeiUI.error((res && res.msg) || '操作失败')
+            }
+          }).catch(() => {})
+        },
+        onDelete(row) {
+          XinfeiUI.confirm('确认删除券包「' + row.name + '」？已有购买记录的包建议下架而非删除。', '删除确认', { type: 'warning' })
+            .then(() => deleteCouponPackage(row.id))
+            .then(res => {
+              if (res && res.code === 1) { XinfeiUI.success('已删除'); this.fetchData() }
+              else if (res) { XinfeiUI.error(res.msg || '删除失败') }
+            }).catch(() => {})
+        }
+      }
+    })
+  </script>
+</body>
+</html>

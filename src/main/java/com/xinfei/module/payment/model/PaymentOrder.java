@@ -41,6 +41,8 @@ public class PaymentOrder implements Serializable {
     public static final String BIZ_ORDER = "ORDER";
     /** 业务类型常量：会员充值 */
     public static final String BIZ_RECHARGE = "RECHARGE";
+    /** 业务类型常量：付费券包购买（O-18，支付成功拆包发券） */
+    public static final String BIZ_COUPON_PACKAGE = "COUPON_PACKAGE";
 
     @Schema(description = "支付订单ID", example = "1")
     @TableId(value = "id", type = IdType.AUTO)
