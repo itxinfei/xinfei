@@ -203,7 +203,9 @@ body.login-page {
   transform: translateY(-1px);
   background: var(--color-white);
 }
-.inp-wrap.ok {
+/* O-31：ok 收敛为非聚焦态——原规则定义在 .on 之后且同优先级，
+   有内容的聚焦框永远被灰色覆盖、无聚焦反馈；聚焦色（.on）应优先于校验通过（.ok） */
+.inp-wrap.ok:not(.on) {
   border-color: var(--color-gray-400);
   box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
@@ -232,6 +234,21 @@ body.login-page {
 .inp-wrap.on .inp-icon { color: var(--c-focus); }
 
 .inp-wrap .el-input { flex: 1; height: 100%; width: 100%; }
+/* O-31 修复「框中框」：Element Plus 的边框画在 .el-input__wrapper（inset box-shadow）上，
+   旧规则只中和了 Element UI 2 时代的 .el-input__inner——wrapper 自带的描边+背景
+   在自定义 .inp-wrap 外框内又画了一层框。此处将 wrapper 完全透明化，
+   视觉上只保留 .inp-wrap 一层边框（聚焦态由 .inp-wrap.on 统一表达）。 */
+.inp-wrap .el-input .el-input__wrapper {
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 4px 0 0 !important;
+  border-radius: 0;
+  transition: none;
+}
+.inp-wrap .el-input .el-input__wrapper:hover,
+.inp-wrap .el-input .el-input__wrapper.is-focus {
+  box-shadow: none !important;
+}
 .inp-wrap .el-input .el-input__inner {
   border: none !important;
   background: transparent !important;

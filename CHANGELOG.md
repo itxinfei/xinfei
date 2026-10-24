@@ -2,6 +2,12 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 登录页 | 输入框「框中框」修复（O-31，用户反馈）
+- **根因**：登录页自定义 `.inp-wrap` 外框内的 Element Plus 输入框，边框画在 `.el-input__wrapper`（inset box-shadow）上，而 login.css「去边框/背景」规则写的是 Element UI 2 时代的 `.el-input__inner`——EP 下不命中，wrapper 自带描边 + 浅底在外框内又画一层框（聚焦时内外两层尤其明显）。
+- **修复**：`.inp-wrap` 内 wrapper 完全透明化（box-shadow/background/padding 归零，含 hover 与 is-focus），视觉只保留外层一处边框；顺带修 `.inp-wrap.ok` 同优先级覆盖 `.on` 导致**有内容的聚焦框永远灰色无反馈**——ok 收敛为 `:not(.on)`，聚焦色优先于校验通过色。
+- 验证（8081 截图）：浅色/深色模式均单层边框；聚焦态品牌黄边框 + 3px 黄色光晕 + 图标变黄；对勾/眼睛/占位符不受影响。CSS-only，login.css 缓存版本 20260926→20261024b。
+- 开发者：AI
+
 ## 2026-10-24 | 权限 | 细粒度权限键入典（O-30，仅入典零行为变更）
 - V17 幂等写入 6 个细粒度键到 permission 字典：TYPE_MENU 顶级 ×4（platform:manage / payment:manage / evaluation:view / notification:send，此前后端 36 处 @RequiresPermission 用的键全不在字典，非超管永远无法通过校验）+ TYPE_BUTTON 子键 ×2（evaluation:reply / evaluation:audit 挂 evaluation:view）。
 - **不做任何授权（零行为变更）**：授权矩阵由管理员在 系统设置→角色管理→权限树 勾选——勾选即同时生效于 O-27 前端菜单门与后端 PermissionAspect（共用同一 permSet；Redis 权限缓存由既有角色保存链路失效）。**待决策**：默认授权矩阵（建议店长+副店全给 4 菜单键、大堂经理给 evaluation:view，或全部手动配）。
