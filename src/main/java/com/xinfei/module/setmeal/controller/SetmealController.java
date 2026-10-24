@@ -65,6 +65,10 @@ public class SetmealController {
     @Autowired
     private SetmealDishService setmealDishService;
 
+    /** 成本模块（O-11 套餐 BOM 成本试算：dish_cost 口径） */
+    @Autowired
+    private com.xinfei.module.cost.service.CostService costService;
+
     /**
      * 新增套餐
      * @param setmealDto 套餐信息（包含基本信息及菜品列表）
@@ -247,6 +251,77 @@ public class SetmealController {
         queryWrapper.eq(SetmealDish::getSetmealId, id);
         List<SetmealDish> list = setmealDishService.list(queryWrapper);
         return R.success(list);
+    }
+
+    /**
+     * 套餐 BOM 成本试算（O-11）
+     * <p>口径：套餐成本 = Σ(菜品单位成本 × 份数)，菜品单位成本取成本模块 dish_cost.total_cost；
+     * 无成本记录的菜品按 0 计并在 missingDishCount 标注（前端展示口径说明，不猜成本）。
+     * 毛利率 = (售价 - 成本) / 售价 × 100，售价为 0 时不计算。</p>
+     *
+     * @param id 套餐ID
+     * @return 成本明细与汇总
+     */
+    @RequireEmployee
+    @GetMapping("/{id}/cost")
+    @Operation(summary = "套餐BOM成本试算", description = "按套餐明细聚合菜品成本（dish_cost口径），返回成本、利润、毛利率与缺成本标注")
+    @Parameter(name = "id", description = "套餐ID", required = true)
+    public R<Map<String, Object>> cost(@PathVariable Long id) {
+        Setmeal setmeal = setmealService.getById(id);
+        if (setmeal == null) {
+            return R.error("套餐不存在");
+        }
+        Long currentTenantId = BaseContext.getCurrentTenantId();
+        if (setmeal.getTenantId() != null && !setmeal.getTenantId().equals(currentTenantId)) {
+            return R.error("套餐不存在");
+        }
+        List<SetmealDish> dishes = setmealDishService.list(new LambdaQueryWrapper<SetmealDish>()
+                .eq(SetmealDish::getSetmealId, id));
+        // 一次取租户内全量菜品成本做映射，避免逐菜品 N+1 查询（套餐菜品数有限，全量成本集可承受）
+        Map<Long, java.math.BigDecimal> costMap = new HashMap<>();
+        for (com.xinfei.module.cost.model.DishCost dc : costService.getDishCostList(currentTenantId)) {
+            if (dc.getDishId() != null && dc.getTotalCost() != null) {
+                costMap.put(dc.getDishId(), dc.getTotalCost());
+            }
+        }
+        List<Map<String, Object>> items = new ArrayList<>();
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        int missing = 0;
+        for (SetmealDish sd : dishes) {
+            int copies = sd.getCopies() == null || sd.getCopies() < 1 ? 1 : sd.getCopies();
+            java.math.BigDecimal unit = costMap.get(sd.getDishId());
+            boolean hasCost = unit != null;
+            if (!hasCost) {
+                missing++;
+                unit = java.math.BigDecimal.ZERO;
+            }
+            java.math.BigDecimal line = unit.multiply(java.math.BigDecimal.valueOf(copies));
+            total = total.add(line);
+            Map<String, Object> item = new HashMap<>();
+            item.put("dishId", sd.getDishId());
+            item.put("name", sd.getName());
+            item.put("copies", copies);
+            item.put("unitCost", unit);
+            item.put("lineCost", line);
+            item.put("hasCost", hasCost);
+            items.add(item);
+        }
+        java.math.BigDecimal price = setmeal.getPrice() == null ? java.math.BigDecimal.ZERO : setmeal.getPrice();
+        java.math.BigDecimal profit = price.subtract(total);
+        Map<String, Object> result = new HashMap<>();
+        result.put("setmealId", id);
+        result.put("setmealName", setmeal.getName());
+        result.put("price", price);
+        result.put("totalCost", total);
+        result.put("profit", profit);
+        result.put("profitRate", price.compareTo(java.math.BigDecimal.ZERO) > 0
+                ? profit.multiply(java.math.BigDecimal.valueOf(100))
+                        .divide(price, 1, java.math.RoundingMode.HALF_UP)
+                : null);
+        result.put("missingDishCount", missing);
+        result.put("items", items);
+        result.put("caliber", "套餐成本=Σ(菜品成本×份数)，菜品成本取成本模块(dish_cost)；缺成本记录的菜品按0计");
+        return R.success(result);
     }
 
     /**

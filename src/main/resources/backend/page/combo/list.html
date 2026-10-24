@@ -13,6 +13,12 @@
   <style>
     /* 提取的内联样式类 */
     .combo-img-btn { width: 36px; height: 36px; object-fit: cover; border: none; cursor: pointer; border-radius: var(--radius-sm); flex-shrink: 0; }
+    /* O-11 套餐 BOM 成本试算弹窗 */
+    .cost-summary { display: flex; gap: 12px; margin-bottom: 10px; }
+    .cost-cell { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+    .cost-cell__label { font-size: var(--font-size-xs); color: var(--text-muted); }
+    .cost-cell__value { font-size: var(--font-size-lg); color: var(--text-primary); }
+    .cost-caliber { margin-top: 10px; font-size: var(--font-size-xs); color: var(--text-muted); }
     /* 图片列：缩略图独占一列，点击可预览大图 */
     /* 已选菜品移除按钮（位图改 remixicon） */
     .del { display: inline-flex; align-items: center; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1; transition: color var(--transition-base); }
@@ -185,7 +191,7 @@
       :selection="true"
       row-key="id"
       :show-actions="true" :viewable="true"
-      :actions-width="180"
+      :actions-width="300"
       :batch-delete="doBatchDelete"
       @selection-change="handleSelectionChange"
       @batch-deleted="handleQuery()"
@@ -219,6 +225,7 @@
       </template>
       <template #actions="{ row }">
         <el-button text size="small" class="btn-view" @click="addSetMeal(row.id)">修改</el-button>
+        <el-button text size="small" class="btn-view" @click="openCost(row)">成本</el-button>
         <el-button v-if="row.status == '0'" text size="small" class="btn-success" @click="statusHandle(row)">启售</el-button>
         <el-button v-else text size="small" class="btn-warning" @click="statusHandle(row)">停售</el-button>
         <el-button text size="small" class="btn-delete" @click="deleteHandle(row)">删除</el-button>
@@ -405,6 +412,46 @@
       <el-button type="primary" @click="confirmDishSelection">确 定</el-button>
     </template>
   </crud-dialog>
+
+  <!-- O-11 套餐 BOM 成本试算（只读弹窗，口径与缺成本标注随接口返回） -->
+  <crud-dialog
+    title="套餐成本试算"
+    v-model="costVisible"
+    size="lg"
+    :show-submit="false"
+    cancel-text="关 闭"
+    :close-on-click-modal="true"
+  >
+    <div v-loading="costLoading" class="cost-body">
+      <template v-if="costData">
+        <div class="cost-summary">
+          <div class="cost-cell"><span class="cost-cell__label">售价</span><b class="cost-cell__value">¥{{ fmtCost(costData.price) }}</b></div>
+          <div class="cost-cell"><span class="cost-cell__label">BOM 成本</span><b class="cost-cell__value">¥{{ fmtCost(costData.totalCost) }}</b></div>
+          <div class="cost-cell"><span class="cost-cell__label">毛利</span><b class="cost-cell__value">¥{{ fmtCost(costData.profit) }}</b></div>
+          <div class="cost-cell"><span class="cost-cell__label">毛利率</span><b class="cost-cell__value">{{ costData.profitRate == null ? '-' : costData.profitRate + '%' }}</b></div>
+        </div>
+        <el-alert
+          v-if="costData.missingDishCount > 0"
+          type="warning"
+          :closable="false"
+          :title="costData.missingDishCount + ' 个菜品暂无成本记录，按 ¥0 计入合计'"
+          style="margin: 10px 0;"
+        ></el-alert>
+        <el-table :data="costData.items || []" size="small" border>
+          <el-table-column prop="name" label="菜品" min-width="140" align="center"></el-table-column>
+          <el-table-column prop="copies" label="份数" width="70" align="center"></el-table-column>
+          <el-table-column label="单位成本" width="120" align="center">
+            <template #default="s">{{ s.row.hasCost ? '¥' + s.row.unitCost : '缺记录（按0）' }}</template>
+          </el-table-column>
+          <el-table-column label="小计" width="110" align="center">
+            <template #default="s">¥{{ s.row.lineCost }}</template>
+          </el-table-column>
+        </el-table>
+        <div class="cost-caliber">口径：{{ costData.caliber }}</div>
+      </template>
+      <el-empty v-else-if="!costLoading" description="暂无数据"></el-empty>
+    </div>
+  </crud-dialog>
 </div>
 
 <!-- JS 依赖 -->
@@ -430,6 +477,10 @@ createXinfeiApp({
     return {
       input: '',
       submitting: false, // 提交防重：请求期间锁定弹窗确认按钮
+      // O-11 套餐 BOM 成本试算弹窗
+      costVisible: false,
+      costLoading: false,
+      costData: null,
       // 修改点：搜索下拉框动态选项（从数据库加载套餐名称）
       filterOptions: { names: [] },
       optionsLoading: false,
@@ -559,6 +610,27 @@ createXinfeiApp({
     this.fetchData(true)
   },
   methods: {
+    // O-11 套餐 BOM 成本试算：GET /setmeal/{id}/cost，口径与缺成本标注由接口返回
+    async openCost(row) {
+      this.costVisible = true
+      this.costLoading = true
+      this.costData = null
+      try {
+        const res = await getSetmealCost(row.id)
+        if (res && res.code === 1) {
+          this.costData = res.data
+        } else {
+          XinfeiUI.error((res && res.msg) || '成本试算失败')
+        }
+      } catch (e) {
+        /* 失败提示由 request.js 统一处理 */
+      } finally {
+        this.costLoading = false
+      }
+    },
+    fmtCost(v) {
+      return Number(v || 0).toFixed(2)
+    },
     // 修改点：<stat-cards> 点击（payload.activeKey 为 .sync 更新后的值）
     onCardClick: function(payload) {
       this.activeFilter = payload.activeKey

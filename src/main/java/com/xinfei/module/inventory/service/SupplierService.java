@@ -40,4 +40,11 @@ public interface SupplierService extends IService<Supplier> {
      * @param suppliers 供应商列表（原地回填，无需返回）
      */
     void fillPurchaseSummary(List<Supplier> suppliers);
+
+    /**
+     * 批量回填未结清欠款（O-11）：PENDING 供应商结算单的 Σ(总额 - 已付)
+     *
+     * @param suppliers 供应商列表（原地回填，无需返回）
+     */
+    void fillArrears(List<Supplier> suppliers);
 }

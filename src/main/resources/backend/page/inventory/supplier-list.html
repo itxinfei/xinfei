@@ -75,6 +75,13 @@
         </span>
         <span v-else style="color:var(--text-muted);">-</span>
       </template>
+      <!-- O-11 欠款列：PENDING 结算单未付差额；0 显示已结清 -->
+      <template #col-arrears="{ row }">
+        <span v-if="row.arrears != null && Number(row.arrears) > 0" style="color:var(--color-danger);font-weight:600;">
+          ¥{{ formatMoney(row.arrears) }}
+        </span>
+        <span v-else style="color:var(--text-muted);">已结清</span>
+      </template>
       <!-- 资质图片列：有图显示缩略图，点击放大 -->
       <template #col-license="{ row }">
         <el-image
@@ -270,6 +277,8 @@
             { prop: 'license', label: '资质', width: 80, align: 'center', slot: true },
             // 修改点：8.3.3 采购汇总列（后端按供应商聚合回填 totalPurchaseAmount / purchaseCount）
             { prop: 'totalPurchaseAmount', label: '累计采购额', width: 110, align: 'center', slot: true, type: 'money' },
+            // O-11 未结清欠款：PENDING 结算单 Σ(总额-已付)，后端 fillArrears 回填
+            { prop: 'arrears', label: '欠款', width: 100, align: 'center', slot: true, type: 'money' },
             { prop: 'status', label: '状态', width: 70, align: 'center', slot: true }
           ]
         }

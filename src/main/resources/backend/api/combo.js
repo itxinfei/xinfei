@@ -56,3 +56,6 @@ const setmealStatusByStatus = (params) => {
 
 /* ── 套餐列表（团餐下单等下拉用，2026-10-06） ── */
 const setmealList = () => $axios({ url: '/setmeal/list', method: 'get', params: { status: 1 } })
+
+/* ── 套餐 BOM 成本试算（O-11，dish_cost 口径） ── */
+const getSetmealCost = (id) => $axios({ url: '/setmeal/' + id + '/cost', method: 'get' })

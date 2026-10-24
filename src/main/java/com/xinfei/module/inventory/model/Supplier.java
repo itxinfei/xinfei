@@ -70,6 +70,10 @@ public class Supplier implements Serializable {
     @TableField(exist = false)
     private Integer purchaseCount;
 
+    /** 未结清欠款（O-11）：PENDING 供应商结算单的 Σ(总额-已付)，关联聚合填充，数据库无此列 */
+    @TableField(exist = false)
+    private java.math.BigDecimal arrears;
+
     /** 创建人 */
     @TableField(fill = FieldFill.INSERT)
     private Long createUser;

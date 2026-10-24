@@ -74,6 +74,8 @@ public class SupplierController {
         supplierService.page(pageInfo, qw);
         // 修改点：8.3.3 批量回填采购汇总（累计采购金额/采购单笔数）
         supplierService.fillPurchaseSummary(pageInfo.getRecords());
+        // O-11：批量回填未结清欠款（PENDING 结算单 Σ(总额-已付)），页面「欠款」列真实数据源
+        supplierService.fillArrears(pageInfo.getRecords());
         return R.success(pageInfo);
     }
 
