@@ -5,9 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>总部控制台 - 心飞外卖管理端</title>
-  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
   <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
-  <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20260926" />
+  <link rel="stylesheet" href="../../styles/components-stats-card.css?v=20261022" />
     <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
     <script src="../../plugins/echarts/echarts.min.js"></script>
     <style>
@@ -247,7 +247,7 @@
 <script src="../../js/components-v3.js?v=3001001"></script>
 <script src="../../js/app-v3.js?v=3001001"></script>
 <script>
-  // 图表语义色统一引用全局 window.XinfeiPalette（components.js 从 tokens.css 运行时解析，
+  // 图表语义色统一引用全局 window.XinfeiPalette（components-v3.js 从 tokens.css 运行时解析，
   // canvas 无法使用 CSS 变量，XinfeiPalette 为 JS 侧唯一颜色来源）；多色系列数据色保留图表调色板
   createXinfeiApp({
     el: '#store-dash-app',
@@ -563,7 +563,7 @@
             var orders = this.dashboard.storeRanking[idx].todayOrders || 0;
             return Math.max((orders / maxOrders * 100), 8) + '%';
         },
-        // 修改点：复用全局 XinfeiFormat.formatMoney（components.js 已挂载），不再重复实现 formatAmount
+        // 修改点：复用全局 XinfeiFormat.formatMoney（components-v3.js 已挂载），不再重复实现 formatAmount
         formatMoney(val) {
             return (window.XinfeiFormat && window.XinfeiFormat.formatMoney)
                 ? window.XinfeiFormat.formatMoney(val)

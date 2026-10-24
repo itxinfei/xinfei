@@ -6,7 +6,7 @@
   <title>规格管理 - 心飞外卖</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css">
   <link rel="stylesheet" href="../../styles/tokens.css?v=20260926">
-  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001">
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003">
   <style>
     /* ===== 规格管理页专有样式（前缀 spec- 避免污染全局） ===== */
 
@@ -287,7 +287,7 @@
             </div>
 
             <div class="spec-panel__body">
-              <!-- 修改点：P2-1 骨架屏——规格组列表加载态（element-ui 无 Skeleton 组件，用全局 .ds-skeleton 脉冲骨架替代） -->
+              <!-- 修改点：P2-1 骨架屏——规格组列表加载态（用全局 .ds-skeleton 脉冲骨架替代内置 Skeleton） -->
               <div v-if="groupLoading && groupList.length === 0" class="spec-group-skeleton">
                 <div class="ds-skeleton">
                   <div class="ds-skeleton-row"><div class="ds-skeleton-cell"><div class="ds-skeleton-bar"></div></div></div>
@@ -640,7 +640,7 @@
           this.optionPage = 1
         },
         /**
-         * 列对齐：与 components.js resolveColAlign 默认规则保持一致
+         * 列对齐：与 components-v3.js resolveColAlign 默认规则保持一致
          * 修改点(2026-09-01)：全站表格统一居中，金额/数字列亦居中
          */
         resolveColAlign: function (col) {

@@ -101,22 +101,6 @@ body > .container {
   text-align: right !important;
 }
 
-/* ========== 6. 手写统计卡片统一（cashier/finance/cost/report 等页面的私有 .stats-row/.stats-card） ========== */
-/* 这些页面仍用私有实现而非 <stat-cards> 组件，此处补齐与统一组件一致的交互态与表面，
-   避免页面间统计卡片观感割裂（仅增强，不改页面 HTML）。 */
-.stats-row .stats-card,
-.stats-cards .stats-card {
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  border: 1px solid var(--border-subtle);
-}
-.stats-row .stats-card:hover,
-.stats-cards .stats-card:hover {
-  /* 抬升档全站统一：translateY(-2px) + shadow-md（与统一组件 .stat-card、
-     .ds-card--hover 一致）；移除原先 -3px + shadow-lg + 金边的夸张反馈。 */
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
 /* ========== 5. 表格表头统一（表头底色/字重/字号对齐设计规范） ========== */
 .el-table th.el-table__cell {
   background: var(--bg-subtle);

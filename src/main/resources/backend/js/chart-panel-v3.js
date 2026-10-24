@@ -1,9 +1,8 @@
 /**
- * 报表页通用组件 —— Vue 3 / Element Plus 版（与 js/chart-panel.js 并行存在）
+ * 报表页通用组件 —— Vue 3 / Element Plus 版
  *
- * 为什么另开一份而不是原地改：后台是 iframe 单页架构，每个页面自己 new 一个 app，
- * 灰度期同一个组件要同时服务 Vue 2 页（chart-panel.js）和 Vue 3 页（本文件），
- * 与 js/components.js / js/components-v3.js 是同一套双轨做法。
+ * 后台是 iframe 单页架构，每个页面自己 new 一个 app；旧 Vue 2 版 chart-panel.js
+ * 已删除（git 历史可查），报表页现统一使用本文件。
  *
  * 组件列表（与 v2 版一一对应，模板与 props 未改）：
  *   <chart-panel>  — 图表面板（统一圆角、阴影、标题栏、hover 效果）

@@ -46,26 +46,19 @@
   max-width: 400px;
 }
 
+/* 单行输入框：边框 / 圆角 / 背景 / hover·focus 反馈统一由 .el-input__wrapper 承担，
+   inner 只保留布局与文字样式，透明无边框（旧 Vue2 Element UI 压在 inner 上的边框已移除，
+   避免与 wrapper 的 inset 阴影形成双层边框）。textarea 自身是边框载体，规则见下方 .el-textarea__inner。 */
 .el-input__inner {
   height: 32px;
   line-height: 32px;
   padding: 0 var(--space-3);
   font-size: var(--font-size-sm);
-  border-radius: var(--radius-md);
-  transition: var(--transition-all);
-  border: var(--border-width-thin) var(--border-style-solid) var(--border-color-base);
-  background: var(--bg-surface);
   color: var(--text-primary);
-}
-
-.el-input__inner:hover {
-  border-color: var(--color-brand-400);
-}
-
-.el-input__inner:focus {
-  border-color: var(--color-brand-500);
-  box-shadow: 0 0 0 3px var(--color-brand-100);
-  outline: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  transition: var(--transition-all);
 }
 
 .el-input__inner::placeholder {

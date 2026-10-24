@@ -46,20 +46,11 @@
 }
 
 .stat-card:hover {
-  /* 抬升档全站统一：-2px + shadow-md（与 .ds-card--hover、私有 .stats-card 同一档位） */
+  /* 抬升档全站统一：-2px + shadow-md（与 .ds-card--hover 同一档位） */
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-}
-
-/* 顶部主题色条（纯色，符合"禁止渐变"规范） */
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--stat-color, var(--color-brand-500));
+  /* hover 反馈：1px 主色边框（默认保持中性细边框，不另设顶部色条） */
+  border-color: var(--el-color-primary);
 }
 
 /* 图标（经典变体：绝对定位右上角） */

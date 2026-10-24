@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
     <style>
         /* 布局/容器/工具栏/分页全部走公共样式（consistency.css + table-bar/crud-table），
            本页仅保留表格插槽与弹窗用到的局部类 */
@@ -580,7 +580,7 @@
         },
 
         // ========== 选择 ==========
-        // crud-table 的 selection-change 载荷为 { rows, ids, count }（components.js），
+        // crud-table 的 selection-change 载荷为 { rows, ids, count }（components-v3.js），
         // 直接赋数组否则 length/disabled/map 全部失效
         onSelectionChange: function(val) { this.selection = (val && val.rows) || []; },
 

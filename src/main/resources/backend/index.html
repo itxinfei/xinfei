@@ -7,11 +7,10 @@
     <title>心飞外卖管理端</title>
     <link rel="shortcut icon" href="favicon.ico">
     <!-- 引入样式 -->
-    <!-- 修改点(2026-09-01)：移除 plugins/element-ui/index.css 官方样式表 ——
-         与 common.css（→common-el.css，token 化副本）重复加载，统一由后者单源提供 -->
-    <link rel="stylesheet" href="styles/common.css?v=20260926" />
-    <link rel="stylesheet" href="styles/index.css?v=20260926" />
-    <link rel="stylesheet" href="styles/design-system.css?v=20260930" />
+    <!-- 样式链：main-v3.css（EP index.css + tokens + design-system + 统一组件/表单/一致性层）+ index.css（壳层布局）；
+         Vue2 / Element UI 旧样式链 common.css、main.css、common-el.css、common-base-ui2.css 已删除（git 历史可查），页面不引用 -->
+    <link rel="stylesheet" href="styles/main-v3.css?v=3001003" />
+    <link rel="stylesheet" href="styles/index.css?v=20261022" />
     <!-- Remix Icon v4.6 — 2700+ 免费商用图标，替代原 iconfont（仅7个图标） -->
     <link href="plugins/remixicon/remixicon.css" rel="stylesheet" />
     <style>
@@ -75,8 +74,8 @@
               :active-text-color="menuActiveColor"
             >
               <div v-for="item in visibleMenuList" :key="item.id">
-                <el-submenu :index="item.id" v-if="item.children && item.children.length>0">
-                  <template slot="title">
+                <el-sub-menu :index="item.id" v-if="item.children && item.children.length>0">
+                  <template #title>
                     <i :class="item.icon"></i>
                     <span>{{item.name}}</span>
                   </template>
@@ -87,12 +86,12 @@
                     @click="menuHandle(sub,false)"
                   >
                     <i :class="sub.icon"></i>
-                    <span slot="title">{{sub.name}}</span>
+                    <span>{{sub.name}}</span>
                   </el-menu-item>
-                </el-submenu>
+                </el-sub-menu>
                 <el-menu-item v-else :index="item.id" @click="menuHandle(item,false)">
                   <i :class="item.icon"></i>
-                  <span slot="title">{{item.name}}</span>
+                  <span>{{item.name}}</span>
                 </el-menu-item>
               </div>
             </el-menu>
@@ -121,7 +120,7 @@
               </button>
               <!-- 面包屑导航（同时作为页面标题，最后一级不再重复显示） -->
               <div class="breadcrumb" v-if="breadcrumbs.length > 0">
-                <template v-for="(crumb, index) in breadcrumbs">
+                <template v-for="(crumb, index) in breadcrumbs" :key="index">
                   <!-- 分隔符 "/" 纯装饰：对读屏隐藏，避免读屏念出无意义的斜杠；同时提升其可见性（见 styles/index.css） -->
                   <span v-if="index > 0" class="crumb-sep" aria-hidden="true">/</span>
                   <span :class="['crumb-item', { clickable: index < breadcrumbs.length - 1, 'crumb-current': index === breadcrumbs.length - 1 }]"
@@ -206,20 +205,23 @@
     </div>
     </div>
     <!-- 开发环境版本，包含了有帮助的命令行警告 -->
-    <script src="plugins/vue/vue.js"></script>
-    <!-- 引入组件库 -->
-    <script src="plugins/element-ui/index.js?v=20260915"></script>
+    <script src="plugins/vue3/vue.global.js"></script>
+    <!-- Element Plus 组件库 + 图标 + 中文语言包（顺序不可调换） -->
+    <script src="plugins/element-plus/index.full.min.js"></script>
+    <script src="plugins/element-plus/icons.global.iife.min.js"></script>
+    <script src="plugins/element-plus/locale.zh-cn.min.js"></script>
     <!-- 引入axios -->
     <script src="plugins/axios/axios.min.js"></script>
     <script src="js/request.js?v=20260930"></script>
-    <script src="js/components.js?v=20261002"></script>
     <script src="./api/login.js?v=20260926"></script>
     <script src="./api/sys.js?v=20260928"></script>
     <script src="./api/employee.js?v=20260922"></script>
     <script src="./api/store.js?v=20261003"></script>
+    <script src="js/components-v3.js?v=3001001"></script>
+    <script src="js/app-v3.js?v=3001001"></script>
     <script>
 
-      new Vue({
+      createXinfeiApp({
         el: '#app',
         data() {
           return {
@@ -376,7 +378,9 @@
             // 修改点(P1-1)：菜单按角色过滤所需（角色标识 / 超管标识 / 权限集合）
             roleKey: '',
             isSuperAdmin: false,
-            permSet: new Set()
+            permSet: new Set(),
+            // 未登录跳转防重入标记（401 并发只跳转一次）
+            notLoginJumping: false
           }
         },
         computed: {
@@ -771,14 +775,14 @@
             this.sidebarOpen = false
           },
           // ========== iframe 高度自适应（修改点：iframe 高度 = 视口高 - 顶栏，由 iframe 自身滚动） ==========
-          /* 修改点(2026-09-27)：Element UI 2.x 把 el-menu-item / el-submenu__title 渲染成
+          /* 修改点(2026-09-27)：Element Plus 把 el-menu-item / el-sub-menu__title 渲染成
              不带 tabindex 的 <li>，整个侧边栏因此不在 Tab 序列里——键盘用户无法进入后台任何
              一个页面（此前 60 次 Tab 从未停靠到任何菜单项）。这里补 tabindex，并让 Enter /
              空格触发与鼠标点击等价的行为；菜单是异步渲染的，用 MutationObserver 兜住后到的节点。 */
           initMenuKeyboard() {
             var scope = document.querySelector('.sidebar-container') || document
             var apply = function () {
-              scope.querySelectorAll('.el-menu-item, .el-submenu__title').forEach(function (el) {
+              scope.querySelectorAll('.el-menu-item, .el-sub-menu__title').forEach(function (el) {
                 if (el.tabIndex < 0) el.tabIndex = 0
                 if (el.__kbMenuBound) return
                 el.__kbMenuBound = true
@@ -828,7 +832,7 @@
             // 不再取内容 scrollHeight（那会导致 iframe 撑高超高但被外层 overflow:hidden 裁剪）
             iframe.style.height = (window.innerHeight - 56) + 'px'
           },
-          // 窗口尺寸变化处理（具名注册，便于 beforeDestroy 精确移除监听）
+          // 窗口尺寸变化处理（具名注册，便于 beforeUnmount 精确移除监听）
           handleWindowResize() {
             this.resizeIframe()
             this.autoCollapseSidebar()
@@ -849,7 +853,7 @@
             }
           }
         },
-        beforeDestroy() {
+        beforeUnmount() {
           this.clearLoadingTimer()
           window.removeEventListener('message', this.handleChildNotLogin)
           window.removeEventListener('keydown', this.handleGlobalKeydown)

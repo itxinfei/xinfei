@@ -594,23 +594,9 @@ a.breadcrumb__item:hover,
   font-size: var(--font-size-sm);
 }
 
-.el-input__inner,
-.el-textarea__inner {
-  border-radius: var(--radius-md);
-  transition: var(--transition-all);
-  border: var(--border-width-thin) var(--border-style-solid) var(--border-color-base);
-}
-
-.el-input__inner:hover,
-.el-textarea__inner:hover {
-  border-color: var(--color-brand-400);
-}
-
-.el-input__inner:focus,
-.el-textarea__inner:focus {
-  border-color: var(--color-brand-500);
-  box-shadow: 0 0 0 2px var(--color-brand-100);
-}
+/* 输入框边框归属：单行 .el-input__inner 透明无边框，边框/圆角/背景由 .el-input__wrapper 承担；
+   .el-textarea__inner 自身是边框载体。二者的边框、圆角、hover/focus 统一在 form-fixes.css 定义，
+   此处不再重复书写，避免给 inner 叠加边框形成双层框。 */
 
 /* ========== 弹窗样式增强 ========== */
 .el-dialog {

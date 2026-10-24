@@ -52,6 +52,13 @@
   --el-border-color-dark: var(--border-strong);
   --el-border-color-darker: var(--border-strong);
 
+  /* ---------- 输入框 hover 边框色：EP 在 .el-input / .el-date-editor / .el-textarea 等
+     元素级把 --el-input-hover-border-color 绑到 --el-border-color-hover，该元素级声明优先于
+     :root 继承值，因此必须改底层 --el-border-color-hover 才能生效；默认色取 --el-border-color、
+     聚焦色 EP 元素级直接绑 --el-color-primary（已为品牌金），无需在此覆盖。
+     边框反馈统一落在 wrapper / textarea__inner 上，.el-input__inner 保持透明无边框（见 form-fixes.css）。 */
+  --el-border-color-hover: var(--color-brand-400);
+
   /* ---------- 圆角 / 字号：tokens 用的是无前缀名，这里桥给 EP ---------- */
   --el-border-radius-base: var(--border-radius-base);
   --el-border-radius-small: 2px;

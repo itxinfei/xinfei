@@ -4,10 +4,10 @@ document.write('<script src="/shared/js/img-path.js?v=20260924"><\/script>');
  * 后台管理系统通用组件库 —— Vue 3 + Element Plus 版
  * 适用于 iframe 架构 + Vue 3 global build 的无构建工具场景
  *
- * 【迁移期分叉】本文件由 js/components.js（Vue 2 + Element UI）逐组件移植而来，
- * 全站 81 个页面按页面粒度灰度切换：页面把 components.js 换成本文件 + app-v3.js。
- * 因此 components.js 在迁移期内冻结（不再新增功能），否则两边同步成本失控。
- * 全站切完后删除 components.js，本文件改回组件名注册即可。
+ * 本文件由旧 Vue 2 + Element UI 组件库（旧文件已删除，git 历史可查）逐组件移植而来；
+ * 后台 81 个页面 + 壳层现已全部切到本文件 + app-v3.js，旧库不再加载。
+ * 注册表 window.XinfeiComponentsV3 由 app-v3.js 的 createXinfeiApp() 统一注册，
+ * 新增组件在此对象内定义即可，不要再另起 Vue 2 双轨实现。
  *
  * 注册方式的变化：Vue 2 时代全局 Vue.component() 自动生效；Vue 3 必须先拿到 app 实例，
  * 故本文件只导出注册表 window.XinfeiComponentsV3，由 app-v3.js 的 createXinfeiApp() 统一注册。
@@ -948,7 +948,7 @@ XinfeiComponentsV3['crud-table'] = {
       // 2. actions-width 宽度档：2 个元素 120 / 3 个元素 180 / 4 个元素 240（「更多」触发器算 1 个元素）。
       // 3. 语义按钮类（styles/page.css）：查看/编辑 btn-view；启用/接单/上架等肯定流转 btn-success；
       //    停用/暂停 btn-warning；删除/取消/拒单/退款等否定操作 btn-delete（dropdown 内项用内联 danger 色）。
-      // 4. 按钮统一 type="text" size="small"，禁止 mini；「更多」触发器用 class="text-info" + el-icon-arrow-down。
+      // 4. 按钮统一 text size="small"（EP 文字按钮，勿用已废弃的 type="text"）；「更多」触发器用 class="text-info" + <i class="ri-arrow-down-s-line">。
       '<el-table-column v-if="showActions" :label="actionsLabel" :min-width="actionsWidth" :align="actionsAlign" :header-align="actionsAlign" :fixed="actionsFixed ? \'right\' : false" class-name="crud-actions-col">' +
         '<template #default="scope">' +
           '<el-button v-if="viewable" text size="small" class="btn-view" @click="openView(scope.row)">查看</el-button>' +
@@ -1092,7 +1092,7 @@ XinfeiComponentsV3['crud-table'] = {
     /** 列宽解析（内容驱动策略）：
      *  - 优先 minWidth（页面显式下限）
      *  - 否则 width 降级为下限（历史配置兼容）
-     *  - 都未设置则返回 undefined，由 Element UI 按内容自动分配
+     *  - 都未设置则返回 undefined，由 Element Plus 按内容自动分配
      * 目标：整行完整展示，避免固定 width 总和溢出导致横向滚动。
      */
     resolveColMinWidth: function (col) {
@@ -1692,7 +1692,7 @@ window.XinfeiListMixin = {
       // 修改点：兼容 crud-table 传纯数字和 table-bar 传对象两种情况
       this.pageSize = (typeof payload === 'object' && payload != null) ? (payload.pageSize || payload) : payload
       // 不在此调用 fetchData：crud-table 改页大小时会同步连续 emit size-change 再 emit
-      // page-change（components.js onSizeChange），紧随的 onPageChange 会以 page=1 统一加载。
+      // page-change（本文件 onSizeChange），紧随的 onPageChange 会以 page=1 统一加载。
       // 若这里也 fetch，改页大小必然发出两次相同请求。
     }
   }

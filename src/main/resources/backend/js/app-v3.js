@@ -1,14 +1,13 @@
 /* ============================================================
- * Vue 3 装配层（迁移期与 Vue 2 的 new Vue 并存）
+ * Vue 3 装配层（后台全站统一入口；旧 Vue 2 资产已删除，git 历史可查）
  * ============================================================
- * 页面侧只需把 `new Vue({ el: '#x', ... })` 改成 `createXinfeiApp({ el: '#x', ... })`，
- * 其余不动：el 从 options 里取出来在装配完成后自行 mount，这样每页的差异面
- * 缩到一处标识符替换，转换脚本能机械完成，回滚也只是改回这一个标识符。
+ * 页面启动器：createXinfeiApp({ el: '#x', ... })；el 从 options 取出，
+ * 装配完成后由本层统一 mount，页面不要直接调用 Vue.createApp。
  *
  * 装配内容（顺序即依赖）：
- *   ElementPlus 安装 → 中文语言包 → 图标组件 → 共享业务组件
- * 语言包必须显式传：Element Plus 默认英文，旧 element-ui 内置中文，
- * 漏了会把分页/日期面板/MessageBox 按钮悄悄换成 OK、Cancel、January。
+ *   ElementPlus 安装 → 中文语言包 → 图标组件 → 全局 mixin → 共享业务组件
+ * 语言包必须显式传：Element Plus 默认英文，漏了会把分页/日期面板/
+ * MessageBox 按钮悄悄换成 OK、Cancel、January。
  * ============================================================ */
 (function () {
   'use strict'
@@ -40,8 +39,8 @@
   }
 
   /* 全局格式化 mixin（formatMoney / formatDate / xinfeiStatusText …）。
-     Vue 2 由 components.js 里的 Vue.mixin() 装到原型上，Vue 3 只能挂在 app 上，
-     所以这里补一次；漏了的话所有页面模板里的 this.formatMoney 会变成 undefined 静默报错。 */
+     Vue 3 没有原型挂法，只能 app.mixin() 在这里补注册；
+     漏了的话所有页面模板里的 this.formatMoney 会变成 undefined 静默报错。 */
   function registerGlobalMixin (app) {
     if (window.XinfeiGlobalMixinV3) app.mixin(window.XinfeiGlobalMixinV3)
   }

@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -435,8 +435,7 @@
             this.page = 1
             this.fetchData(false)
           },
-          // 修改点：stats-card 点击切换筛选状态 — 已迁移至 onCardClick，保留兼容
-          // filterBy 已由 onCardClick 替代
+          // 旧 stats-card 点击筛选（filterBy）已迁移至 <stat-cards> 的 onCardClick，无残留兼容逻辑
           /* ========== 食材操作（新增/编辑/删除/预警） ========== */
           // ── 输入辅助（el-autocomplete）──
           queryNameSuggestions(queryString, cb) {

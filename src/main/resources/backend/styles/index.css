@@ -205,12 +205,12 @@ html, body {
   background-color: var(--sidebar-item-hover-bg) !important;
 }
 
-/* 修改点：Element UI 自带 `.el-submenu__title:focus, .el-submenu__title:hover { outline: 0 }`
+/* 修改点：Element UI 自带 `.el-sub-menu__title:focus, .el-sub-menu__title:hover { outline: 0 }`
    与 `.el-menu-item:focus { outline: 0 }`，特异性 (0,2,0) 高于全局 `:focus-visible` 的 (0,1,0)，
    会整条压掉键盘焦点环——键盘用户 Tab 到菜单时看不到焦点在哪（WCAG 2.4.7）。
    这里用 .sidebar-container 提升特异性到 (0,3,0) 覆盖回去，并把环画在内侧避免被侧边栏裁掉。 */
 .sidebar-container .el-menu-item:focus-visible,
-.sidebar-container .el-submenu__title:focus-visible {
+.sidebar-container .el-sub-menu__title:focus-visible {
   outline: 2px solid var(--color-brand-600);
   outline-offset: -2px;
   border-radius: var(--sidebar-item-radius) !important;
@@ -261,7 +261,7 @@ html, body {
 }
 
 /* ---------- 子菜单标题 ---------- */
-.sidebar-container .el-submenu__title {
+.sidebar-container .el-sub-menu__title {
   height: 40px !important;
   line-height: 40px !important;
   padding: 0 14px !important;
@@ -274,11 +274,11 @@ html, body {
   transition: color var(--transition-fast),
               background-color var(--transition-fast);
 }
-.sidebar-container .el-submenu__title:hover {
+.sidebar-container .el-sub-menu__title:hover {
   color: var(--text-inverse) !important;
   background-color: var(--sidebar-subitem-hover-bg) !important;
 }
-.sidebar-container .el-submenu__title i {
+.sidebar-container .el-sub-menu__title i {
   font-size: 19px;
   margin-right: 10px;
   width: 20px;
@@ -287,13 +287,13 @@ html, body {
 }
 
 /* 子菜单展开箭头 */
-.sidebar-container .el-submenu__icon-arrow {
+.sidebar-container .el-sub-menu__icon-arrow {
   color: var(--sidebar-arrow-color) !important;
   transition: transform var(--transition-fast);
   right: 12px;
   font-size: 12px;
 }
-.sidebar-container .el-submenu.is-opened > .el-submenu__title .el-submenu__icon-arrow {
+.sidebar-container .el-sub-menu.is-opened > .el-sub-menu__title .el-sub-menu__icon-arrow {
   color: var(--accent-color) !important;
 }
 
@@ -312,11 +312,11 @@ html, body {
 }
 
 /* ---------- 三级菜单（订单中心分组折叠，2026-09-10）----------
-   分组层：订单中心下「交易/配送/打印」用三级 el-submenu 折叠。
+   分组层：订单中心下「交易/配送/打印」用三级 el-sub-menu 折叠。
    Element 每级内层 ul 自带 .el-menu--inline，间距与二级一致；
    深度 1（二级分组的 el-menu-item 无 url 不渲染叶子）直接复用二级缩进 46px；
    深度 2 叶子（分组下菜单项）额外缩进 20px，突出层级关系。 */
-.sidebar-container .el-menu--inline .el-submenu__title {
+.sidebar-container .el-menu--inline .el-sub-menu__title {
   height: 36px !important;
   line-height: 36px !important;
   padding: 0 14px !important;
@@ -328,12 +328,12 @@ html, body {
   margin: 1px 0;
   transition: color var(--transition-fast), background-color var(--transition-fast);
 }
-.sidebar-container .el-menu--inline .el-submenu__title:hover {
+.sidebar-container .el-menu--inline .el-sub-menu__title:hover {
   color: var(--text-inverse) !important;
   background: var(--sidebar-subitem-hover-bg) !important;
 }
 /* 分组层展开箭头（对齐 Element 默认箭头位置） */
-.sidebar-container .el-menu--inline .el-submenu__icon-arrow {
+.sidebar-container .el-menu--inline .el-sub-menu__icon-arrow {
   right: 8px;
   font-size: 12px;
 }
@@ -397,20 +397,20 @@ html, body {
 .sidebar-container.collapsed .el-menu-item i {
   margin-right: 0;
 }
-.sidebar-container.collapsed .el-submenu__title {
+.sidebar-container.collapsed .el-sub-menu__title {
   padding: 0 !important;
   justify-content: center;
 }
-.sidebar-container.collapsed .el-submenu__title i {
+.sidebar-container.collapsed .el-sub-menu__title i {
   margin-right: 0;
 }
-.sidebar-container.collapsed .el-submenu__title span,
+.sidebar-container.collapsed .el-sub-menu__title span,
 .sidebar-container.collapsed .el-menu-item span {
   opacity: 0;
   display: none;
 }
 /* 折叠态隐藏子菜单展开箭头 */
-.sidebar-container.collapsed .el-submenu__icon-arrow {
+.sidebar-container.collapsed .el-sub-menu__icon-arrow {
   display: none;
 }
 /* 折叠态禁用 active 左侧条 */
@@ -741,7 +741,7 @@ html, body {
   .sidebar-container .el-menu-item {
     padding: 0 18px !important;
   }
-  .sidebar-container .el-submenu__title {
+  .sidebar-container .el-sub-menu__title {
     padding: 0 18px !important;
   }
   .sidebar-logo {

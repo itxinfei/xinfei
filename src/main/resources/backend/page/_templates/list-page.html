@@ -33,7 +33,7 @@
     8. 操作列 → #actions 插槽契约：常显主操作 ≤3 个，超出收「更多」el-dropdown；
        宽度档 2 元素 120 / 3 元素 180 / 4 元素 240（更多触发器算 1 个元素）；
        语义类 查看/编辑 btn-view、启用 btn-success、停用/暂停 btn-warning、删除/取消 btn-delete
-       （完整契约注释见 js/components.js crud-table 操作列处；落地范本 dining/table-list、platform/order-list）
+       （完整契约注释见 js/components-v3.js crud-table 操作列处；落地范本 dining/table-list、platform/order-list）
 
   【规范检测】
     提交前运行：node scripts/lint-ui-conventions.js
@@ -48,7 +48,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>列表页模板 - 心飞外卖管理端</title>
 
-    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001001" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -60,7 +60,7 @@
       <!-- 页面唯一主标题：视觉隐藏（.sr-only），仅供屏幕阅读器播报，配合 main 的 aria-labelledby -->
       <h1 class="sr-only" id="page-title">页面标题</h1>
 
-      <!-- ① 统计卡片（按需）：cards 配置见 components.js 的 stat-cards -->
+      <!-- ① 统计卡片（按需）：cards 配置见 components-v3.js 的 stat-cards -->
       <!--
       <stat-cards :cards="statsCards" v-model:active-key="activeFilter" @card-click="onCardClick" />
       -->
@@ -106,8 +106,8 @@
           <el-dropdown trigger="click" @command="(cmd) => onRowCommand(cmd, row)" @click.stop>
             <el-button text size="small" class="text-info">更多<i class="ri-arrow-down-s-line "></i></el-button>
             <template #dropdown><el-dropdown-menu>
-              <!-- 危险项标红；继续加项时常用在前、删除收尾 -->
-              <el-dropdown-item command="delete" icon="ri-delete-bin-line" style="color:var(--color-danger);">删除</el-dropdown-item>
+              <!-- 危险项标红；继续加项时常用在前、删除收尾；Remix 图标走 #icon 插槽，勿用 icon="ri-..." 字符串 -->
+              <el-dropdown-item command="delete" style="color:var(--color-danger);"><template #icon><i class="ri-delete-bin-line"></i></template>删除</el-dropdown-item>
             </el-dropdown-menu></template>
           </el-dropdown>
         </template>
@@ -156,20 +156,20 @@
       mixins: [window.XinfeiListMixin],
       data() {
         return {
-          // 搜索项配置（详见 components.js 的 table-bar）
+          // 搜索项配置（详见 components-v3.js 的 table-bar）
           searchItems: [
             { type: 'input', field: 'name', placeholder: '请输入名称' },
             { type: 'select', field: 'status', placeholder: '状态', options: [
               { label: '启用', value: 1 }, { label: '禁用', value: 0 }
             ] }
           ],
-          // 操作按钮配置（详见 components.js 的 table-bar，文案字段是 text 不是 label）
+          // 操作按钮配置（详见 components-v3.js 的 table-bar，文案字段是 text 不是 label）
           actions: [
             { key: 'add', text: '新增', type: 'primary', icon: 'ri-add-line' }
           ],
           // 页面自有筛选状态：table-bar 内部 searchValues 不双向绑定，需在 onSearch/onReset 桥接回写
           filters: { name: '', status: '' },
-          // 列配置（详见 components.js 的 crud-table）
+          // 列配置（详见 components-v3.js 的 crud-table）
           columns: [
             { prop: 'id', label: 'ID', width: 80 },
             { prop: 'name', label: '名称', width: 120 },

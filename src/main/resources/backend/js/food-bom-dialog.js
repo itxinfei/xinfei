@@ -3,6 +3,9 @@
  * 修改点(2026-09-24)：从 page/food/list.html（941 行）拆出独立组件文件，
  *   降低最高频菜品页的体积与回归风险；API 依赖 api/inventory.js 的
  *   materialList / dishMaterialListByDish / dishMaterialBatchSave（页面已引入）。
+ * 迁移(2026-10-22)：按 Vue3 + Element Plus 契约修订——:visible.sync → v-model、
+ *   slot-scope → #default、el-button type="text" → text、图标改 #icon 插槽；
+ *   规范见 docs/Element-Plus迁移计划.md。
  *
  * 用法（food/list.html）：
  *   <food-bom-dialog ref="bomDialog" @saved="onBomSaved"></food-bom-dialog>
@@ -13,22 +16,25 @@
 
   var FoodBomDialog = {
     name: 'FoodBomDialog',
+    emits: ['saved'],
     template:
-      '<crud-dialog :show-submit="true" :show-cancel="true"' +
+      '<crud-dialog' +
       '  size="lg"' +
       '  :title="\'编辑配方 - \' + (dishName || \'\')"' +
-      '  :visible.sync="visible"' +
+      '  v-model="visible"' +
       '  :close-on-click-modal="false"' +
       '  :submit-loading="submitting"' +
       '  custom-class="bom-dialog"' +
       '  @submit="submit">' +
       '  <div class="bom-toolbar">' +
-      '    <el-button type="primary" size="small" icon="ri-add-line" @click="addItem">添加食材</el-button>' +
+      '    <el-button type="primary" size="small" @click="addItem">' +
+      '      <template #icon><i class="ri-add-line"></i></template>添加食材' +
+      '    </el-button>' +
       '    <el-button size="small" @click="loadItems">刷新</el-button>' +
       '  </div>' +
       '  <el-table :data="items" size="small" border style="width: 100%;">' +
       '    <el-table-column label="食材名称" width="180" align="center">' +
-      '      <template slot-scope="scope">' +
+      '      <template #default="scope">' +
       '        <el-select v-model="scope.row.materialId" placeholder="请选择食材" size="small" filterable' +
       '          @change="onMaterialChange(scope.row, $event)" style="width: 100%;">' +
       '          <el-option v-for="m in materialOptions" :key="m.id" :label="m.name" :value="m.id">' +
@@ -39,19 +45,19 @@
       '      </template>' +
       '    </el-table-column>' +
       '    <el-table-column label="用量" width="140" align="center">' +
-      '      <template slot-scope="scope">' +
+      '      <template #default="scope">' +
       '        <el-input-number v-model="scope.row.usageQty" :min="0.001" :precision="3"' +
       '          controls-position="right" size="small" style="width: 100%;" />' +
       '      </template>' +
       '    </el-table-column>' +
       '    <el-table-column label="单位" width="100" align="center" :header-align="\'center\'" :show-overflow-tooltip="true">' +
-      '      <template slot-scope="scope">' +
+      '      <template #default="scope">' +
       '        <span class="bom-unit">{{ scope.row.materialUnit || \'-\' }}</span>' +
       '      </template>' +
       '    </el-table-column>' +
       '    <el-table-column label="操作" align="center" width="120" :header-align="\'center\'">' +
-      '      <template slot-scope="scope">' +
-      '        <el-button type="text" size="small" class="btn-delete" @click="delItem(scope.$index)">删除</el-button>' +
+      '      <template #default="scope">' +
+      '        <el-button text size="small" class="btn-delete" @click="delItem(scope.$index)">删除</el-button>' +
       '      </template>' +
       '    </el-table-column>' +
       '  </el-table>' +
