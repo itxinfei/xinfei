@@ -59,9 +59,32 @@ public class DashboardController {
 
         Map<String, Object> data = dashboardService.getOverview(tenantId);
 
+        // 附加待办计数（待评价/待退款）：实时查询、不走 overview 的 Redis 缓存
+        data.putAll(dashboardService.getTodoCounts(tenantId));
+
         // 附加Redis状态标识
         data.put("redisEnabled", dashboardService.isRedisAvailable());
         data.put("serverTime", System.currentTimeMillis());
+        return R.success(data);
+    }
+
+    /**
+     * 获取订单时段分布（按小时聚合的订单量）
+     * <p>当日或近N天订单按 0-23 小时聚合，无订单的小时补 0，供工作台时段分布柱状图使用
+     */
+    @GetMapping("/hourly-distribution")
+    @Operation(summary = "订单时段分布", description = "按小时聚合订单量（days=1 当日，days=7 近7天），返回 24 小时分布")
+    public R<List<Map<String, Object>>> hourlyDistribution(
+            @Parameter(description = "天数（1=当日，7=近7天）", required = false, example = "1")
+            @RequestParam(defaultValue = "1") int days) {
+        Long tenantId = BaseContext.getCurrentTenantId();
+        if (days != 1 && days != 7) { days = 1; }
+        log.info("[Dashboard] 获取订单时段分布 tenantId={}, days={}", tenantId, days);
+        java.time.LocalDateTime startTime = days == 1
+                ? java.time.LocalDate.now().atStartOfDay()
+                : java.time.LocalDate.now().minusDays(days - 1).atStartOfDay();
+        java.time.LocalDateTime endTime = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+        List<Map<String, Object>> data = dashboardService.getHourlyDistribution(tenantId, startTime, endTime);
         return R.success(data);
     }
 
@@ -149,7 +172,10 @@ public class DashboardController {
 
         Map<String, Object> result = new HashMap<>();
         try {
-            result.put("overview", dashboardService.getOverview(tenantId));
+            Map<String, Object> overview = dashboardService.getOverview(tenantId);
+            // 附加待办计数（待评价/待退款），实时查询不缓存
+            overview.putAll(dashboardService.getTodoCounts(tenantId));
+            result.put("overview", overview);
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
             log.error("[Dashboard] 概览数据获取异常", e);
@@ -182,6 +208,15 @@ public class DashboardController {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
             log.error("[Dashboard] 系统健康获取异常", e);
             result.put("health", healthErrorPlaceholder(e));
+        }
+        try {
+            java.time.LocalDateTime startTime = java.time.LocalDate.now().atStartOfDay();
+            java.time.LocalDateTime endTime = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+            result.put("hourly", dashboardService.getHourlyDistribution(tenantId, startTime, endTime));
+        } catch (Exception e) {
+            // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
+            log.error("[Dashboard] 时段分布获取异常", e);
+            result.put("hourly", new ArrayList<>());
         }
         result.put("serverTime", System.currentTimeMillis());
         return R.success(result);

@@ -99,4 +99,29 @@ public interface DashboardMapper {
     Map<String, Object> getMemberOverview(@Param("tenantId") Long tenantId,
                                           @Param("monthStart") LocalDateTime monthStart,
                                           @Param("monthEnd") LocalDateTime monthEnd);
+
+    /**
+     * 待办计数：待评价订单数 + 待退款（退款申请中）订单数
+     * <p>待评价口径与 C 端 my-evaluations 一致：已完成(status=4) 且仍存在未评价商品
+     * （order_detail 中 dish_id/setmeal_id 非空且无对应 dish_evaluation 记录）的订单数</p>
+     * <p>待退款口径：refund_record 中 status IN ('pending','processing')（售后申请待审核/退款处理中）的申请单数</p>
+     *
+     * @param tenantId 租户ID
+     * @return Map（包含 pendingEvaluation, pendingRefund）
+     */
+    @InterceptorIgnore(tenantLine = "true")
+    Map<String, Object> getTodoCounts(@Param("tenantId") Long tenantId);
+
+    /**
+     * 订单量按小时聚合（时段分布）
+     *
+     * @param tenantId 租户ID
+     * @param startTime 起始时间（含）
+     * @param endTime 结束时间（含）
+     * @return 每行包含 hour（0-23）与 orderCount
+     */
+    @InterceptorIgnore(tenantLine = "true")
+    List<Map<String, Object>> getHourlyOrderCount(@Param("tenantId") Long tenantId,
+                                                  @Param("startTime") LocalDateTime startTime,
+                                                  @Param("endTime") LocalDateTime endTime);
 }

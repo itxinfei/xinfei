@@ -128,4 +128,54 @@
           m.is_deleted = 0
     </select>
 
+    <!-- ==================== 待办计数（待评价 + 待退款） ==================== -->
+    <!-- 待评价：已完成订单中仍存在未评价商品（与 C 端 my-evaluations 的逐商品判定口径一致）
+         待退款：refund_record 中 status IN ('pending','processing')（枚举 RefundStatus，小写 code） -->
+    <select id="getTodoCounts" resultType="java.util.HashMap">
+        SELECT
+            (SELECT COUNT(*)
+               FROM orders o
+              WHERE o.status = 4
+                AND o.is_deleted = 0
+                <if test="tenantId != null">AND o.tenant_id = #{tenantId}</if>
+                AND EXISTS (
+                    SELECT 1
+                      FROM order_detail od
+                     WHERE od.order_id = o.id
+                       AND od.is_deleted = 0
+                       <if test="tenantId != null">AND od.tenant_id = #{tenantId}</if>
+                       AND (od.dish_id IS NOT NULL OR od.setmeal_id IS NOT NULL)
+                       AND NOT EXISTS (
+                           SELECT 1
+                             FROM dish_evaluation de
+                            WHERE de.order_id = od.order_id
+                              AND de.is_deleted = 0
+                              <if test="tenantId != null">AND de.tenant_id = #{tenantId}</if>
+                              AND ((od.dish_id IS NOT NULL AND de.dish_id = od.dish_id)
+                                OR (od.setmeal_id IS NOT NULL AND de.setmeal_id = od.setmeal_id))
+                       )
+                )
+            ) AS pendingEvaluation,
+            (SELECT COUNT(*)
+               FROM refund_record r
+              WHERE r.is_deleted = 0
+                AND r.status IN ('pending', 'processing')
+                <if test="tenantId != null">AND r.tenant_id = #{tenantId}</if>
+            ) AS pendingRefund
+    </select>
+
+    <!-- ==================== 订单时段分布（按小时聚合） ==================== -->
+    <select id="getHourlyOrderCount" resultType="java.util.HashMap">
+        SELECT
+            HOUR(o.order_time) AS hour,
+            COUNT(*) AS orderCount
+        FROM orders o
+        WHERE
+          <if test="tenantId != null">o.tenant_id = #{tenantId} AND </if>
+          o.is_deleted = 0
+          AND o.order_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY HOUR(o.order_time)
+        ORDER BY HOUR(o.order_time) ASC
+    </select>
+
 </mapper>

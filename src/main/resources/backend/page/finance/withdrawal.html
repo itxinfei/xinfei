@@ -60,6 +60,7 @@
 
     <!-- 数据表格：申请编号/申请人/提现金额/方式/收款账户/状态/申请时间/操作 -->
     <crud-table
+      empty-hint="暂无提现记录，试试调整筛选条件"
       :data="pagedData"
       :columns="columns"
       :loading="loading"

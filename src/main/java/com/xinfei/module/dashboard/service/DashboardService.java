@@ -24,6 +24,28 @@ public interface DashboardService {
     Map<String, Object> getOverview(Long tenantId);
 
     /**
+     * 获取待办计数（待评价订单数 + 待退款申请数）
+     * <p>不做 Redis 缓存：待办数要求实时（评价提交/退款审核后立即反映），
+     * 且为轻量聚合查询（两个子查询 COUNT），缓存收益有限。
+     *
+     * @param tenantId 租户ID
+     * @return Map（包含 pendingEvaluation, pendingRefund）
+     */
+    Map<String, Object> getTodoCounts(Long tenantId);
+
+    /**
+     * 获取订单量按小时聚合的时段分布（填充 0-23 全部小时，无订单的小时补 0）
+     *
+     * @param tenantId 租户ID
+     * @param startTime 起始时间（含）
+     * @param endTime 结束时间（含）
+     * @return 24 行，每行包含 hour（如 "08:00"）与 orderCount
+     */
+    List<Map<String, Object>> getHourlyDistribution(Long tenantId,
+                                                    java.time.LocalDateTime startTime,
+                                                    java.time.LocalDateTime endTime);
+
+    /**
      * 获取最近7天趋势数据
      * Redis缓存Key: dashboard:trend:{tenantId}
      * 缓存TTL: 30分钟（历史数据不频繁变动）

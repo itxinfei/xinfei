@@ -525,6 +525,19 @@
         </div>
       </div>
 
+      <!-- 修改点：订单时段分布（按小时聚合柱状图，数据来自 /api/dashboard/hourly-distribution） -->
+      <div class="chart-panel" style="margin-bottom: var(--space-4);">
+        <div class="chart-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="ri-bar-chart-grouped-line" aria-hidden="true"></i> 订单时段分布（{{ hourlyDays === 1 ? '今日' : '近7天' }}）</span>
+          <el-radio-group v-model="hourlyDays" size="small" @change="switchHourlyDays" style="margin-left:12px;">
+            <el-radio-button :value="1">今日</el-radio-button>
+            <el-radio-button :value="7">近7天</el-radio-button>
+          </el-radio-group>
+        </div>
+        <div class="chart-box" id="hourlyChart" v-show="!echartsLoadFailed" role="img" aria-label="订单时段分布柱状图"></div>
+        <div v-if="echartsLoadFailed" class="chart-box chart-box--failed">图表加载失败，请刷新重试</div>
+      </div>
+
       <!-- ========== 底部: 热销菜品 + 系统健康 ========== -->
       <div class="bottom-row">
         <div class="bottom-panel chart-panel">
@@ -689,6 +702,10 @@
           },
           trendChart: null,
           statusChart: null,
+          // 修改点：订单时段分布（0-23 小时订单量柱状图）
+          hourly: [],
+          hourlyDays: 1,
+          hourlyChart: null,
           _resizeHandler: null,
           // 修改点：昨日对比数据
           yesterdayOrders: 0,
@@ -728,7 +745,8 @@
             { key: 'users', icon: 'ri-group-line', label: '注册用户 / 在职员工', value: (ov.totalUsers || 0) + ' / ' + (ov.activeEmployees || 0), color: 'info', clickable: true, subText: '数据来源: ' + (ov.cacheSource || 'MySQL') }
           ];
         },
-        // 首屏待办台（8.7.1）：数据源复用 dashboard overview + 库存预警；待评价/待退款后端暂无独立计数，暂不展示
+        // 首屏待办台（8.7.1）：数据源复用 dashboard overview + 库存预警
+        // 修改点：接入后端新增的待评价/待退款计数（overview.pendingEvaluation / pendingRefund）
         todoItems: function() {
           const list = []
           const ov = this.overview || {}
@@ -737,6 +755,10 @@
           list.push({ key: 'pending', icon: 'ri-time-line', label: '待接单/待处理', count: pendingCount, url: 'page/order/list.html?status=2' })
           const deliveringCount = orderStatus['派送中'] || 0
           list.push({ key: 'delivering', icon: 'ri-truck-line', label: '配送中', count: deliveringCount, url: 'page/order/list.html?status=3' })
+          // 待评价：已完成且仍有未评价商品的订单数（后端口径与 C 端一致）
+          list.push({ key: 'evaluation', icon: 'ri-star-line', label: '待评价', count: ov.pendingEvaluation || 0, url: 'page/report/evaluation-list.html' })
+          // 待退款：退款申请待审核/处理中（refund_record pending/processing）
+          list.push({ key: 'refund', icon: 'ri-refund-2-line', label: '待退款', count: ov.pendingRefund || 0, url: 'page/payment/order-list.html' })
           const invCount = (this.inventoryAlert && this.inventoryAlert.lowStockCount) || 0
           list.push({ key: 'inventory', icon: 'ri-error-warning-line', label: '库存预警', count: invCount, url: 'page/inventory/material-list.html' })
           return list
@@ -773,6 +795,9 @@
         if (this.statusChart) {
           this.statusChart.dispose();
         }
+        if (this.hourlyChart) {
+          this.hourlyChart.dispose();
+        }
       },
       methods: {
         // 修改点：KPI 卡点击下钻到对应页面（8.7.1）
@@ -802,6 +827,8 @@
               this.orderStatus = data.orderStatus || {};
               this.hotDishes = data.hotDishes || [];
               this.health = data.health || {};
+              // 修改点：时段分布（/all 附带当日 24 小时聚合）
+              this.hourly = data.hourly || [];
               this.serverTime = data.serverTime;
 
               // 修改点：计算昨日对比
@@ -819,6 +846,7 @@
                 this.$nextTick(() => {
                   this.renderTrendChart();
                   this.renderStatusChart();
+                  this.renderHourlyChart();
                 });
               } catch (e) {
                 console.warn('ECharts 加载失败，已跳过图表渲染', e);
@@ -1191,6 +1219,110 @@
           if (this.statusChart) {
             this.statusChart.resize();
           }
+          if (this.hourlyChart) {
+            this.hourlyChart.resize();
+          }
+        },
+
+        // 修改点：切换时段分布范围（今日/近7天），重新拉取小时聚合数据
+        async switchHourlyDays(days) {
+          try {
+            if (!this.echartsReady()) {
+              await this.ensureEcharts();
+            }
+            this.echartsLoadFailed = false;
+            var res = await dashboardHourly({ days: days });
+            if (String(res.code) === '1') {
+              this.hourly = res.data || [];
+              this.$nextTick(() => this.renderHourlyChart());
+            } else {
+              XinfeiUI.error(res.msg || '时段分布数据加载失败');
+            }
+          } catch (e) {
+            console.warn('切换时段分布范围失败:', e);
+            if (!this.echartsReady()) this.echartsLoadFailed = true;
+          }
+        },
+
+        // 修改点：渲染订单时段分布柱状图（0-23 小时订单量）
+        renderHourlyChart() {
+          if (!this.echartsReady()) return;
+          const dom = document.getElementById('hourlyChart');
+          if (!dom) return;
+          if (!this.hourlyChart) {
+            this.hourlyChart = Vue.markRaw(echarts.init(dom));
+          }
+          const hours = this.hourly.map(h => h.hour);
+          const counts = this.hourly.map(h => h.orderCount || 0);
+          const total = counts.reduce((s, v) => s + v, 0);
+
+          // 空态：与趋势图一致的居中提示
+          if (hours.length === 0 || total === 0) {
+            this.hourlyChart.setOption({ title: { text: '所选时间范围内暂无订单数据',
+              left: 'center', top: 'center',
+              textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }, true);
+            this.$nextTick(() => { if (this.hourlyChart) this.hourlyChart.resize(); });
+            return;
+          }
+
+          this.hourlyChart.setOption({
+            title: { show: false },
+            color: [XinfeiPalette.brand],
+            tooltip: {
+              trigger: 'axis',
+              backgroundColor: XinfeiPalette.white,
+              borderColor: this.cssVar('--el-border-lighter2') || XinfeiPalette.borderLighter2,
+              borderWidth: 1,
+              textStyle: { color: this.cssVar('--el-text-primary') || XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(params) {
+                const p = params[0];
+                return '<strong>' + p.axisValue + '</strong><br/>' + p.marker
+                  + ' 订单量：<b>' + p.value + '</b> 单';
+              }
+            },
+            grid: { left: 55, right: 30, top: 30, bottom: 40 },
+            xAxis: {
+              type: 'category',
+              data: hours,
+              axisLine: { lineStyle: { color: this.cssVar('--el-border-lighter2') || XinfeiPalette.borderLighter2 } },
+              axisTick: { show: false },
+              axisLabel: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12, interval: 2 }
+            },
+            yAxis: {
+              type: 'value',
+              name: '订单量(单)',
+              // 订单数为整数，强制刻度间隔 1，避免小数刻度
+              minInterval: 1,
+              nameTextStyle: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12 },
+              axisLabel: { color: this.cssVar('--el-text-secondary') || XinfeiPalette.textSecondary, fontSize: 12 },
+              splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } },
+              axisLine: { show: false },
+              axisTick: { show: false }
+            },
+            series: [{
+              name: '订单量',
+              type: 'bar',
+              data: counts,
+              barMaxWidth: 22,
+              itemStyle: {
+                borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
+                color: XinfeiPalette.brand
+              },
+              // 只在非零柱顶显示数值标签，避免 24 个 0 压叠
+              label: {
+                show: true,
+                position: 'top',
+                color: XinfeiPalette.brand800,
+                fontSize: 11,
+                fontWeight: 600,
+                formatter: function(p) { return p.value > 0 ? p.value : ''; }
+              },
+              emphasis: { itemStyle: { color: XinfeiPalette.brand600 } }
+            }]
+          }, true);
+          this.$nextTick(() => {
+            if (this.hourlyChart) this.hourlyChart.resize();
+          });
         },
 
         // 热销菜品进度条宽度

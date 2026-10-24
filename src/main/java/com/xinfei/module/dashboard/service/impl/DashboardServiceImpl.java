@@ -218,6 +218,55 @@ public class DashboardServiceImpl implements DashboardService {
         return result;
     }
 
+    // ==================== 待办计数 ====================
+
+    /**
+     * 获取待办计数（待评价 + 待退款）
+     * <p>待评价：已完成(status=4) 且仍有未评价商品的订单数（口径同 C 端 my-evaluations 逐商品判定）
+     * <p>待退款：refund_record 中 status IN ('pending','processing') 的申请单数
+     * <p>不缓存：待办要求实时，且查询轻量（见接口注释）。
+     */
+    @Override
+    public Map<String, Object> getTodoCounts(Long tenantId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            Map<String, Object> counts = dashboardMapper.getTodoCounts(tenantId);
+            result.put("pendingEvaluation", getInt(counts, "pendingEvaluation"));
+            result.put("pendingRefund", getInt(counts, "pendingRefund"));
+        } catch (Exception e) {
+            // 宽异常兜底：有意捕获 Exception，避免待办计数失败拖垮整个 overview
+            log.warn("[Dashboard] 查询待办计数异常", e);
+            result.put("pendingEvaluation", 0);
+            result.put("pendingRefund", 0);
+        }
+        return result;
+    }
+
+    // ==================== 订单时段分布 ====================
+
+    /**
+     * 订单量按小时聚合（0-23 全小时填充，无订单补 0，便于前端直接画柱状图）
+     */
+    @Override
+    public List<Map<String, Object>> getHourlyDistribution(Long tenantId, LocalDateTime startTime, LocalDateTime endTime) {
+        List<Map<String, Object>> rows = dashboardMapper.getHourlyOrderCount(tenantId, startTime, endTime);
+        int[] counts = new int[24];
+        for (Map<String, Object> row : rows) {
+            Object hourObj = row.get("hour");
+            if (hourObj instanceof Number) {
+                counts[((Number) hourObj).intValue()] = getInt(row, "orderCount");
+            }
+        }
+        List<Map<String, Object>> result = new ArrayList<>(24);
+        for (int h = 0; h < 24; h++) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("hour", String.format("%02d:00", h));
+            item.put("orderCount", counts[h]);
+            result.add(item);
+        }
+        return result;
+    }
+
     // ==================== 趋势数据 ====================
 
     /**

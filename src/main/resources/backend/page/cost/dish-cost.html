@@ -47,6 +47,7 @@
 
     <!-- 数据表格：菜品名称/各项成本/售价/毛利率/备注 -->
     <crud-table
+        empty-hint="暂无成本数据，试试调整筛选条件"
         :data="filteredTableData"
         :columns="columns"
         :loading="loading"
