@@ -159,6 +159,33 @@
         </el-form-item>
       </el-form>
     </crud-dialog>
+    <!-- O-21 二期：食材分类管理弹窗（原独立页 category-list.html 并入） -->
+    <crud-dialog title="食材分类管理" v-model="catDialogVisible" size="md"
+      :close-on-click-modal="false" :show-submit="false" cancel-text="关 闭">
+      <el-form :model="catForm" label-width="80px" size="small" @submit.prevent>
+        <el-form-item label="分类名称">
+          <el-input v-model="catForm.name" placeholder="请输入分类名称" maxlength="32" style="width: 60%;"></el-input>
+        </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="catForm.sort" :min="0" :max="9999" style="width: 30%;"></el-input-number>
+          <el-button type="primary" size="small" style="margin-left: 12px;" @click="catSave">
+            {{ catForm.id ? '保存修改' : '添加分类' }}
+          </el-button>
+          <el-button v-if="catForm.id" size="small" @click="catReset">取消编辑</el-button>
+        </el-form-item>
+      </el-form>
+      <el-table :data="catList" size="small" stripe aria-label="食材分类列表">
+        <el-table-column prop="name" label="分类名称" min-width="120" align="center"></el-table-column>
+        <el-table-column prop="sort" label="排序" width="70" align="center"></el-table-column>
+        <el-table-column prop="materialCount" label="食材数量" width="90" align="center"></el-table-column>
+        <el-table-column label="操作" width="130" align="center">
+          <template #default="s">
+            <el-button text size="small" class="btn-view" @click="catEdit(s.row)">编辑</el-button>
+            <el-button text size="small" class="btn-delete" @click="catDelete(s.row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </crud-dialog>
     <!-- 修改点：使用 <crud-dialog :show-submit="true" :show-cancel="true"> 统一弹窗组件替代手写 el-dialog（仅展示，隐藏确认按钮） -->
     <crud-dialog :show-cancel="true" title="库存预警" v-model="warningDialogVisible" size="lg" :show-submit="false" cancel-text="关 闭">
       <el-table aria-label="数据表格" :data="warningData" stripe class="tableBox">
@@ -217,12 +244,17 @@
             tableSearchItems: [],
             tableActions: [
               { key: 'add', text: '+ 新增食材', type: 'primary' },
-              { key: 'warning', text: '库存预警', type: 'warning' }
+              { key: 'warning', text: '库存预警', type: 'warning' },
+              { key: 'category', text: '分类管理', type: 'default' }
             ],
             input: {
               name: '',
               categoryId: ''
             },
+            // O-21 二期：食材分类管理弹窗（原独立页并入）
+            catDialogVisible: false,
+            catList: [],
+            catForm: { id: null, name: '', sort: 0 },
             // 修改点：搜索下拉框动态选项（从数据库加载）
             filterOptions: { names: [] },
             // 修改点：下拉选项加载状态
@@ -317,6 +349,44 @@
           onTableAction: function(payload) {
             if (payload.key === 'add') { this.addHandle(); }
             else if (payload.key === 'warning') { this.warningHandle(); }
+            else if (payload.key === 'category') { this.openCatDialog(); }
+          },
+          /* ── 食材分类管理（O-21 二期：原独立页并入本页弹窗）── */
+          openCatDialog() {
+            this.catDialogVisible = true
+            this.loadCatList()
+          },
+          async loadCatList() {
+            const res = await matCategoryList()
+            if (String(res.code) === '1') { this.catList = res.data || [] }
+          },
+          catEdit(row) {
+            this.catForm = { id: row.id, name: row.name, sort: row.sort || 0 }
+          },
+          catReset() {
+            this.catForm = { id: null, name: '', sort: 0 }
+          },
+          async catSave() {
+            if (!this.catForm.name || !this.catForm.name.trim()) { XinfeiUI.warning('请输入分类名称'); return }
+            const res = await (this.catForm.id ? updateMatCategory(this.catForm) : addMatCategory(this.catForm))
+            if (String(res.code) === '1') {
+              XinfeiUI.success(this.catForm.id ? '更新成功' : '新增成功')
+              this.catReset()
+              this.loadCatList()
+              this.handleQuery()
+            } else { XinfeiUI.error(res.msg || '操作失败') }
+          },
+          async catDelete(id) {
+            try {
+              await XinfeiUI.confirm('确定删除该分类吗？分类下有食材时将被拒绝。', '删除确认', { type: 'warning' })
+            } catch (e) { return }
+            const res = await deleteMatCategory(id)
+            if (String(res.code) === '1') {
+              XinfeiUI.success('删除成功')
+              if (this.catForm.id === id) this.catReset()
+              this.loadCatList()
+              this.handleQuery()
+            } else { XinfeiUI.error(res.msg || '删除失败') }
           },
           // 修改点：统一方法名 fetchData（供 crud-table 分页事件调用）；reloadStats=true 才重算全局统计
           async fetchData(reloadStats = true) {
