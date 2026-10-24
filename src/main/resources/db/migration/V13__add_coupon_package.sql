@@ -1,4 +1,4 @@
--- V11：付费券包（O-18，对标有赞/天财商龙「付费券包」玩法）
+-- V13：付费券包（O-18；原编 V11 与既有 V10__add_user_openid 顺延规划撞号，2026-10-24 改 V13——未在任何库执行过，改号安全）
 -- 形态：多张优惠券打包售卖（一期口径：包内每模板限一张，受 coupon_user.uk_member_template 约束）
 CREATE TABLE IF NOT EXISTS coupon_package (
   id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',

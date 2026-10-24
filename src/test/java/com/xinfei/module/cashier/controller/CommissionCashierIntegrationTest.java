@@ -78,7 +78,7 @@ public class CommissionCashierIntegrationTest extends BaseControllerTest {
 
     @BeforeEach
     void setUp() {
-        // 历史测试库 employee 表可能缺 V10 新列（test profile 不跑 Flyway），幂等补齐
+        // 历史测试库 employee 表可能缺 V12 新列（test profile 不跑 Flyway），幂等补齐
         schemaPatcher.ensureColumn("employee", "commission_rate",
                 "commission_rate decimal(5,2) NULL DEFAULT NULL COMMENT '提成比例(%)，NULL/0=不参与提成'");
         cleaner.cleanTables("cashier_record", "commission_record", "employee", "orders", "payment_order");

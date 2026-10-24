@@ -8,7 +8,7 @@
 - 开发者：AI
 
 ## 2026-10-24 | 会员 / 支付 / 营销 / 小程序 | 付费券包（对标 O-18 一期：打包售卖 + 支付自动发券）
-- 数据结构（V11 迁移 + schema-member 夹具同步）：`coupon_package`（名称/售价/面值合计/状态/排序）+ `coupon_package_item`（包内券模板，一期每模板限一张）+ `coupon_package_order`（购买单，orderNo 唯一，状态 0 待支付/1 已支付已发券/2 已关闭）。
+- 数据结构（V13 迁移 + schema-member 夹具同步；原编 V11 撞号改 V13）：`coupon_package`（名称/售价/面值合计/状态/排序）+ `coupon_package_item`（包内券模板，一期每模板限一张）+ `coupon_package_order`（购买单，orderNo 唯一，状态 0 待支付/1 已支付已发券/2 已关闭）。
 - 后端：`CouponPackageService`（adminPage/saveWithItems 含同模板重复拒绝/上下架/删除、listPublished、createOrder 幂等复用待支付单、deliverPaid CAS+拆包发券）；管理端 `/coupon-package` CRUD；顾客端 `/api/coupon-package`（list 匿名/buy/my）；支付走新 `CouponPackagePaymentController`（`/api/payment/coupon-package/pay`，与 RechargePaymentController 同构，JSAPI openid 从登录档案取）；`PaymentOrder.BIZ_COUPON_PACKAGE` 回调分支：deliverPaid 失败抛异常回滚支付单状态供回调重试，购买单缺失/已关闭走与充值同口径的 afterCommit 自动全额退款。
 - 发券口径：复用 `claimCoupon` 内核（原子扣库存 + uk 幂等 + validDays 过期），购买者未开通会员自动开通；任一张失败整体回滚（防「付了钱只发一部分」）。
 - 管理端：`page/marketing/coupon-package.html`（列表含明细标签/编辑弹窗券模板多选/上下架/删除，口径说明文案）挂营销组菜单；`api/coupon-package.js`。
@@ -18,7 +18,7 @@
 - 开发者：AI
 
 ## 2026-10-24 | 收银 / 员工 / 后台 | 员工提成管理（对标 O-17，收银提成口径）
-- 数据结构（V10 迁移 + 夹具同步）：`employee` 增 `commission_rate decimal(5,2)`（0~100%，NULL/0=不参与，更新白名单校验边界，编辑表单 el-input-number 维护）；新表 `commission_record`（员工/收银记录ID/基数/比例快照/提成额/期间 yyyy-MM/状态，`uk_commission_cashier` 唯一键幂等）。
+- 数据结构（V12 迁移 + 夹具同步；原编 V10 与 V10__add_user_openid 撞号改 V12）：`employee` 增 `commission_rate decimal(5,2)`（0~100%，NULL/0=不参与，更新白名单校验边界，编辑表单 el-input-number 维护）；新表 `commission_record`（员工/收银记录ID/基数/比例快照/提成额/期间 yyyy-MM/状态，`uk_commission_cashier` 唯一键幂等）。
 - 生成挂点：`CashierServiceImpl` 三条收银落库路径（普通收银 cashPayment / 桌台合并结账 cashPaymentByTable / 手工补录 saveCashierRecord）统一调 `recordCommissionQuietly`——基数=实收−找零（现金多收不计提），0 元单不落记录，比例取生成时刻快照（改比例不影响历史），宽异常兜底不阻断收银主事务。
 - 查询接口：`CommissionController` `GET /commission/summary`（按员工聚合提成额/基数/单数，时间范围筛选，提成额降序）+ `GET /commission/page`（员工/期间筛选明细分页），员工鉴权。
 - 后台页面：`page/employee/commission.html`（期间汇总卡片 + 员工汇总表 + 明细表 + 口径说明文案，照 v3 模板骨架），挂载侧边栏「员工管理」组；`api/commission.js` 封装。

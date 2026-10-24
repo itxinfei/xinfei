@@ -1,4 +1,4 @@
--- V10：员工提成（O-17，收银提成口径）
+-- V12：员工提成（O-17，收银提成口径；原编 V10 与 V10__add_user_openid 撞号，2026-10-24 改 V12——未在任何库执行过，改号安全）
 -- 1) employee 增加提成比例列：NULL/0 = 不参与提成；按收银实收（现金扣除找零）计提
 ALTER TABLE employee
     ADD COLUMN commission_rate decimal(5, 2) NULL COMMENT '提成比例(%)，NULL/0=不参与提成' AFTER department_id;

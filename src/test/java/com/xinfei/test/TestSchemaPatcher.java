@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 /**
  * 测试库结构补丁器：给「测试库中已存在的历史表」幂等补列。
  * <p>背景：test profile 关闭 Flyway，夹具 schema.sql 的 CREATE TABLE IF NOT EXISTS
- * 对历史已建表不会生效——首次出现「给已存在表加列」的迁移（V10 employee.commission_rate）
+ * 对历史已建表不会生效——首次出现「给已存在表加列」的迁移（V12 employee.commission_rate）
  * 时，旧测试库会缺列。本工具按 information_schema 判断缺列才 ALTER，新库/旧库都幂等。</p>
  *
  * @author xinfei
