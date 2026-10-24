@@ -2,6 +2,13 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 权限 | 细粒度权限键入典（O-30，仅入典零行为变更）
+- V17 幂等写入 6 个细粒度键到 permission 字典：TYPE_MENU 顶级 ×4（platform:manage / payment:manage / evaluation:view / notification:send，此前后端 36 处 @RequiresPermission 用的键全不在字典，非超管永远无法通过校验）+ TYPE_BUTTON 子键 ×2（evaluation:reply / evaluation:audit 挂 evaluation:view）。
+- **不做任何授权（零行为变更）**：授权矩阵由管理员在 系统设置→角色管理→权限树 勾选——勾选即同时生效于 O-27 前端菜单门与后端 PermissionAspect（共用同一 permSet；Redis 权限缓存由既有角色保存链路失效）。**待决策**：默认授权矩阵（建议店长+副店全给 4 菜单键、大堂经理给 evaluation:view，或全部手动配）。
+- V17 幂等写法踩坑：MySQL 无 FROM 的 SELECT+WHERE 需 `FROM DUAL`；同表 NOT EXISTS 用派生表包裹。
+- 验证：RoleControllerTest/RoleMapperTest 回归绿（test: 前缀测试键与字典键互不干扰）；8081 实测 /sys/role/permissions/tree 返回 17 节点、6 新键层级正确。
+- 开发者：AI
+
 ## 2026-10-24 | 收银 / 工程纪律 | 交班台账落库（O-29）+ 依赖审计误报修正与首次清零
 - **O-29 交班台账**：V16 新表 `cashier_shift`（员工/日期/交班时间/笔数/总额/找零/支付方式分布JSON/备注）；`POST /cashier/shift/close` **复用 shiftSummary 同一聚合函数**落时点快照（台账与对账弹窗数字天然一致；时点快照语义——落库后退款/改账不影响本班历史，重复交班落多条不设唯一键，前端确认文案提示）；`GET /cashier/shift/page` 台账分页（收银员/日期过滤）。收银台「交班对账」弹窗升级：备注输入（≤200 字）+「确认交班并记录」二次确认 + 弹窗内最近 5 条台账。测试 `CashierShiftIntegrationTest` 5 例全绿（空班全零/实收口径/分页倒序/按人过滤/非法日期 422）+ 收银回归绿；8081 E2E 全链（备注→确认→弹条→台账表实时出现）。
 - **依赖审计首次 0 ERROR / 0 WARNING**：三类误报修正——① 命名空间对象用法（`sysApi.menuAccess()` 被裸调用判定漏掉）；② 回调引用（`const refApi = cond ? fnA : fnB`，category/list 实测）；③ 对象键位前导逗号误判（`categoryOptions: []` 被当使用，产生 4 假 ERROR）。按全页全文核对后移除 7 个零引用 include（ai/provider-config、cashier/index、kds/board、payment/channel-config、platform×3），支付渠道页清理后浏览器抽查正常。
