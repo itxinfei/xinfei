@@ -161,7 +161,7 @@
       <i class="ri-file-text-line"></i>
       <p>该供应商暂无采购记录</p>
     </div>
-    <el-table v-else :data="purchaseList" stripe border size="small" v-loading="purchaseLoading">
+    <el-table class="tableBox" v-else :data="purchaseList" stripe border size="small" v-loading="purchaseLoading">
       <el-table-column prop="orderNo" label="采购单号" min-width="160" align="center"></el-table-column>
       <el-table-column prop="totalAmount" label="金额" width="110" align="center">
         <template  #default="s">¥{{ formatMoney(s.row.totalAmount) }}</template>

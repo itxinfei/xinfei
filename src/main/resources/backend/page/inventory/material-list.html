@@ -174,7 +174,7 @@
           <el-button v-if="catForm.id" size="small" @click="catReset">取消编辑</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="catList" size="small" stripe aria-label="食材分类列表">
+      <el-table class="tableBox" :data="catList" size="small" stripe aria-label="食材分类列表">
         <el-table-column prop="name" label="分类名称" min-width="120" align="center"></el-table-column>
         <el-table-column prop="sort" label="排序" width="70" align="center"></el-table-column>
         <el-table-column prop="materialCount" label="食材数量" width="90" align="center"></el-table-column>

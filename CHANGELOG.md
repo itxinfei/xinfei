@@ -2,6 +2,14 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 表格 | 全站表格样式统一收口（O-33，用户反馈设计不统一 + 订单详情闪动）
+- **订单详情闪动定位**：MutationObserver + body/表格宽度前后对比实测——当前构建打开订单详情 0 突变、0 宽度变化，闪动属旧缓存旧版体验（旧版明细为表格、现行版已重构为卡片布局），Ctrl+F5 强刷即消。
+- **样式统一根因**：全站表格统一视觉由 `.tableBox` 类承载（page.css：边框/圆角/密度 13px/斑马纹/操作按钮间距与圆角），crud-table 组件自动挂该类；14 页含手写 el-table 中 11 页未挂 → 视觉漂移。
+- **修复**：14 处手写 el-table 统一补 `class="tableBox"`（已有 class 追加）：cashier 交班弹窗×2、employee 导入结果×2、delivery 费率、dining 区域/团餐、supplier 采购、subsidy×2、order 支付记录、material 分类、combo 成本、qrcode-center 桌台；刻意不动 platform/order-list（po-detail__table）与 purchase-list（detail-dialog__table）的专属布局类表（原设计意图）。
+- **验证**：补类后手写表与 crud 主表实测完全一致（圆角 12px / 边框 / 字号 14px 同源同值，4 页抽查）；14 页语法扫描 + 三门禁全绿。
+- **登记未做**：8 个主列表页从手写 el-table 迁移到 crud-table 组件（交互层统一：选择列/批量条/空态文案；工作量大独立排期）。
+- 开发者：AI
+
 ## 2026-10-24 | 前端清理 | 死文件清零（O-32，用户要求清理旧/多余代码）
 - 新增资产引用审计：CSS 以 main-v3.css @import 链 + 页面直链双向可达性判定；js/api 以文件名引用计数（排除自身、含脚本间引用）。
 - **git rm 5 个死文件**：`js/emoji-to-icon.js`、`api/export.js`（同步导出前端已全量迁任务通道，无页面引用；后端同步端点保留为对外 API）、`api/kds.js`、`api/platform.js`（include 移除后整体失联）、`plugins/vant/index.css`（后台目录里的 Vant CSS，小程序端有独立副本）。

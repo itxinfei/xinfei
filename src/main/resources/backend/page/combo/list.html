@@ -437,7 +437,7 @@
           :title="costData.missingDishCount + ' 个菜品暂无成本记录，按 ¥0 计入合计'"
           style="margin: 10px 0;"
         ></el-alert>
-        <el-table :data="costData.items || []" size="small" border>
+        <el-table class="tableBox" :data="costData.items || []" size="small" border>
           <el-table-column prop="name" label="菜品" min-width="140" align="center"></el-table-column>
           <el-table-column prop="copies" label="份数" width="70" align="center"></el-table-column>
           <el-table-column label="单位成本" width="120" align="center">

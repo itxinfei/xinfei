@@ -293,7 +293,7 @@
       <div style="margin-bottom: 16px;">
         <el-button type="primary" size="small" icon="ri-add-line" @click="handleAddFeeStep">新增阶梯</el-button>
       </div>
-      <el-table aria-label="数据表格" :data="feeSteps" border stripe style="width: 100%">
+      <el-table class="tableBox" aria-label="数据表格" :data="feeSteps" border stripe style="width: 100%">
         <el-table-column prop="startDistance" label="起始距离(米)" width="120" align="center" :header-align="'center'"></el-table-column>
         <el-table-column prop="endDistance" label="结束距离(米)" width="120" align="center" :header-align="'center'"></el-table-column>
         <el-table-column prop="fee" label="配送费(元)" width="130" align="center" :header-align="'center'" :show-overflow-tooltip="true"></el-table-column>
