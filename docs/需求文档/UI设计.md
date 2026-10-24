@@ -111,7 +111,7 @@
 | 状态展示 | 带色圆点 + 文字（`XinfeiStatus`）：成功/完成→success、警告/待处理→warning、危险/取消→danger、进行中→info/主色；同一实体状态在列表/详情/筛选项必须同一套映射 |
 | 表单 | `:rules` + `validate()` inline 错误；必经 `crud-dialog` 承载；金额 `type="number"` + `precision:2`，展示统一 `XinfeiFormat.money`（等宽数字不跳动）；提交失败区分业务错误（单 toast）与网络错误（`request.js` 统一处理，避免双 toast） |
 | 图表（ECharts） | 卡片式：header 左标题右副标题；配色优先 `XinfeiPalette`/语义色；图例 tooltip 用 `--color-text-secondary`；图表数据色走 `window.XinfeiPalette`（见 §2.4 例外①） |
-| 空态 | 纯查询/报表页必须覆盖 `empty-hint`，禁止「点击右上角新建」误导文案（覆盖进度见 PRD §8 O-12）；首次使用空态带引导 + 主操作按钮 |
+| 空态 | 纯查询/报表页必须覆盖 `empty-hint`，禁止「点击右上角新建」误导文案（覆盖进度见 功能升级.md O-12）；首次使用空态带引导 + 主操作按钮 |
 | 加载 | crud-table 内置骨架屏，保持行高稳定防跳动；慢请求 >500ms 显示 loading |
 | 交互反馈 | 全部走 `window.XinfeiUI`（success 2s/error/warning/info），**禁止**混用 `this.$message/$confirm`；危险操作（删除/退款/取消）`XinfeiUI.confirm` 二次确认且文案含对象名；批量操作反馈成功数与失败明细 |
 | 无障碍 | 保留 skip-link（「跳转到主内容」）、`role="region"` + `aria-label` |
@@ -153,7 +153,7 @@
 
 ## 6. 交互与可用性基线（全端）
 
-- **空态提示（empty-hint）**：查询页必须有空态占位，禁止裸表格/空白页；覆盖进度约 21/38，收口项见 PRD §8 O-12。
+- **空态提示（empty-hint）**：查询页必须有空态占位，禁止裸表格/空白页；覆盖进度约 21/38，收口项见 功能升级.md O-12。
 - **加载与错误反馈**：交互反馈统一 `window.XinfeiUI`；接口错误按 `R.code` 解包提示（401 回登录）。
 - **危险操作**：删除/取消类操作必须二次确认；表单 dirty 时关弹窗走 `beforeClose` 守卫。
 - **「能上线」定义**（后台页面清单 §4.4）：页面接真实接口、异常/空态/加载态齐备、浏览器硬刷新实测通过，三项缺一不可。

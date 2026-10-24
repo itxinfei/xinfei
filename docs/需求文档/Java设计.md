@@ -1,6 +1,6 @@
 # Java 设计（后端架构与关键设计决策）
 
-> 版本口径：2026-10-24。隶属 [./PRD.md](./PRD.md) 需求文档集。本文是**设计摘要 + 指向**：完整细节以 [../架构设计.md](../架构设计.md)、[../数据模型.md](../数据模型.md)、[../FLYWAY_MIGRATION.md](../FLYWAY_MIGRATION.md) 与仓库根 `AGENTS.md` 为唯一事实来源；技术红线速查见 PRD §2/§3。
+> 版本口径：2026-10-24。隶属 [./PRD.md](./PRD.md) 需求文档集。本文是**设计摘要 + 指向**：完整细节以 [../架构设计.md](../架构设计.md)、[../数据模型.md](../数据模型.md)、[../FLYWAY_MIGRATION.md](../FLYWAY_MIGRATION.md) 与仓库根 `AGENTS.md` 为唯一事实来源；技术红线速查见 [约束.md](./约束.md)。
 
 ---
 
@@ -106,7 +106,7 @@ SecurityHeaderFilter(@Order 0, 安全头)
 |---|---|
 | 导出 | `ExportUtil`：Excel 用 SXSSF 滑动窗口 100 行防 OOM；PDF 横向 A4 + 中文字体多级 fallback；所有导出接口 `LIMIT 10000` |
 | 定时任务 | `module/schedule/task/`（券到期、对账、留存等）；**必须手动管理 BaseContext** ThreadLocal |
-| 事件 | `common/event/listener/`（如订单取消监听器，扩展点见 PRD §8 O-15） |
+| 事件 | `common/event/listener/`（如订单取消监听器，扩展点见 功能升级.md O-15） |
 | AI | 供应商/密钥 DB 管理（`ai_provider_config`，密钥加密存储），yml 仅兜底；多供应商切换 + 连通性测试 |
 | 日志脱敏 | 统一 `LogMaskUtils.maskPhone/maskIdCard`，**禁止手写正则** |
 
