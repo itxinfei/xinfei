@@ -2,6 +2,14 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 后台 IA / 收银 / 店务 | O-21 二期页面归并（②③④）+ O-22 交班对账 + O-23 自动接单 + 三项修复
+- 页面归并（O-21 二期，用户确认全内置+浏览器实测）：① 营销 5 页→activities.html 多 Tab（5 类 CRUD 全链实测，顺带修时段 Date 序列化既有回归）；② 食材分类并入食材管理弹窗；③ 区域管理并入桌台管理弹窗；④ 支付记录并入订单明细弹窗。git rm 旧页 7 个，菜单 数据报表 7→2 待办、营销 7→3、库存 7→6、堂食 5→4、订单中心 -1。
+- O-22 交班对账：/cashier/shift-summary 当日+本人收款聚合（笔数/总额/找零/按支付方式），收银台「交班对账」按钮+弹窗。
+- O-23 自动接单：StoreAutoPauseTask 按 businessHours 边沿触发翻转挂牌（跨午夜支持、不碰手动暂停、保守恢复策略）。
+- 修复三项：收银台整页挂载失败（O-19 缺右花括号，语法级静默故障）、printer 时间查询参数回归（Jackson 同族）、V12 迁移共享 dev 库撞已存在列（条件化改写+Flyway 失败记录清理，实测应用成功）。
+- 验证：全菜单 70 页浏览器体检 0 异常；76 页静态语法扫描 0 错误；新增单测 StoreAutoPauseTaskTest 4 例；后端 8081 常驻供自查。
+- 开发者：AI
+
 ## 2026-10-24 | 平台对接 / 测试基建 | 恢复拉单修复（O-14，P1 全清）+ 全量回归排障
 - O-14：`PlatformRecoveryTask.recoverPlatform` 根因修复——原实现形式上已调 `pullOrders`，但把 `LocalDateTime.toString()`（ISO 带 T/毫秒）拼进平台 API 时间参数，与拉单链路 `yyyy-MM-dd HH:mm:ss` 口径不一致导致恢复实际拉不到单；现同格式化 + 窗口扩为 30 分钟（窗口重叠 + platformOrderId 唯一键去重幂等兜底）+ 起止同源防漂移 + 日志带拉取数。`PlatformRecoveryTaskTest` 3 例（格式回归守卫/全链透传/总开关）全绿。**至此 P1 清单 O-06~O-16 全部完成。**
 - 全量回归（1112 用例）排障：2 个真实失败为 `DashboardTodoAndHourlyControllerTest` 夹具缺口（未清其他测试残留的租户 999 待退记录致 pendingRefund 计数被污染），已补 `cleanByCondition` 精准清理（保种子 ID）；226 个 context 连坐错误定位为**全量跑期间并行执行其他 mvn 命令导致 target/classes 并发写**（类加载撞上类文件替换 → PermissionServiceImpl 偶发缺失雪崩），单跑全绿验证代码无回归——教训：全量跑期间禁止并行任何 mvn。
