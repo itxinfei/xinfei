@@ -61,8 +61,12 @@
 
     var app = Vue.createApp(opts)
 
+    /* O-34：size 全局默认 small——全站按钮/输入控件统一紧凑密度（官方 ConfigProvider 语义）。
+       此前 13 页 38 处 el-button 漏写 size 走 EP 默认 32px，与全站 small(24px) 混排；
+       一处配置收口优于逐页补属性。页面显式 size 声明优先级更高，不受影响。 */
     app.use(window.ElementPlus, {
-      locale: window.ElementPlusLocaleZhCn
+      locale: window.ElementPlusLocaleZhCn,
+      size: 'small'
     })
 
     registerGlobalMixin(app)

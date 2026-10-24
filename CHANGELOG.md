@@ -2,6 +2,13 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | UI | 全站按钮密度统一 24px（O-34，工具栏 32px 与弹窗 24px 混排修复）
+- **根因三层**：① 13 页 38 处 el-button 漏写 size（EP 默认 32px）；② page.css 两份 Element UI 2 时代强制规则（97 行 / 879 行双副本 height:32px，覆盖组件 small 声明——密度漂移主源，879 行注释还挂「dialog footer 统一 medium」废弃规范）；③ crud-dialog footer 组件模板写死 size=default。
+- **修复**：app-v3 的 `app.use(ElementPlus)` 增 `size: 'small'` 全局默认（一处配置盖 38 处漏写，页面显式声明不受影响）；page.css 删除双份 32px 副本并在最高优先级一次声明 small 皮肤官方尺寸（24px / 5px 11px）；crud-dialog footer default→small。
+- **缓存链踩坑记录**：@import 内层 css（page.css?v=）的缓存键独立于入口文件（main-v3.css?v=），入口升版对内层无效——须逐层递增（page.css→20261024d、main-v3→3001008、app-v3→3001003、components-v3→3001002）。
+- **验证**：combo/order/material/employee 四页按钮高度实测 100% 归一 24px（61/38/18/51 个）；截图确认视觉紧凑无变形；三门禁全绿。
+- 开发者：AI
+
 ## 2026-10-24 | 表格 | 全站表格样式统一收口（O-33，用户反馈设计不统一 + 订单详情闪动）
 - **订单详情闪动定位**：MutationObserver + body/表格宽度前后对比实测——当前构建打开订单详情 0 突变、0 宽度变化，闪动属旧缓存旧版体验（旧版明细为表格、现行版已重构为卡片布局），Ctrl+F5 强刷即消。
 - **样式统一根因**：全站表格统一视觉由 `.tableBox` 类承载（page.css：边框/圆角/密度 13px/斑马纹/操作按钮间距与圆角），crud-table 组件自动挂该类；14 页含手写 el-table 中 11 页未挂 → 视觉漂移。

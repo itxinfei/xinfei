@@ -90,11 +90,12 @@
    统一按钮颜色体系（按功能明确区分）
    ============================================ */
 
-/* 基础按钮尺寸 */
+/* 基础按钮尺寸
+   O-34：原 height:32px / padding:7px 15px 是 Element UI 2 时代密度，覆盖了组件的
+   small 声明——工具栏 32px 与弹窗/表格内 24px 混排即密度漂移源。
+   统一 small 档：去掉强制高度/内边距，由 EP small 皮肤（24px）决定，仅保留字号与圆角微调。 */
 .container .tableBar .el-button:not(.el-button--text) {
   font-size: 13px;
-  padding: 7px 15px;
-  height: 32px;
   border-radius: var(--radius-sm);
   transition: var(--transition-all);
   white-space: nowrap;
@@ -874,30 +875,25 @@
 /* ========== 按钮样式规范 ========== */
 
 /* --- 尺寸规范 --- */
-/* tableBar 按钮统一 small（与输入框高度 32px 对齐） */
-.container .tableBar .el-button {
+/* O-34：全站按钮统一 small 密度。page.css 历史上存在两份 32px 强制规则（97 行旧档、
+   本处旧档）与 components-v3 组件内声明叠加，来源多、优先级缠绕；与其逐条溯源，
+   在最高优先级处一次性声明 small 皮肤官方尺寸（24px 高 / 5px 11px 内边距），
+   盖掉全部历史残留。媒体查询窄屏档（1420 行区段）!important 优先级更高仍生效。 */
+.container .tableBar .el-button:not(.el-button--text) {
   font-size: 13px;
-  padding: 9px 15px;
-  height: 32px;
+  padding: 5px 11px !important;
+  height: 24px !important;
   line-height: 1;
 }
-/* 修改点：确保 tableBar 内输入框与按钮高度完全一致 */
-.container .tableBar .el-input .el-input__inner {
-  height: 32px;
-  line-height: 32px;
-}
-/* 修改点：确保 tableBar 内下拉选择框与按钮高度完全一致 */
-.container .tableBar .el-select .el-input__inner {
-  height: 32px;
-  line-height: 32px;
+.container .tableBar .el-button.el-button--text {
+  height: 24px;
 }
 .container .tableBar .el-button [class*="el-icon"] {
   font-size: 13px;
 }
-/* dialog footer 按钮统一 medium */
+/* dialog footer 按钮与全站 small 对齐（原 medium 14px/80px 规范废弃） */
 .container .el-dialog .dialog-footer .el-button {
-  font-size: 14px;
-  min-width: 80px;
+  font-size: 13px;
 }
 
 /* --- 语义按钮类（替代 inline style） --- */

@@ -1390,8 +1390,8 @@ XinfeiComponentsV3['crud-dialog'] = {
       '<template #footer>' +
         '<span class="dialog-footer">' +
           '<slot name="footer">' +
-            '<el-button v-if="showCancel" size="default" @click="requestClose">{{ cancelText }}</el-button>' +
-            '<el-button v-if="showSubmit" type="primary" size="default" :loading="submitLoading" @click="$emit(\'submit\')">{{ submitText }}</el-button>' +
+            '<el-button v-if="showCancel" size="small" @click="requestClose">{{ cancelText }}</el-button>' +
+            '<el-button v-if="showSubmit" type="primary" size="small" :loading="submitLoading" @click="$emit(\'submit\')">{{ submitText }}</el-button>' +
           '</slot>' +
         '</span>' +
       '</template>' +

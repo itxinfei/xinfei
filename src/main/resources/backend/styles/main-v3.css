@@ -38,7 +38,7 @@
 @import "common-fixes.css";
 
 /* 页面级样式 */
-@import "page.css?v=20261024";
+@import "page.css?v=20261024d";
 
 /* 组件样式 */
 @import "components.css";
