@@ -22,4 +22,7 @@ public class UserLoginDTO {
     @Schema(description = "验证码", required = true, example = "1234")
     @NotBlank(message = "验证码不能为空")
     private String code;
+
+    @Schema(description = "微信绑定凭据（可选，来自 /user/wxLogin 的 needBind 场景；登录成功后把 openid 绑定到本账号）")
+    private String wxTicket;
 }

@@ -30,9 +30,11 @@ CREATE TABLE IF NOT EXISTS user (
   update_time datetime NULL DEFAULT NULL COMMENT '用户信息',
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
   department_id bigint NULL DEFAULT NULL COMMENT '部门ID（企业组织架构，2026-10-06）',
+  openid varchar(64) NULL DEFAULT NULL COMMENT '微信小程序openid（jscode2session获取，wxLogin绑定）',
   PRIMARY KEY (id),
   KEY idx_user_phone (phone),
-  KEY idx_user_tenant (tenant_id)
+  KEY idx_user_tenant (tenant_id),
+  UNIQUE KEY uk_user_openid (openid)
 );
 
 -- ==================== 地址簿 ====================

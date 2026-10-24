@@ -47,19 +47,21 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
         if (targetType != UserFavorite.TYPE_DISH) {
             throw new CustomException("暂不支持该类型的收藏");
         }
-        // 校验菜品真实存在且属于当前租户，避免收藏幽灵商品
-        Dish dish = dishMapper.selectById(targetId);
-        if (dish == null || dish.getTenantId() == null || !dish.getTenantId().equals(tenantId)) {
-            throw new CustomException("菜品不存在，无法收藏");
-        }
 
         UserFavorite existing = findExisting(userId, tenantId, targetType, targetId);
         Map<String, Object> result = new HashMap<>();
         if (existing != null) {
-            // 已收藏 → 取消（物理删除）
+            // 已收藏 → 取消（物理删除）。取消路径不校验菜品存在性：
+            // 菜品被删除后 listFavorites 会返回 available=false 的失效记录"供用户清理"，
+            // 若此处先校验菜品会导致失效收藏永远无法取消（旧实现的自相矛盾）
             favoriteMapper.deleteById(existing.getId());
             result.put("favorited", false);
         } else {
+            // 新增收藏才校验菜品真实存在且属于当前租户，避免收藏幽灵商品
+            Dish dish = dishMapper.selectById(targetId);
+            if (dish == null || dish.getTenantId() == null || !dish.getTenantId().equals(tenantId)) {
+                throw new CustomException("菜品不存在，无法收藏");
+            }
             UserFavorite favorite = new UserFavorite();
             favorite.setUserId(userId);
             favorite.setTargetType(targetType);

@@ -39,6 +39,8 @@ public final class AuthConstants {
         "/user/sendMsg",
         "/user/login",
         "/user/loginout",
+        // 微信小程序登录（匿名，登录前无 CSRF token；miniapp 前置改造 5.3）
+        "/user/wxLogin",
         // 骑手登录接口（匿名，登录前无 CSRF token）
         "/api/rider/login",
         // 骑手自助重置密码（匿名，凭短信验证码鉴权）
@@ -69,6 +71,8 @@ public final class AuthConstants {
         "/user/sendMsg",
         "/user/login",
         "/user/loginout",
+        // 微信小程序登录（匿名；miniapp 前置改造 5.3）
+        "/user/wxLogin",
         // 骑手登录接口（匿名）；其余 /api/rider/** 业务接口需登录，不在此列
         "/api/rider/login",
         // 骑手自助重置密码（匿名，凭短信验证码鉴权）

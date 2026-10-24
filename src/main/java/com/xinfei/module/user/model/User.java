@@ -58,6 +58,10 @@ public class User implements Serializable {
     @Schema(description = "部门ID（企业组织架构，可选；餐补按部门发放时的归属）", example = "1")
     private Long departmentId;
 
+    /** 微信小程序 openid（jscode2session 获取，wxLogin 绑定；JSAPI 支付 payer 标识） */
+    @Schema(description = "微信小程序openid", example = "oXyz...")
+    private String openid;
+
     @Schema(description = "创建时间", example = "2024-01-01 12:00:00")
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     private LocalDateTime createTime;

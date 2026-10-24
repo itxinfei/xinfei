@@ -107,6 +107,10 @@ public class PaymentController {
     @Autowired
     private com.xinfei.module.payment.service.impl.RefundCallbackService refundCallbackService;
 
+    /** JSAPI 支付需从当前用户档案取 openid（miniapp 前置改造 5.3） */
+    @Autowired
+    private com.xinfei.module.user.service.UserService userService;
+
     /**
      * 创建支付订单
      * @param dto 支付请求参数
@@ -168,6 +172,14 @@ public class PaymentController {
         // payType 由前端按场景选择（不传渠道自行默认）；clientIp 只从 HTTP 请求解析，不采信前端
         request.setPayType(dto.getPayType());
         request.setClientIp(resolveClientIp(httpRequest));
+        // 修改点(2026-10-22 5.3)：JSAPI（小程序）支付 payer 标识从当前登录用户档案取，不采信前端入参
+        if ("JSAPI".equalsIgnoreCase(request.getPayType())) {
+            com.xinfei.module.user.model.User payUser = userService.getById(currentUserId);
+            if (payUser == null || payUser.getOpenid() == null || payUser.getOpenid().isBlank()) {
+                return R.error("当前账号未绑定微信，请先使用微信登录绑定后再支付");
+            }
+            request.setOpenid(payUser.getOpenid());
+        }
         PayResponse response = paymentChannel.createOrder(request);
         // 回填商户支付单号：沙箱(mock-mode)收银台需用它作为 out_trade_no 发起模拟支付回调
         response.setTradeNo(paymentOrder.getTradeNo());

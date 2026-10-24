@@ -1,9 +1,9 @@
 package com.xinfei.test.config;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,19 +37,32 @@ public class MockMvcFilterExclusionAutoConfiguration {
     /** 主代码 FilterRegistrationConfig 中登录校验注册器的 Bean 名（@Bean 方法名）。 */
     private static final String LOGIN_CHECK_REGISTRATION_BEAN = "loginCheckFilterRegistration";
 
-    @Bean
-    public static BeanDefinitionRegistryPostProcessor testServletFilterExclusionPostProcessor() {
-        return new BeanDefinitionRegistryPostProcessor() {
-            @Override
-            public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-                removeIfPresent(registry, CSRF_REGISTRATION_BEAN);
-                removeIfPresent(registry, LOGIN_CHECK_REGISTRATION_BEAN);
-            }
+    /** 设为 true 时保留 CSRF/登录校验过滤器链（供全栈鉴权测试使用） */
+    private static final String KEEP_AUTH_FILTERS_PROPERTY = "xinfei.test.keep-auth-filters";
 
-            @Override
-            public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-                // Bean 定义已在 registry 阶段移除，此处无需处理
+    /**
+     * 修改点(2026-10-22 5.1 Token 会话通道)：默认仍移除两个过滤器（存量测试零回归）；
+     * 测试上下文带属性 {@code xinfei.test.keep-auth-filters=true}（如 @TestPropertySource）时
+     * 保留过滤器链，供需要走完整 Servlet 过滤器链的全栈测试（如 AuthTokenChannelTest）使用。
+     * 移除动作延后到 BFPP 阶段以便读取 Environment（registry 阶段 Environment 尚未注入）。
+     */
+    @Bean
+    public static BeanFactoryPostProcessor testServletFilterExclusionPostProcessor() {
+        return beanFactory -> {
+            // Spring 7 的 ConfigurableListableBeanFactory 不再暴露 getEnvironment()，改由容器取 Environment 单例
+            String keep = null;
+            try {
+                keep = beanFactory.getBean(org.springframework.core.env.Environment.class)
+                        .getProperty(KEEP_AUTH_FILTERS_PROPERTY);
+            } catch (Exception e) {
+                // Environment 单例尚未注册：按默认行为（移除过滤器）处理
             }
+            if ("true".equalsIgnoreCase(keep)) {
+                return;
+            }
+            BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+            removeIfPresent(registry, CSRF_REGISTRATION_BEAN);
+            removeIfPresent(registry, LOGIN_CHECK_REGISTRATION_BEAN);
         };
     }
 

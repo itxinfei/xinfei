@@ -161,6 +161,24 @@ class RechargePaymentControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void jsapiWithoutOpenidRejected() throws Exception {
+        // JSAPI 必须有 payer.openid：测试库无 user 9001 档案，控制器应在调渠道前拒绝（不断言中文文案）
+        insertRecharge(6105L, "RC-PAY-5", 9001L, "PENDING");
+
+        mockMvc.perform(withCsrfToken(mockMvc, post("/api/payment/recharge/pay"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rechargeNo\":\"RC-PAY-5\",\"channel\":\"WECHAT\",\"payType\":\"JSAPI\"}")
+                        .session(session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        // 拒绝发生在创建支付单之后还是之前不影响业务正确性，但不应产生 SUCCESS 支付单
+        Integer c = jdbc.queryForObject("SELECT COUNT(*) FROM payment_order WHERE biz_type = 'RECHARGE' "
+                + "AND order_id = 6105 AND status = 'SUCCESS'", Integer.class);
+        org.junit.jupiter.api.Assertions.assertEquals(Integer.valueOf(0), c);
+    }
+
+    @Test
     void payWithoutLoginContext() throws Exception {
         // MockMvc 已在测试侧移除 LoginCheckFilter（见 MockMvcFilterExclusionAutoConfiguration），
         // 这里清空 ThreadLocal 登录态，验证 controller 自身的未登录纵深防御：200 + code=0 + 请先登录。

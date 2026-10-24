@@ -21,6 +21,7 @@ import com.xinfei.module.auth.dto.UpdateEmployeeStatusBatchDTO;
 import com.xinfei.module.auth.dto.UpdateEmployeeStatusDTO;
 import com.xinfei.module.auth.model.Employee;
 import com.xinfei.enums.UserStatus;
+import com.xinfei.module.auth.service.AuthTokenService;
 import com.xinfei.module.auth.service.EmployeeService;
 import com.xinfei.module.auth.service.LoginAttemptService;
 import com.xinfei.module.sys.model.Role;
@@ -54,6 +55,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -82,6 +84,14 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+
+    /** 非 cookie 会话通道（miniapp 前置改造 5.1）：登录成功颁发 X-Auth-Token，登出吊销 */
+    @Autowired
+    private AuthTokenService authTokenService;
+
+    /** 验证码存储（miniapp 前置改造 5.2）：Redis 优先、session 兜底，与 C 端发码同源跨端校验 */
+    @Autowired
+    private com.xinfei.module.user.service.SmsCodeService smsCodeService;
 
     @Autowired
     private RoleService roleService;
@@ -134,7 +144,7 @@ public class EmployeeController {
     @Operation(summary = "员工登录", description = "员工账号密码登录，支持验证码")
     @Parameter(name = "loginDTO", description = "员工登录信息（用户名、密码）", required = true)
     @RateLimit(maxRequestsPerSecond = 5, type = RateLimitType.IP)
-    public R<Map<String, Object>> login(HttpServletRequest request, @Valid @RequestBody EmployeeLoginDTO loginDTO) {
+    public R<Map<String, Object>> login(HttpServletRequest request, HttpServletResponse response, @Valid @RequestBody EmployeeLoginDTO loginDTO) {
 
         //1、根据页面提交的用户名username查询数据库
         // 修复 P2-1：employee 表在 IGNORE_TABLES 中，需手动附加租户条件，防止跨租户用户名枚举
@@ -177,7 +187,7 @@ public class EmployeeController {
 
         //5、登录成功，清除失败计数并建立会话返回脱敏信息（等价抽取）
         loginAttemptService.clearOnSuccess(LoginAttemptService.Scope.EMP, lockIdentity);
-        return R.success(establishSessionAndBuildResult(request, emp));
+        return R.success(establishSessionAndBuildResult(request, response, emp));
     }
 
     /**
@@ -214,7 +224,7 @@ public class EmployeeController {
     /**
      * 建立登录会话并返回脱敏后的登录信息（等价抽取）。
      */
-    private Map<String, Object> establishSessionAndBuildResult(HttpServletRequest request, Employee emp) {
+    private Map<String, Object> establishSessionAndBuildResult(HttpServletRequest request, HttpServletResponse response, Employee emp) {
         // 重新从数据库查询最新信息，确保租户上下文准确
         Employee freshEmp = employeeService.getById(emp.getId());
         String sessionRoleKey;
@@ -243,6 +253,13 @@ public class EmployeeController {
 
         // 防止Session Fixation攻击：登录成功后切换Session ID
         request.changeSessionId();
+
+        // 修改点(2026-10-22 5.1 Token 会话通道)：颁发 X-Auth-Token 供无 cookie 客户端（小程序）回带；
+        // 颁发失败（Redis 降级）不下发头，登录主流程不受影响
+        String authToken = authTokenService.issue(AuthTokenService.TYPE_EMPLOYEE, emp.getId(), sessionTenantId, sessionRoleKey);
+        if (authToken != null) {
+            response.setHeader(AuthTokenService.HEADER_NAME, authToken);
+        }
 
         // 返回脱敏后的登录信息（不包含密码等敏感字段）
         Map<String, Object> result = new HashMap<>();
@@ -465,20 +482,9 @@ public class EmployeeController {
      * @return 校验失败时返回错误响应；通过时返回 null
      */
     private R<String> verifyForgotPasswordSmsCode(HttpSession session, String phone, String code) {
-        if (code == null || code.trim().isEmpty()) {
-            return R.error("请输入短信验证码");
-        }
-        String sessionCode = (String) session.getAttribute("smsCode_" + phone);
-        if (sessionCode == null) {
-            return R.error("请先获取短信验证码");
-        }
-        if (!sessionCode.equals(code)) {
-            return R.error("验证码错误");
-        }
-        // 验证通过后清除验证码（一次性使用）
-        session.removeAttribute("smsCode_" + phone);
-        session.removeAttribute("smsCode_" + phone + "_time");
-        return null;
+        // 修改点(2026-10-22 5.2)：校验改走 SmsCodeService——Redis 优先（sms:code:<phone>），
+        // 未命中回落 session 原逻辑；骑手/顾客共用 /user/sendMsg 下发的同一码
+        return smsCodeService.verifyAndConsume(phone, code, session, "请先获取短信验证码");
     }
 
     /**
@@ -565,6 +571,8 @@ public class EmployeeController {
     @PostMapping("/logout")
     @Operation(summary = "员工退出", description = "退出当前登录账号，清除Session和租户上下文")
     public R<String> logout(HttpServletRequest request){
+        // 修改点(2026-10-22 5.1)：吊销非 cookie 会话通道的 X-Auth-Token（小程序登出无 session 可销毁）
+        authTokenService.revoke(request.getHeader(AuthTokenService.HEADER_NAME));
         // 必须 invalidate 整个 Session，仅 removeAttribute 不会使 Session ID 失效
         try {
             request.getSession().invalidate();

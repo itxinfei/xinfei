@@ -2,6 +2,7 @@ package com.xinfei.module.payment.channel.sdk;
 
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.service.payments.h5.H5Service;
+import com.wechat.pay.java.service.payments.jsapi.JsapiService;
 import com.wechat.pay.java.service.payments.nativepay.NativePayService;
 import com.wechat.pay.java.service.refund.RefundService;
 
@@ -19,13 +20,21 @@ public class WechatSdkClients {
     private final NativePayService nativePayService;
     private final H5Service h5Service;
     private final RefundService refundService;
+    /** JSAPI（小程序）下单服务：miniapp 前置改造 5.3 */
+    private final JsapiService jsapiService;
 
     public WechatSdkClients(Config config, NativePayService nativePayService,
                             H5Service h5Service, RefundService refundService) {
+        this(config, nativePayService, h5Service, refundService, null);
+    }
+
+    public WechatSdkClients(Config config, NativePayService nativePayService,
+                            H5Service h5Service, RefundService refundService, JsapiService jsapiService) {
         this.config = config;
         this.nativePayService = nativePayService;
         this.h5Service = h5Service;
         this.refundService = refundService;
+        this.jsapiService = jsapiService;
     }
 
     public Config getConfig() {
@@ -42,5 +51,9 @@ public class WechatSdkClients {
 
     public RefundService getRefundService() {
         return refundService;
+    }
+
+    public JsapiService getJsapiService() {
+        return jsapiService;
     }
 }

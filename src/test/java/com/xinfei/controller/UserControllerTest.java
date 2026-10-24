@@ -130,8 +130,8 @@ public class UserControllerTest {
                 .getRequest()
                 .getSession();
 
-        // 从 Session 中获取实际生成的验证码
-        String code = (String) session.getAttribute("smsCode_13800138000");
+        // 修改点(2026-10-22 5.2)：验证码已迁 Redis，从 sms:code:<phone> 读取实际生成的验证码
+        String code = String.valueOf(redisTemplate.opsForValue().get("sms:code:13800138000"));
 
         // 使用正确的验证码登录
         mockMvc.perform(post("/user/login")

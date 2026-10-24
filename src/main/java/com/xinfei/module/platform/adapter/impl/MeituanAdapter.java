@@ -8,13 +8,9 @@ import com.xinfei.module.platform.adapter.PlatformOrder;
 import com.xinfei.module.platform.model.PlatformConfig;
 import com.xinfei.module.platform.util.PlatformCredentialEncryptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -41,11 +37,11 @@ public class MeituanAdapter implements PlatformAdapter {
     private static final String PLATFORM_TYPE = "MEITUAN";
     private static final String BASE_URL = "https://openapi.meituan.com/ecommerce/v1";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public MeituanAdapter() {
-        this.restTemplate = new RestTemplate();
+        this.restClient = RestClient.create();
     }
 
     /**
@@ -75,20 +71,19 @@ public class MeituanAdapter implements PlatformAdapter {
             String url = BASE_URL + "/order/query?accessToken=" + accessToken
                     + "&beginTime=" + beginTime + "&endTime=" + endTime + "&pageSize=100&pageNo=1";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("X-Meituan-Appkey", cfg.getAppKey());
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseOrders(response.getBody());
+            String body = restClient.get()
+                    .uri(url)
+                    .header("X-Meituan-Appkey", cfg.getAppKey())
+                    .retrieve()
+                    .body(String.class);
+            if (body != null) {
+                return parseOrders(body);
             }
-            log.warn("[美团] 拉单响应异常: status={}", response.getStatusCode());
+            log.warn("[美团] 拉单响应异常: 响应体为空");
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程。
-            // 安全修复（2026-10-02）：RestTemplate 异常消息含带 accessToken 的完整 URL，
-            // 只打脱敏后的消息、不打堆栈，防止令牌明文入日志。
+            // 安全修复（2026-10-02，RestClient 迁移后语义不变）：RestClientResponseException 的
+            // 异常消息同样含带 accessToken 的完整 URL，只打脱敏后的消息、不打堆栈，防止令牌明文入日志。
             log.error("[美团] 拉单失败: {}", LogMaskUtils.maskUrl(e.getMessage()));
         }
         return Collections.emptyList();
@@ -252,7 +247,7 @@ public class MeituanAdapter implements PlatformAdapter {
                 return false;
             }
             String url = BASE_URL + "/shop/status?accessToken=" + accessToken;
-            restTemplate.getForObject(url, String.class);
+            restClient.get().uri(url).retrieve().body(String.class);
             return true;
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程。
@@ -265,11 +260,13 @@ public class MeituanAdapter implements PlatformAdapter {
     private void callPost(PlatformConfig cfg, String url, Map<String, Object> body) {
         try {
             String accessToken = PlatformCredentialEncryptor.decrypt(cfg.getAccessToken());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + accessToken);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
             log.info("[美团] 调用成功: url={}", LogMaskUtils.maskUrl(url));
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程；url 统一脱敏

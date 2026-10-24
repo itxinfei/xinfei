@@ -71,11 +71,70 @@ public class WechatV3PayChannel implements PaymentChannel, RealNotifyCapable, Re
             if ("H5".equals(payType)) {
                 return createH5Order(request);
             }
+            // JSAPI 小程序内支付（miniapp 前置改造 5.3）：payer 必须携带 openid
+            if ("JSAPI".equals(payType)) {
+                return createJsapiOrder(request);
+            }
             return createNativeOrder(request);
         } catch (Exception e) {
             log.error("[微信支付] 下单失败 tradeNo={}, err={}", request.getTradeNo(), errOf(e), e);
             return payFail(errOf(e));
         }
+    }
+
+    /**
+     * JSAPI 小程序下单：返回 wx.requestPayment 调起五参（appId/timeStamp/nonceStr/package/signType/paySign）。
+     * <p>openid 由控制器从当前登录用户档案取（PayRequest.openid），缺失直接失败；
+     * 调起签名由本项目按微信规范（SHA256withRSA，Config#createSigner）组装。</p>
+     */
+    private PayResponse createJsapiOrder(PayRequest request) {
+        if (request.getOpenid() == null || request.getOpenid().isBlank()) {
+            log.warn("[微信支付] JSAPI 下单缺少 openid tradeNo={}", request.getTradeNo());
+            return payFail("当前账号未绑定微信，请先使用微信登录绑定后再支付");
+        }
+        com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest jsapiRequest =
+                new com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest();
+        jsapiRequest.setAppid(config.getWxAppId());
+        jsapiRequest.setMchid(config.getWxMchId());
+        jsapiRequest.setDescription(resolveDescription(request));
+        jsapiRequest.setOutTradeNo(request.getTradeNo());
+        jsapiRequest.setNotifyUrl(NotifyUrlRouter.withTenant(config.getPayNotifyUrl(), config.getTenantId()));
+        com.wechat.pay.java.service.payments.jsapi.model.Amount jsapiAmount =
+                new com.wechat.pay.java.service.payments.jsapi.model.Amount();
+        jsapiAmount.setTotal(toFen(request.getAmount()));
+        jsapiAmount.setCurrency(CURRENCY_CNY);
+        jsapiRequest.setAmount(jsapiAmount);
+        com.wechat.pay.java.service.payments.jsapi.model.Payer payer =
+                new com.wechat.pay.java.service.payments.jsapi.model.Payer();
+        payer.setOpenid(request.getOpenid());
+        jsapiRequest.setPayer(payer);
+
+        // 本地 SDK（0.2.14）的 JsapiService 只提供 prepay 返回 prepay_id，
+        // wx.requestPayment 调起五参由本项目按微信规范（SHA256withRSA）自行签名组装
+        com.wechat.pay.java.service.payments.jsapi.model.PrepayResponse prepayResponse =
+                clients.getJsapiService().prepay(jsapiRequest);
+        String packageVal = "prepay_id=" + prepayResponse.getPrepayId();
+
+        String appId = config.getWxAppId();
+        String timeStamp = String.valueOf(System.currentTimeMillis() / 1000);
+        String nonceStr = java.util.UUID.randomUUID().toString().replace("-", "");
+        // 签名串：appId\n timeStamp\n nonceStr\n package\n（微信支付 JSAPI 调起签名规范）
+        String message = appId + "\n" + timeStamp + "\n" + nonceStr + "\n" + packageVal + "\n";
+        String paySign = clients.getConfig().createSigner().sign(message).getSign();
+
+        // 字段名对齐 wx.requestPayment 入参
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("appId", appId);
+        params.put("timeStamp", timeStamp);
+        params.put("nonceStr", nonceStr);
+        params.put("package", packageVal);
+        params.put("signType", "RSA");
+        params.put("paySign", paySign);
+
+        PayResponse response = successResponse("JSAPI");
+        response.setJsapiParams(params);
+        response.setRawResponse(packageVal);
+        return response;
     }
 
     /**
@@ -337,6 +396,10 @@ public class WechatV3PayChannel implements PaymentChannel, RealNotifyCapable, Re
     private String resolvePayType(String payType) {
         if (payType != null && "H5".equalsIgnoreCase(payType.trim())) {
             return "H5";
+        }
+        // JSAPI 小程序内支付（miniapp 前置改造 5.3）
+        if (payType != null && "JSAPI".equalsIgnoreCase(payType.trim())) {
+            return "JSAPI";
         }
         return "NATIVE";
     }

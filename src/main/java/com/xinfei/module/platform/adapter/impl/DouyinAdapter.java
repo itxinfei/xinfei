@@ -8,13 +8,9 @@ import com.xinfei.module.platform.adapter.PlatformOrder;
 import com.xinfei.module.platform.model.PlatformConfig;
 import com.xinfei.module.platform.util.PlatformCredentialEncryptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -44,11 +40,11 @@ public class DouyinAdapter implements PlatformAdapter {
     private static final String PLATFORM_TYPE = "DOUYIN";
     private static final String BASE_URL = "https://open.douyin.com/life/v1";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DouyinAdapter() {
-        this.restTemplate = new RestTemplate();
+        this.restClient = RestClient.create();
     }
 
     /**
@@ -78,20 +74,19 @@ public class DouyinAdapter implements PlatformAdapter {
             String url = BASE_URL + "/order/list?access_token=" + accessToken
                     + "&begin_time=" + beginTime + "&end_time=" + endTime + "&page_size=100&page_no=1";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("X-Douyin-Appkey", cfg.getAppKey());
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseOrders(response.getBody());
+            String body = restClient.get()
+                    .uri(url)
+                    .header("X-Douyin-Appkey", cfg.getAppKey())
+                    .retrieve()
+                    .body(String.class);
+            if (body != null) {
+                return parseOrders(body);
             }
-            log.warn("[抖音] 拉单响应异常: status={}", response.getStatusCode());
+            log.warn("[抖音] 拉单响应异常: 响应体为空");
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程。
-            // 安全修复（2026-10-02）：RestTemplate 异常消息含带 access_token 的完整 URL，
-            // 只打脱敏后的消息、不打堆栈，防止令牌明文入日志。
+            // 安全修复（2026-10-02，RestClient 迁移后语义不变）：RestClientResponseException 的
+            // 异常消息同样含带 access_token 的完整 URL，只打脱敏后的消息、不打堆栈，防止令牌明文入日志。
             log.error("[抖音] 拉单失败: {}", LogMaskUtils.maskUrl(e.getMessage()));
         }
         return Collections.emptyList();
@@ -255,7 +250,7 @@ public class DouyinAdapter implements PlatformAdapter {
                 return false;
             }
             String url = BASE_URL + "/shop/status?access_token=" + accessToken;
-            restTemplate.getForObject(url, String.class);
+            restClient.get().uri(url).retrieve().body(String.class);
             return true;
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
@@ -267,11 +262,13 @@ public class DouyinAdapter implements PlatformAdapter {
     private void callPost(PlatformConfig cfg, String url, Map<String, Object> body) {
         try {
             String accessToken = PlatformCredentialEncryptor.decrypt(cfg.getAccessToken());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("access-token", accessToken);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            restClient.post()
+                    .uri(url)
+                    .header("access-token", accessToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
             log.info("[抖音] 调用成功: url={}", LogMaskUtils.maskUrl(url));
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程；url 统一脱敏

@@ -96,6 +96,13 @@ xinfei:
     # 修改点：短信Mock模式开关（开发环境默认true，仅打印日志不实际发送）
     mock-mode: true
 
+  # 微信小程序配置（miniapp 前置改造 5.3：wxLogin 的 code2Session）。
+  # secret 属敏感信息：本文件只留空占位，实际值放本地 application-dev.yml（已 gitignore）或环境变量注入；
+  # 未配置时 /user/wxLogin fail-closed 拒绝服务，不影响其他登录方式。
+  wechat-miniapp:
+    appid: ${WECHAT_MINIAPP_APPID:}
+    secret: ${WECHAT_MINIAPP_SECRET:}
+
   # 修改点：APP推送服务配置
   push:
     # 推送Mock模式（开发环境默认true，仅打印日志不实际发送；生产环境设为false并配置推送SDK）

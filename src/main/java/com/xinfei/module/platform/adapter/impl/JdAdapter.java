@@ -8,13 +8,9 @@ import com.xinfei.module.platform.adapter.PlatformOrder;
 import com.xinfei.module.platform.model.PlatformConfig;
 import com.xinfei.module.platform.util.PlatformCredentialEncryptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -46,11 +42,11 @@ public class JdAdapter implements PlatformAdapter {
     // 路径/签名仍为占位约定，正式对接须按 https://opendj.jd.com 官方文档重写协议层
     private static final String BASE_URL = "https://openapi.jddj.com/djapi/v1";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JdAdapter() {
-        this.restTemplate = new RestTemplate();
+        this.restClient = RestClient.create();
     }
 
     /**
@@ -80,20 +76,19 @@ public class JdAdapter implements PlatformAdapter {
             String url = BASE_URL + "/order/pull?access_token=" + accessToken
                     + "&beginTime=" + beginTime + "&endTime=" + endTime + "&pageSize=100&pageNo=1";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("X-Jd-AppKey", cfg.getAppKey());
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseOrders(response.getBody());
+            String body = restClient.get()
+                    .uri(url)
+                    .header("X-Jd-AppKey", cfg.getAppKey())
+                    .retrieve()
+                    .body(String.class);
+            if (body != null) {
+                return parseOrders(body);
             }
-            log.warn("[京东] 拉单响应异常: status={}", response.getStatusCode());
+            log.warn("[京东] 拉单响应异常: 响应体为空");
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程。
-            // 安全修复（2026-10-02）：RestTemplate 异常消息含带 access_token 的完整 URL，
-            // 只打脱敏后的消息、不打堆栈，防止令牌明文入日志。
+            // 安全修复（2026-10-02，RestClient 迁移后语义不变）：RestClientResponseException 的
+            // 异常消息同样含带 access_token 的完整 URL，只打脱敏后的消息、不打堆栈，防止令牌明文入日志。
             log.error("[京东] 拉单失败: {}", LogMaskUtils.maskUrl(e.getMessage()));
         }
         return Collections.emptyList();
@@ -257,7 +252,7 @@ public class JdAdapter implements PlatformAdapter {
                 return false;
             }
             String url = BASE_URL + "/shop/businessStatus?access_token=" + accessToken;
-            restTemplate.getForObject(url, String.class);
+            restClient.get().uri(url).retrieve().body(String.class);
             return true;
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程
@@ -269,11 +264,13 @@ public class JdAdapter implements PlatformAdapter {
     private void callPost(PlatformConfig cfg, String url, Map<String, Object> body) {
         try {
             String accessToken = PlatformCredentialEncryptor.decrypt(cfg.getAccessToken());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + accessToken);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
             log.info("[京东] 调用成功: url={}", LogMaskUtils.maskUrl(url));
         } catch (Exception e) {
             // 宽异常兜底：有意捕获 Exception，避免单个失败影响主流程；url 统一脱敏

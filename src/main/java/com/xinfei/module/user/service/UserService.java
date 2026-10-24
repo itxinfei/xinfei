@@ -42,6 +42,23 @@ public interface UserService extends IService<User> {
     User getByPhoneForLogin(String phone);
 
     /**
+     * 按微信小程序 openid 查用户（wxLogin 登录用，忽略租户过滤，口径同 getByPhoneForLogin）。
+     *
+     * @param openid 微信小程序 openid
+     * @return 用户信息，不存在则返回 null
+     */
+    User getByOpenidForLogin(String openid);
+
+    /**
+     * 将微信 openid 绑定到指定用户（忽略租户插件；openid IS NULL 防并发重复绑定）。
+     *
+     * @param userId 用户 ID
+     * @param openid 微信小程序 openid
+     * @return true=绑定成功；false=该用户已绑定过 openid
+     */
+    boolean bindOpenid(Long userId, String openid);
+
+    /**
      * 更新用户个人信息
      *
      * @param user 用户信息

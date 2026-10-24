@@ -64,6 +64,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return this.baseMapper.selectByPhoneIgnoreTenant(phone);
     }
 
+    @Override
+    public User getByOpenidForLogin(String openid) {
+        return this.baseMapper.selectByOpenidIgnoreTenant(openid);
+    }
+
+    @Override
+    public boolean bindOpenid(Long userId, String openid) {
+        return this.baseMapper.bindOpenid(userId, openid) > 0;
+    }
+
     /**
      * 更新 user base info。
      * @param user 参数 user

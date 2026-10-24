@@ -56,6 +56,9 @@ public class RechargePaymentController {
     @Autowired
     private RechargeRecordService rechargeRecordService;
 
+    @Autowired
+    private com.xinfei.module.user.service.UserService userService;
+
     /**
      * 发起充值支付。
      * @param dto 充值支付请求
@@ -94,6 +97,14 @@ public class RechargePaymentController {
         request.setSubject("心飞会员充值");
         request.setPayType(dto.getPayType());
         request.setClientIp(resolveClientIp(httpRequest));
+        // JSAPI（小程序）支付 payer 标识从当前登录用户档案取，不采信前端入参（与订单支付同口径）
+        if ("JSAPI".equalsIgnoreCase(request.getPayType())) {
+            com.xinfei.module.user.model.User payUser = userService.getById(userId);
+            if (payUser == null || payUser.getOpenid() == null || payUser.getOpenid().isBlank()) {
+                return R.error("当前账号未绑定微信，请先使用微信登录绑定后再支付");
+            }
+            request.setOpenid(payUser.getOpenid());
+        }
         PayResponse response = paymentChannel.createOrder(request);
         response.setTradeNo(po.getTradeNo());
         response.setMockMode(paymentConfigProperties.isMockMode());

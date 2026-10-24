@@ -8,7 +8,9 @@ import com.xinfei.common.RateLimit;
 import com.xinfei.common.RateLimitType;
 import com.xinfei.common.SecurityConstants;
 import com.xinfei.common.annotation.RequireRider;
+import com.xinfei.module.auth.service.AuthTokenService;
 import com.xinfei.module.auth.service.LoginAttemptService;
+import com.xinfei.module.user.service.SmsCodeService;
 import com.xinfei.module.delivery.mapper.RiderMapper;
 import com.xinfei.module.delivery.model.Rider;
 import com.xinfei.module.delivery.model.RiderRememberToken;
@@ -49,6 +51,14 @@ public class RiderAuthController {
 
     @Autowired
     private RiderMapper riderMapper;
+
+    /** 非 cookie 会话通道（miniapp 前置改造 5.1）：登录成功颁发 X-Auth-Token，登出吊销 */
+    @Autowired
+    private AuthTokenService authTokenService;
+
+    /** 验证码存储（miniapp 前置改造 5.2）：Redis 优先、session 兜底，与 C 端发码同源跨端校验 */
+    @Autowired
+    private SmsCodeService smsCodeService;
 
     @Autowired
     private DeliveryTrackingService deliveryTrackingService;
@@ -113,6 +123,12 @@ public class RiderAuthController {
         request.getSession().setAttribute("tenantId", rider.getTenantId());
         // 防止 Session Fixation：登录后切换 Session ID（须在写入属性后调用）
         request.changeSessionId();
+        // 修改点(2026-10-22 5.1 Token 会话通道)：颁发 X-Auth-Token 供无 cookie 客户端（小程序）回带；
+        // 颁发失败（Redis 降级）不下发头，登录主流程不受影响
+        String authToken = authTokenService.issue(AuthTokenService.TYPE_RIDER, rider.getId(), rider.getTenantId(), null);
+        if (authToken != null) {
+            response.setHeader(AuthTokenService.HEADER_NAME, authToken);
+        }
         log.info("骑手登录成功：riderId={}, tenantId={}, rememberMe={}",
                 rider.getId(), rider.getTenantId(), rememberMe);
 
@@ -140,6 +156,8 @@ public class RiderAuthController {
     @PostMapping("/logout")
     @Operation(summary = "骑手登出", description = "退出骑手端并销毁会话")
     public R<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        // 修改点(2026-10-22 5.1)：吊销非 cookie 会话通道的 X-Auth-Token（小程序登出无 session 可销毁）
+        authTokenService.revoke(request.getHeader(AuthTokenService.HEADER_NAME));
         Long riderId = (Long) request.getSession().getAttribute("rider");
         if (riderId != null) {
             riderRememberTokenService.revokeByRider(riderId);
@@ -179,24 +197,13 @@ public class RiderAuthController {
             return R.error("新密码长度须为6-20位");
         }
 
-        String codeKey = "smsCode_" + phone.trim();
-        Object cachedCode = request.getSession().getAttribute(codeKey);
-        Object cachedTime = request.getSession().getAttribute(codeKey + "_time");
-        if (cachedCode == null || cachedTime == null) {
-            return R.error("验证码不存在或已失效，请重新获取");
+        // 修改点(2026-10-22 5.2)：校验改走 SmsCodeService——Redis 优先（sms:code:<phone>，由
+        // /user/sendMsg 写入，跨会话/跨端可校验），未命中回落 session 原逻辑；提示文案保持不变
+        R<String> codeError = smsCodeService.verifyAndConsume(
+                phone.trim(), code, request.getSession(false), "验证码不存在或已失效，请重新获取");
+        if (codeError != null) {
+            return codeError;
         }
-        long elapsed = System.currentTimeMillis() - (Long) cachedTime;
-        if (elapsed > SMS_CODE_EXPIRE_MS) {
-            request.getSession().removeAttribute(codeKey);
-            request.getSession().removeAttribute(codeKey + "_time");
-            return R.error("验证码已过期，请重新获取");
-        }
-        if (!code.trim().equals(String.valueOf(cachedCode))) {
-            return R.error("验证码错误");
-        }
-        // 验证码一次性使用
-        request.getSession().removeAttribute(codeKey);
-        request.getSession().removeAttribute(codeKey + "_time");
 
         // selectByPhone 内部关闭了租户过滤
         Rider rider = riderMapper.selectByPhone(phone.trim());

@@ -5,6 +5,7 @@ import com.xinfei.common.AuthConstants;
 import com.xinfei.common.ObjectMapperHolder;
 import com.xinfei.common.BaseContext;
 import com.xinfei.common.R;
+import com.xinfei.module.auth.service.AuthTokenService;
 import com.xinfei.module.delivery.model.RiderRememberToken;
 import com.xinfei.module.delivery.service.RiderRememberTokenService;
 import com.xinfei.module.store.service.StoreService;
@@ -77,7 +78,7 @@ public class LoginCheckFilter implements Filter{
             //3、如果不需要处理，则直接放行（仍尽力恢复已有登录态上下文，保证租户隔离）
             if (check(EXCLUDE_URLS, requestURI)) {
                 log.debug("本次请求{}不需要处理", requestURI);
-                restoreExcludeContext(request);
+                restoreExcludeContext(request, response);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -124,6 +125,15 @@ public class LoginCheckFilter implements Filter{
                 return;
             }
 
+            //4-5、非 cookie 会话通道（miniapp 前置改造 5.1）：小程序无 cookie 容器，
+            // 凭 X-Auth-Token 请求头恢复登录态。置于会话三分支之后：Web/H5 有会话的请求
+            // 仍走原通道，行为零变化；token 分支不创建 session（保持 CsrfFilter 对
+            // 无会话写请求放行的既有语义——token 头非浏览器环境凭据，无 CSRF 面）。
+            if (applyTokenContext(request, response)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             log.info("用户未登录");
             //5、如果未登录则返回未登录结果：HTTP 401 + JSON 体 NOTLOGIN
             //   （此前仅返回 200 + NOTLOGIN，前端按 body 判断；补 401 让标准客户端/网关/监控
@@ -139,38 +149,44 @@ public class LoginCheckFilter implements Filter{
      * 保证数据按租户隔离（R-21-A 公开端点租户解析）：
      * <ol>
      *   <li>会话已有登录态（employee/user + tenantId）→ 按会话恢复；</li>
+     *   <li>无会话但带 X-Auth-Token（小程序 / H5 token 通道）→ 按 token 恢复
+     *       租户与主体，否则 token 登录用户浏览公开菜单会被租户插件 fail-closed 成空数据；</li>
      *   <li>匿名 → 请求参数解析（?tenantId= 或 ?storeId=，storeId 经门店档案反查租户）；</li>
      *   <li>无参数 → 配置 xinfei.public-tenant-id（单租户自托管默认租户兜底）。</li>
      * </ol>
-     * 三级均不可得时保持原状（不设上下文，由租户插件 fail-closed 兜底），零破坏升级。
+     * 均不可得时保持原状（不设上下文，由租户插件 fail-closed 兜底），零破坏升级。
      *
-     * @param request 请求
+     * @param request  请求
+     * @param response 响应（token 分支签名需要，当前实现失败时不写响应体）
      */
-    private void restoreExcludeContext(HttpServletRequest request) {
+    private void restoreExcludeContext(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //（R-01）公开端点不因 Redis 不可用而拒绝服务：会话读取失败按匿名处理，
-        // 继续走请求参数/默认租户两级回落，保证匿名用户仍可浏览公开菜单
+        // 继续走 token/请求参数/默认租户回落，保证匿名用户仍可浏览公开菜单
         HttpSession excludeSession = null;
         try {
             excludeSession = request.getSession(false);
         } catch (DataAccessException e) {
             log.warn("公开端点会话读取降级（Redis 不可用），按匿名处理：{}", e.getMessage());
         }
-        Long excludeTenantId = excludeSession == null ? null : (Long) excludeSession.getAttribute("tenantId");
-        if (excludeTenantId == null) {
-            excludeTenantId = resolvePublicTenantId(request);
-            if (excludeTenantId == null) {
-                return;
+        Long sessionTenantId = excludeSession == null ? null : (Long) excludeSession.getAttribute("tenantId");
+        if (sessionTenantId != null) {
+            BaseContext.setCurrentTenantId(sessionTenantId);
+            Object empId = excludeSession.getAttribute("employee");
+            Object userId = excludeSession.getAttribute("user");
+            if (empId != null) {
+                BaseContext.setCurrentId((Long) empId);
+            } else if (userId != null) {
+                BaseContext.setCurrentId((Long) userId);
             }
-            BaseContext.setCurrentTenantId(excludeTenantId);
             return;
         }
-        BaseContext.setCurrentTenantId(excludeTenantId);
-        Object empId = excludeSession.getAttribute("employee");
-        Object userId = excludeSession.getAttribute("user");
-        if (empId != null) {
-            BaseContext.setCurrentId((Long) empId);
-        } else if (userId != null) {
-            BaseContext.setCurrentId((Long) userId);
+        // token 通道：applyTokenContext 无头/无效时返回 false 且不写响应，安全回落匿名分支
+        if (applyTokenContext(request, response)) {
+            return;
+        }
+        Long publicTenantId = resolvePublicTenantId(request);
+        if (publicTenantId != null) {
+            BaseContext.setCurrentTenantId(publicTenantId);
         }
     }
 
@@ -394,6 +410,55 @@ public class LoginCheckFilter implements Filter{
             log.warn("记住登录自动登录失败：{}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 非 cookie 会话通道（miniapp 前置改造 5.1）：凭 X-Auth-Token 头恢复登录态。
+     * <p>本过滤器非 Spring Bean（FilterRegistrationConfig 显式 new 注册），
+     * 经 WebApplicationContextUtils 取 AuthTokenService。会话优先：已有会话
+     * 登录态的请求不会走到本分支。校验失败/无头/Redis 降级统一返回 false，
+     * 由调用方继续走 401。</p>
+     *
+     * @param request  请求
+     * @param response 响应
+     * @return true 表示已按 token 恢复上下文并放行；false 表示无 token 或 token 无效
+     * @throws IOException 写响应失败
+     */
+    private boolean applyTokenContext(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String token = request.getHeader(AuthTokenService.HEADER_NAME);
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
+        WebApplicationContext context = WebApplicationContextUtils
+                .getWebApplicationContext(request.getServletContext());
+        if (context == null) {
+            return false;
+        }
+        AuthTokenService authTokenService = context.getBean(AuthTokenService.class);
+        AuthTokenService.AuthTokenPayload payload = authTokenService.validate(token);
+        if (payload == null) {
+            log.info("X-Auth-Token 无效或已过期");
+            return false;
+        }
+        BaseContext.setCurrentId(payload.id());
+        BaseContext.setCurrentTenantId(payload.tenantId());
+        // 与会话分支口径一致：员工/骑手需向 AOP 鉴权切面透出主体标识
+        if (AuthTokenService.TYPE_EMPLOYEE.equals(payload.type())) {
+            request.setAttribute("employeeId", payload.id());
+            request.setAttribute("roleKey", payload.roleKey());
+        } else if (AuthTokenService.TYPE_RIDER.equals(payload.type())) {
+            request.setAttribute("riderId", payload.id());
+        } else if (AuthTokenService.TYPE_USER.equals(payload.type())) {
+            // UserGuardAspect 鉴权读 request 属性 userId（与会话分支口径一致）
+            request.setAttribute("userId", payload.id());
+        } else {
+            log.warn("X-Auth-Token 主体类型未知：{}", payload.type());
+            return false;
+        }
+        log.debug("凭 X-Auth-Token 恢复登录态：type={}, id={}, tenantId={}",
+                payload.type(), payload.id(), payload.tenantId());
+        return true;
     }
 
     /**

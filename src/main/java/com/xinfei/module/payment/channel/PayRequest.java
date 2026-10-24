@@ -23,8 +23,10 @@ public class PayRequest {
     private String description;
     /** 支付超时时间（分钟） */
     private Integer timeoutMinutes;
-    /** 支付方式：NATIVE扫码 / H5跳转 / PC网页；不传由渠道按场景默认 */
+    /** 支付方式：NATIVE扫码 / H5跳转 / JSAPI小程序 / PC网页；不传由渠道按场景默认 */
     private String payType;
     /** 客户端真实 IP（H5 支付风控需要，由控制器从请求头/远端地址解析，不采信前端入参） */
     private String clientIp;
+    /** JSAPI 支付的 payer openid（小程序场景必填，由控制器从当前登录用户档案取，不采信前端入参） */
+    private String openid;
 }

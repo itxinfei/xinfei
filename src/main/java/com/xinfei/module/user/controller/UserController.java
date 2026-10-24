@@ -8,7 +8,10 @@ import com.xinfei.common.BaseContext;
 import com.xinfei.common.R;
 import com.xinfei.dto.SendMsgDTO;
 import com.xinfei.dto.UserLoginDTO;
+import com.xinfei.module.auth.service.AuthTokenService;
 import com.xinfei.module.user.model.User;
+import com.xinfei.module.user.service.SmsCodeService;
+import com.xinfei.module.user.service.WxLoginService;
 import com.xinfei.module.user.service.SmsSendLogService;
 import com.xinfei.module.user.service.UserService;
 import com.xinfei.utils.SMSUtils;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.security.SecureRandom;
@@ -55,6 +59,18 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    /** 非 cookie 会话通道（miniapp 前置改造 5.1）：登录成功颁发 X-Auth-Token，登出吊销 */
+    @Autowired
+    private AuthTokenService authTokenService;
+
+    /** 验证码存储（miniapp 前置改造 5.2）：Redis 优先、session 兜底，跨会话/跨端可校验 */
+    @Autowired
+    private SmsCodeService smsCodeService;
+
+    /** 微信登录（miniapp 前置改造 5.3）：code2Session + 一次性绑定凭据 */
+    @Autowired
+    private WxLoginService wxLoginService;
 
     /**
      * 验证码按手机号频控（2026-09-30 修复：60s 间隔原存 HttpSession，清 Cookie 换新会话即归零，
@@ -221,9 +237,11 @@ public class UserController {
         int code = SECURE_RANDOM.nextInt(900000) + 100000;
         String codeStr = String.valueOf(code);
 
-        // 存储验证码及生成时间到Session
-        session.setAttribute("smsCode_" + phone, codeStr);
-        session.setAttribute("smsCode_" + phone + "_time", System.currentTimeMillis());
+        // 修改点(2026-10-22 5.2)：验证码迁 Redis（sms:code:<phone>，TTL 5min 由 TTL 承担过期判断），
+        // 供无 cookie 容器的小程序跨会话校验；Redis 不可用时 service 内部回落 session（R-01 降级口径）。
+        // 注：Redis 路径不写会话级 _time，本方法的会话级 60s 冷却（上方）对 Redis 路径不生效，
+        // 由下方跨会话的 Redis 冷却键 sms:cooldown:<phone> 覆盖，频控语义不变。
+        smsCodeService.save(phone, codeStr, session);
 
         // 发送短信：凭证+模板配置完整则真实发送（同时在日志打印验证码），否则进入控制台模式——
         // 验证码仅打印到服务端日志、不调用外部接口、流程继续。控制台模式不抛错，无需返回失败。
@@ -232,8 +250,8 @@ public class UserController {
         } catch (Exception e) {
             // 仅真实发送链路异常才会进入：清除本次验证码并提示用户稍后重试
             log.error("短信发送失败，phone={}, error={}", LogMaskUtils.maskPhone(phone), e.getMessage(), e);
-            session.removeAttribute("smsCode_" + phone);
-            session.removeAttribute("smsCode_" + phone + "_time");
+            // 修改点(2026-10-22 5.2)：清理改走 service（Redis + session 双清）
+            smsCodeService.delete(phone, session);
             rollbackSmsCooldown(cooldownKey);
             return R.error("短信发送失败，请稍后再试");
         }
@@ -278,7 +296,7 @@ public class UserController {
     @RateLimit(maxRequestsPerSecond = 5, type = RateLimitType.IP)
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "手机号+验证码登录，新用户自动注册")
-    public R<User> login(HttpServletRequest request, @Valid @RequestBody UserLoginDTO dto, HttpSession session){
+    public R<User> login(HttpServletRequest request, HttpServletResponse response, @Valid @RequestBody UserLoginDTO dto, HttpSession session){
         String phone = dto.getPhone();
         String code = dto.getCode();
 
@@ -289,24 +307,12 @@ public class UserController {
             return R.error("验证码不能为空");
         }
 
-        String sessionCode = (String) session.getAttribute("smsCode_" + phone);
-        Long codeTime = (Long) session.getAttribute("smsCode_" + phone + "_time");
-
-        if (sessionCode == null || codeTime == null) {
-            return R.error("请先获取验证码");
+        // 修改点(2026-10-22 5.2)：校验改走 SmsCodeService——Redis 优先（sms:code:<phone>，TTL 承担过期），
+        // 未命中回落 session 原逻辑；提示文案保持原三种不变。通过即消费（一次性使用）。
+        R<String> codeError = smsCodeService.verifyAndConsume(phone, code, session, "请先获取验证码");
+        if (codeError != null) {
+            return R.error(codeError.getMsg());
         }
-        if (System.currentTimeMillis() - codeTime > CODE_EXPIRE_MS) {
-            session.removeAttribute("smsCode_" + phone);
-            session.removeAttribute("smsCode_" + phone + "_time");
-            return R.error("验证码已过期，请重新获取");
-        }
-        if (!sessionCode.equals(code)) {
-            return R.error("验证码错误");
-        }
-
-        // 验证通过，清除Session中的验证码（一次性使用）
-        session.removeAttribute("smsCode_" + phone);
-        session.removeAttribute("smsCode_" + phone + "_time");
 
         log.info("用户登录，手机号={}", LogMaskUtils.maskPhone(phone));
 
@@ -334,14 +340,107 @@ public class UserController {
             }
         }
 
+        // 修改点(2026-10-22 5.3)：携带微信绑定凭据时，必须先完成 openid 绑定、再建立登录会话——
+        // 绑定冲突（微信已绑其他账号 / 本账号已绑微信）在此直接返回错误，绝不建立 session、
+        // 不下发 X-Auth-Token，避免错误响应携带有效登录态。
+        // 凭据过期/已消费则降级为普通登录：手机+验证码已是强身份校验，不因凭据 5 分钟 TTL 阻塞登录，
+        // 仅跳过本次绑定（下次 wxLogin 仍会返回 needBind）。
+        // 用 bindOpenid 定向更新（忽略租户插件）：登录请求为匿名公开路径、无租户上下文，
+        // 通用 updateById 会被租户插件 fail-closed 追加 tenant_id=-1 导致静默更新 0 行
+        if (dto.getWxTicket() != null && !dto.getWxTicket().isBlank()) {
+            String wxOpenid = wxLoginService.tryConsumeBindTicket(dto.getWxTicket());
+            if (wxOpenid == null) {
+                log.info("微信绑定凭据无效或已过期，降级为普通登录: userId={}", user.getId());
+            } else {
+                User bound = userService.getByOpenidForLogin(wxOpenid);
+                if (bound != null && !bound.getId().equals(user.getId())) {
+                    return R.error("该微信已绑定其他账号");
+                }
+                if (!userService.bindOpenid(user.getId(), wxOpenid)) {
+                    return R.error("该账号已绑定过微信，无需重复绑定");
+                }
+                user.setOpenid(wxOpenid);
+                log.info("微信 openid 绑定成功: userId={}", user.getId());
+            }
+        }
+
         session.setAttribute("user", user.getId());
         if (user.getTenantId() != null) {
             session.setAttribute("tenantId", user.getTenantId());
         }
         // 防止Session Fixation攻击：登录成功后切换Session ID
         request.changeSessionId();
-        // 脱敏：返回前清除敏感字段
+        // 修改点(2026-10-22 5.1 Token 会话通道)：颁发 X-Auth-Token 供无 cookie 客户端（小程序）回带；
+        // 颁发失败（Redis 降级）不下发头，登录主流程不受影响
+        String authToken = authTokenService.issue(AuthTokenService.TYPE_USER, user.getId(), user.getTenantId(), null);
+        if (authToken != null) {
+            response.setHeader(AuthTokenService.HEADER_NAME, authToken);
+        }
+        // 脱敏：返回前清除敏感字段（openid 不离开服务端）
         user.setIdNumber(null);
+        user.setOpenid(null);
+        user.setPhone(user.getPhone() != null ? maskPhone(user.getPhone()) : null);
+        return R.success(user);
+    }
+
+    /**
+     * 微信小程序登录（miniapp 前置改造 5.3）。
+     * <p>wx.login 的临时 code 经 code2Session 换 openid：</p>
+     * <ul>
+     *   <li>openid 已绑定用户：直接登录（建立会话 + 下发 X-Auth-Token），返回脱敏用户；</li>
+     *   <li>未绑定：返回 {@code needBind=true} + 一次性 {@code wxTicket}（5 分钟有效），
+     *       前端引导手机号+验证码登录并携带 wxTicket 完成绑定（user.phone NOT NULL，
+     *       不允许无手机号的纯微信注册）。</li>
+     * </ul>
+     *
+     * @param request  HTTP 请求
+     * @param response HTTP 响应（下发 X-Auth-Token）
+     * @param session  HTTP 会话
+     * @param body     含 code
+     * @return 已绑定：R&lt;User&gt;（会话已建立）；未绑定：R&lt;Map&gt;{needBind, wxTicket}
+     */
+    @PostMapping("/wxLogin")
+    @RateLimit(maxRequestsPerSecond = 5, type = RateLimitType.IP)
+    @Operation(summary = "微信小程序登录", description = "wx.login code 换 openid 登录；未绑定用户返回 needBind 与一次性绑定凭据 wxTicket")
+    public R<?> wxLogin(HttpServletRequest request, HttpServletResponse response, HttpSession session,
+                        @RequestBody Map<String, Object> body) {
+        String code = body == null ? null : (String) body.get("code");
+        if (code == null || code.trim().isEmpty()) {
+            return R.error("微信登录 code 不能为空");
+        }
+        // fail-closed：code 无效 / 配置缺失时 resolveOpenid 内部抛 CustomException
+        String openid = wxLoginService.resolveOpenid(code.trim());
+
+        User user = userService.getByOpenidForLogin(openid);
+        if (user == null) {
+            // 未绑定：签发一次性凭据，引导手机号验证码登录后绑定
+            String wxTicket = wxLoginService.issueBindTicket(openid);
+            log.info("微信登录未绑定用户，签发绑定凭据: openid=****{}", openid.length() > 4
+                    ? openid.substring(openid.length() - 4) : openid);
+            java.util.Map<String, Object> result = new HashMap<>();
+            result.put("needBind", true);
+            result.put("wxTicket", wxTicket);
+            return R.success(result);
+        }
+        if (user.getStatus() != null && user.getStatus() != 1) {
+            return R.error("账号已被禁用，请联系客服");
+        }
+        // 已绑定：建立会话（与验证码登录同构）
+        if (user.getTenantId() == null) {
+            user.setTenantId(DEFAULT_TENANT_ID);
+            userService.updateById(user);
+        }
+        session.setAttribute("user", user.getId());
+        session.setAttribute("tenantId", user.getTenantId());
+        request.changeSessionId();
+        String authToken = authTokenService.issue(AuthTokenService.TYPE_USER, user.getId(), user.getTenantId(), null);
+        if (authToken != null) {
+            response.setHeader(AuthTokenService.HEADER_NAME, authToken);
+        }
+        log.info("微信一键登录成功: userId={}", user.getId());
+        // 脱敏：openid 不离开服务端（JSAPI 下单时由后端按登录态自取）
+        user.setIdNumber(null);
+        user.setOpenid(null);
         user.setPhone(user.getPhone() != null ? maskPhone(user.getPhone()) : null);
         return R.success(user);
     }
@@ -354,7 +453,9 @@ public class UserController {
      */
     @PostMapping("/loginout")
     @Operation(summary = "用户退出", description = "退出当前登录账号，清除会话信息")
-    public R<String> loginout(HttpSession session) {
+    public R<String> loginout(HttpServletRequest request, HttpSession session) {
+        // 修改点(2026-10-22 5.1)：吊销非 cookie 会话通道的 X-Auth-Token（小程序登出无 session 可销毁）
+        authTokenService.revoke(request.getHeader(AuthTokenService.HEADER_NAME));
         // 必须 invalidate 整个 Session，仅 removeAttribute 不会使 Session ID 失效
         try {
             session.invalidate();
@@ -376,6 +477,10 @@ public class UserController {
     public R<User> getCurrentUser(@RequestParam(value = "full", required = false, defaultValue = "false") Boolean full,
                                   HttpSession session) {
         Long userId = (Long) session.getAttribute("user");
+        // 修改点(2026-10-22 5.1)：token 会话通道无 session，回落 ThreadLocal 上下文（LoginCheckFilter 已写入）
+        if (userId == null) {
+            userId = BaseContext.getCurrentId();
+        }
         if (userId == null) {
             return R.error("NOTLOGIN");
         }
@@ -409,6 +514,10 @@ public class UserController {
     @Operation(summary = "更新当前登录用户基本信息", description = "更新昵称/性别/头像，仅作用于当前登录用户自身，忽略请求体中的 id 防止越权")
     public R<User> updateCurrentUser(@RequestBody User user, HttpSession session) {
         Long userId = (Long) session.getAttribute("user");
+        // 修改点(2026-10-22 5.1)：token 会话通道无 session，回落 ThreadLocal 上下文（LoginCheckFilter 已写入）
+        if (userId == null) {
+            userId = BaseContext.getCurrentId();
+        }
         if (userId == null) {
             return R.error("NOTLOGIN");
         }

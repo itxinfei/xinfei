@@ -59,7 +59,7 @@ public class SelfPickupVerifyTest extends BaseControllerTest {
         named = new NamedParameterJdbcTemplate(jdbc);
         BaseContext.setCurrentTenantId(999L);
 
-        jdbc.update("DELETE FROM orders WHERE id BETWEEN 5071 AND 5076");
+        jdbc.update("DELETE FROM orders WHERE id BETWEEN 5071 AND 5077");
         jdbc.update("DELETE FROM user WHERE id = 9001");
 
         jdbc.update("INSERT IGNORE INTO tenant (id, name, phone, address, contact, status, create_time, update_time) "
@@ -70,7 +70,7 @@ public class SelfPickupVerifyTest extends BaseControllerTest {
 
     @AfterEach
     void tearDown() {
-        jdbc.update("DELETE FROM orders WHERE id BETWEEN 5071 AND 5076");
+        jdbc.update("DELETE FROM orders WHERE id BETWEEN 5071 AND 5077");
         jdbc.update("DELETE FROM user WHERE id = 9001");
     }
 
@@ -186,5 +186,22 @@ public class SelfPickupVerifyTest extends BaseControllerTest {
 
         org.junit.jupiter.api.Assertions.assertTrue(resp.contains("\"code\":0"));
         org.junit.jupiter.api.Assertions.assertEquals(3, orderStatus(5076L));
+    }
+
+    @Test
+    void customerCannotConfirmReceiptForSelfPickupOrder() throws Exception {
+        // 自提 3→4 的合法路径只有店员取餐码核销；顾客调确认收货必须被挡，状态保持配送中(3)
+        insertOrder(5077L, 3, "SELF_PICKUP", "8888");
+
+        String resp = mockMvc.perform(withCsrfToken(mockMvc, put("/order/userConfirmReceipt"))
+                        .param("id", "5077")
+                        .session(customerSession()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 仅断言业务拒绝（code=0）与状态不变；中文 msg 经 Jackson 转义输出，不做中文字面断言
+        org.junit.jupiter.api.Assertions.assertTrue(resp.contains("\"code\":0"));
+        org.junit.jupiter.api.Assertions.assertFalse(resp.contains("确认收货成功"));
+        org.junit.jupiter.api.Assertions.assertEquals(3, orderStatus(5077L));
     }
 }

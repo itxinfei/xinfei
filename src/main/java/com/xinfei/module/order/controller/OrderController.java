@@ -219,13 +219,19 @@ public class OrderController {
         }
         // 用户端查询他人订单详情拦截（防 IDOR 越权，参照 userCancel 归属校验模式）
         // 修改点：仅当请求方是 C 端用户时校验归属；管理后台员工端放行。
-        // 判断方式：session 中有 "employee" 属性 → 员工端，跳过用户归属校验；
-        // session 中有 "user" 属性 → C 端用户，校验 userId 归属。
+        // 判断口径与 EmployeeGuardAspect 一致：token 通道读 request 属性 employeeId
+        //（X-Auth-Token 不写 session），session 通道读 "employee" 属性（MockMvc 同路）。
+        // 旧实现只认 session，员工小程序凭 token 调本接口会被误判为越权
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 (org.springframework.web.context.request.ServletRequestAttributes)
                         org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-        jakarta.servlet.http.HttpSession session = attrs != null ? attrs.getRequest().getSession(false) : null;
-        boolean isEmployeeSession = session != null && session.getAttribute("employee") != null;
+        jakarta.servlet.http.HttpServletRequest currentRequest =
+                attrs != null ? attrs.getRequest() : null;
+        jakarta.servlet.http.HttpSession session = currentRequest != null
+                ? currentRequest.getSession(false) : null;
+        boolean isEmployeeSession =
+                (currentRequest != null && currentRequest.getAttribute("employeeId") != null)
+                        || (session != null && session.getAttribute("employee") != null);
         if (!isEmployeeSession) {
             Long currentUserId = BaseContext.getCurrentId();
             if (currentUserId != null && !Objects.equals(currentUserId, orders.getUserId())) {
@@ -585,6 +591,11 @@ public class OrderController {
         // 堂食订单由门店员工在上菜完成时完结并释放桌台，顾客端不允许确认收货
         if (existing.getTableId() != null) {
             return R.error("堂食订单请由门店确认上菜");
+        }
+        // 自提订单由店员在门店凭取餐码核销完结（PUT /order/selfPickup/verify，会触发完成事件/积分），
+        // 顾客端不允许确认收货，否则可绕过取餐码把配送中(3)的自提单直接置为已完成
+        if (com.xinfei.enums.OrderSource.SELF_PICKUP.getValue().equals(existing.getSource())) {
+            return R.error("自提订单请到店由店员核销取餐");
         }
         statusFlowService.completeOrder(id);
         clearDashboardCache();

@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.xinfei</groupId>
-    <artifactId>xinfei_take_out</artifactId>
+    <artifactId>xinfei_takeout</artifactId>
     <version>1.0-SNAPSHOT</version>
     <description>心飞外卖</description>
 
@@ -27,13 +27,13 @@
         <dependency>
             <groupId>com.aliyun</groupId>
             <artifactId>aliyun-java-sdk-core</artifactId>
-            <version>4.5.16</version>
+            <version>4.7.10</version>
         </dependency>
 
         <dependency>
             <groupId>com.aliyun</groupId>
             <artifactId>aliyun-java-sdk-dysmsapi</artifactId>
-            <version>2.1.0</version>
+            <version>2.2.1</version>
         </dependency>
 
         <dependency>
@@ -203,31 +203,31 @@
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
-            <version>3.5.1</version>
+            <version>3.5.4</version>
         </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
-            <version>3.5.1</version>
+            <version>3.5.4</version>
         </dependency>
 
         <!-- 修改点：Apache POI - Excel文件读写 -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>4.1.2</version>
+            <version>5.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>4.1.2</version>
+            <version>5.5.1</version>
         </dependency>
 
         <!-- 修改点：iText - PDF文件生成 -->
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>itextpdf</artifactId>
-            <version>5.5.13.3</version>
+            <version>5.5.13.6</version>
         </dependency>
         <dependency>
             <groupId>com.itextpdf</groupId>
@@ -238,21 +238,21 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.10.0</version>
+            <version>1.15.0</version>
         </dependency>
 
         <!-- 微信支付官方 SDK（APIv3，支持 JDK 1.8+）：下单/查询/退款/回调验签与 AEAD 解密 -->
         <dependency>
             <groupId>com.github.wechatpay-apiv3</groupId>
             <artifactId>wechatpay-java</artifactId>
-            <version>0.2.14</version>
+            <version>0.2.17</version>
         </dependency>
 
         <!-- 支付宝官方 SDK（RSA2，支持 JDK 1.6+）：电脑/手机网站/当面付/查询/退款/回调验签 -->
         <dependency>
             <groupId>com.alipay.sdk</groupId>
             <artifactId>alipay-sdk-java</artifactId>
-            <version>4.39.79.ALL</version>
+            <version>4.40.1044.ALL</version>
             <!-- commons-logging 与 spring-core 内置 spring-jcl 重复，排除后走 spring-jcl -->
             <exclusions>
                 <exclusion>

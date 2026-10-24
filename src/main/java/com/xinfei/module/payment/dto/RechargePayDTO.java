@@ -22,6 +22,6 @@ public class RechargePayDTO {
     @NotBlank(message = "支付渠道不能为空")
     private String channel;
 
-    @Schema(description = "支付方式（NATIVE/H5，不传由渠道默认）", example = "H5")
+    @Schema(description = "支付方式（NATIVE/H5/JSAPI，不传由渠道默认；小程序用 JSAPI）", example = "JSAPI")
     private String payType;
 }

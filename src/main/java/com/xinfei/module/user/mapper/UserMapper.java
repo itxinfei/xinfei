@@ -6,6 +6,7 @@ import com.xinfei.module.user.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +40,18 @@ public interface UserMapper extends BaseMapper<User>{
     User selectByPhoneIgnoreTenant(@Param("phone") String phone);
 
     /**
+     * 按微信小程序 openid 查用户（wxLogin 登录前无租户上下文，忽略租户插件）。
+     * <p>openid 全局唯一（uk_user_openid），登录成功后租户上下文由用户自身 tenantId 恢复，
+     * 口径同 selectByPhoneIgnoreTenant。</p>
+     *
+     * @param openid 微信小程序 openid
+     * @return 用户信息，不存在则返回 null
+     */
+    @InterceptorIgnore(tenantLine = "true")
+    @Select("SELECT * FROM `user` WHERE openid = #{openid} LIMIT 1")
+    User selectByOpenidIgnoreTenant(@Param("openid") String openid);
+
+    /**
      * 按门店(tenant_id)聚合指定时间区间内的新增用户数（总部控制台用）
      * <p>仅在超管视图（tenantId 上下文为空）下跨门店返回全部分组；用于替代逐店 N+1 查询</p>
      * <p>必须 @InterceptorIgnore 绕开租户拦截器：否则 MyBatis-Plus 会注入
@@ -54,5 +67,18 @@ public interface UserMapper extends BaseMapper<User>{
             + "GROUP BY tenant_id")
     List<Map<String, Object>> statNewUsersByTenant(@Param("start") LocalDateTime start,
                                                    @Param("end") LocalDateTime end);
-}
 
+    /**
+     * 将微信 openid 绑定到指定用户（wxLogin 绑定链路，miniapp 前置改造 5.3）。
+     * <p>绑定动作发生在匿名登录请求内（无租户上下文），忽略租户插件避免 fail-closed
+     * 追加 tenant_id=-1 导致静默更新 0 行；{@code openid IS NULL} 条件防并发重复绑定，
+     * 与唯一键 uk_user_openid 双保险。</p>
+     *
+     * @param userId 用户 ID
+     * @param openid 微信小程序 openid
+     * @return 绑定成功返回 1；该用户已有 openid 返回 0
+     */
+    @InterceptorIgnore(tenantLine = "true")
+    @Update("UPDATE `user` SET openid = #{openid}, update_time = NOW() WHERE id = #{userId} AND openid IS NULL")
+    int bindOpenid(@Param("userId") Long userId, @Param("openid") String openid);
+}

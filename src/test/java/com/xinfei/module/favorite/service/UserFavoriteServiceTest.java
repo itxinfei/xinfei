@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -112,7 +113,6 @@ class UserFavoriteServiceTest {
 
     @Test
     void toggle_alreadyFavorited_cancels() {
-        when(dishMapper.selectById(1L)).thenReturn(dish(1L, "宫保鸡丁", "20.00", 1));
         when(userFavoriteMapper.selectOne(any())).thenReturn(fav(1L));
         when(userFavoriteMapper.deleteById(101L)).thenReturn(1);
 
@@ -120,6 +120,20 @@ class UserFavoriteServiceTest {
 
         assertFalse((Boolean) r.get("favorited"), "已收藏时切换为取消");
         verify(userFavoriteMapper).deleteById(101L);
+        verify(dishMapper, never()).selectById(any());
+    }
+
+    @Test
+    void toggle_dishDeletedButFavorited_stillCancels() {
+        // 菜品已删除（列表标记 available=false），已存在的收藏记录必须仍可取消清理
+        when(userFavoriteMapper.selectOne(any())).thenReturn(fav(3L));
+        when(userFavoriteMapper.deleteById(103L)).thenReturn(1);
+
+        Map<String, Object> r = favoriteService.toggle(UserFavorite.TYPE_DISH, 3L);
+
+        assertFalse((Boolean) r.get("favorited"), "失效收藏可取消");
+        verify(userFavoriteMapper).deleteById(103L);
+        verify(dishMapper, never()).selectById(any());
     }
 
     @Test

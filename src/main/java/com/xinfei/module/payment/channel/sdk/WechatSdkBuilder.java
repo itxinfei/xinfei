@@ -7,6 +7,7 @@ import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import com.wechat.pay.java.core.RSAPublicKeyConfig;
 import com.wechat.pay.java.service.payments.h5.H5Service;
+import com.wechat.pay.java.service.payments.jsapi.JsapiService;
 import com.wechat.pay.java.service.payments.nativepay.NativePayService;
 import com.wechat.pay.java.service.refund.RefundService;
 import lombok.extern.slf4j.Slf4j;
@@ -56,11 +57,13 @@ public final class WechatSdkBuilder {
         NativePayService nativePayService = new NativePayService.Builder().config(wxConfig).build();
         H5Service h5Service = new H5Service.Builder().config(wxConfig).build();
         RefundService refundService = new RefundService.Builder().config(wxConfig).build();
+        // JSAPI（小程序内支付，miniapp 前置改造 5.3）
+        JsapiService jsapiService = new JsapiService.Builder().config(wxConfig).build();
 
         log.info("[微信支付] SDK 初始化成功 tenantId={}, mchId={}, appId={}, mode={}",
                 config.getTenantId(), mchId, appId,
                 isBlank(config.getWxPublicKeyId()) ? "平台证书自动更新" : "微信支付公钥");
-        return new WechatSdkClients(wxConfig, nativePayService, h5Service, refundService);
+        return new WechatSdkClients(wxConfig, nativePayService, h5Service, refundService, jsapiService);
     }
 
     /**

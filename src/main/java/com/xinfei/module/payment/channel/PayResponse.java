@@ -28,6 +28,8 @@ public class PayResponse {
     private String payType;
     /** 是否 mock 渠道：C 端据此区分真实扫码轮询与沙箱模拟回调 */
     private boolean mockMode;
+    /** JSAPI 小程序调起参数（wx.requestPayment 五参：appId/timeStamp/nonceStr/package/signType/paySign）；miniapp 前置改造 5.3 */
+    private java.util.Map<String, String> jsapiParams;
     /** 错误信息 */
     private String errorMsg;
 }
