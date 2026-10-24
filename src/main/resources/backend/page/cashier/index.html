@@ -77,6 +77,12 @@
     .settle-bar__item b { color: var(--el-text-primary); font-weight: 600; margin-left: 2px; }
     .settle-bar__diff--warn { color: var(--el-color-warning); }
     .settle-bar__btn { margin-left: auto; }
+    /* O-22 交班对账弹窗 */
+    .shift-summary { display: flex; flex-direction: column; gap: 8px; }
+    .shift-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-hairline, #f0f0f0); font-size: var(--font-size-sm); }
+    .shift-row span { color: var(--text-muted); }
+    .shift-amount { color: var(--color-price); font-size: var(--font-size-md); }
+    .shift-tip { margin-top: 12px; font-size: var(--font-size-xs); color: var(--text-muted); line-height: 1.6; }
     .cashier-main {
       display: grid;
       grid-template-columns: 1fr var(--cashier-side-width);
@@ -826,7 +832,35 @@
         @click="handleSettlement">
         一键日结
       </el-button>
+      <el-button size="small" class="settle-bar__btn" title="查看本人今日收款汇总（交班对账）" @click="openShiftDialog">
+        交班对账
+      </el-button>
     </div>
+
+    <!-- O-22 交班对账弹窗：当日本人收款汇总（笔数/总额/各支付方式/找零） -->
+    <crud-dialog title="交班对账" v-model="shiftDialogVisible" size="md"
+      :close-on-click-modal="false" :show-submit="false" cancel-text="关 闭">
+      <div v-loading="shiftLoading">
+        <div class="shift-summary" v-if="shiftData">
+          <div class="shift-row"><span>收银员</span><b>{{ shiftData.cashierName || '-' }}</b></div>
+          <div class="shift-row"><span>日期</span><b>{{ shiftData.date }}</b></div>
+          <div class="shift-row"><span>收款笔数</span><b>{{ shiftData.totalCount }} 笔</b></div>
+          <div class="shift-row"><span>收款总额</span><b class="shift-amount">¥{{ formatMoney(shiftData.totalAmount) }}</b></div>
+          <div class="shift-row"><span>其中找零</span><b>¥{{ formatMoney(shiftData.totalChange) }}</b></div>
+        </div>
+        <el-table v-if="shiftData && (shiftData.byPayType || []).length" :data="shiftData.byPayType" size="small" stripe
+          style="margin-top: 12px;" aria-label="按支付方式分布">
+          <el-table-column label="支付方式" align="center">
+            <template #default="s">{{ payTypeLabel(s.row.payType) }}</template>
+          </el-table-column>
+          <el-table-column prop="count" label="笔数" width="80" align="center"></el-table-column>
+          <el-table-column label="金额" align="center">
+            <template #default="s">¥{{ formatMoney(s.row.amount) }}</template>
+          </el-table-column>
+        </el-table>
+        <div class="shift-tip">口径：当日 00:00 起本人名下全部收款记录；现金收款已含找零，找零合计单列。确认无误后请完成当日日结。</div>
+      </div>
+    </crud-dialog>
   </div>
 
   <script src="../../plugins/vue3/vue.global.js"></script>
@@ -842,7 +876,7 @@
   <script src="../../js/accessibility-utils.js?v=20260927"></script>
   <script src="../../js/performance-utils.js?v=20260926"></script>
   <script src="../../js/common.js?v=20260926"></script>
-  <script src="../../api/cashier.js?v=20260926"></script>
+  <script src="../../api/cashier.js?v=20261024"></script>
   <script src="../../api/order.js?v=20260926"></script>
   <script src="../../api/member-center.js?v=20260926"></script>
   <script src="../../api/dining.js?v=20260918b"></script>
@@ -863,6 +897,10 @@
           // O-19 离线韧性：断网状态（online/offline 事件驱动）+ 收款草稿（提交失败时本地留存）
           offline: typeof navigator !== 'undefined' && navigator.onLine === false,
           draftRestored: false,
+          // O-22 交班对账弹窗
+          shiftDialogVisible: false,
+          shiftLoading: false,
+          shiftData: null,
           payType: 1,
           actualAmount: 0,
           remark: '',
@@ -1240,6 +1278,21 @@
             : '无门槛'
           return '满减券 · ' + cond
         },
+        /* ── 交班对账（O-22）── */
+        openShiftDialog() {
+          this.shiftDialogVisible = true
+          this.shiftLoading = true
+          const self = this
+          getShiftSummary().then(function (res) {
+            if (String(res.code) === '1') { self.shiftData = res.data }
+            else { XinfeiUI.error(res.msg || '交班汇总加载失败') }
+          }).catch(function () { XinfeiUI.error('网络异常，请稍后重试') })
+            .finally(function () { self.shiftLoading = false })
+        },
+        payTypeLabel(t) {
+          const map = { 1: '现金', 2: '微信', 3: '支付宝', 4: '银行卡', 5: '会员储值', 0: '其他' }
+          return map[t] || '其他'
+        },
         /* ── 收款与日结 ── */
         // O-19 离线韧性：浏览器联网状态切换
         onNetChange() {
@@ -1289,6 +1342,7 @@
             this.saveDraft(this.selectedOrder.number)
             XinfeiUI.error('当前处于离线状态，无法收款。已填写信息已留存，恢复网络后会自动带出。')
             return
+          }
 
           // C.1：现金大额（>200 元）收款二次确认
           if (this.payType === 1 && this.actualAmount > 200) {

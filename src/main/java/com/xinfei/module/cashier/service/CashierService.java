@@ -201,5 +201,13 @@ public interface CashierService extends IService<CashierRecord> {
      * @return 日结汇总
      */
     Map<String, Object> getDailySettlementSummary(LocalDate startDate, LocalDate endDate, Long tenantId);
+
+    /**
+     * 交班对账汇总（O-22）：当日指定收银员的收款聚合（笔数/总额/按支付方式分布）。
+     *
+     * @param cashierId 收银员员工ID
+     * @return cashierName/date/totalCount/totalAmount/byPayType 列表
+     */
+    Map<String, Object> shiftSummary(Long cashierId);
 }
 

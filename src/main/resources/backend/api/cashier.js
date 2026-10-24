@@ -23,3 +23,5 @@ const getCashierStatistics = (params) => $axios({ url: '/cashier/statistics', me
 const getPaymentTypeStatistics = (params) => $axios({ url: '/cashier/statistics/payment-type', method: 'get', params })
 const getCashierTrend = (params) => $axios({ url: '/cashier/trend', method: 'get', params })
 const getDailySettlementSummary = (params) => $axios({ url: '/cashier/settlement/summary', method: 'get', params })
+// 交班对账汇总（O-22）：当日当前收银员的收款聚合
+const getShiftSummary = () => $axios({ url: '/cashier/shift-summary', method: 'get' })

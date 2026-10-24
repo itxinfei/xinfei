@@ -1558,6 +1558,53 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
             log.warn("释放收银幂等锁失败（TTL兜底自动过期）：orderId={}", orderId);
         }
     }
+
+    /**
+     * 交班对账汇总（O-22）：当日指定收银员的收款聚合。
+     * <p>口径：cashier_record 当日 00:00 起、本人名下、未删除记录；按支付方式分组统计笔数与实收
+     * （实收=actualAmount，找零不重复扣减——现金实收已含找零，展示层另行展示找零合计）。</p>
+     */
+    @Override
+    public Map<String, Object> shiftSummary(Long cashierId) {
+        Long tenantId = BaseContext.getCurrentTenantId();
+        LocalDateTime start = java.time.LocalDate.now().atStartOfDay();
+        LambdaQueryWrapper<CashierRecord> qw = new LambdaQueryWrapper<>();
+        qw.eq(cashierId != null, CashierRecord::getCashierId, cashierId)
+                .eq(tenantId != null, CashierRecord::getTenantId, tenantId)
+                .ge(CashierRecord::getCashierTime, start)
+                .orderByAsc(CashierRecord::getCashierTime);
+        List<CashierRecord> records = cashierRecordMapper.selectList(qw);
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal totalChange = BigDecimal.ZERO;
+        Map<Integer, Map<String, Object>> byPayType = new java.util.LinkedHashMap<>();
+        for (CashierRecord r : records) {
+            BigDecimal actual = r.getActualAmount() == null ? BigDecimal.ZERO : r.getActualAmount();
+            BigDecimal change = r.getChangeAmount() == null ? BigDecimal.ZERO : r.getChangeAmount();
+            totalAmount = totalAmount.add(actual);
+            totalChange = totalChange.add(change);
+            Integer type = r.getPayType() == null ? 0 : r.getPayType();
+            Map<String, Object> row = byPayType.computeIfAbsent(type, k -> {
+                Map<String, Object> m = new java.util.LinkedHashMap<>();
+                m.put("payType", k);
+                m.put("count", 0);
+                m.put("amount", BigDecimal.ZERO);
+                return m;
+            });
+            row.put("count", (Integer) row.get("count") + 1);
+            row.put("amount", ((BigDecimal) row.get("amount")).add(actual));
+        }
+
+        String cashierName = records.isEmpty() ? null : records.get(records.size() - 1).getCashierName();
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("date", java.time.LocalDate.now().toString());
+        result.put("cashierName", cashierName);
+        result.put("totalCount", records.size());
+        result.put("totalAmount", totalAmount.setScale(2, java.math.RoundingMode.HALF_UP));
+        result.put("totalChange", totalChange.setScale(2, java.math.RoundingMode.HALF_UP));
+        result.put("byPayType", new ArrayList<>(byPayType.values()));
+        return result;
+    }
 }
 
 

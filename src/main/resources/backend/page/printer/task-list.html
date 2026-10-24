@@ -231,14 +231,23 @@
           this.loading = true
           try {
             const range = this.query.timeRange && this.query.timeRange.length === 2 ? this.query.timeRange : []
+            // 时间参数格式化：el-date-picker 产出 Date，axios GET 会转成 toString() 格式，
+            // 后端 LocalDateTime @RequestParam 解析失败（与 O-21 营销合并发现的 Jackson 回归同族）
+            const fmtDT = function (d) {
+              if (!d) return undefined
+              var dd = (d instanceof Date) ? d : new Date(d)
+              const p = n => String(n).padStart(2, '0')
+              return dd.getFullYear() + '-' + p(dd.getMonth() + 1) + '-' + p(dd.getDate())
+                + ' ' + p(dd.getHours()) + ':' + p(dd.getMinutes()) + ':' + p(dd.getSeconds())
+            }
             const params = {
               page: this.page,
               pageSize: this.pageSize,
               orderId: this.query.orderId || undefined,
               taskType: this.query.taskType || undefined,
               status: this.query.status || undefined,
-              beginTime: range[0] || undefined,
-              endTime: range[1] || undefined
+              beginTime: fmtDT(range[0]),
+              endTime: fmtDT(range[1])
             }
             const requests = [printerTaskPage(params)]
             if (reloadStats) { requests.push(this.loadStats()) }

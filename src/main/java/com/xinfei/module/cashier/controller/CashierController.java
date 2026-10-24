@@ -51,6 +51,21 @@ public class CashierController {
     @Autowired
     private EmployeeService employeeService;
 
+    /**
+     * 交班对账汇总（O-22）：当日 + 当前收银员的收款聚合。
+     * <p>口径：cashier_record 当日 00:00 起、本人名下全部收款记录（含撤销态记录按 is_deleted 过滤），
+     * 按支付方式分组统计笔数/实收；供「交班对账」弹窗展示，不落交班台账（登记为后续增强）。</p>
+     *
+     * @return 当日本人收款汇总（cashierName/date/totalCount/totalAmount/byPayType）
+     */
+    @GetMapping("/shift-summary")
+    @RequireEmployee
+    @RateLimit(maxRequestsPerSecond = 5)
+    @Operation(summary = "交班对账汇总", description = "当日当前收银员的收款笔数/总额/按支付方式分布")
+    public R<Map<String, Object>> shiftSummary() {
+        return R.success(cashierService.shiftSummary(BaseContext.getCurrentId()));
+    }
+
     // ==================== 收银记录管理 ====================
 
     /**
