@@ -26,6 +26,16 @@
               <text v-for="n in 5" :key="n" class="star" :class="{ 'star--on': n <= item.star }">★</text>
             </view>
             <text v-if="item.content" class="done__text">{{ item.content }}</text>
+            <view v-if="item.doneImages.length" class="imgs">
+              <image
+                v-for="(img, ii) in item.doneImages"
+                :key="ii"
+                class="imgs__item"
+                :src="fullImage(img)"
+                mode="aspectFill"
+                @tap="previewImage(item.doneImages, ii)"
+              />
+            </view>
             <text class="done__tag">{{ item.auditText }}</text>
           </view>
 
@@ -59,6 +69,22 @@
               placeholder="说说这道菜怎么样（选填，200 字以内）"
               placeholder-class="dish__ph"
             />
+            <!-- 评价传图（每道菜最多3张，与 Web 版 my-evaluations.html 口径一致）：先传 /common/upload 拿相对路径，提交时随评价写入 images -->
+            <view class="imgs">
+              <view v-for="(img, ii) in item.images" :key="ii" class="imgs__cell">
+                <image class="imgs__item" :src="img.local" mode="aspectFill" @tap="previewImage(item.images.map(x => x.local), ii)" />
+                <text v-if="img.uploading" class="imgs__mask">上传中</text>
+                <text v-else-if="img.failed" class="imgs__mask imgs__mask--fail">失败</text>
+                <text class="imgs__del" hover-class="hover-press" @tap.stop="removeImage(item, ii)">×</text>
+              </view>
+              <view
+                v-if="item.images.length < MAX_EVAL_IMAGES"
+                class="imgs__add"
+                :class="{ 'imgs__add--off': uploadingKey }"
+                hover-class="hover-press"
+                @tap="chooseImages(item)"
+              >＋</view>
+            </view>
             <text v-if="item.error" class="dish__error">{{ item.error }}</text>
           </template>
         </view>
@@ -142,11 +168,17 @@
 </template>
 
 <script>
-import { http, qs, busyLock } from '@xinfei/mini-shared'
+import { http, qs, busyLock, uploadFile, fullImage } from '@xinfei/mini-shared'
 
 // 快捷标签后端无字典接口，与 H5 同口径写死；菜品标签随 content 落库（dish_evaluation 无 tags 列）
 const DISH_TAGS = ['味道好', '分量足', '配送快', '包装好', '食材新鲜', '性价比高']
 const RIDER_TAGS = ['准时送达', '态度友好', '包装完好', '骑行平稳', '沟通顺畅']
+
+// 评价传图：每道菜最多 3 张（Web 版 my-evaluations.html van-uploader :max-count="3"）；
+// /common/upload 后端约束：jpg/jpeg/png/gif、单张 ≤5MB（CommonController.upload）
+const MAX_EVAL_IMAGES = 3
+const MAX_IMG_SIZE = 5 * 1024 * 1024
+const ALLOWED_IMG_EXT = ['jpg', 'jpeg', 'png', 'gif']
 
 export default {
   data() {
@@ -163,7 +195,10 @@ export default {
       riderDone: false,
       loading: true,
       loadError: false,
-      notCompleted: false
+      notCompleted: false,
+      // 正在上传的评价图片所属菜品 key（同一时间只允许一处选图/上传，避免 busyLock key 爆炸）
+      uploadingKey: '',
+      MAX_EVAL_IMAGES
     })
   },
   computed: {
@@ -176,6 +211,7 @@ export default {
     this.bootstrap()
   },
   methods: {
+    fullImage,
     bootstrap() {
       if (!this.orderId) {
         this.loading = false
@@ -217,6 +253,8 @@ export default {
             star: 0,
             tags: [],
             text: '',
+            images: [],        // 待提交：[{ local, path(上传后), uploading, failed }]
+            doneImages: [],    // 已评回显：服务器相对路径数组
             error: '',
             submitted: false,
             content: '',
@@ -241,6 +279,7 @@ export default {
         item.submitted = true
         item.star = Number(ev.starRating || 0)
         item.content = ev.content || ''
+        item.doneImages = this.parseImages(ev.images)
         item.auditText = Number(ev.status) === 0 ? '审核中' : (Number(ev.status) === 2 ? '未通过' : '已评价')
       })
     },
@@ -283,6 +322,75 @@ export default {
     onRiderAnonymousChange(e) {
       this.rider.anonymous = !!(e.detail && e.detail.value)
     },
+    // ---------- 评价图片 ----------
+    // images 字段为 JSON 数组字符串（DishEvaluation.images 为 String 列，与 Web 版口径一致）
+    parseImages(raw) {
+      if (!raw) return []
+      if (Array.isArray(raw)) return raw
+      try {
+        const arr = JSON.parse(raw)
+        return Array.isArray(arr) ? arr : [raw]
+      } catch (e) {
+        return [raw]
+      }
+    },
+    previewImage(urls, index) {
+      if (!urls || !urls.length) return
+      uni.previewImage({ urls: urls.map(u => fullImage(u)), current: fullImage(urls[index || 0]) })
+    },
+    chooseImages(item) {
+      if (this.uploadingKey) return
+      const remain = MAX_EVAL_IMAGES - item.images.length
+      if (remain <= 0) return
+      uni.chooseImage({
+        count: remain,
+        sizeType: ['compressed'],
+        success: res => {
+          const paths = res.tempFilePaths || []
+          const files = res.tempFiles || []
+          let bad = ''
+          for (let i = 0; i < paths.length; i++) {
+            const size = files[i] && files[i].size
+            const ext = paths[i].indexOf('.') >= 0 ? paths[i].split('.').pop().toLowerCase() : ''
+            if (size > MAX_IMG_SIZE) { bad = '图片大小不能超过 5MB'; break }
+            if (ALLOWED_IMG_EXT.indexOf(ext) === -1) { bad = '仅支持 JPG / PNG / GIF 格式'; break }
+          }
+          if (bad) {
+            uni.showToast({ title: bad, icon: 'none' })
+            return
+          }
+          if (!paths.length) return
+          this.uploadImages(item, paths)
+        }
+      })
+    },
+    uploadImages(item, paths) {
+      // 顺序上传（uni.uploadFile 无并发必要，逐张补 path），全部结束后释放 uploadingKey
+      this.uploadingKey = item.key
+      const chain = paths.reduce((promise, path) => {
+        return promise.then(() => {
+          const entry = { local: path, path: '', uploading: true, failed: false }
+          item.images.push(entry)
+          return uploadFile({ filePath: path, bizType: 'evaluation' })
+            .then(remote => {
+              entry.path = remote
+              entry.uploading = false
+            })
+            .catch(err => {
+              if (err && err.notLogin) throw err
+              entry.uploading = false
+              entry.failed = true
+            })
+        })
+      }, Promise.resolve())
+      chain.catch(() => {}).then(() => {
+        // 上传失败的留在本地可删；未失败的参与提交
+        this.uploadingKey = ''
+      })
+    },
+    removeImage(item, index) {
+      item.images.splice(index, 1)
+    },
     // 标签与文字组合成 content 落库（对齐 H5「标签入 content」口径；后端 content 上限 500，文本限 200 不会超）
     composeContent(item) {
       const text = (item.text || '').trim()
@@ -307,12 +415,22 @@ export default {
         uni.showToast({ title: '还有商品未评分', icon: 'none' })
         return
       }
+      // 有图片还在上传时禁止提交（与 Web 版"图片还在上传，请稍候"同口径）
+      if (this.uploadingKey) {
+        uni.showToast({ title: '图片还在上传，请稍候', icon: 'none' })
+        return
+      }
+      if (this.pendingItems.some(item => item.images.some(x => x.failed))) {
+        uni.showToast({ title: '有图片上传失败，请删除后重试', icon: 'none' })
+        return
+      }
       this.setBusy(key, true)
       const targets = this.pendingItems.slice()
       const failed = []
       // 顺序逐条提交：后端无批量端点；成功一条转只读，失败的保留可重试
       const chain = targets.reduce((promise, item) => {
         return promise.then(() => {
+          const uploaded = item.images.filter(x => x.path && !x.failed).map(x => x.path)
           return http.post('/api/dish-evaluation', {
             orderId: this.order.id,
             dishId: item.dishId,
@@ -320,10 +438,13 @@ export default {
             dishName: item.name,
             starRating: item.star,
             content: this.composeContent(item),
+            // images 后端为 String（存 JSON 数组），与 Web 版 my-evaluations.html 口径一致
+            images: uploaded.length ? JSON.stringify(uploaded) : null,
             anonymous: this.anonymous ? 1 : 0
           }, { silent: true }).then(() => {
             item.submitted = true
             item.content = this.composeContent(item)
+            item.doneImages = uploaded
             item.auditText = '审核中'
           }).catch(() => {
             failed.push(item.name)
@@ -508,6 +629,75 @@ export default {
   margin-top: 8rpx;
   font-size: 24rpx;
   color: var(--color-danger);
+}
+
+/* ---- 评价图片 ---- */
+.imgs {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 14rpx;
+}
+
+.imgs__cell {
+  position: relative;
+  margin: 0 14rpx 14rpx 0;
+}
+
+.imgs__item {
+  width: 152rpx;
+  height: 152rpx;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+}
+
+.imgs__mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-size: 22rpx;
+  color: var(--color-primary-text);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.imgs__mask--fail {
+  color: var(--color-danger-text);
+}
+
+.imgs__del {
+  position: absolute;
+  top: -14rpx;
+  right: -14rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 38rpx;
+  text-align: center;
+  border-radius: var(--radius-round);
+  font-size: 28rpx;
+  color: var(--color-primary-text);
+  background: var(--color-danger);
+}
+
+.imgs__add {
+  width: 152rpx;
+  height: 152rpx;
+  line-height: 148rpx;
+  text-align: center;
+  border: 1rpx dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  font-size: 48rpx;
+  color: var(--color-text-hint);
+  background: var(--bg-input);
+  box-sizing: border-box;
+}
+
+.imgs__add--off {
+  opacity: 0.5;
 }
 
 .done {

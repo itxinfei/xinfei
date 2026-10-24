@@ -23,6 +23,15 @@
         <text class="row__label">开票金额</text>
         <text class="row__value row__price">¥{{ fmtAmount(item.amount) }}</text>
       </view>
+      <!-- 已开具且有票面文件：下载 PDF 后打开（发票文件落 private 目录，须带 X-Auth-Token 走 /common/download） -->
+      <view v-if="Number(item.status) === 2 && item.invoiceUrl" class="card__ops">
+        <text
+          class="card__view"
+          :class="{ 'card__view--off': openingId }"
+          hover-class="hover-press"
+          @tap.stop="viewInvoice(item)"
+        >{{ openingId === item.id ? '打开中…' : '查看发票' }}</text>
+      </view>
     </view>
 
     <view v-if="listError" class="list__error">
@@ -36,7 +45,7 @@
 </template>
 
 <script>
-import { http, listState, fmtAmount } from '@xinfei/mini-shared'
+import { http, listState, fmtAmount, fullImage, AUTH_HEADER, STORAGE_KEYS, read } from '@xinfei/mini-shared'
 
 const STATUS_TEXT = { 0: '待申请', 1: '已申请，待开具', 2: '已开具', 3: '已作废' }
 
@@ -61,7 +70,8 @@ export default {
       page: 1,
       pageSize: 10,
       hasMore: true,
-      loading: false
+      loading: false,
+      openingId: null
     })
   },
   onLoad() {
@@ -116,6 +126,35 @@ export default {
         + '&orderNo=' + encodeURIComponent(item.orderNo || '')
         + '&amount=' + encodeURIComponent(item.amount != null ? item.amount : '')
       uni.navigateTo({ url: '/pages/invoice/invoice?' + q })
+    },
+    // 已开具（status=2，InvoiceRecord.STATUS_ISSUED）且有 invoiceUrl：带头下载 PDF 再 openDocument 打开
+    viewInvoice(item) {
+      if (this.openingId) return
+      if (!item.invoiceUrl) return
+      this.openingId = item.id
+      const header = {}
+      const token = read(STORAGE_KEYS.authToken)
+      if (token) header[AUTH_HEADER] = token
+      uni.downloadFile({
+        url: fullImage(item.invoiceUrl),   // private 相对路径 → /common/download?name=…
+        header,
+        success: res => {
+          if (res.statusCode === 200) {
+            uni.openDocument({
+              filePath: res.tempFilePath,
+              fileType: 'pdf',
+              showMenu: true,
+              fail: () => uni.showToast({ title: '发票文件打开失败', icon: 'none' })
+            })
+          } else if (res.statusCode === 401) {
+            uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+          } else {
+            uni.showToast({ title: '发票下载失败', icon: 'none' })
+          }
+        },
+        fail: () => uni.showToast({ title: '网络不可用，发票下载失败', icon: 'none' }),
+        complete: () => { this.openingId = null }
+      })
     }
   }
 }
@@ -204,6 +243,26 @@ export default {
 .row__price {
   font-weight: 600;
   color: var(--color-price);
+}
+
+.card__ops {
+  display: flex;
+  justify-content: center;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-light);
+}
+
+.card__view {
+  padding: 10rpx 48rpx;
+  border-radius: var(--radius-round);
+  font-size: 26rpx;
+  color: var(--color-primary-text-strong);
+  border: 1rpx solid var(--color-primary-text-strong);
+}
+
+.card__view--off {
+  opacity: 0.5;
 }
 
 /* ---- 列表状态 ---- */

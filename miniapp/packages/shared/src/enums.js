@@ -106,11 +106,16 @@ export function sourceText(source) {
 }
 
 /**
- * 图片地址归一：后端存的是相对路径（如 /images/xxx.jpg），小程序 <image> 必须绝对地址。
- * 与 shared/js/img-path.js 同一语义。
+ * 图片地址归一：后端存的是相对路径（如 /images/xxx.jpg、public/user/evaluation/…），小程序 <image> 必须绝对地址。
+ * 与 shared/js/img-path.js 同一权限语义：public/ 前缀免登录静态直出（/uploads/…）；
+ * private/ 与旧相对路径走 /common/download 鉴权访问（<image> 无法带 X-Auth-Token 头，
+ * private 图需先 uni.downloadFile 带头下载成本地路径再展示）。
  */
 export function fullImage(path) {
   if (!path) return '';
   if (/^(https?:)?\/\//.test(path) || path.indexOf('data:') === 0) return path;
-  return getBaseUrl() + (path.charAt(0) === '/' ? path : '/' + path);
+  if (path.indexOf('wxfile://') === 0 || path.indexOf('file://') === 0) return path;
+  if (path.indexOf('public/') === 0) return getBaseUrl() + '/uploads/' + path;
+  if (path.charAt(0) === '/') return getBaseUrl() + path;
+  return getBaseUrl() + '/common/download?name=' + encodeURIComponent(path);
 }

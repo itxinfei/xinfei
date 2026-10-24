@@ -134,6 +134,48 @@ export function request(opts) {
   });
 }
 
+/**
+ * uni.uploadFile 版的统一上传：走 /common/upload，登录态与 CSRF 头同 request 规则
+ * （uni.uploadFile 不经过 request 封装，必须自己补 X-Auth-Token / X-CSRF-Token）。
+ * 后端 /common/upload 已兼容 token 通道（CommonController hasEmployeePrincipal/hasUserPrincipal）。
+ *
+ * @param {Object} opts
+ * @param {string} opts.filePath  本地临时文件路径（uni.chooseImage 的 tempFilePaths[i]）
+ * @param {string} [opts.bizType] 业务目录（ImageStoragePathResolver：avatar/evaluation/chat 等）
+ * @param {string} [opts.name='file'] 文件表单字段名，后端固定 file
+ * @returns {Promise<string>} resolve 上传后的服务器相对路径（R.data）
+ */
+export function uploadFile(opts) {
+  const headers = {};
+  const authToken = read(STORAGE_KEYS.authToken);
+  if (authToken) headers[AUTH_HEADER] = authToken;
+  const csrf = read(STORAGE_KEYS.csrfToken);
+  if (csrf) headers[CSRF_HEADER] = csrf;
+
+  return new Promise((resolve, reject) => {
+    uni.uploadFile({
+      url: getBaseUrl() + '/common/upload',
+      filePath: opts.filePath,
+      name: opts.name || 'file',
+      formData: opts.bizType ? { bizType: opts.bizType } : {},
+      header: headers,
+      success: res => {
+        let body = null;
+        try { body = JSON.parse(res.data); } catch (e) { /* 非 JSON 响应按失败处理 */ }
+        if (res.statusCode === 401 || (body && body.msg === 'NOTLOGIN')) {
+          toLogin();
+          return reject(Object.assign(new Error('NOTLOGIN'), { notLogin: true }));
+        }
+        if (res.statusCode !== 200 || !body || body.code !== 1 || !body.data) {
+          return reject(new Error((body && body.msg) || '上传失败，请重试'));
+        }
+        resolve(body.data);
+      },
+      fail: () => reject(new Error('网络不可用，上传失败'))
+    });
+  });
+}
+
 export const http = {
   get: (url, data, extra) => request(Object.assign({ url, method: 'GET', data }, extra)),
   post: (url, data, extra) => request(Object.assign({ url, method: 'POST', data }, extra)),

@@ -297,6 +297,99 @@ class AuthTokenChannelTest {
         assertEquals(401, exchange("/user/info", HttpMethod.GET, token).getStatusCode().value());
     }
 
+    // ---------- 上传/下载 token 通道（2026-10-24：CommonController 兼容 token 登录态） ----------
+
+    @Test
+    void userTokenGrantsUploadWithoutSession() {
+        String token = authTokenService.issue(AuthTokenService.TYPE_USER, USER_ID, 999L, null);
+        assertNotNull(token);
+        org.springframework.util.MultiValueMap<String, Object> body =
+                new org.springframework.util.LinkedMultiValueMap<>();
+        // 1x1 PNG（真实魔数，通过 CommonController 的扩展名+魔数双重校验）
+        byte[] png = java.util.Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+        body.add("file", new org.springframework.core.io.ByteArrayResource(png) {
+            @Override
+            public String getFilename() {
+                return "token-upload-test.png";
+            }
+        });
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.set(AuthTokenService.HEADER_NAME, token);
+        ResponseEntity<String> resp = rest.postForEntity(base + "/common/upload",
+                new HttpEntity<>(body, headers), String.class);
+        assertEquals(200, resp.getStatusCode().value());
+        org.junit.jupiter.api.Assertions.assertTrue(resp.getBody().contains("\"code\":1"),
+                "token 通道上传应成功: " + resp.getBody());
+
+        // 同一文件匿名上传必须被拒（NOTLOGIN，防口径放宽）
+        org.springframework.util.MultiValueMap<String, Object> anonBody =
+                new org.springframework.util.LinkedMultiValueMap<>();
+        anonBody.add("file", new org.springframework.core.io.ByteArrayResource(png) {
+            @Override
+            public String getFilename() {
+                return "token-upload-test.png";
+            }
+        });
+        ResponseEntity<String> anonResp = rest.postForEntity(base + "/common/upload",
+                new HttpEntity<>(anonBody, headers_noToken()), String.class);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                anonResp.getBody() != null && anonResp.getBody().contains("NOTLOGIN"),
+                "匿名上传必须被拒: " + anonResp.getBody());
+    }
+
+    @Test
+    void userTokenGrantsPrivateDownloadWithoutSession() {
+        String token = authTokenService.issue(AuthTokenService.TYPE_USER, USER_ID, 999L, null);
+        // 先经 token 通道上传一张用户侧私图，再凭 token 下载、匿名拒绝
+        org.springframework.util.MultiValueMap<String, Object> body =
+                new org.springframework.util.LinkedMultiValueMap<>();
+        byte[] png = java.util.Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+        body.add("file", new org.springframework.core.io.ByteArrayResource(png) {
+            @Override
+            public String getFilename() {
+                return "token-download-test.png";
+            }
+        });
+        // bizType=avatar 落 private/user/avatar（匿名不可下载），空 bizType 会落旧公开目录导致断言失真
+        body.add("bizType", "avatar");
+        HttpHeaders uploadHeaders = new HttpHeaders();
+        uploadHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        uploadHeaders.set(AuthTokenService.HEADER_NAME, token);
+        ResponseEntity<String> uploadResp = rest.postForEntity(base + "/common/upload",
+                new HttpEntity<>(body, uploadHeaders), String.class);
+        org.junit.jupiter.api.Assertions.assertTrue(uploadResp.getBody().contains("\"code\":1"),
+                "前置上传应成功: " + uploadResp.getBody());
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("\"data\"\\s*:\\s*\"([^\"]+)\"").matcher(uploadResp.getBody());
+        org.junit.jupiter.api.Assertions.assertTrue(matcher.find(),
+                "上传响应应包含文件相对路径: " + uploadResp.getBody());
+        String relativePath = matcher.group(1);
+
+        ResponseEntity<byte[]> dlResp = rest.exchange(base + "/common/download?name=" + relativePath,
+                HttpMethod.GET, new HttpEntity<>(tokenHeaders(token)), byte[].class);
+        assertEquals(200, dlResp.getStatusCode().value(),
+                "token 通道应可下载用户私图: " + relativePath);
+
+        ResponseEntity<byte[]> anonDl = rest.exchange(base + "/common/download?name=" + relativePath,
+                HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
+        assertEquals(401, anonDl.getStatusCode().value(), "匿名下载私图必须 401");
+    }
+
+    private HttpHeaders headers_noToken() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        return headers;
+    }
+
+    private HttpHeaders tokenHeaders(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(AuthTokenService.HEADER_NAME, token);
+        return headers;
+    }
+
     // ---------- 工具方法 ----------
 
     private String issueEmployeeTokenViaLogin() {

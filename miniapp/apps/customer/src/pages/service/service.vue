@@ -35,16 +35,25 @@
               <image
                 v-if="m.messageType === 2 && m.imageUrl"
                 class="bubble__img"
-                :src="fullImage(m.imageUrl)"
+                :src="imgCache[m.imageUrl] || ''"
                 mode="aspectFill"
-                @tap="previewImage(m.imageUrl)"
+                @tap="previewImage(imgCache[m.imageUrl])"
               />
               <text v-else>{{ m.content }}</text>
             </view>
           </view>
-          <!-- 用户消息居右（小程序无图片通道，仅文本） -->
+          <!-- 用户消息居右（文本 / 图片） -->
           <view v-else class="msg msg--user">
-            <view class="bubble bubble--user"><text>{{ m.content }}</text></view>
+            <view class="bubble bubble--user">
+              <image
+                v-if="m.messageType === 2 && m.imageUrl"
+                class="bubble__img"
+                :src="imgCache[m.imageUrl] || ''"
+                mode="aspectFill"
+                @tap="previewImage(imgCache[m.imageUrl])"
+              />
+              <text v-else>{{ m.content }}</text>
+            </view>
           </view>
         </view>
 
@@ -57,6 +66,12 @@
 
       <!-- 输入栏 -->
       <view v-if="!sessionClosed" class="input-bar">
+        <text
+          class="input-bar__img"
+          :class="{ 'input-bar__img--off': sendingImage }"
+          hover-class="hover-press"
+          @tap="sendImage"
+        >图</text>
         <input
           v-model="draft"
           class="input-bar__input"
@@ -143,10 +158,28 @@
         </view>
 
         <view class="card">
+          <view class="section-title">图片凭证（选填，最多 3 张）</view>
+          <view class="imgs">
+            <view v-for="(img, ii) in complaintImages" :key="ii" class="imgs__cell">
+              <image class="imgs__item" :src="img.local" mode="aspectFill" @tap="previewImage(img.local)" />
+              <text v-if="img.uploading" class="imgs__mask">上传中</text>
+              <text v-else-if="img.failed" class="imgs__mask imgs__mask--fail">失败</text>
+              <text class="imgs__del" hover-class="hover-press" @tap.stop="complaintImages.splice(ii, 1)">×</text>
+            </view>
+            <view
+              v-if="complaintImages.length < 3"
+              class="imgs__add"
+              hover-class="hover-press"
+              @tap="chooseComplaintImage"
+            >＋</view>
+          </view>
+        </view>
+
+        <view class="card">
           <text class="btn btn--main btn--block" :class="{ 'btn--off': submitting }" hover-class="hover-press" @tap="submitComplaint">
             {{ submitting ? '提交中…' : '提交投诉' }}
           </text>
-          <view class="tipnote">我们会尽快核实并通过客服或电话与您联系。图片凭证上传通道暂未在小程序开放，如需提交图片请使用 Web 端。</view>
+          <view class="tipnote">我们会尽快核实并通过客服或电话与您联系。</view>
         </view>
       </scroll-view>
     </block>
@@ -237,9 +270,13 @@
 </template>
 
 <script>
-import { http, qs, fullImage, fmtAmount, busyLock } from '@xinfei/mini-shared'
+import { http, qs, fullImage, fmtAmount, busyLock, uploadFile, AUTH_HEADER, STORAGE_KEYS, read } from '@xinfei/mini-shared'
 
 const QUICK_QUESTIONS = ['我的订单还要多久送到？', '可以修改收货地址吗？', '餐品少送/错送怎么办？', '如何申请退款？']
+
+// /common/upload 后端约束：jpg/jpeg/png/gif、单张 ≤5MB（CommonController.upload）
+const MAX_IMG_SIZE = 5 * 1024 * 1024
+const ALLOWED_IMG_EXT = ['jpg', 'jpeg', 'png', 'gif']
 
 function pad2(n) {
   return n < 10 ? '0' + n : '' + n
@@ -266,9 +303,15 @@ export default {
       messages: [],
       draft: '',
       sending: false,
+      sendingImage: false,
       chatAnchor: '',
+      // 消息图片缓存：chat 业务图落 private 目录，<image> 无法带 X-Auth-Token 头，
+      // 须先 uni.downloadFile 带头下载成本地路径再展示/预览（键=服务器相对路径，值=本地临时路径）
+      imgCache: {},
+      imgFetching: {},
       // ---- 投诉表单 ----
       form: { complaintType: 1, title: '', content: '', orderId: null, orderNumber: '' },
+      complaintImages: [],   // [{ local, path(上传后), uploading, failed }]，最多 3 张（与 Web 版口径一致）
       submitting: false,
       complaintTypes: [
         { v: 1, label: '食品质量', glyph: '食' },
@@ -332,7 +375,10 @@ export default {
       return String(t).replace('T', ' ').slice(0, 16)
     },
     previewImage(url) {
-      if (url) uni.previewImage({ urls: [fullImage(url)] })
+      // 本地临时路径（wxfile:// 等）不经 fullImage 拼 baseURL，远端相对路径才拼
+      if (!url) return
+      const isLocal = /^(https?:)?\/\//.test(url) || url.indexOf('wxfile://') === 0 || url.indexOf('file://') === 0 || url.indexOf('data:') === 0
+      uni.previewImage({ urls: [isLocal ? url : fullImage(url)] })
     },
 
     // ---------- 会话初始化 ----------
@@ -397,9 +443,33 @@ export default {
     loadMessages() {
       return http.get('/cs/portal/message/list/' + this.activeSession.id, null, { silent: true }).then(list => {
         this.messages = Array.isArray(list) ? list : []
+        this.warmMessageImages()
         this.scrollBottom()
         // 进入/查看时把客服未读标记已读
         http.post('/cs/portal/message/read/' + this.activeSession.id, null, { silent: true }).catch(() => {})
+      })
+    },
+    // 消息里的图片落 private 目录，<image> 带不了 X-Auth-Token：带头下载到本地后经 imgCache 展示
+    warmMessageImages() {
+      this.messages.forEach(m => {
+        if (m.messageType === 2 && m.imageUrl && !this.imgCache[m.imageUrl]) this.fetchImage(m.imageUrl)
+      })
+    },
+    fetchImage(url) {
+      if (this.imgCache[url] || this.imgFetching[url]) return
+      this.imgFetching[url] = true
+      const header = {}
+      const token = read(STORAGE_KEYS.authToken)
+      if (token) header[AUTH_HEADER] = token
+      uni.downloadFile({
+        url: fullImage(url),   // private 相对路径 → /common/download?name=…
+        header,
+        success: res => {
+          if (res.statusCode === 200) this.imgCache[url] = res.tempFilePath
+        },
+        complete: () => {
+          this.imgFetching[url] = false
+        }
       })
     },
     pollMessages() {
@@ -423,6 +493,7 @@ export default {
           const curKey = cur ? (cur.id != null ? cur.id : (cur.updateTime || '')) : null
           if (lastKey !== curKey || next.length !== this.messages.length) {
             this.messages = next
+            this.warmMessageImages()
             this.scrollBottom()
             if (last && last.senderType === 2 && last.isRead === 0) {
               http.post('/cs/portal/message/read/' + this.activeSession.id, null, { silent: true }).catch(() => {})
@@ -471,7 +542,7 @@ export default {
       const text = (this.draft || '').trim()
       if (!text || this.sending || !this.activeSession) return
       this.sending = true
-      // messageType：1-文本 2-图片（小程序无上传通道，仅文本）
+      // messageType：1-文本 2-图片（Controller 契约，图片消息内容走 imageUrl）
       http.post('/cs/portal/message/send', {
         sessionId: this.activeSession.id,
         messageType: 1,
@@ -484,6 +555,51 @@ export default {
         uni.showToast({ title: (err && err.message) || '发送失败', icon: 'none' })
       }).then(() => {
         this.sending = false
+      })
+    },
+    // 发送图片消息：uni.chooseImage → POST /common/upload（bizType=chat）→ POST /message/send（messageType=2，imageUrl=相对路径）
+    sendImage() {
+      if (this.sendingImage || this.sending) return
+      if (!this.activeSession || this.sessionClosed) return
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        success: res => {
+          const file = res.tempFiles && res.tempFiles[0]
+          const path = file && (file.path || res.tempFilePaths[0])
+          if (!path) return
+          if (file && file.size > MAX_IMG_SIZE) {
+            uni.showToast({ title: '图片大小不能超过 5MB', icon: 'none' })
+            return
+          }
+          const ext = path.indexOf('.') >= 0 ? path.split('.').pop().toLowerCase() : ''
+          if (ALLOWED_IMG_EXT.indexOf(ext) === -1) {
+            uni.showToast({ title: '仅支持 JPG / PNG / GIF 格式', icon: 'none' })
+            return
+          }
+          this.doSendImage(path)
+        }
+      })
+    },
+    doSendImage(localPath) {
+      this.sendingImage = true
+      uni.showLoading({ title: '发送中', mask: true })
+      uploadFile({ filePath: localPath, bizType: 'chat' }).then(remote => {
+        return http.post('/cs/portal/message/send', {
+          sessionId: this.activeSession.id,
+          messageType: 2,
+          imageUrl: remote
+        }, { silent: true }).then(msg => {
+          // 刚发出的图本地已有，直接种缓存，免去一次回环下载
+          if (msg && msg.imageUrl) this.imgCache[msg.imageUrl] = localPath
+          return this.loadMessages()
+        })
+      }).catch(err => {
+        if (err && err.notLogin) return
+        uni.showToast({ title: (err && err.message) || '图片发送失败', icon: 'none' })
+      }).then(() => {
+        uni.hideLoading()
+        this.sendingImage = false
       })
     },
 
@@ -508,6 +624,49 @@ export default {
       this.form.orderNumber = o.number
       this.orderPickShow = false
     },
+    // 投诉凭证图：选图即传（bizType=chat，与 Web 版口径一致），提交时拼逗号分隔的 imageUrls
+    chooseComplaintImage() {
+      if (this.submitting) return
+      const remain = 3 - this.complaintImages.length
+      if (remain <= 0) return
+      uni.chooseImage({
+        count: remain,
+        sizeType: ['compressed'],
+        success: res => {
+          const paths = res.tempFilePaths || []
+          const files = res.tempFiles || []
+          let bad = ''
+          for (let i = 0; i < paths.length; i++) {
+            const size = files[i] && files[i].size
+            const ext = paths[i].indexOf('.') >= 0 ? paths[i].split('.').pop().toLowerCase() : ''
+            if (size > MAX_IMG_SIZE) { bad = '图片大小不能超过 5MB'; break }
+            if (ALLOWED_IMG_EXT.indexOf(ext) === -1) { bad = '仅支持 JPG / PNG / GIF 格式'; break }
+          }
+          if (bad) {
+            uni.showToast({ title: bad, icon: 'none' })
+            return
+          }
+          if (!paths.length) return
+          // 顺序逐张上传，本地缩略图先行展示，失败标记可删除重选
+          paths.reduce((promise, path) => {
+            return promise.then(() => {
+              const entry = { local: path, path: '', uploading: true, failed: false }
+              this.complaintImages.push(entry)
+              return uploadFile({ filePath: path, bizType: 'chat' })
+                .then(remote => {
+                  entry.path = remote
+                  entry.uploading = false
+                })
+                .catch(err => {
+                  if (err && err.notLogin) throw err
+                  entry.uploading = false
+                  entry.failed = true
+                })
+            })
+          }, Promise.resolve()).catch(() => {})
+        }
+      })
+    },
     submitComplaint() {
       if (this.submitting) return
       const content = (this.form.content || '').trim()
@@ -515,12 +674,23 @@ export default {
         uni.showToast({ title: '请至少填写5个字的详细描述', icon: 'none' })
         return
       }
+      // 与 Web 版同口径：上传中不让提交，失败图须先删除
+      if (this.complaintImages.some(x => x.uploading)) {
+        uni.showToast({ title: '图片还在上传，请稍候', icon: 'none' })
+        return
+      }
+      if (this.complaintImages.some(x => x.failed)) {
+        uni.showToast({ title: '有图片上传失败，请删除后重试', icon: 'none' })
+        return
+      }
       this.submitting = true
-      // imageUrls 小程序端固定不传：/common/upload 只认 Session 登录态，token 通道待后端改造
+      const urls = this.complaintImages.filter(x => x.path).map(x => x.path)
       const payload = {
         complaintType: this.form.complaintType,
         title: (this.form.title || '').trim() || '投诉',
-        content: content
+        content: content,
+        // Controller 契约：imageUrls 为逗号分隔的相对路径串（与 Web 版 urls.join(',') 一致）
+        imageUrls: urls.length ? urls.join(',') : null
       }
       if (this.form.orderId) {
         payload.orderId = this.form.orderId
@@ -529,6 +699,7 @@ export default {
       http.post('/cs/portal/complaint/create', payload, { silent: true }).then(() => {
         uni.showToast({ title: '投诉已提交，请留意处理进展', icon: 'none' })
         this.form = { complaintType: 1, title: '', content: '', orderId: null, orderNumber: '' }
+        this.complaintImages = []
         this.view = 'chat'
       }).catch(err => {
         if (err && err.notLogin) return
@@ -825,6 +996,24 @@ export default {
   color: var(--color-text-disabled);
 }
 
+/* 输入栏图片按钮 */
+.input-bar__img {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  margin-right: 16rpx;
+  text-align: center;
+  border-radius: var(--radius-round);
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  background: var(--bg-input);
+}
+
+.input-bar__img--off {
+  opacity: 0.5;
+}
+
 .input-bar__send {
   margin-left: 20rpx;
   padding: 14rpx 36rpx;
@@ -995,6 +1184,70 @@ export default {
   font-size: 22rpx;
   line-height: 34rpx;
   color: var(--color-text-hint);
+}
+
+/* ---- 投诉凭证图片 ---- */
+.imgs {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.imgs__cell {
+  position: relative;
+  margin: 0 14rpx 14rpx 0;
+}
+
+.imgs__item {
+  width: 152rpx;
+  height: 152rpx;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+}
+
+.imgs__mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-size: 22rpx;
+  color: var(--color-primary-text);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.imgs__mask--fail {
+  color: var(--color-danger-text);
+}
+
+.imgs__del {
+  position: absolute;
+  top: -14rpx;
+  right: -14rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 38rpx;
+  text-align: center;
+  border-radius: var(--radius-round);
+  font-size: 28rpx;
+  color: var(--color-primary-text);
+  background: var(--color-danger);
+}
+
+.imgs__add {
+  width: 152rpx;
+  height: 152rpx;
+  line-height: 148rpx;
+  text-align: center;
+  border: 1rpx dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  font-size: 48rpx;
+  color: var(--color-text-hint);
+  background: var(--bg-input);
+  box-sizing: border-box;
 }
 
 /* ---- 底部弹层 ---- */

@@ -18,6 +18,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -92,11 +93,30 @@ public class CommonController {
      * 检查登录态（文件上传/下载需要登录）
      */
     private R<String> checkLogin(HttpServletRequest request) {
-        if (request.getSession().getAttribute("employee") == null
-                && request.getSession().getAttribute("user") == null) {
+        if (!hasEmployeePrincipal(request) && !hasUserPrincipal(request)) {
             return R.error("NOTLOGIN");
         }
         return null; // 已登录
+    }
+
+    /**
+     * 员工登录态：Session 通道（session.employee）或 token 通道
+     * （LoginCheckFilter 按 X-Auth-Token 注入的 request 属性 employeeId）任一命中。
+     */
+    private boolean hasEmployeePrincipal(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return (session != null && session.getAttribute("employee") != null)
+                || request.getAttribute("employeeId") != null;
+    }
+
+    /**
+     * 顾客登录态：Session 通道（session.user）或 token 通道
+     * （LoginCheckFilter 注入的 request 属性 userId）任一命中。
+     */
+    private boolean hasUserPrincipal(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return (session != null && session.getAttribute("user") != null)
+                || request.getAttribute("userId") != null;
     }
 
     /**
@@ -150,11 +170,12 @@ public class CommonController {
         //使用UUID重新生成文件名，防止文件名称重复造成文件覆盖
         String fileName = UUID.randomUUID().toString() + suffix;
 
-        // 来源段只信 session（employee→admin，user→user），防前端伪造 bizType 越权落 public/admin
+        // 来源段只信服务端登录态（employee→admin，user→user），防前端伪造 bizType 越权落 public/admin；
+        // Session 与 token 通道同权判定（hasEmployeePrincipal/hasUserPrincipal）
         String sessionRole;
-        if (request.getSession().getAttribute("employee") != null) {
+        if (hasEmployeePrincipal(request)) {
             sessionRole = "admin";
-        } else if (request.getSession().getAttribute("user") != null) {
+        } else if (hasUserPrincipal(request)) {
             sessionRole = "user";
         } else {
             return R.error("NOTLOGIN");
@@ -334,8 +355,8 @@ public class CommonController {
      * @return true 放行；false 拒绝（调用方写 401 NOTLOGIN）
      */
     private boolean authorizeDownload(String canonicalRelativePath, HttpServletRequest request) {
-        boolean hasEmployee = request.getSession().getAttribute("employee") != null;
-        boolean hasUser = request.getSession().getAttribute("user") != null;
+        boolean hasEmployee = hasEmployeePrincipal(request);
+        boolean hasUser = hasUserPrincipal(request);
         if (com.xinfei.utils.ImageStoragePathResolver.isPublicPath(canonicalRelativePath)) {
             return true;
         }

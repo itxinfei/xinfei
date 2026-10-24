@@ -53,6 +53,15 @@
           <view v-if="record.title" class="row"><text class="row__label">抬头</text><text class="row__value">{{ record.title }}</text></view>
           <view v-if="record.amount" class="row"><text class="row__label">开票金额</text><text class="row__value">¥{{ fmtAmount(record.amount) }}</text></view>
           <view v-if="record.applyTime" class="row"><text class="row__label">申请时间</text><text class="row__value">{{ fmtTime(record.applyTime) }}</text></view>
+          <!-- 已开具（status=2）且有票面文件：下载 PDF 后打开（与 Web 版 invoice.html「查看电子发票」同口径） -->
+          <view v-if="Number(record.status) === 2 && record.invoiceUrl" class="rec-ops">
+            <text
+              class="btn btn--main"
+              :class="{ 'btn--off': busy('view') }"
+              hover-class="hover-press"
+              @tap="viewInvoice"
+            >{{ busy('view') ? '打开中…' : '查看电子发票' }}</text>
+          </view>
           <!-- 已作废：允许重新申请（后端仅拦截非作废记录） -->
           <view v-if="record.status === 3" class="rec-ops">
             <text class="btn btn--main" hover-class="hover-press" @tap="reapply">重新申请开票</text>
@@ -132,7 +141,7 @@
 </template>
 
 <script>
-import { http, busyLock, fmtAmount } from '@xinfei/mini-shared'
+import { http, busyLock, fmtAmount, fullImage, AUTH_HEADER, STORAGE_KEYS, read } from '@xinfei/mini-shared'
 
 const STATUS_TEXT = { 0: '待申请', 1: '已申请，待开具', 2: '已开具', 3: '已作废' }
 
@@ -348,6 +357,40 @@ export default {
     // 已作废 → 回到抬头选择/申请流程（后端允许作废后重新申请）
     reapply() {
       this.record = null
+    },
+    // 已开具（status=2，InvoiceRecord.STATUS_ISSUED）且有 invoiceUrl：带头下载 PDF 再 openDocument 打开。
+    // 发票文件落 private 目录，<webview> 直链带不了 X-Auth-Token，必须 uni.downloadFile 带头下载
+    viewInvoice() {
+      if (this.busy('view')) return
+      const url = this.record && this.record.invoiceUrl
+      if (!url) {
+        uni.showToast({ title: '发票文件尚未上传', icon: 'none' })
+        return
+      }
+      this.setBusy('view', true)
+      const header = {}
+      const token = read(STORAGE_KEYS.authToken)
+      if (token) header[AUTH_HEADER] = token
+      uni.downloadFile({
+        url: fullImage(url),   // private 相对路径 → /common/download?name=…（Controller 对 invoice 路径按任一登录放行）
+        header,
+        success: res => {
+          if (res.statusCode === 200) {
+            uni.openDocument({
+              filePath: res.tempFilePath,
+              fileType: 'pdf',
+              showMenu: true,
+              fail: () => uni.showToast({ title: '发票文件打开失败', icon: 'none' })
+            })
+          } else if (res.statusCode === 401) {
+            uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+          } else {
+            uni.showToast({ title: '发票下载失败', icon: 'none' })
+          }
+        },
+        fail: () => uni.showToast({ title: '网络不可用，发票下载失败', icon: 'none' }),
+        complete: () => { this.setBusy('view', false) }
+      })
     }
   }
 }

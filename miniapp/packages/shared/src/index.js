@@ -1,4 +1,4 @@
-export { request, http, initRequest, qs } from './request';
+export { request, http, initRequest, qs, uploadFile } from './request';
 export { read, write, remove, clearSession } from './storage';
 export { customerAuth, employeeAuth, riderAuth, isLogged } from './auth';
 export {
