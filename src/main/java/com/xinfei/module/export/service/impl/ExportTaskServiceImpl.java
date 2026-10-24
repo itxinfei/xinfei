@@ -13,6 +13,7 @@ import com.xinfei.module.export.mapper.ExportTaskMapper;
 import com.xinfei.module.export.model.ExportTask;
 import com.xinfei.module.export.service.ExportDataService;
 import com.xinfei.module.export.service.ExportTaskService;
+import com.xinfei.module.notification.sse.EmployeeSseManager;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +67,9 @@ public class ExportTaskServiceImpl implements ExportTaskService {
 
     @Resource
     private ExportDataService exportDataService;
+
+    @Resource
+    private EmployeeSseManager employeeSseManager;
 
     @Resource
     private EmployeeService employeeService;
@@ -150,6 +154,7 @@ public class ExportTaskServiceImpl implements ExportTaskService {
             exportTaskMapper.updateById(done);
             log.info("[导出任务] 完成: id={}, type={}, file={}, size={}B",
                     taskId, task.getTaskType(), file, bytes.length);
+            notifyTerminal(task, ExportTask.STATUS_SUCCESS, done.getFileName(), null);
         } catch (Exception e) {
             // 宽异常兜底：任务失败必须落状态而不是向上抛（异步线程无接收方）
             String msg = e instanceof CustomException && e.getMessage() != null
@@ -161,6 +166,30 @@ public class ExportTaskServiceImpl implements ExportTaskService {
             failed.setErrorMsg(msg.length() > 500 ? msg.substring(0, 500) : msg);
             failed.setFinishTime(LocalDateTime.now());
             exportTaskMapper.updateById(failed);
+            notifyTerminal(task, ExportTask.STATUS_FAILED, null, msg);
+        }
+    }
+
+    /**
+     * 任务终态实时推送（O-25）：向发起员工的壳层 SSE 通道发 "export-task" 事件，
+     * 前端弹提示，无需打开导出中心轮询。推送失败只记日志，绝不影响任务状态本身。
+     */
+    private void notifyTerminal(ExportTask task, int status, String fileName, String errorMsg) {
+        if (task.getEmployeeId() == null) {
+            return;
+        }
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("taskId", task.getId());
+            payload.put("taskType", task.getTaskType());
+            payload.put("fileFormat", task.getFileFormat());
+            payload.put("status", status);
+            payload.put("fileName", fileName);
+            payload.put("errorMsg", errorMsg);
+            employeeSseManager.sendToUser(task.getEmployeeId(), "export-task", payload);
+        } catch (Exception e) {
+            // 宽异常兜底：推送通道任何问题都不反噬任务结果（离线员工下次打开导出中心仍可见终态）
+            log.warn("[导出任务] 终态推送失败: id={}, employeeId={}", task.getId(), task.getEmployeeId(), e);
         }
     }
 

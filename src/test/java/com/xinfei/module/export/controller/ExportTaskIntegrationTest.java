@@ -162,6 +162,18 @@ public class ExportTaskIntegrationTest extends BaseControllerTest {
     }
 
     @Test
+    @DisplayName("SSE 订阅端点：员工会话建立长连接（asyncStarted）")
+    void sseSubscribeStartsAsync() throws Exception {
+        MvcResult result = mockMvc.perform(get("/export/tasks/subscribe")
+                        .sessionAttr("employee", EMPLOYEE_ID)
+                        .sessionAttr("tenantId", TENANT_ID))
+                .andReturn();
+        // Spring 7 下挂起的 SseEmitter 不做 asyncDispatch（永不完成会等到超时）；
+        // 只要请求进入异步即说明端点已注册 emitter，事件投递由浏览器 E2E 覆盖
+        assertTrue(result.getRequest().isAsyncStarted(), "SSE 订阅应进入异步长连接");
+    }
+
+    @Test
     @DisplayName("API：非法类型被拒绝")
     void apiRejectsUnknownType() throws Exception {
         mockMvc.perform(withCsrfToken(mockMvc, post("/export/tasks"))

@@ -1,6 +1,7 @@
 package com.xinfei.module.export.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xinfei.common.BaseContext;
 import com.xinfei.common.R;
 import com.xinfei.common.RateLimit;
 import com.xinfei.common.annotation.RequireEmployee;
@@ -8,6 +9,7 @@ import com.xinfei.common.CustomException;
 import com.xinfei.module.export.model.ExportTask;
 import com.xinfei.module.export.service.ExportTaskService;
 import com.xinfei.module.export.task.ExportTaskRunner;
+import com.xinfei.module.notification.sse.EmployeeSseManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.annotation.Resource;
 import java.io.IOException;
@@ -57,6 +60,27 @@ public class ExportTaskController {
 
     @Resource
     private ExportTaskRunner exportTaskRunner;
+
+    @Resource
+    private EmployeeSseManager employeeSseManager;
+
+    /**
+     * 员工端导出任务实时通道（SSE，O-25）。
+     * <p>壳层通过 {@code new EventSource('/export/tasks/subscribe')} 建立长连接（同源
+     * JSESSIONID 鉴权，GET 不走 CSRF），任务终态由 ExportTaskService 推送 "export-task"
+     * 事件——前端弹提示，无需打开导出中心轮询。员工与 C 端用户分属不同连接表
+     * （{@link EmployeeSseManager}），ID 数值可撞故不可共用。</p>
+     */
+    @GetMapping(path = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "导出任务SSE订阅", description = "建立SSE长连接，实时接收本人导出任务的完成/失败事件")
+    public SseEmitter subscribe() {
+        Long employeeId = BaseContext.getCurrentId();
+        if (employeeId == null) {
+            // 理论上 LoginCheckFilter 已拦截未登录请求，此处兜底避免空键污染连接表
+            throw new CustomException("用户未登录");
+        }
+        return employeeSseManager.subscribe(employeeId);
+    }
 
     /**
      * 创建导出任务（请求体 JSON：taskType / fileFormat / params{...}）。

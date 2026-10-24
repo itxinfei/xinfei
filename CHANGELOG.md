@@ -2,6 +2,15 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 导出 / 通知 | O-25 终章：员工 SSE 通道 + 导出任务完成实时推送
+- **EmployeeSseManager**（notification/sse）：员工端 SSE 连接管理器，与 C 端 `SseEmitterManager` 刻意分开建类——员工 ID 与 C 端用户 ID 分属两表、数值可撞（员工 1 与顾客 1），共用一张 Long 键连接表会跨主体串台。语义对齐 C 端实现（多连接/终态摘除/建链 connected/心跳保活），总开关与超时/心跳配置复用 `xinfei.sse.*`。
+- **端点**：`GET /export/tasks/subscribe`（text/event-stream）——员工会话鉴权，挂在 ExportTaskController 下（/export/** 天然要求员工登录，无需改 LoginCheckFilter）。
+- **推送**：`ExportTaskServiceImpl.execute` 终态（成功/失败）向发起员工推 "export-task" 事件（taskId/taskType/fileFormat/status/fileName/errorMsg），推送失败只记日志绝不反噬任务状态。
+- **壳层客户端** `js/export-task-sse.js`：同源 EventSource（自动带 JSESSIONID），完成弹「导出任务完成：文件名」、失败弹「导出任务失败：原因」（右上角通知）；浏览器原生重连，连续 5 次失败主动放弃（防会话失效后无限重试），整页刷新自动重建。
+- 验证：`ExportTaskIntegrationTest` 8 例全绿（新增 SSE 端点 asyncStarted 冒烟）；8081 实后端浏览器实测——通道 readyState=1，提交员工数据导出后**无轮询**即时弹「导出任务完成」、非法日期构造失败即时弹「导出任务失败」。
+- 至此 O-25 全部子项完成；登记项转出：预警类信息（库存/成本）接入员工 SSE 通道（通道已就绪，缺事件源接线）。
+- 开发者：AI
+
 ## 2026-10-24 | 导出 / 工程纪律 | O-25 收尾：全站导出任务化 + 两道静态审计脚本
 - **同步导出全量任务化**：订单/菜品/员工/用户 4 个列表页的「导出Excel/PDF」由同步 blob 下载改走 `/export/tasks` 任务通道（勾选行 ids 经 params_json 透传；后端补 `TYPE_USERS` 类型分发）。V15 迁移：`export_task.params_json` 扩容 text（1000 个勾选 ID 序列化 ~8KB，varchar(1000) 容不下，与同步导出 GET URL 历史容量对齐），服务端限长校验同步放宽至 60KB 防滥用。
 - **壳层全局「导出中心」**：顶栏新增入口（弹窗组件挂壳层 Vue 应用）——列表页提交任务后无需回经营报表页即可查看/下载；导出中心补「用户数据」类型。
