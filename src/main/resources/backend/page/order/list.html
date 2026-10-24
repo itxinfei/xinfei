@@ -74,6 +74,9 @@
         <template #col-source="{ row }">
           {{ formatDiningType(row.source) }}
         </template>
+        <template #col-platformType="{ row }">
+          <el-tag :type="platformTag(row).type" size="small" effect="plain">{{ platformTag(row).label }}</el-tag>
+        </template>
         <template #col-amount="{ row }">
           <span>¥{{ formatMoney(row.amount) }}</span>
         </template>
@@ -346,6 +349,15 @@
           // 搜索配置
           searchConfig: [
             { type: 'input', field: 'number', placeholder: '请输入订单号', width: '200px' },
+            // 订单来源筛选（O-16 同屏接单）：SELF=自有单，平台单按 platform_type 过滤，空=全部
+            { type: 'select', field: 'platformType', placeholder: '全部来源', width: '130px', options: [
+              { label: '全部来源', value: '' },
+              { label: '自有', value: 'SELF' },
+              { label: '美团', value: 'MEITUAN' },
+              { label: '饿了么', value: 'ELEME' },
+              { label: '抖音', value: 'DOUYIN' },
+              { label: '京东', value: 'JD' }
+            ] },
             { type: 'date', field: 'orderTime', placeholder: '选择日期', width: '360px',
               beginField: 'beginTime', endField: 'endTime' }
           ],
@@ -363,6 +375,7 @@
             { prop: 'amount', label: '金额', slot: true, width: 110, type: 'money' },
             { prop: 'payMethod', label: '支付', width: 70, align: 'center', slot: true },
             { prop: 'source', label: '就餐', width: 70, align: 'center', slot: true },
+            { prop: 'platformType', label: '来源', width: 70, align: 'center', slot: true },
             { prop: 'tableName', label: '桌台', width: 60, align: 'center' },
             { prop: 'orderTime', label: '下单时间', width: 160, align: 'center' },
           ],
@@ -597,6 +610,18 @@
           // （OUTSIDE 为心飞原版下单写入值，DELIVERY 为加列前老数据默认值）
           const map = { DELIVERY: '外卖配送', TAKEOUT: '外卖配送', OUTSIDE: '外卖配送', EAT_IN: '堂食扫码', QUEUE: '排队', RESERVATION: '预订' }
           return map[val] || val
+        },
+        // 订单来源标签（O-16 同屏接单）：平台单按 platform_type 显示平台名，空=自有单
+        platformTag: function(row) {
+          const type = row && row.platformType
+          if (!type) return { label: '自有', type: 'info' }
+          const map = {
+            MEITUAN: { label: '美团', type: 'warning' },
+            ELEME: { label: '饿了么', type: 'primary' },
+            DOUYIN: { label: '抖音', type: 'danger' },
+            JD: { label: '京东', type: 'success' }
+          }
+          return map[type.toUpperCase()] || { label: type, type: 'info' }
         },
         // 支付方式文案（与 /api/meta/enums payMethod 字典一致：1现金/2微信/3支付宝/4银行卡/5储值/6货到付款）
         payMethodText: function(val) {

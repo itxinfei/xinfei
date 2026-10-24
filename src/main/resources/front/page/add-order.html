@@ -84,6 +84,7 @@
                     <i class="ri-map-pin-line" style="font-size:22rem;color:var(--color-success);"></i>
                     <div>
                         <div class="spt-title" style="font-weight:600;color:var(--color-success);">到店自提</div>
+                        <div class="spt-desc" v-if="shopAddress" style="font-size:12rem;color:var(--color-text-secondary);">门店地址：{{ shopAddress }}</div>
                         <div class="spt-desc" style="font-size:12rem;color:var(--color-text-secondary);">下单后到店向店员出示取餐码即可取餐，无需配送</div>
                     </div>
                 </div>
@@ -365,6 +366,7 @@
                         finishTime:'',//送达时间
                         cartData:[],
                         note:'',//备注信息
+                        shopAddress:'',//门店地址（O-08 自提提示展示；/restaurant/info 无值则留空不显示该行）
                         loading:false,
                         // 修改点(2026-09-17 UX)：下单幂等键——每次进入结算页生成一次，网络失败重试/快速双击
                         // 复用同一键交由后端幂等去重；原实现每次点击 Date.now() 生成新键，幂等机制完全失效
@@ -632,8 +634,18 @@
                     window.removeEventListener('pageshow', this.onPageShow)
                 },
                 methods:{
+                    // 门店地址（O-08）：匿名接口，无值/失败都静默——地址行仅在拿到值时渲染
+                    loadShopAddress(){
+                        fetchRestaurantInfo().then(res=>{
+                            if(res && res.code === 1 && res.data && res.data.address){
+                                this.shopAddress = res.data.address
+                            }
+                        }).catch(function(){ /* 地址缺失不阻塞结算 */ })
+                    },
                     // 会话确认有效后再启动：原 created 主体（reorderId 续付分支 / 常规初始化）
                     startAfterLogin(){
+                        // 门店地址（O-08）：自提提示展示用；静默加载，失败不影响结算主流程
+                        this.loadShopAddress()
                         // 修改点（P2-11）：解析订单列表「去支付」跳转携带的 reorderId（待付款订单 ID）
                         const reorderId = this.getUrlParam('reorderId')
                         if(reorderId){

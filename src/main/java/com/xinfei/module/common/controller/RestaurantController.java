@@ -85,7 +85,7 @@ public class RestaurantController {
 
         Map<String, Object> info = new HashMap<>();
 
-        // 门店名/Logo：tenant 表是唯一名称来源（logo 列已存在：tenant.logo，此前注释"均无 logo 列"已过时）
+        // 门店名/Logo/地址：tenant 表是唯一来源（logo/address 列均存在）
         String name = "心飞外卖";
         String logo = "images/common/logo.png";
         try {
@@ -102,6 +102,10 @@ public class RestaurantController {
                         custom = "/" + custom;
                     }
                     logo = custom;
+                }
+                // 门店地址（O-08）：无值不返回该字段，前端显示占位
+                if (tenant.getAddress() != null && !tenant.getAddress().isEmpty()) {
+                    info.put("address", tenant.getAddress());
                 }
             }
         } catch (Exception e) {

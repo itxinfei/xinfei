@@ -37,7 +37,7 @@ public interface OrderService extends IService<Orders> {
     void submitEatInOrder(Orders orders, List<OrderDetail> orderDetails);
 
     /**
-     * 后台订单分页查询，支持按订单号和时间范围筛选
+     * 后台订单分页查询，支持按订单号、时间范围与订单来源筛选
      *
      * @param page 页码
      * @param pageSize 每页条数
@@ -45,9 +45,12 @@ public interface OrderService extends IService<Orders> {
      * @param beginTime 开始时间（可选）
      * @param endTime 结束时间（可选）
      * @param status 订单状态（可选）
+     * @param platformType 订单来源（可选）：SELF=自有单（platform_type 为空），
+     *                     MEITUAN/ELEME/DOUYIN/JD=对应平台拉取单，空=全部
      * @return 分页订单列表
      */
-    Page<Orders> orderPage(int page, int pageSize, String number, String beginTime, String endTime, Integer status);
+    Page<Orders> orderPage(int page, int pageSize, String number, String beginTime, String endTime, Integer status,
+            String platformType);
 
     /**
      * 修改订单状态

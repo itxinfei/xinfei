@@ -202,6 +202,51 @@ public class OrderControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void testOrderPageFilterByPlatformType() throws Exception {
+        // O-16 同屏接单：自有单（platformType 为空）与美团平台拉取单同表，按来源筛选
+        Orders selfOrder = new Orders();
+        selfOrder.setId(997012L);
+        selfOrder.setNumber("2024003");
+        selfOrder.setStatus(2);
+        selfOrder.setAmount(new BigDecimal("30.00"));
+        selfOrder.setUserId(994001L);
+        selfOrder.setOrderTime(LocalDateTime.now());
+        orderService.save(selfOrder);
+
+        Orders mtOrder = new Orders();
+        mtOrder.setId(997013L);
+        mtOrder.setNumber("2024004");
+        mtOrder.setStatus(2);
+        mtOrder.setAmount(new BigDecimal("45.00"));
+        mtOrder.setUserId(994001L);
+        mtOrder.setOrderTime(LocalDateTime.now());
+        mtOrder.setPlatformType("MEITUAN");
+        mtOrder.setPlatformOrderId("MT-TEST-997013");
+        orderService.save(mtOrder);
+
+        // SELF：仅自有单
+        mockMvc.perform(get("/order/page")
+                .param("page", "1").param("pageSize", "10")
+                .param("platformType", "SELF")
+                .sessionAttr("employee", 1L).sessionAttr("tenantId", 999L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records[0].number").value("2024003"));
+
+        // MEITUAN：仅平台单，platformType 随行返回供前端打标
+        mockMvc.perform(get("/order/page")
+                .param("page", "1").param("pageSize", "10")
+                .param("platformType", "MEITUAN")
+                .sessionAttr("employee", 1L).sessionAttr("tenantId", 999L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records[0].number").value("2024004"))
+                .andExpect(jsonPath("$.data.records[0].platformType").value("MEITUAN"));
+    }
+
+    @Test
     void testList() throws Exception {
         Orders order = new Orders();
         order.setId(997020L);

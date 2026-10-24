@@ -39,10 +39,8 @@ public class OrderCancelledEventListener {
 
         log.info("[事件] 订单取消事件触发: orderId={}, tenantId={}, reason={}", orderId, tenantId, reason);
 
-        // TODO: 后续模块可在此处注册处理逻辑
-        // 示例：
-        // - 推荐模块：清除该订单关联的推荐缓存
-        // - 通知模块：给用户发送取消通知
-        // - 积分模块：如有积分变动需回退
+        // 事件链路骨架：业务消费方在各模块内以 @EventListener 自行订阅（与本类并列，互不影响）。
+        // 已接入：notification 模块 OrderCancelledNotifyListener（顾客站内消息 + SSE 推送）。
+        // 同步回退（库存/积分/券/秒杀名额/桌台）在 OrderStatusFlowServiceImpl 主事务内完成，不走本事件。
     }
 }

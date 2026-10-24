@@ -268,13 +268,15 @@ public class OrderController {
     @Parameter(name = "beginTime", description = "开始时间（可选）")
     @Parameter(name = "endTime", description = "结束时间（可选）")
     @Parameter(name = "status", description = "订单状态（可选，1=待付款,2=待接单/处理中,3=已接单/派送中,4=已完成,5=已取消,6=已退款）")
+    @Parameter(name = "platformType", description = "订单来源（可选）：SELF=自有单，MEITUAN/ELEME/DOUYIN/JD=平台拉取单，空=全部")
     public R<Page<Orders>> page(@RequestParam(defaultValue = "1") @Min(1) int page, @RequestParam(defaultValue =
             "10") @Min(1) @Max(100) int pageSize, @RequestParam(required = false) String number,
             @RequestParam(required = false) String beginTime, @RequestParam(required = false) String endTime,
-            @RequestParam(required = false) Integer status) {
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String platformType) {
         // 租户ID已由 LoginCheckFilter 设置到 BaseContext
         Page<Orders> pageInfo = orderService.orderPage(page, PageUtils.cap(pageSize), number, beginTime, endTime,
-                status);
+                status, platformType);
         // 脱敏：列表页手机号脱敏，保护用户隐私
         if (pageInfo.getRecords() != null) {
             for (Orders order : pageInfo.getRecords()) {

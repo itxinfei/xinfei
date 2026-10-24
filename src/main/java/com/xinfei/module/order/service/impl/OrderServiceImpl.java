@@ -1503,11 +1503,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      * @param beginTime 开始时间
      * @param endTime 结束时间
      * @param status 订单状态（可选）
+     * @param platformType 订单来源（可选）：SELF=自有单，MEITUAN/ELEME/DOUYIN/JD=平台拉取单，空=全部
      * @return 订单分页结果
      */
     @Override
     public Page<Orders> orderPage(int page, int pageSize, String number, String beginTime, String endTime,
-            Integer status) {
+            Integer status, String platformType) {
         Page<Orders> pageInfo = PageUtils.of(page, pageSize);
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
 
@@ -1519,6 +1520,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
         queryWrapper.like(StringUtils.isNotBlank(number), Orders::getNumber, number);
         queryWrapper.eq(status != null, Orders::getStatus, status);
+
+        // 订单来源筛选（O-16 同屏接单）：SELF=自有单（平台拉取单 platform_type 非空），空=自有与平台单混合
+        if (StringUtils.isNotBlank(platformType)) {
+            if ("SELF".equalsIgnoreCase(platformType)) {
+                queryWrapper.isNull(Orders::getPlatformType);
+            } else {
+                queryWrapper.eq(Orders::getPlatformType, platformType.toUpperCase());
+            }
+        }
 
         if (StringUtils.isNotBlank(beginTime)) {
             queryWrapper.ge(Orders::getOrderTime, beginTime);
