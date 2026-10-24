@@ -1,6 +1,6 @@
 # UI 设计（设计系统与各端规范）
 
-> 版本口径：2026-10-24（第 2 版，补充布局系统 / 交互规范 / 高频页交互模式）。隶属 [../需求文档.md](../需求文档.md) 需求文档集。契约级细节以 [../Element-Plus迁移计划.md](../Element-Plus迁移计划.md)、`src/main/resources/shared/styles/tokens.css`、`backend/js/components-v3.js` 源码与 `miniapp/README.md` 为唯一事实来源；本文是设计摘要 + 指向。
+> 版本口径：2026-10-24（第 2 版，补充布局系统 / 交互规范 / 高频页交互模式）。隶属 [./PRD.md](./PRD.md) 需求文档集。契约级细节以 [../Element-Plus迁移计划.md](../Element-Plus迁移计划.md)、`src/main/resources/shared/styles/tokens.css`、`backend/js/components-v3.js` 源码与 `miniapp/README.md` 为唯一事实来源；本文是设计摘要 + 指向。
 >
 > ⚠ 历史文档口径提醒：[../后台页面清单.md](../后台页面清单.md) §7–§9 是 2026-08 的实用化规划与提示词模板，仅作设计意图参考、不作为现状证据；其中与现行规范冲突处（典型如「金额/数字列右对齐」）**一律以现行规范为准**——2026-09-01 起全站表头与内容一律居中（AGENTS.md「crud-table 列对齐规范」）。
 
