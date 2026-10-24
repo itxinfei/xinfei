@@ -2,6 +2,56 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 会员 / 支付 / 营销 / 小程序 | 付费券包（对标 O-18 一期：打包售卖 + 支付自动发券）
+- 数据结构（V11 迁移 + schema-member 夹具同步）：`coupon_package`（名称/售价/面值合计/状态/排序）+ `coupon_package_item`（包内券模板，一期每模板限一张）+ `coupon_package_order`（购买单，orderNo 唯一，状态 0 待支付/1 已支付已发券/2 已关闭）。
+- 后端：`CouponPackageService`（adminPage/saveWithItems 含同模板重复拒绝/上下架/删除、listPublished、createOrder 幂等复用待支付单、deliverPaid CAS+拆包发券）；管理端 `/coupon-package` CRUD；顾客端 `/api/coupon-package`（list 匿名/buy/my）；支付走新 `CouponPackagePaymentController`（`/api/payment/coupon-package/pay`，与 RechargePaymentController 同构，JSAPI openid 从登录档案取）；`PaymentOrder.BIZ_COUPON_PACKAGE` 回调分支：deliverPaid 失败抛异常回滚支付单状态供回调重试，购买单缺失/已关闭走与充值同口径的 afterCommit 自动全额退款。
+- 发券口径：复用 `claimCoupon` 内核（原子扣库存 + uk 幂等 + validDays 过期），购买者未开通会员自动开通；任一张失败整体回滚（防「付了钱只发一部分」）。
+- 管理端：`page/marketing/coupon-package.html`（列表含明细标签/编辑弹窗券模板多选/上下架/删除，口径说明文案）挂营销组菜单；`api/coupon-package.js`。
+- 小程序：优惠券页「可领取」顶部新增「超值券包」卡片区（主色渐变面卡，购买→微信 JSAPI→轮询支付单→成功后刷新）；`shared/pay.js` 新增 `payCouponPackageByWechat`（复用通用支付单轮询，mock 沙箱同契约）并加入 index 转出口。
+- 测试：`CouponPackageIntegrationTest` 3 例（全链建包→购买→回调发券→幂等重放不双发；同模板重复拒绝+下架不可买；管理端分页明细回填+下架后顾客端不可见）；shared 9 例回归、`pnpm build:customer` 通过。期间确认 MockMvc 上下文 LoginCheckFilter 不生效为项目既有测试语义（顾客身份测试需 setUp 直设 BaseContext），已在测试注释注明。
+- 未做（登记）：权益卡形态、H5 券包入口、储值渠道购买券包、包内同模板多张（需放开 coupon_user 唯一索引，涉及迁移与防重领逻辑复核）。
+- 开发者：AI
+
+## 2026-10-24 | 收银 / 员工 / 后台 | 员工提成管理（对标 O-17，收银提成口径）
+- 数据结构（V10 迁移 + 夹具同步）：`employee` 增 `commission_rate decimal(5,2)`（0~100%，NULL/0=不参与，更新白名单校验边界，编辑表单 el-input-number 维护）；新表 `commission_record`（员工/收银记录ID/基数/比例快照/提成额/期间 yyyy-MM/状态，`uk_commission_cashier` 唯一键幂等）。
+- 生成挂点：`CashierServiceImpl` 三条收银落库路径（普通收银 cashPayment / 桌台合并结账 cashPaymentByTable / 手工补录 saveCashierRecord）统一调 `recordCommissionQuietly`——基数=实收−找零（现金多收不计提），0 元单不落记录，比例取生成时刻快照（改比例不影响历史），宽异常兜底不阻断收银主事务。
+- 查询接口：`CommissionController` `GET /commission/summary`（按员工聚合提成额/基数/单数，时间范围筛选，提成额降序）+ `GET /commission/page`（员工/期间筛选明细分页），员工鉴权。
+- 后台页面：`page/employee/commission.html`（期间汇总卡片 + 员工汇总表 + 明细表 + 口径说明文案，照 v3 模板骨架），挂载侧边栏「员工管理」组；`api/commission.js` 封装。
+- 测试基建：新增 `TestSchemaPatcher`（com.xinfei.test）——test profile 不跑 Flyway、夹具 IF NOT EXISTS 对历史已建表不生效，首次出现「已存在表加列」漂移，用 information_schema 判缺列才 ALTER，幂等；`CommissionCashierIntegrationTest` 5 例（含找零扣减/无比例跳过/比例快照），回归 CashierControllerTest 14 + EmployeeControllerTest 19 全绿。
+- 开发者：AI
+
+## 2026-10-24 | 进销存 / 套餐 / 成本 | 供应商欠款出网 + 套餐 BOM 成本试算（PRD O-11，P1 清单收官）
+- 供应商欠款：`Supplier` 实体新增瞬态字段 `arrears`（`@TableField(exist=false)`，与 totalPurchaseAmount 同模式）；`SupplierService.fillArrears` 一次 in 查询 + 内存分组聚合（真实数据源 `supplier_settlement`：PENDING 结算单 Σ(total_amount-paid_amount)，PAID 已结清不计），挂在 `/api/inventory/supplier/page` 与既有采购汇总回填并列；供应商列表页新增「欠款」列（>0 红色金额 / 0 显示「已结清」）。
+- 套餐 BOM 成本：`GET /setmeal/{id}/cost`（员工鉴权 + 租户校验）：按套餐明细聚合 Σ(菜品单位成本 × copies)，菜品成本取成本模块 `dish_cost.total_cost`（全量一次查询做映射，避免 N+1）；返回售价/BOM 成本/毛利/毛利率/逐菜品明细（`hasCost` 标记）/`missingDishCount`/`caliber` 口径文案——缺成本记录的菜品按 0 计并显式标注，不猜成本。套餐页（combo/list.html）操作列新增「成本」按钮 + 只读试算弹窗（摘要四格 + 缺成本告警条 + 明细表 + 口径说明），actions-width 180→300。
+- 评分明确不做（诚实口径）：库内无供应商评分数据源，不造近似评分；待有真实评价数据（收货异常率等）再立项。
+- 测试：新增 `SupplierArrearsSetmealCostTest` 2 例（欠款聚合含 PAID 排除与无结算单归零；BOM 成本含缺成本按 0 计、利润 66.7%、missingDishCount 标注），实测全绿。
+- 开发者：AI
+
+## 2026-10-24 | 小程序顾客端 | 预约配送时间（PRD O-07）
+- 结算页配送模式新增「期望送达」卡（行内展开，复用券面板交互模式）：默认「尽快送达 · 预计 HH:MM」（进页按 now+40min 计算一次）；可选今天/明天/后天 × 四时段（早餐 07:30-09:00 / 午餐 11:30-12:30 / 下午茶 14:00-16:00 / 晚餐 17:30-19:00，与 H5 `scheduleTimeSlots` 同口径同顺序），「尽快送达」仅今天可选，切天时段越界自动回落。
+- 提交透传 `expectDeliveryTime`（后端 `/order/submit` 既有透传，落 `orders.expect_delivery_time`，骑手任务 VO 已回显）：立即=`HH:MM 尽快送达`、预约=`yyyy-MM-dd HH:mm-HH:mm`，两种格式与 H5 完全一致；自提模式不显示该卡、传 null。样式全走设计令牌。
+- 验证：`pnpm build:customer`（uni-app mp-weixin）构建通过（同时覆盖 O-06 的结算页改动）；后端零改动。
+- 开发者：AI
+
+## 2026-10-24 | 支付 / 小程序顾客端 | 会员储值支付闭环（PRD O-06，payMethod=5 / BALANCE 渠道）
+- 后端：`PaymentController#pay` 新增 `BALANCE` 同步渠道分支（与既有 `SUBSIDY` 餐补渠道同构）：0 元单走 `completeZeroAmountPayment`；正额建 BALANCE 支付单 → `MemberRewardService#deductStoredBalance`（按 userId 原子扣余额，与收银台 payType=5 同一扣款内核，含租户防越权）→ `handlePaymentSuccess` 推进支付单 SUCCESS + 订单 1→2；扣款失败（未开通会员/余额不足）与餐补同口径保持订单待付款与支付单 PENDING，顾客可充值重试或换渠道。
+- 小程序结算页：`bootstrap` 静默拉 `/api/member/member/my-info`，余额 >0 时展示「会员储值（余额 ¥xx）」支付项（payMethod=5）；提交后 `handleBalancePay` 调 BALANCE 渠道，成功本地刷新余额展示并跳下单完成页，失败 toast 原因并引导到订单详情重试。
+- 测试：新增 `BalancePayIntegrationTest` 4 例（支付成功扣款+订单待接单+支付单 SUCCESS(BALANCE)/余额不足拒付且订单保持待付款/未开通会员拒付/支付后重复发起幂等不再扣款），实测全绿。
+- 开发者：AI
+
+## 2026-10-24 | 订单 / 通知 | 订单来源同屏标识（对标 O-16）+ 订单取消站内通知（O-15）
+- 订单来源聚合（O-16，对标美团/客如云「同屏接单」）：核实平台拉取单经 `PlatformOrderPersistServiceImpl` 已落 `orders` 表（platform_type/platform_order_id），缺的只是展示。`GET /order/page` 新增可选 `platformType` 参数（SELF=自有单即 platform_type 为空；MEITUAN/ELEME/DOUYIN/JD=平台单，空=全部），`OrderService/Impl.orderPage` 同步加参；后台 `order/list.html` 新增「来源」列（自有 info / 美团 warning / 饿了么 primary / 抖音 danger / 京东 success tag）与「全部来源」筛选下拉（select 值经 lastSearch 自动并入请求）。
+- 订单取消通知（O-15）：notification 模块新增 `OrderCancelledNotifyListener` 订阅 `OrderCancelledEvent`，向顾客消息中心（`marketing_message`，campaignId=0 系统消息）写「订单已取消」通知并对在线用户 SSE 推送；平台单（userId=0）/订单缺失跳过；异步线程手动设置并恢复 BaseContext 租户上下文（租户插件对无上下文 SQL fail-closed 注入 -1，与定时任务同口径）；common 骨架监听器的 TODO 注释更新为登记真实消费方。
+- 测试：`OrderControllerTest` 新增 `testOrderPageFilterByPlatformType`（SELF/MEITUAN 双向过滤 + platformType 回传），`OrderCancelledNotifyListenerTest` 4 例（正常落消息+SSE、平台单跳过、订单缺失跳过、空原因默认文案+租户上下文恢复）；两类共 14 例全绿（`mvn test -Dtest=...` 实测）。
+- 开发者：AI
+
+## 2026-10-24 | 公共 / 顾客端 / 小程序 | 门店地址出网（PRD O-08）+ shared 包单测（O-13）+ 需求文档集
+- 门店地址（O-08）：`/restaurant/info` 返回 `tenant.address`（并入既有 tenant 单次查询，无值不返回字段）；H5 `front/page/add-order.html` 自提提示新增「门店地址」行（`loadShopAddress` 静默加载，失败不阻塞结算）；小程序 `checkout.vue` 门店卡新增 `pickup__addr` 行与配套样式（无值不渲染）。验证：`mvn compile`（JDK 25）通过；8080 当时被 Vite dev server 占用，未做在线自测。
+- shared 单测（O-13）：新增 `miniapp/packages/shared/test/shared.test.mjs`（node:test，9 用例全过：qs 拼参、R.code=1/0 解包与 msg 透出、HTTP 422 透传、CSRF 头捕获回带、X-Auth-Token 捕获回带、401 清会话+onUnauthorized 回登录、枚举字典对齐、customerAuth.login 写缓存）；`npm test` 脚本入 package.json，包声明 `"type": "module"`；src 相对导入补 `.js` 扩展（Vite 兼容、Node 原生 ESM 可跑）。
+- 核实已修：骑手在线状态 / 门店暂停接单回显（PRD O-09）实际已由 `/rider/auth/me` 的 `status` 与 `/store/detail` 的 `pauseOrder` 回传支撑，`miniapp/README.md` §6 过时记录已更正（划线标注）。
+- 需求文档集（docs/需求文档/）：`功能调研.md` 重写为完整市场调研（2026-10-24 实时检索 + 开源竞品 + SWOT/风险）并新增 §6「成熟产品能力对标」；PRD §8.3 标记 O-08/O-09/O-13 完成、新增对标登记 O-16～O-20（订单来源聚合/员工提成/付费券包/收银离线韧性/补货预测化，均未排期）。
+- 开发者：AI
+
 ## 2026-10-22 | 小程序 / 鉴权 | 5.2 验证码迁移 Redis：HttpSession → sms:code:<phone>
 - 新增 `com.xinfei.module.user.service.SmsCodeService`：验证码存储统一入口。`save` 写 Redis 键 `sms:code:<phone>`（TTL 5 分钟，过期由 TTL 承担，替代原 session `_time` 时间戳比较）；Redis 不可用回落 HttpSession（键不变，R-01 降级口径）。`verifyAndConsume` Redis 命中常量时间比较（口径同 CsrfFilter P1-3）、通过即删（一次性使用）；未命中回落 session 原逻辑，兼容「发码时降级、校验时恢复」窗口。
 - 消费方改造：`UserController#login`、`EmployeeController#verifyForgotPasswordSmsCode`、`RiderAuthController#forgotPassword` 均改走 service；骑手/员工忘记密码与顾客登录共用 `/user/sendMsg` 下发的同一码，跨会话/跨端（小程序）可校验。提示文案三种保持不变。
