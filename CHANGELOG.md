@@ -2,6 +2,25 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-22 | 小程序 / 鉴权 | 5.2 验证码迁移 Redis：HttpSession → sms:code:<phone>
+- 新增 `com.xinfei.module.user.service.SmsCodeService`：验证码存储统一入口。`save` 写 Redis 键 `sms:code:<phone>`（TTL 5 分钟，过期由 TTL 承担，替代原 session `_time` 时间戳比较）；Redis 不可用回落 HttpSession（键不变，R-01 降级口径）。`verifyAndConsume` Redis 命中常量时间比较（口径同 CsrfFilter P1-3）、通过即删（一次性使用）；未命中回落 session 原逻辑，兼容「发码时降级、校验时恢复」窗口。
+- 消费方改造：`UserController#login`、`EmployeeController#verifyForgotPasswordSmsCode`、`RiderAuthController#forgotPassword` 均改走 service；骑手/员工忘记密码与顾客登录共用 `/user/sendMsg` 下发的同一码，跨会话/跨端（小程序）可校验。提示文案三种保持不变。
+- `UserController#sendMsg` 写码与发送失败清理改走 service；频控三层结构保留（Redis 冷却 60s → Redis 快计数 → DB 台账权威兜底），会话级 60s 冷却在 Redis 路径由跨会话冷却键覆盖。
+- 测试：`AuthTokenChannelTest` 新增 `customerSmsLoginFullChainViaToken`（发码 → Redis 取码 → 无 session 登录 → X-Auth-Token → /user/info，顾客端小程序登录链全链路打通）；`UserControllerTest` 取码改 Redis 并清理 `sms:code:*`；`RiderAuthControllerTest` setUp 清 `sms:code:*`（既有 session 造码用例经回落路径零改动兼容）。
+- 回归实测：UserControllerTest 5 + SmsAntiAbuseGuardTest 4 + AuthTokenChannelTest 10 + RiderAuthControllerTest 20 + EmployeeControllerTest 19 + EmployeeLoginSecurityTest 4 + LoginCheckFilterTest 10，共 72 例全绿。
+- 至此小程序三端（员工/骑手/顾客）登录链全部走通（5.1 Token 会话 + 5.2 验证码迁 Redis）。
+- 开发者：AI
+
+## 2026-10-22 | 小程序 / 鉴权 | 5.1 Token 会话通道：Cookie → X-Auth-Token
+- 新增 `com.xinfei.module.auth.service.AuthTokenService`：登录颁发 / 校验 / 吊销非 cookie 会话令牌（SecureRandom 256bit），载荷（主体类型/ID/租户ID/角色）存 Redis 键 `auth:token:<token>`，TTL 默认 72h（`xinfei.auth-token.ttl-hours` 可配）；Redis 降级安全（颁发失败登录不受影响、校验失败回落 401，口径同 R-01）。
+- `LoginCheckFilter` 新增 token 分支：会话三分支未命中后凭 `X-Auth-Token` 头恢复登录态（不创建 session，CSRF 既有语义不变）；员工/顾客/骑手分别写入 employeeId/userId/riderId request 属性，与 AOP 鉴权切面口径一致。
+- 三端登录下发、登出吊销：`/employee/login`+`/employee/logout`、`/user/login`+`/user/loginout`、`/api/rider/login`+`/api/rider/logout`；`/user/info`（GET/PUT）补 BaseContext 回落（token 通道无 session）。
+- 小程序侧：`packages/shared/src/request.js` 统一捕获响应头 `X-Auth-Token` 存 storage 并回带；`config.js` 注释同步。
+- 测试基建：`MockMvcFilterExclusionAutoConfiguration` 支持属性 `xinfei.test.keep-auth-filters=true` 保留过滤器链（默认行为不变）。
+- 测试：新增 `AuthTokenChannelTest`（RANDOM_PORT 真实容器，三端 9 例：登录下发/无会话访问/无效令牌 401/登出吊销）；`LoginCheckFilterTest` 补 token 分支 4 例；回归 EmployeeLoginSecurityTest + RiderAuthControllerTest + UserControllerTest 29 例全绿。
+- 边界：顾客端登录链仍依赖 5.2（验证码尚存 HttpSession）；员工端/骑手端小程序已可全链路跑通。
+- 开发者：AI
+
 ## 2026-09-28 | 骑手端 / 订单 | 修复计划 P0-6：取餐码核销（R9）
 - 新增字段 `orders.pickup_code`（`schema.sql` + 迁移参考 `db/migration/V20260928__add_order_pickup_code.sql`）：6 位数字，在**派单（`dispatchOrder`）与抢单（`grabOrder`）**时生成，保证骑手到店前门店已持有可核销的取餐码。
 - 核销：`OrderStatusFlowService.pickupRiderTask(orderId, riderId, pickupCode)` 增加取餐码入参，订单已有取餐码时**必须校验一致**方可取餐，否则抛"取餐码不正确，请向店员索取正确的取餐码"；`POST /api/rider/tasks/{id}/pickup` 新增可选参数 `pickupCode`。

@@ -7,7 +7,7 @@
 
 | 项 | 值 |
 |---|---|
-| 依赖 | `org.flywaydb:flyway-core`，版本由 Spring Boot 2.4.5 BOM 管理 = **7.1.1**（兼容 JDK 1.8 与 MySQL 8；7.x 的 MySQL 支持内置于 core，无需 `flyway-mysql`） |
+| 依赖 | 现行（Boot 4.1.1 / JDK 25）：`spring-boot-flyway` + `org.flywaydb:flyway-core` + `org.flywaydb:flyway-mysql`，版本由 Boot BOM 管理 = **Flyway 12.4.0**；Boot 4 已把 Flyway 自动配置拆到 `spring-boot-flyway`，只引 `flyway-core` 时 `spring.flyway.*` 静默失效，且 12.x 的 MySQL 支持独立于 core，必须显式引 `flyway-mysql`。历史背景：2026-10-16 首次接入时为 Boot 2.4.5 / Flyway 7.1.1 / JDK 1.8，7.x 的 MySQL 支持内置于 core、无需 `flyway-mysql`，该口径随后端升级已废止。 |
 | 脚本位置 | `src/main/resources/db/migration/`（入库；`db/` 目录整体仍被 `.gitignore` 忽略，只有 `seed-minimal.sql` 例外） |
 | 记账表 | `flyway_schema_history` |
 | 已有基线 | `V1__baseline_schema.sql`（129 张表全量表结构）、`V2__seed_minimal.sql`（租户/门店/超管最小数据） |

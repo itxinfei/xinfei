@@ -12,7 +12,8 @@
 | [项目总览.md](./项目总览.md) | 项目概览、技术栈、目录结构、构建与运行 |
 | [模块与接口.md](./模块与接口.md) | 业务模块清单、Controller 与 API 端点分组 |
 | [数据模型.md](./数据模型.md) | 持久化实体、字段约定、多租户与乐观锁策略 |
-| [后台页面清单.md](./后台页面清单.md) | 管理后台页面清单、目录结构、组件与样式规范 |
+| [后台页面清单.md](./后台页面清单.md) | 管理后台页面清单、目录结构、组件与样式规范（页面业务归属仍有效；技术栈口径以 `agents.md` 与迁移计划为准） |
+| [Element-Plus迁移计划.md](./Element-Plus迁移计划.md) | 后台 Vue3 + Element Plus 现状契约、Vue2/Vue3 与 Element UI2/EP 对照表、新页面骨架、封装规范与排查清单（AI agent 写后台页面前必读） |
 | [架构设计.md](./架构设计.md) | 分层架构、异常处理、多租户、安全、约定等关键设计决策 |
 
 ---
@@ -30,7 +31,7 @@
 ## 项目速览
 
 - **性质**: 多租户餐饮全栈系统（开源自托管，面向商家自行部署与二开）
-- **后端**: Spring Boot 2.4.5 + MyBatis-Plus 3.5.3.1 + JDK 1.8
-- **前端**: 三端免构建静态资源 —— 管理后台 Vue2 + Element-UI、用户点餐端 Vue2 + Vant、骑手端 Vant（均为原生 JS，无编译步骤）
-- **规模**: 40 个业务模块 / 109 个 Controller / 874 个 API 端点 / 129 张业务数据表（Flyway V1 基线，另有 1 张 `flyway_schema_history`）/ 80 个后台功能页（`backend/page/**/*.html`，不含 `_templates`）/ 39 个后台 API 封装（`backend/api/*.js`）
+- **后端**: Spring Boot 4.1.1 + MyBatis-Plus 3.5.17 + JDK 25（2026-10-20 从 Boot 2.4.5 / JDK 8 一步升级；详见 `agents.md` 技术栈节）
+- **前端**: 三端免构建静态资源 —— 管理后台 Vue3 + Element Plus、用户点餐端 Vue3 + Vant 4、骑手端 Vue3 + Vant 4（均为原生 JS，无编译步骤）；小程序端 `miniapp/` 为独立 uni-app pnpm 工程
+- **规模**: 40 个业务模块 / 109 个 Controller / 874 个 API 端点 / 129 张业务数据表（Flyway V1 基线，另有 1 张 `flyway_schema_history`）/ 后台 80 个业务内容页（`backend/page/**/*.html`，不含 `_templates`）+ 1 个标准模板 `page/_templates/list-page.html` + 1 个壳层 `index.html` / 后台 API 封装在 `backend/api/*.js`。前端技术栈以 `agents.md` 与 [Element-Plus迁移计划.md](./Element-Plus迁移计划.md) 为准
 - **测试**: 131 个可执行测试类（另有 1 个抽象基类 `BaseControllerTest`）、1019 个测试用例（`mvn test`，0 失败 0 跳过，含 JaCoCo 覆盖率报告）
