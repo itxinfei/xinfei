@@ -255,10 +255,11 @@
                 { id: '2-4', name: '菜品规格', url: 'page/food/spec-management.html', icon: 'ri-list-check-2' },
               ]},
 
-              /* ──3. 订单中心（6 项，合并订单管理+收银台+催菜）── */
+              /* ──3. 订单中心（合并订单管理+收银台+催菜；菜单信息架构收敛 O-21：
+                      「待处理订单」与订单明细状态筛选重复，hidden:true=不进侧边栏、仅 Ctrl+K 可检索直达）── */
               { id: '3', name: '订单中心', icon: 'ri-file-list-3-line', children: [
                 { id: '3-1', name: '订单明细', url: 'page/order/list.html', icon: 'ri-file-list-3-line' },
-                { id: '3-2', name: '待处理订单', url: 'page/order/pending-monitor.html', icon: 'ri-radar-line' },
+                { id: '3-2', name: '待处理订单', url: 'page/order/pending-monitor.html', icon: 'ri-radar-line', hidden: true },
                 { id: '3-7', name: '出餐大屏', url: 'page/kds/board.html', icon: 'ri-tv-line' },
                 { id: '3-3', name: '紧急催菜', url: 'page/urgency/urgency.html', icon: 'ri-alarm-warning-line' },
                 { id: '3-4', name: '支付管理', url: 'page/payment/order-list.html', icon: 'ri-money-dollar-circle-line' },
@@ -277,11 +278,13 @@
                 { id: '4-5', name: '团餐预订', url: 'page/dining/group-booking.html', icon: 'ri-restaurant-2-line' },
               ]},
 
-              /* ──5. 履约配送（3 项，新增骑手管理）── */
+              /* ──5. 履约配送（骑手评价/异常自财务管理挪回，O-21 归位）── */
               { id: '5', name: '履约配送', icon: 'ri-truck-line', children: [
                 { id: '5-1', name: '配送订单', url: 'page/delivery/order-list.html', icon: 'ri-map-pin-line' },
                 { id: '5-2', name: '配送范围', url: 'page/delivery/range-management.html', icon: 'ri-road-map-line' },
                 { id: '5-3', name: '骑手管理', url: 'page/delivery/rider-list.html', icon: 'ri-motorbike-line' },
+                { id: '5-4', name: '骑手评价', url: 'page/delivery/rider-evaluation.html', icon: 'ri-star-line' },
+                { id: '5-5', name: '骑手异常', url: 'page/delivery/rider-exception.html', icon: 'ri-alert-line' },
               ]},
 
               /* ──12. 外卖平台对接（3 项，原「配送平台」拆分）── */
@@ -302,7 +305,7 @@
                 { id: '10-7', name: '库存盘点', url: 'page/inventory/stock-check.html', icon: 'ri-survey-line' },
               ]},
 
-              /* ──6. 会员中心（5 项）── */
+              /* ──6. 会员中心（客服管理自系统设置挪入：顾客运营归口，O-21）── */
               { id: '6', name: '会员中心', icon: 'ri-group-line', children: [
                 { id: '6-1', name: '会员列表', url: 'page/member-center/member-list.html', icon: 'ri-user-star-line' },
                 { id: '6-2', name: '会员等级', url: 'page/member-center/level-list.html', icon: 'ri-vip-crown-line' },
@@ -310,6 +313,7 @@
                 { id: '6-4', name: '优惠券', url: 'page/member-center/coupon-list.html', icon: 'ri-coupon-line' },
                 { id: '6-5', name: '充值记录', url: 'page/member-center/recharge-list.html', icon: 'ri-bank-card-line' },
                 { id: '6-6', name: '用户管理', url: 'page/user/list.html', icon: 'ri-user-line' },
+                { id: '6-7', name: '客服管理', url: 'page/customer-service/list.html', icon: 'ri-customer-service-2-line' },
               ]},
 
               /* ──11. 营销管理（6 项，原营销活动卡片导航页只会 window.open 跳走，
@@ -335,39 +339,45 @@
                 { id: '7-8', name: '导出中心', url: 'page/export/index.html?v=20260915d', icon: 'ri-file-download-line' },
               ]},
 
-              /* ──8. 财务管理（4 项）── */
+              /* ──8. 财务管理（骑手评价/异常挪履约配送，O-21）── */
               { id: '8', name: '财务管理', icon: 'ri-wallet-3-line', children: [
                 { id: '8-1', name: '成本概览', url: 'page/cost/overview.html', icon: 'ri-pie-chart-line' },
                 { id: '8-2', name: '菜品成本', url: 'page/cost/dish-cost.html', icon: 'ri-restaurant-line' },
                 { id: '8-3', name: '提现管理', url: 'page/finance/withdrawal.html', icon: 'ri-bank-card-2-line' },
                 { id: '8-4', name: '发票管理', url: 'page/finance/invoice-list.html', icon: 'ri-receipt-line' },
                 { id: '8-5', name: '骑手提现', url: 'page/delivery/rider-withdrawal.html', icon: 'ri-bike-line' },
-                { id: '8-6', name: '骑手评价', url: 'page/delivery/rider-evaluation.html', icon: 'ri-star-line' },
-                { id: '8-7', name: '骑手异常', url: 'page/delivery/rider-exception.html', icon: 'ri-alert-line' },
               ]},
 
-              /* ──9. 系统设置（14 项，精简+合并扩展功能）── */
+              /* ──9. 系统设置（菜单信息架构收敛 O-21：员工/考勤/提成→员工考勤组，AI 三页→AI 助手组，
+                      客服→会员中心，地区管理摘除菜单——一次性数据收进系统配置，页面文件保留）── */
               { id: '9', name: '系统设置', icon: 'ri-settings-3-line', children: [
                 { id: '9-16', name: '租户管理', url: 'page/tenant/list.html?v=20260922', icon: 'ri-building-2-line', roles: ['SUPER_ADMIN'] },
                 { id: '9-17', name: '门店管理', url: 'page/store/list.html', icon: 'ri-store-line' },
                 { id: '9-18', name: '总部看板', url: 'page/store/dashboard.html', icon: 'ri-bar-chart-box-line' },
                 { id: '9-19', name: '店铺设置', url: 'page/store/shop-settings.html?v=20260930', icon: 'ri-store-2-line' },
-                { id: '9-1', name: '员工管理', url: 'page/employee/list.html?v=20260922', icon: 'ri-user-settings-line' },
+                { id: '9-9', name: '地区管理', url: 'page/region/list.html', icon: 'ri-map-2-line', hidden: true },
                 { id: '9-2', name: '角色管理', url: 'page/sys/role-list.html', icon: 'ri-shield-user-line', roles: ['SUPER_ADMIN'] },
-                { id: '9-20', name: '部门管理', url: 'page/sys/department-list.html', icon: 'ri-node-tree', roles: ['SUPER_ADMIN'] },
                 { id: '9-21', name: '餐补管理', url: 'page/subsidy/account-list.html', icon: 'ri-hand-coin-line', roles: ['SUPER_ADMIN'] },
-                { id: '9-3', name: '考勤管理', url: 'page/attendance/attendance.html', icon: 'ri-calendar-check-line' },
-                { id: '9-22', name: '员工提成', url: 'page/employee/commission.html?v=20261024', icon: 'ri-copper-coin-line' },
-                { id: '9-15', name: '排班管理', url: 'page/schedule/schedule.html', icon: 'ri-calendar-schedule-line' },
-                { id: '9-4', name: '客服管理', url: 'page/customer-service/list.html', icon: 'ri-customer-service-2-line' },
                 { id: '9-5', name: '通知模板', url: 'page/sys/template-list.html', icon: 'ri-message-2-line' },
                 { id: '9-6', name: '消息通知', url: 'page/notification/list.html', icon: 'ri-notification-3-line' },
                 { id: '9-7', name: '系统配置', url: 'page/sys/config-list.html', icon: 'ri-tools-line' },
                 { id: '9-8', name: '操作日志', url: 'page/sys/operation-log.html', icon: 'ri-file-list-2-line' },
-                { id: '9-9', name: '地区管理', url: 'page/region/list.html', icon: 'ri-map-2-line' },
-                { id: '9-10', name: 'AI 助手', url: 'page/ai/assistant.html', icon: 'ri-robot-line' },
-                { id: '9-13', name: '提示词模板', url: 'page/ai/prompt-list.html', icon: 'ri-message-3-line' },
-                { id: '9-14', name: '知识库', url: 'page/ai/knowledge-list.html', icon: 'ri-database-2-line' },
+              ]},
+
+              /* ──13. 员工考勤（自系统设置拆出，O-21：员工域 5 项归口一组）── */
+              { id: '13', name: '员工考勤', icon: 'ri-team-line', children: [
+                { id: '13-1', name: '员工管理', url: 'page/employee/list.html?v=20260922', icon: 'ri-user-settings-line' },
+                { id: '13-2', name: '部门管理', url: 'page/sys/department-list.html', icon: 'ri-node-tree', roles: ['SUPER_ADMIN'] },
+                { id: '13-3', name: '员工提成', url: 'page/employee/commission.html?v=20261024', icon: 'ri-copper-coin-line' },
+                { id: '13-4', name: '考勤管理', url: 'page/attendance/attendance.html', icon: 'ri-calendar-check-line' },
+                { id: '13-5', name: '排班管理', url: 'page/schedule/schedule.html', icon: 'ri-calendar-schedule-line' },
+              ]},
+
+              /* ──14. AI 助手（自系统设置拆出，O-21）── */
+              { id: '14', name: 'AI 助手', icon: 'ri-robot-2-line', children: [
+                { id: '14-1', name: 'AI 助手', url: 'page/ai/assistant.html', icon: 'ri-robot-line' },
+                { id: '14-2', name: '提示词模板', url: 'page/ai/prompt-list.html', icon: 'ri-message-3-line' },
+                { id: '14-3', name: '知识库', url: 'page/ai/knowledge-list.html', icon: 'ri-database-2-line' },
               ]},
             ],
             iframeUrl: 'page/dashboard/overview.html',
@@ -406,9 +416,10 @@
             self.menuList.forEach(function (group) {
               if (group.roles && group.roles.length && !allow(group)) return
               if (group.children && group.children.length) {
-                const kids = group.children.filter(allow)
+                // O-21：hidden:true 的菜单项不进侧边栏（仅命令面板可检索，见 flatMenuList）
+                const kids = group.children.filter(function (c) { return !c.hidden && allow(c) })
                 if (kids.length) out.push(Object.assign({}, group, { children: kids }))
-              } else if (group.url) {
+              } else if (group.url && !group.hidden) {
                 // 修复：直链菜单（无二级子菜单，如"数据概览"）此前被 kids.length 判断丢弃，
                 // 导致侧边栏模板 v-else 直链分支成为死代码、首页入口不可见
                 out.push(group)
@@ -418,15 +429,31 @@
             return out.length ? out : self.menuList
           },
           flatMenuList() {
+            // O-21：命令面板数据源取全量 menuList（含 hidden 项）——隐藏菜单「不占侧边栏，
+            // 但 Ctrl+K 仍可检索直达」；角色过滤对 hidden 项同样生效（走 allow 规则）
+            const self = this
+            const allow = function (node) {
+              if (!node) return false
+              if (self.isSuperAdmin) return true
+              if (node.roles && node.roles.length) {
+                return !!self.roleKey && node.roles.indexOf(self.roleKey) !== -1
+              }
+              if (node.perm) {
+                return !!self.permSet && self.permSet.has(node.perm)
+              }
+              return true
+            }
             const result = []
-            this.visibleMenuList.forEach(function (group) {
+            this.menuList.forEach(function (group) {
+              if (!allow(group)) return
               const kids = group.children || []
               kids.forEach(function (leaf) {
+                if (!allow(leaf)) return
                 if (leaf.url) {
                   result.push({ id: leaf.id, name: leaf.name, url: leaf.url, icon: leaf.icon, group: group.name })
                 } else if (leaf.children) {
                   leaf.children.forEach(function (sub) {
-                    if (sub.url) result.push({ id: sub.id, name: sub.name, url: sub.url, icon: sub.icon, group: group.name + ' / ' + leaf.name })
+                    if (sub.url && allow(sub)) result.push({ id: sub.id, name: sub.name, url: sub.url, icon: sub.icon, group: group.name + ' / ' + leaf.name })
                   })
                 }
               })
