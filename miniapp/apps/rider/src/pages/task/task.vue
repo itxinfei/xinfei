@@ -57,6 +57,7 @@
 
 <script>
 import { http, qs, orderText, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
+import { locationReporter } from '../../utils/location-reporter'
 
 export default {
   data() {
@@ -96,6 +97,11 @@ export default {
       this.listError = false
       return http.get(qs('/api/rider/tasks/mine', { scope: this.scope })).then(list => {
         this.tasks = list || []
+        // 仅 delivering 视图校准位置自动上报：有在途单开表、全部送达停表；
+        // 切到待接单/历史页不停——在途单不因翻页而消失
+        if (this.scope === 'delivering') {
+          locationReporter.sync(this.tasks.length > 0)
+        }
       }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
@@ -106,6 +112,8 @@ export default {
       this.setBusy(key, true)
       http.post('/api/rider/tasks/' + task.id + '/accept').then(() => {
         uni.showToast({ title: '已接单', icon: 'none' })
+        // 接单即开始 12s 位置上报（当前视图通常是待接单，load() 的 delivering 校准走不到）
+        locationReporter.start()
         this.load()
       }).catch(() => {}).then(() => { this.setBusy(key, false) })
     },

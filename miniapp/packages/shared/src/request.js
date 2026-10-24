@@ -9,12 +9,10 @@ import { read, write, clearSession } from './storage';
  *   2. CSRF token 由响应头 X-CSRF-Token 下发，写操作（POST/PUT/DELETE/PATCH）需原样带回；
  *   3. 未登录 = HTTP 401 且 body.msg='NOTLOGIN'。
  *
- * 鉴权通道现状：后端登录态是 Tomcat HttpSession + JSESSIONID（HttpOnly、SameSite=strict），
- * 小程序没有浏览器 cookie 容器，wx.request 不回传 JSESSIONID，因此
- * **除公开接口外，所有需要登录态的接口在小程序里都会拿到 401**，直到后端补出
- * 非 cookie 的会话通道（方案见 miniapp/README.md「后端前置改造」）。
- * 本层已按目标形态预留：服务端下发的会话标识存进 STORAGE_KEYS.authToken 并以
- * X-Auth-Token 头回带；后端未落地时该头不出现，公开接口不受影响。
+ * 鉴权通道（2026-10-22 后端 5.1/5.2 已落地）：登录成功时后端在响应头下发 X-Auth-Token，
+ * 本层捕获后存进 STORAGE_KEYS.authToken，后续请求以同名头回带；后端 LoginCheckFilter
+ * 在无会话时凭该头恢复登录态。顾客端短信验证码已迁 Redis（sms:code:<phone>），
+ * 发码与登录跨会话可校验，三端登录链均已全链路可用。
  */
 
 const options = { loginRoute: '', onUnauthorized: null };
@@ -90,14 +88,26 @@ export function request(opts) {
         const csrf = headerValue(res.header, CSRF_HEADER);
         if (csrf) write(STORAGE_KEYS.csrfToken, csrf);
 
+        // 5.1 Token 会话通道：登录响应头下发会话标识，捕获后由后续请求统一回带
+        const issuedToken = headerValue(res.header, AUTH_HEADER);
+        if (issuedToken) write(STORAGE_KEYS.authToken, issuedToken);
+
         if (res.statusCode === 401) {
           toLogin();
           return reject(Object.assign(new Error('NOTLOGIN'), { notLogin: true }));
         }
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          const msg = '服务异常（' + res.statusCode + '）';
+          // 后端 400(参数校验)/422(CustomException 业务失败)/429(限流) 仍返回标准 R 体，
+          // 必须透出 body.msg（如"积分不足"），不能一律盖成"服务异常（422）"；
+          // 读不到 R 体（网关错误/非 JSON）时再回退状态码文案
+          const errBody = res.data;
+          const bizMsg = errBody && typeof errBody === 'object' ? errBody.msg : '';
+          const msg = bizMsg || ('服务异常（' + res.statusCode + '）');
           if (!opts.silent) toast(msg);
-          return reject(new Error(msg));
+          return reject(Object.assign(new Error(msg), {
+            statusCode: res.statusCode,
+            data: errBody && typeof errBody === 'object' ? errBody.data : undefined
+          }));
         }
 
         const body = res.data;
@@ -109,9 +119,12 @@ export function request(opts) {
           toLogin();
           return reject(Object.assign(new Error('NOTLOGIN'), { notLogin: true }));
         }
-        if (opts.silent) return reject(new Error(body.msg || '业务失败'));
+        // 业务失败也可能携带结构化 data（如配送追踪 R.error 带 data.reason=EAT_IN/NO_DELIVERY），
+        // 挂到 Error 上供调用方在 silent 模式下判别处理
+        const bizError = Object.assign(new Error(body.msg || '业务失败'), { data: body.data });
+        if (opts.silent) return reject(bizError);
         toast(body.msg);
-        return reject(new Error(body.msg || '业务失败'));
+        return reject(bizError);
       },
       fail: err => {
         if (!opts.silent) toast('网络不可用，请检查后端地址与网络');

@@ -5,6 +5,7 @@
   "description": "心飞外卖小程序三端（顾客 / 骑手 / 门店），pnpm workspace + uni-app（Vue 3 + Vite）",
   "scripts": {
     "gen": "node scripts/gen-app.mjs",
+    "gen:assets": "node scripts/gen-brand-assets.mjs",
     "sync:tokens": "node scripts/sync-tokens.mjs",
     "dev:customer": "pnpm -F @xinfei/mini-customer dev:mp-weixin",
     "dev:rider": "pnpm -F @xinfei/mini-rider dev:mp-weixin",

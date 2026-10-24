@@ -37,6 +37,7 @@
 
 <script>
 import { riderAuth, write, STORAGE_KEYS } from '@xinfei/mini-shared'
+import { locationReporter } from '../../utils/location-reporter'
 
 export default {
   data() {
@@ -77,7 +78,12 @@ export default {
       uni.getLocation({
         type: 'gcj02',
         success: res => {
-          riderAuth.reportLocation({ longitude: res.longitude, latitude: res.latitude }).then(() => {
+          // 显式声明 GCJ-02：getLocation(gcj02) 返回国测局坐标，不传会被后端按 WGS-84 错标
+          riderAuth.reportLocation({
+            longitude: res.longitude,
+            latitude: res.latitude,
+            coordSystem: 'GCJ-02'
+          }).then(() => {
             this.lastReport = new Date().toLocaleTimeString()
             // 本地留一份，便于真机调试时确认最近一次上报成功
             write(STORAGE_KEYS.currentRider, Object.assign({}, this.rider, {
@@ -92,6 +98,8 @@ export default {
     },
     logout() {
       riderAuth.logout().then(() => {
+        // 登出必须停表：否则未登录态的定时器回调会被 401 拦截
+        locationReporter.stop()
         uni.reLaunch({ url: '/pages/login/login' })
       }).catch(() => {})
     }

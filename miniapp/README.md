@@ -53,18 +53,27 @@ pnpm build                          # 三个端一起构建
 
 本轮每个端只落「能跑通主链路的最小骨架」，其余页面按台账逐个补。接口路径与字段名逐条取自 Controller，未做改名。
 
-### apps/customer（4 页已落）
+### apps/customer（12 页已落）
 
 | 页面 | 接口 | 状态 |
 |---|---|---|
-| `pages/login/login` | `POST /user/sendMsg`、`POST /user/login`、`POST /user/loginout` | 已落 |
-| `pages/index/index` | `GET /category/list?type=1`、`GET /dish/list?categoryId=`、`POST /shopping-cart/add`、`POST /shopping-cart/sub`、`GET /shopping-cart/list` | 已落（结算按钮占位） |
-| `pages/order/list` | `GET /order/userPage`、`POST /order/again`、`PUT /order/userCancel?id=`、`PUT /order/userConfirmReceipt?id=` | 已落 |
+| `pages/login/login` | `POST /user/sendMsg`、`POST /user/login`、`POST /user/wxLogin`、`POST /user/loginout` | 已落（含微信一键登录） |
+| `pages/index/index` | `GET /category/list?type=1`、`GET /dish/list?categoryId=`、`POST /shopping-cart/add`、`POST /shopping-cart/sub`、`GET /shopping-cart/list` | 已落（「去结算」进结算页） |
+| `pages/order/list` | `GET /order/userPage`、`POST /order/again`、`PUT /order/userCancel?id=`、`PUT /order/userConfirmReceipt?id=` | 已落（整卡进详情，快捷操作 `.stop` 防冒泡） |
+| `pages/order/checkout` | `GET /restaurant/info`、`GET /address-book/default`、`GET /address-book/{id}`、`GET /shopping-cart/list`、`POST /api/order/preview`、`GET /front/coupon/usable`、`POST /order/submit`、`POST /api/payment/pay`、`GET /api/payment/user/query/{tradeNo}` | 已落（**配送上门/到店自提双模式**：自提 `source=SELF_PICKUP`、地址豁免、配送费 0、不起送价/不校验范围，下单即生成取餐码并跳详情；自提门店卡仅展示名称/营业时间/公告，`/restaurant/info` 不返回地址；**微信 JSAPI 在线支付已接通**——payMethod=2 下单后调 shared/pay.js 闭环，含 0 元单自动完成、支付结果 2s 轮询回查、mock 沙箱模拟回调分支；**结算选券抵扣已接**——`/front/coupon/usable` 按商品额拉可用券，preview/submit 带 `usedCouponId`，券失效自动清空重核；货到/到店付款 payMethod=6 保留；支付宝小程序内无 JSAPI 能力保持灰显；不含预约配送/会员余额） |
+| `pages/order/detail` | `GET /order/{id}`、`GET /order/userRefundRecords?id=`、`POST /order/again`、`POST /order/userApplyRefund?id=&reason=`、`PUT /order/userCancel?id=`、`PUT /order/userConfirmReceipt?id=`、`POST /api/urgency/customer/trigger/{id}`、`GET /api/dish-evaluation/order/{id}`、`GET /api/rider-evaluation/order/{id}?riderId=`、`POST /api/payment/pay`、`GET /api/payment/user/query/{tradeNo}` | 已落（状态横幅/履约信息/价格明细/售后记录；状态 4 按查重结果显示「去评价/评价骑手」入口；**状态 1 显示「去支付」**，复用 shared/pay.js 调起 JSAPI 并轮询回查，取消/超时/失败均不离开详情；发票、客服入口待对应页面落地） |
+| `pages/order/evaluate` | `GET /order/{id}`、`GET /api/dish-evaluation/order/{id}`、`POST /api/dish-evaluation`（逐菜）、`GET/POST /api/rider-evaluation/order/{id}` | 已落（同菜多风味合并为一条评价；星级必填+快捷标签+200 字文本+整单匿名；部分失败可重试剩余项；骑手评价独立提交；**评价图片未做**——`/common/upload` 只认 HttpSession 登录态，token 通道待后端改造） |
+| `pages/delivery/tracking` | `GET /api/delivery/tracking/{orderId}` | 已落（原生 `<map>` GCJ-02 渲染骑手位置+轨迹，WGS-84 历史点内置转换；15s 轮询，终态/堂食/自提停轮，onHide 停 onShow 续） |
 | `pages/user/user` | `GET /user/info`、`GET /address-book/list`、`GET /order/userPage`（角标） | 已落 |
+| `pages/address/list` | `GET /address-book/list`、`PUT /address-book/default`、`DELETE /address-book?ids=` | 已落（支持 `?select=1` 选择模式，经 `customerSelectedAddressId` 一次性交接） |
+| `pages/address/edit` | `GET /address-book/{id}`、`POST/PUT /address-book`、`GET /region/children?parentId=`、`DELETE /address-book?ids=` | 已落（新增/编辑同页；detail 与经纬度由后端拼接/地理编码） |
+| `pages/member/member` | `GET /api/member/member/my-info`、`GET /api/member/member/my-levels`、`GET /api/member/member/my-points`、`GET /api/member/member/my-recharges`、`POST /api/member/portal/open`、`POST /api/member/portal/recharge/create`、`GET /api/member/portal/recharge/status/{no}`、`POST /api/payment/recharge/pay`、mock 沙箱 `POST /api/payment/notify/WECHAT`（均经 shared/pay.js） | 已落（会员卡：等级/折扣徽章/积分/储值余额/券数/升级进度；非会员一键免费开通；积分明细与充值记录分页；**在线充值已接微信 JSAPI**——快捷金额 50/100/200/500 + 自定义 1~5000 元，建充值单→支付→轮询充值单 SUCCESS，回调自动入余额；非会员不显示充值入口） |
+| `pages/coupon/coupon` | `GET /front/coupon/available`、`GET /front/coupon/my`、`POST /front/coupon/claim/{templateId}`、`POST /front/coupon/exchange/{templateId}`、`GET /api/member/member/my-info` | 已落（可领取：免费领/积分兑换，按 `templateId` 去重已领置灰，兑换前本地积分预检+二次确认；我的券：unused/used/expired 前端三段，unused「去使用」回点餐首页；非会员显开通引导；支持 `?tab=mine` 跳入） |
 
-待迁（Web 侧 `front/page/` 其余 22 页）：`add-order`（结算）、`address` / `address-edit`、`order-detail`、
-`pay-cashier` / `pay-success`、`tracking`、`qrcode-order`、`member-center`、`coupon-center`、`invoice` / `my-invoice`、
-`my-evaluations`、`my-favorites`、`message`、`queue`、`reservation`、`browse-history`、`frequent-orders`、
+待迁（Web 侧 `front/page/` 其余 15 页）：
+`pay-cashier` / `pay-success`、`qrcode-order`、`invoice` / `my-invoice`、
+`my-evaluations`（**按订单提交评价已落在 `pages/order/evaluate`，仅剩"我的评价"分页列表态未迁**）、
+`my-favorites`、`message`、`queue`、`reservation`、`browse-history`、`frequent-orders`、
 `customer-service`、`ai-assistant`、`no-wifi`、`user`（编辑资料）。
 
 ### apps/rider（5 页已落，覆盖 Web 侧 8 页的主要功能）
@@ -76,6 +85,8 @@ pnpm build                          # 三个端一起构建
 | `pages/task/task` | `GET /api/rider/tasks/mine?scope=todo\|delivering\|history`、`accept`/`pickup?pickupCode=`/`deliver` | 已落 |
 | `pages/income/income` | `GET /api/rider/income/summary`、`GET /api/rider/income/records?range&page&size` | 已落 |
 | `pages/me/me` | `GET /api/rider/me`、`online`/`offline`/`location`、`POST /api/rider/logout` | 已落 |
+
+> 位置自动上报：有在途单期间每 12s 上报一次 GCJ-02（`utils/location-reporter.js` 模块单例，接单即开、送完即停），App 切后台显式停表、回前台按 `/tasks/mine?scope=delivering` resync，定位连续失败 3 次自动停；「我的」页保留手动上报。顾客端 tracking 地图即消费该数据。
 
 待迁：`evaluation`（`/api/rider-evaluation/**`）、`exception`（`/api/rider-exception/**`）、
 `message`（`/api/rider-message/**`）、结算提现（`/api/rider/settlement/**`）。
@@ -94,30 +105,67 @@ pnpm build                          # 三个端一起构建
 
 ## 5. 后端前置改造（**不做完这三件，小程序上不了线**）
 
-### 5.1 会话通道：Cookie → Token（阻塞项，最优先）
+### 5.1 会话通道：Cookie → Token（✅ 2026-10-22 已落地）
 
-现状：登录态是 Tomcat `HttpSession` + `JSESSIONID`（`HttpOnly`、`SameSite=strict`），见 `filter/LoginCheckFilter`。
-小程序没有 cookie 容器，`uni.request` 不回传 `JSESSIONID`，**除公开接口外一律 401 `NOTLOGIN`**。
-H5 调试能通（浏览器有 cookie），微信开发者工具与真机必挂——别在小程序里等它自己好。
+~~原状：登录态是 Tomcat `HttpSession` + `JSESSIONID`（`HttpOnly`、`SameSite=strict`），小程序没有
+cookie 容器，除公开接口外一律 401~~。
 
-可选方案（择一，前端 `packages/shared/src/request.js` 已按 `X-Auth-Token` 预留读取与回带）：
+已按方案 1 落地（`com.xinfei.module.auth.service.AuthTokenService` + `LoginCheckFilter` token 分支）：
 
-1. **推荐**：登录成功时把会话标识写进响应体（或响应头）返回，客户端存 storage 并以自定义头回带；
-   `LoginCheckFilter` 增加「先读自定义头 → 再回落 cookie」的分支。改动面最小，H5 与小程序共存。
-2. 引入无状态 token（JWT）：改动大，还要处理吊销与租户上下文的注入时机。
-3. 小程序 `web-view` 内嵌现有 H5：不用改后端，但要求 H5 全站 HTTPS + 配置业务域名，且失去小程序原生体验。
+- 登录成功（`/employee/login`、`/api/rider/login`、`/user/login`）响应头下发 `X-Auth-Token`
+  （SecureRandom 256bit），载荷（主体类型/ID/租户ID/角色）存 Redis，键 `auth:token:<token>`，
+  TTL 默认 72h（`xinfei.auth-token.ttl-hours` 可配）；
+- 客户端存 storage 后以 `X-Auth-Token` 头回带（`packages/shared/src/request.js` 已统一捕获与回带）；
+  `LoginCheckFilter` 在无会话时凭该头恢复上下文，Web/H5 的 Session 通道零改动共存；
+- 登出（`/employee/logout`、`/api/rider/logout`、`/user/loginout`）吊销令牌；Redis 降级时颁发失败
+  仅不下发头、校验失败回落 401（口径同 R-01）；
+- ~~顾客端登录链仍不通~~ → 5.2 已落地，三端均全链路可用。
+- 测试：`AuthTokenChannelTest`（RANDOM_PORT 真实容器三端链路，经
+  `xinfei.test.keep-auth-filters=true` 保留过滤器链）+ `LoginCheckFilterTest` token 分支单元用例。
 
-### 5.2 顾客端验证码存在 HttpSession（随 5.1 一起改）
+### 5.2 顾客端验证码存在 HttpSession（✅ 2026-10-22 已落地）
 
-`UserController#sendMsg` 把验证码写进 `session.setAttribute("smsCode_" + phone)`，`#login` 再从同一 session 取。
-即使补了 token 头，只要服务端 session 不共享，**顾客端登录链整条不通**。
-建议改为 Redis 键（`sms:code:<phone>`，项目已有 `smsRateLimitRedisTemplate` 与 60s 冷却、每日上限，可直接并表）。
+~~原状：`UserController#sendMsg` 把验证码写进 `session.setAttribute("smsCode_" + phone)`，`#login` 再从同一 session 取，小程序发码与登录两个请求不落在同一 session，登录链整条不通~~。
 
-### 5.3 微信支付：JSAPI + openid
+已落地：新增 `com.xinfei.module.user.service.SmsCodeService`，验证码迁 Redis 键 `sms:code:<phone>`（TTL 5 分钟，由 TTL 承担过期判断）：
 
-Web 侧走的是 H5/Native 支付。小程序必须 `WECHAT_PAY_JSAPI`，且要拿 `openid`：
-`wx.login` → 临时 `code` → 后端 `code2Session`（`appid`+`secret`）换 `openid` 并持久化到用户。
-落地前需先定：支付与退款分账链路沿用现有 `payment` 模块的哪个渠道实现、`openid` 存哪张表（`user` 表当前无该列，要开 V5+ 迁移）。
+- `save`：Redis 优先；Redis 不可用回落 HttpSession（键不变，R-01 降级口径，Web 端零感知）；
+- `verifyAndConsume`：Redis 命中常量时间比较、通过即删（一次性）；未命中回落 session 原逻辑；
+  三种提示文案（请先获取验证码 / 验证码已过期 / 验证码错误）保持不变；
+- 消费方：`/user/login`、`/employee/forgot-password`、`/api/rider/forgot-password`（骑手重置密码与顾客共用 `/user/sendMsg` 下发的同一码，跨端生效）；
+- 频控三层结构保留：Redis 冷却 60s（跨会话）→ Redis 快计数 → DB 台账权威兜底。
+- 测试：`AuthTokenChannelTest#customerSmsLoginFullChainViaToken`（发码 → Redis 取码 → 无 session 登录 → token → /user/info 全链路）；既有 session 造码用例经「未命中回落 session」路径零改动兼容。
+
+### 5.3 微信支付：JSAPI + openid（✅ 2026-10-22 全链已接通，真机待配）
+
+**openid 登录半链 ✅ 2026-10-22：**
+
+- `user` 表新增 `openid` 列（`db/migration/V10__add_user_openid.sql`，`uk_user_openid` 唯一键）；
+- `/user/wxLogin`：`wx.login` 临时 code 经 `WxCode2SessionClient.code2Session`（appid/secret 走
+  `xinfei.wechat-miniapp.*` 配置）换 openid；已绑定直接登录（建会话 + 下发 X-Auth-Token），
+  未绑定返回 `needBind` + 一次性 `wxTicket`（Redis 键 `wxbind:ticket:*`，5 分钟 TTL），
+  手机验证码登录携带 ticket 完成绑定，之后凭 openid 直接登录；
+- 绑定语义：绑定段在建立会话**之前**执行，冲突（微信已绑其他账号 / 本账号已绑微信）才拒绝且不发 token；
+  ticket 过期/已消费降级为普通登录（手机+验证码已通过，不阻塞），仅跳过本次绑定；
+- openid 不回传前端（两个登录方法返回前均脱敏）；链路测试见 `WxLoginChannelTest`。
+
+**JSAPI 支付半链 ✅ 2026-10-22（前后端均已接通，货到付款与微信在线支付均可完整下单）：**
+
+- 后端 `WechatV3PayChannel` 产出 JSAPI 五参（`appId/timeStamp/nonceStr/package=prepay_id/signType=RSA/paySign` 自签）；
+  `POST /api/payment/pay` body `{orderId, channel:"WECHAT", payType:"JSAPI"}`，`payer.openid` 从登录态 `user.openid` 取、
+  不接受前端传值，未绑微信返回业务拒绝；0 元单（券抵扣后实付 0）由 `completeZeroAmountPayment` 同步完成、无支付单号。
+- 小程序闭环在 `packages/shared/src/pay.js`（checkout 与 detail 复用）：创建支付单 → `uni.requestPayment` 调起 →
+  `GET /api/payment/user/query/{tradeNo}` 每 2s 轮询、最多 90 次（3 分钟），**只以后端支付单 SUCCESS 为支付成功依据**，
+  不信前端调起成功回调；用户取消不报错（订单已建，落详情页可续付），FAIL/CLOSED 提示失败，轮询窗口超时提示稍后自查。
+- mock 沙箱（`payment.mock-mode=true`）：mock 渠道不产 JSAPI 参数，pay.js 按 H5 收银台同契约打
+  `POST /api/payment/notify/WECHAT`（`{out_trade_no, total_fee:分}`）模拟回调后再轮询回查，开发期可无证书走完整链路。
+- 接线：结算页 payMethod=2（微信支付）下单后立即调起；订单详情 status=1 显示「去支付」可对同一订单重试。
+- 会员充值同链已通（2026-10-22）：`POST /api/payment/recharge/pay`（bizType=RECHARGE）补齐 JSAPI openid 接线
+  （从登录用户档案取，与订单支付同口径；`RechargePaymentController` 无 openid 即拒绝）；pay.js 的
+  `payRechargeByWechat` 轮询 `GET /api/member/portal/recharge/status/{no}` 直到充值单 SUCCESS（回调 RECHARGE
+  分支自动加余额，入账失败自动退款）；会员中心弹层支持快捷金额与自定义 1~5000 元。
+- 真机待办（用户后期自测）：`manifest.json` 填 appid、后端配小程序 appid/secret 与商户证书、后台给租户配置微信支付渠道；
+  支付宝小程序内无 JSAPI 能力（`RealAlipayChannel` 仅 NATIVE/PC/WAP），结算页保持灰显。
 
 ### 5.4 其余环境约束
 
@@ -129,6 +177,6 @@ Web 侧走的是 H5/Native 支付。小程序必须 `WECHAT_PAY_JSAPI`，且要�
 
 ## 6. 已知缺口（诚实记录）
 
-- 顾客端「结算」是占位弹窗：`/order/submit` 需要 `addressBookId` 与支付方式，地址簿页与支付尚未迁。
+- 顾客端结算页（`pages/order/checkout`）已接通：配送上门/到店自提双模式、地址交接、`POST /api/order/preview` 同源核价、货到/到店付款与微信 JSAPI 两种支付、结算选券抵扣（`GET /front/coupon/usable` + `usedCouponId`）。会员中心在线充值（微信 JSAPI，回调自动入余额）已接通。**仍不含**：预约配送时间、结算页会员储值余额支付（payMethod=5，后端下单支持，小程序收银台未接）；支付宝小程序内无 JSAPI 能力保持灰显；自提门店地址 `/restaurant/info` 未出网，门店卡暂无地址。
 - 骑手在线状态、门店「暂停接单」的当前值不在详情接口里回传，页面只在写成功后本地回填，重进页面会回到默认值。
 - `packages/shared` 未做单元测试；请求层的行为（CSRF 头读写、`R.code` 解包、401 回登录）目前只靠代码走查。

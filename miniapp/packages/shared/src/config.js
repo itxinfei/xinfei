@@ -11,20 +11,22 @@
 const DEFAULT_BASE_URL = 'http://127.0.0.1:8080';
 
 const STORAGE_KEYS = {
-  /** 后端 token 鉴权通道落地后写入；当前 session cookie 通道下为空 */
+  /** 登录响应 X-Auth-Token 头的值；由 request.js 统一捕获写入，登出随 clearSession 清除 */
   authToken: 'xinfeiAuthToken',
   csrfToken: 'xinfeiCsrfToken',
   /** 登录态载体：顾客 user / 员工 employee / 骑手 rider，字段名与后端会话属性一致 */
   currentUser: 'xinfeiCurrentUser',
   currentEmployee: 'xinfeiCurrentEmployee',
   currentRider: 'xinfeiCurrentRider',
+  /** 地址簿选择模式一次性交接：选中的地址 ID 回传来源页（消费即删） */
+  customerSelectedAddressId: 'customerSelectedAddressId',
   baseUrl: 'xinfeiApiBase'
 };
 
 /** 写操作需带的 CSRF 头，取值与后端 CsrfFilter.CSRF_HEADER_NAME 对齐 */
 const CSRF_HEADER = 'X-CSRF-Token';
 
-/** 预留：后端补 token 通道后由它承载会话标识 */
+/** 会话标识头（2026-10-22 后端 5.1 已落地：登录响应同名声头下发，请求时回带） */
 const AUTH_HEADER = 'X-Auth-Token';
 
 const WRITE_METHODS = ['post', 'put', 'delete', 'patch'];

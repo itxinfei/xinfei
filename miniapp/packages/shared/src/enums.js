@@ -7,6 +7,7 @@ import { getBaseUrl } from './config';
  *   DELIVERY ← com.xinfei.enums.DeliveryOrderStatus + shared/js/order-status.js
  *   SOURCE   ← com.xinfei.enums.OrderSource
  *   REFUND   ← com.xinfei.enums.RefundStatus + shared/js/refund-status.js
+ *   券/积分  ← CouponTemplate.type / CouponUserVO.status / com.xinfei.enums.PointsRecordType
  * cls 沿用 Web 三端的类名，样式里的颜色一律引 tokens.css，禁止再写 hex。
  */
 
@@ -45,6 +46,41 @@ export const REFUND = {
   FAIL: { code: 'fail', text: '退款失败', cls: 'st-fail' },
   REJECTED: { code: 'rejected', text: '审核拒绝', cls: 'st-rejected' }
 };
+
+/**
+ * 优惠券类型 ← CouponTemplate.type（String）
+ * 优惠券状态 ← CouponUserVO.status（unused/used/expired，String）
+ * 积分流水   ← com.xinfei.enums.PointsRecordType（IN/OUT）
+ */
+export const COUPON_TYPE = {
+  FULL_REDUCTION: '满减券',
+  DISCOUNT: '折扣券',
+  NEW_MEMBER: '新客券'
+};
+
+export const COUPON_STATUS = {
+  unused: '未使用',
+  used: '已使用',
+  expired: '已过期'
+};
+
+export function couponTypeText(type) {
+  return COUPON_TYPE[type] || '优惠券';
+}
+
+export function couponStatusText(status) {
+  return COUPON_STATUS[status] || '';
+}
+
+/**
+ * 积分流水方向符号。现网写入只有 IN/OUT（枚举 PointsRecordType）；
+ * 对历史脏数据（小写 earn/acquire=收入、consume=支出）做兼容，
+ * 命中不了支出口径的一律按收入显示，避免未知类型被误看成扣减。
+ */
+export function pointsRecordSign(type) {
+  const t = String(type || '').toUpperCase();
+  return (t === 'OUT' || t === 'CONSUME') ? '−' : '+';
+}
 
 export function orderText(code) {
   return ORDER[code] ? ORDER[code].text : '未知状态';

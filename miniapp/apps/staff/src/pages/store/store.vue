@@ -50,7 +50,7 @@ export default {
     // 修改点(2026-10-17)：接入列表三态（listError）
     return Object.assign(listState(), {
       detail: {},
-      // 暂停接单状态由后端 businessHoursService 维护，详情接口不回传，本页只在写成功后本地回填
+      // 暂停接单状态：后端落 store_info.pause_order，详情接口随 StoreInfo 的 pauseOrder 回传
       paused: false
     })
   },
@@ -80,6 +80,9 @@ export default {
       this.listError = false
       return http.get('/store/detail/' + tid).then(data => {
         this.detail = data || {}
+        // 暂停态后端落 store_info.pause_order，详情接口随 StoreInfo 回传（pauseOrder）；
+        // 此前只在写成功后本地回填，刷新页面永远显示"正常接单"
+        this.paused = this.detail.pauseOrder === true || Number(this.detail.pauseOrder) === 1
       }).catch(() => { this.listError = true })
     },
     toggleStatus(val) {

@@ -47,11 +47,15 @@ console.log('已同步 ' + occurrences + ' 处 :root 选择器 → ' + path.rela
 // pages.json 是原生 JSON 配置，无法引用 CSS 变量；由本脚本从 --color-primary 注入，
 // 保证品牌色仍是单一真源（改 tokens.css 后跑 `pnpm sync:tokens` 即全端联动）。
 // 只做文本级替换，不 JSON.parse 重写，避免破坏手写格式与注释。
+// tabBar 激活色：白底细图标场景优先用专用档 --color-tab-active（深金，对比度 AA），
+// 未声明时回退主色 --color-primary
+const tabActiveMatch = original.match(/--color-tab-active:\s*(#[0-9a-fA-F]{3,8})/);
 const primaryMatch = original.match(/--color-primary:\s*(#[0-9a-fA-F]{3,8})/);
-if (!primaryMatch) {
-  console.warn('tokens.css 里找不到 --color-primary，tabBar 品牌色跳过同步，请人工确认');
+const tabActive = tabActiveMatch ? tabActiveMatch[1] : primaryMatch && primaryMatch[1];
+if (!tabActive) {
+  console.warn('tokens.css 里找不到 --color-tab-active / --color-primary，tabBar 品牌色跳过同步，请人工确认');
 } else {
-  const primary = primaryMatch[1];
+  const primary = tabActive;
   for (const app of ['customer', 'rider', 'staff']) {
     const pagesPath = path.resolve(ROOT, 'apps', app, 'src', 'pages.json');
     if (!fs.existsSync(pagesPath)) continue;

@@ -22,6 +22,12 @@
       }
     },
     {
+      "path": "pages/order/detail",
+      "style": {
+        "navigationBarTitleText": "订单详情"
+      }
+    },
+    {
       "path": "pages/store/store",
       "style": {
         "navigationBarTitleText": "门店状态"
@@ -42,7 +48,7 @@
   },
   "tabBar": {
     "color": "#6e6e6e",
-    "selectedColor": "#ffc200",
+    "selectedColor": "#b87d00",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "black",
     "list": [

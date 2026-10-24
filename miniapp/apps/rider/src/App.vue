@@ -1,10 +1,19 @@
 <script>
 import { initRequest } from '@xinfei/mini-shared'
+import { locationReporter } from './utils/location-reporter'
 
 export default {
   onLaunch() {
     // 401 时由请求层统一回登录页；各端在此声明自己的登录路由
     initRequest({ loginRoute: '/pages/login/login' })
+  },
+  onShow() {
+    // 回前台（含冷启动）：按是否有在途单决定是否恢复位置上报
+    locationReporter.resync()
+  },
+  onHide() {
+    // 进后台：系统会挂起定时器，显式停掉；回前台由 onShow resync 恢复
+    locationReporter.stop()
   }
 }
 </script>

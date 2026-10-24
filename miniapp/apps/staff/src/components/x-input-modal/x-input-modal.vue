@@ -7,9 +7,10 @@
       <input
         class="x-modal__input"
         v-model="inner"
+        :type="inputType"
         :placeholder="placeholder"
         placeholder-class="x-modal__placeholder"
-        :maxlength="200"
+        :maxlength="maxlength"
         :focus="visible"
       />
       <view class="x-modal__btns">
@@ -27,7 +28,10 @@ export default {
     visible: { type: Boolean, default: false },
     title: { type: String, default: '提示' },
     desc: { type: String, default: '' },
-    placeholder: { type: String, default: '' }
+    placeholder: { type: String, default: '' },
+    // 取餐码等纯数字场景传 'number'，弹数字键盘
+    inputType: { type: String, default: 'text' },
+    maxlength: { type: [Number, String], default: 200 }
   },
   emits: ['confirm', 'cancel'],
   data() {

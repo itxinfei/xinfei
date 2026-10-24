@@ -21,6 +21,12 @@ page, :root {
   /* 金底按钮上的深色文字 */
   --color-primary-text: #4a3500;
   --color-primary-gradient: linear-gradient(135deg, #ffc200 0%, #ff9a00 100%);
+  /* C端登录页品牌金 hero 底层渐变（上层另叠两束半透明高光，不属品牌主色，保留原样） */
+  --color-login-hero-gradient: linear-gradient(158deg, #ffcf3f 0%, #ffb300 46%, #f08c00 78%, #e27705 100%);
+  /* C端首页金色头部：纵向三段，顶部更亮 */
+  --color-hero-gradient: linear-gradient(180deg, #ffd54f 0%, #ffc200 70%, #ffb300 100%);
+  /* 会员卡实体金卡渐变（user 页 / 会员中心共用） */
+  --color-gold-card-gradient: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #e09000 100%);
   /* 品牌金低透明底（标签 / 激活态） */
   --color-primary-tint: rgba(255, 194, 0, 0.10);
 
@@ -42,21 +48,38 @@ page, :root {
   /* 修改点(2026-09-27 审查P1对比度族)：品牌橙 #ff9a00 作浅底文字仅 2.13:1，
      文字场景一律改用深棕金档（on 白 5.36:1 达 AA），与 C端 --color-warning-text 同值 */
   --color-primary-text-strong: #955f00;
+  /* 白底细图标场景的激活档（原生 tabBar 图标/文字）：比 955f00 再亮一档保持品牌感 */
+  --color-tab-active: #b87d00;
+  /* 深金实心按钮按下态（:active）比常态再深一档，此前散写裸 hex，收敛为令牌单源 */
+  --color-primary-text-strong-active: #7a4f00;
   /* 功能色「浅底文字」档：#07c160/#e94e3c 在白底仅 2.3/3.6:1，
      小字号状态文字（徽标/角标）必须用深档（on 白 ≥5:1，on 同色 12% tint 底 ≥4.8:1） */
   --color-success-text: #0a7a3f;
   --color-danger-text: #b3372a;
   --color-price: #ff4a26;
+  /* 状态胶囊淡底（订单状态徽标等，文字用对应 *-text 深档） */
+  --color-primary-tint-strong: rgba(255, 179, 0, 0.12);
+  --color-success-tint: rgba(7, 193, 96, 0.12);
+  --color-danger-tint: rgba(233, 78, 60, 0.12);
+  --color-info-tint: rgba(74, 125, 255, 0.12);
+  --color-neutral-tint: rgba(140, 140, 140, 0.12);
+  /* 深色悬浮操作栏（点餐页购物车栏） */
+  --color-bar: #3b3b3b;
 
   /* ---- 背景色 ---- */
   --bg-page: #f3f2f7;
   --bg-card: #ffffff;
   --bg-input: #f8f9fa;
   --bg-hover: #f5f5f5;
+  /* 暖米色系：登录页底与暖色输入框（旧 H5 登录质感） */
+  --bg-warm: #fdf9f0;
+  --bg-input-warm: #f6f1e6;
 
   /* ---- 边框色 ---- */
   --border-light: #eeeeee;   /* 浅分割线 */
   --border-medium: #dddddd;  /* 输入框 / 卡片边框 */
+  --border-warm: #d8c8a0;    /* 暖色输入框 / 协议勾选描边 */
+  --border-hairline: rgba(0, 0, 0, 0.04); /* 卡片内发丝分割线 */
 
   /* ---- 圆角（375 px 基准） ---- */
   --radius-sm: 4px;
@@ -94,6 +117,10 @@ page, :root {
   --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
   /* 品牌主按钮金色投影（带透明度的主色暗档） */
   --color-primary-shadow: rgba(255, 154, 0, 0.35);
+  /* 金色主按钮/主操作的完整投影（直接用于 box-shadow；阴影沿用 px 与既有阴影令牌同惯例，H5/小程序通吃） */
+  --shadow-primary: 0 8px 22px rgba(255, 158, 0, 0.38);
+  /* 金色小圆钮（菜品加购）投影 */
+  --shadow-primary-sm: 0 2px 6px rgba(255, 209, 0, 0.35);
 
   /* ---- 字体族 ---- */
   --font-family-base: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft Yahei", sans-serif;

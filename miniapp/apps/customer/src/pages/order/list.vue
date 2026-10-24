@@ -14,10 +14,10 @@
     </scroll-view>
 
     <scroll-view class="list" scroll-y @scrolltolower="loadMore">
-      <view v-for="o in records" :key="o.id" class="card">
+      <view v-for="o in records" :key="o.id" class="card" hover-class="hover-press" @tap="openDetail(o)">
         <view class="card__head">
           <text class="card__no">{{ o.number }}</text>
-          <text class="card__status">{{ orderText(o.status) }}</text>
+          <text class="card__status" :class="'card__status--s' + o.status">{{ orderText(o.status) }}</text>
         </view>
 
         <view class="items" v-if="o.orderDetails && o.orderDetails.length">
@@ -30,13 +30,18 @@
 
         <view class="card__foot">
           <text class="card__time">{{ o.orderTime }}</text>
-          <text class="card__amount">¥{{ fmtAmount(o.amount) }}</text>
+          <view class="card__pricebox">
+            <text class="card__yen">¥</text>
+            <text class="card__amount">{{ fmtAmount(o.amount) }}</text>
+          </view>
         </view>
 
         <view class="ops">
-          <text class="op" :class="{ 'op--off': busy('again:' + o.id) }" hover-class="hover-press" @tap="again(o)">再来一单</text>
-          <text v-if="o.status === 1 || o.status === 2" class="op" :class="{ 'op--off': busy('cancel:' + o.id) }" hover-class="hover-press" @tap="cancel(o)">取消订单</text>
-          <text v-if="o.status === 3" class="op op--main" :class="{ 'op--off': busy('receipt:' + o.id) }" hover-class="hover-press" @tap="confirmReceipt(o)">确认收货</text>
+          <text class="op" :class="{ 'op--off': busy('again:' + o.id) }" hover-class="hover-press" @tap.stop="again(o)">再来一单</text>
+          <text v-if="o.status === 1 || o.status === 2" class="op" :class="{ 'op--off': busy('cancel:' + o.id) }" hover-class="hover-press" @tap.stop="cancel(o)">取消订单</text>
+          <text v-if="o.status === 1" class="op op--main" :class="{ 'op--off': busy('pay:' + o.id) }" hover-class="hover-press" @tap.stop="pay(o)">{{ busy('pay:' + o.id) ? '支付中…' : '去支付' }}</text>
+          <text v-if="o.status === 3" class="op op--main" :class="{ 'op--off': busy('receipt:' + o.id) }" hover-class="hover-press" @tap.stop="confirmReceipt(o)">确认收货</text>
+          <text v-if="o.status === 4" class="op op--main" hover-class="hover-press" @tap.stop="goEvaluate(o)">去评价</text>
         </view>
       </view>
 
@@ -52,7 +57,7 @@
 </template>
 
 <script>
-import { http, qs, orderText, fullImage, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
+import { http, qs, orderText, fullImage, listState, busyLock, fmtAmount, payOrderByWechat, PAY_CANCEL, PAY_PENDING } from '@xinfei/mini-shared'
 
 export default {
   data() {
@@ -94,7 +99,8 @@ export default {
       const handoff = uni.getStorageSync('customerOrderStatus')
       if (!handoff) return false
       uni.removeStorageSync('customerOrderStatus')
-      this.status = Number(handoff)
+      // 'all' 来自个人中心「全部订单」，显式回到全部 tab
+      this.status = handoff === 'all' ? null : Number(handoff)
       return true
     },
     switchTab(status) {
@@ -107,7 +113,7 @@ export default {
         this.page = 1
         this.records = []
         this.hasMore = true
-      } else if (this.loading || !this.hasMore) {
+      } else if (this.loading || !hasMore) {
         return Promise.resolve()
       }
       this.loading = true
@@ -127,6 +133,9 @@ export default {
     },
     loadMore() {
       this.load(false)
+    },
+    openDetail(order) {
+      uni.navigateTo({ url: '/pages/order/detail?id=' + order.id })
     },
     again(order) {
       const key = 'again:' + order.id
@@ -154,6 +163,36 @@ export default {
       if (this.busy(key)) return
       this.setBusy(key, true)
       http.put(qs('/order/userConfirmReceipt', { id: order.id })).then(() => this.load(true)).catch(() => {}).then(() => { this.setBusy(key, false) })
+    },
+    // 列表内直接发起微信 JSAPI 支付，终态处理与订单详情页 payOrder 完全一致（见 shared/pay.js）
+    pay(order) {
+      const key = 'pay:' + order.id
+      if (this.busy(key)) return
+      this.setBusy(key, true)
+      payOrderByWechat(order.id, order.amount).then(() => {
+        uni.showToast({ title: '支付成功', icon: 'success' })
+        this.load(true)
+      }).catch(err => {
+        if (err && err.code === PAY_CANCEL) {
+          uni.showToast({ title: '支付已取消', icon: 'none' })
+          return
+        }
+        if (err && err.code === PAY_PENDING) {
+          uni.showModal({
+            title: '支付结果确认中',
+            content: '如已扣款，请稍后在订单详情查看支付结果',
+            showCancel: false,
+            success: () => this.load(true)
+          })
+          return
+        }
+        uni.showToast({ title: (err && err.message) || '支付失败，请稍后重试', icon: 'none' })
+        this.load(true)
+      }).then(() => { this.setBusy(key, false) })
+    },
+    // 已完成单直跳评价页；评价页对已评商品只读回显，内部还有一次查重
+    goEvaluate(order) {
+      uni.navigateTo({ url: '/pages/order/evaluate?id=' + order.id })
     }
   }
 }
@@ -167,33 +206,49 @@ export default {
   background: var(--bg-page);
 }
 
+/* ---------------- 状态筛选 tab ---------------- */
 .tabs {
   flex-shrink: 0;
   white-space: nowrap;
   background: var(--bg-card);
-  border-bottom: 1rpx solid var(--border-light);
 }
 
 .tab {
-  display: inline-block;
-  padding: 24rpx 28rpx;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  padding: 0 32rpx;
   font-size: 28rpx;
   color: var(--color-text-secondary);
-  border-bottom: 4rpx solid transparent;
 }
 
 .tab--on {
   color: var(--color-text-primary);
-  font-weight: 600;
-  border-bottom-color: var(--color-primary);
+  font-weight: 700;
 }
 
+/* 选中指示条：28×3 金色圆角（替旧下划线） */
+.tab--on::after {
+  content: '';
+  position: absolute;
+  bottom: 10rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56rpx;
+  height: 6rpx;
+  border-radius: 6rpx;
+  background: var(--color-primary);
+}
+
+/* ---------------- 订单卡 ---------------- */
 .list {
   flex: 1;
 }
 
 .card {
-  margin: 16rpx 24rpx;
+  margin: 24rpx 24rpx 0;
   padding: 24rpx;
   border-radius: var(--radius-lg);
   background: var(--bg-card);
@@ -211,9 +266,39 @@ export default {
   color: var(--color-text-secondary);
 }
 
+/* 状态淡底胶囊：1 待付款红（催付）/ 2 待接单金 / 3 配送绿 / 4 完成灰 / 5 取消浅灰 */
 .card__status {
-  font-size: 26rpx;
+  padding: 4rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.card__status--s1 {
+  color: var(--color-danger-text);
+  background: var(--color-danger-tint);
+}
+
+.card__status--s2 {
   color: var(--color-primary-text-strong);
+  background: var(--color-primary-tint-strong);
+}
+
+.card__status--s3 {
+  color: var(--color-success-text);
+  background: var(--color-success-tint);
+}
+
+.card__status--s4 {
+  color: var(--color-text-hint);
+  background: var(--color-neutral-tint);
+}
+
+.card__status--s5 {
+  color: var(--color-text-hint);
+  background: var(--color-neutral-tint);
+  opacity: 0.75;
 }
 
 .items {
@@ -230,9 +315,9 @@ export default {
 }
 
 .item__img {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: var(--radius-sm);
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
   background: var(--bg-input);
 }
@@ -242,9 +327,14 @@ export default {
   margin-left: 16rpx;
   font-size: 28rpx;
   color: var(--color-text-primary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .item__num {
+  flex-shrink: 0;
+  margin-left: 16rpx;
   font-size: 26rpx;
   color: var(--color-text-hint);
 }
@@ -263,12 +353,24 @@ export default {
   color: var(--color-text-hint);
 }
 
-.card__amount {
-  font-size: 30rpx;
+.card__pricebox {
+  display: flex;
+  align-items: baseline;
+}
+
+.card__yen {
+  font-size: 24rpx;
   font-weight: 600;
   color: var(--color-price);
 }
 
+.card__amount {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-price);
+}
+
+/* ---------------- 操作钮 ---------------- */
 .ops {
   display: flex;
   justify-content: flex-end;
@@ -277,20 +379,28 @@ export default {
 
 .op {
   margin-left: 20rpx;
-  padding: 10rpx 28rpx;
+  padding: 0 32rpx;
+  height: 72rpx;
+  line-height: 70rpx;
   border-radius: 32rpx;
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--color-text-secondary);
+  background: var(--bg-card);
   border: 1rpx solid var(--border-medium);
+  box-sizing: border-box;
 }
 
 .op--main {
   color: var(--color-primary-text);
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-primary-gradient);
+  border-color: transparent;
+  box-shadow: var(--shadow-primary-sm);
 }
 
-.list__empty,
+.op--off {
+  opacity: 0.5;
+}
+
 .list__more,
 .list__error {
   padding: 120rpx 0;
@@ -306,9 +416,5 @@ export default {
 .list__retry {
   margin-left: 12rpx;
   color: var(--color-primary-text);
-}
-
-.op--off {
-  opacity: 0.5;
 }
 </style>

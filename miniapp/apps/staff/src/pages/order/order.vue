@@ -12,9 +12,12 @@
     </scroll-view>
 
     <scroll-view class="list" scroll-y @scrolltolower="loadMore">
-      <view v-for="o in records" :key="o.id" class="card">
+      <view v-for="o in records" :key="o.id" class="card" hover-class="hover-press" @tap="openDetail(o)">
         <view class="card__head">
-          <text class="card__no">{{ o.number }}</text>
+          <view class="card__headleft">
+            <text class="card__no">{{ o.number }}</text>
+            <text v-if="o.source && o.source !== 'TAKEOUT'" class="card__src">{{ sourceText(o.source) }}</text>
+          </view>
           <text class="card__status">{{ orderText(o.status) }}</text>
         </view>
 
@@ -38,10 +41,12 @@
         <view class="card__foot">
           <text class="card__time">{{ o.orderTime }}｜¥{{ fmtAmount(o.amount) }}</text>
           <view class="ops">
-            <text v-if="o.status === 2" class="op op--danger" :class="{ 'op--off': busy('act:reject:' + o.id) }" hover-class="hover-press" @tap="act('reject', o)">拒单</text>
-            <text v-if="o.status === 2" class="op op--main" :class="{ 'op--off': busy('act:confirm:' + o.id) }" hover-class="hover-press" @tap="act('confirm', o)">接单</text>
-            <text v-if="o.status === 3" class="op op--main" :class="{ 'op--off': busy('act:complete:' + o.id) }" hover-class="hover-press" @tap="act('complete', o)">完成</text>
-            <text v-if="o.status !== 4 && o.status !== 5" class="op" :class="{ 'op--off': busy('act:cancel:' + o.id) }" hover-class="hover-press" @tap="act('cancel', o)">取消</text>
+            <text v-if="o.status === 2" class="op op--danger" :class="{ 'op--off': busy('act:reject:' + o.id) }" hover-class="hover-press" @tap.stop="act('reject', o)">拒单</text>
+            <text v-if="o.status === 2" class="op op--main" :class="{ 'op--off': busy('act:confirm:' + o.id) }" hover-class="hover-press" @tap.stop="act('confirm', o)">接单</text>
+            <text v-if="o.status === 2" class="op" hover-class="hover-press" @tap.stop="openDetail(o, true)">派单</text>
+            <text v-if="o.status === 3 && isSelfPickup(o)" class="op op--main" hover-class="hover-press" @tap.stop="openDetail(o, true)">核销</text>
+            <text v-if="o.status === 3 && !isSelfPickup(o)" class="op op--main" :class="{ 'op--off': busy('act:complete:' + o.id) }" hover-class="hover-press" @tap.stop="act('complete', o)">完成</text>
+            <text v-if="o.status !== 4 && o.status !== 5" class="op" :class="{ 'op--off': busy('act:cancel:' + o.id) }" hover-class="hover-press" @tap.stop="act('cancel', o)">取消</text>
           </view>
         </view>
       </view>
@@ -67,7 +72,9 @@
 </template>
 
 <script>
-import { http, qs, orderText, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
+import { http, qs, orderText, sourceText, listState, busyLock, fmtAmount } from '@xinfei/mini-shared'
+
+const SELF_PICKUP = 'SELF_PICKUP'
 
 // 状态流转与服务端一致：2 待接单 →(confirm) 3 配送中 →(complete) 4 已完成；2/3 →(cancel|reject) 5 已取消
 const ACTIONS = {
@@ -105,13 +112,28 @@ export default {
   },
   onShow() {
     // 工作台快捷入口经本地存储交接筛选状态（switchTab 不支持 query）
-    if (this.applyHandoff()) this.load(true)
+    if (this.applyHandoff()) {
+      this.load(true)
+      return
+    }
+    // 从详情页接单/派单/核销返回后刷新列表（首次 onShow 已由 onLoad 加载，跳过）
+    if (this.entered) this.load(true)
+    this.entered = true
   },
   onPullDownRefresh() {
     this.load(true).then(() => uni.stopPullDownRefresh())
   },
   methods: {
     orderText,
+    sourceText,
+    isSelfPickup(order) {
+      return order.source === SELF_PICKUP
+    },
+    // action: 列表「派单/核销」直达时带入，详情页加载后自动展开对应弹层
+    openDetail(order, action) {
+      const suffix = action ? ('&action=' + action) : ''
+      uni.navigateTo({ url: '/pages/order/detail?id=' + order.id + suffix })
+    },
     applyHandoff() {
       const handoff = uni.getStorageSync('staffOrderStatus')
       if (!handoff) return false
@@ -230,6 +252,22 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.card__headleft {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.card__src {
+  margin-left: 12rpx;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-sm);
+  font-size: 20rpx;
+  color: var(--color-primary-text);
+  background: var(--color-primary-tint);
+  flex-shrink: 0;
 }
 
 .card__no {
