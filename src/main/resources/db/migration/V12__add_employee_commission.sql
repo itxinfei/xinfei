@@ -1,7 +1,23 @@
 -- V12：员工提成（O-17，收银提成口径；原编 V10 与 V10__add_user_openid 撞号，2026-10-24 改 V12——未在任何库执行过，改号安全）
 -- 1) employee 增加提成比例列：NULL/0 = 不参与提成；按收银实收（现金扣除找零）计提
-ALTER TABLE employee
-    ADD COLUMN commission_rate decimal(5, 2) NULL COMMENT '提成比例(%)，NULL/0=不参与提成' AFTER department_id;
+--    说明：共享 dev 库该列可能已由测试侧 TestSchemaPatcher 先行补齐（test profile 不跑 Flyway），
+--    故 ALTER 用 information_schema 条件化（临时存储过程自清理，与 V4 移除的手工迁移辅助过程同族模式）
+DROP PROCEDURE IF EXISTS xinfei_v12_add_commission_rate;
+
+CREATE PROCEDURE xinfei_v12_add_commission_rate()
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = DATABASE() AND table_name = 'employee' AND column_name = 'commission_rate'
+    ) THEN
+        ALTER TABLE employee
+            ADD COLUMN commission_rate decimal(5, 2) NULL COMMENT '提成比例(%)，NULL/0=不参与提成' AFTER department_id;
+    END IF;
+END;
+
+CALL xinfei_v12_add_commission_rate();
+
+DROP PROCEDURE IF EXISTS xinfei_v12_add_commission_rate;
 
 -- 2) 提成记录表：收银成功即按当次比例快照落一条，uk_commission_cashier 保证一单一提幂等
 CREATE TABLE IF NOT EXISTS commission_record (
