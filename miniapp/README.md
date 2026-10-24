@@ -195,4 +195,4 @@ cookie 容器，除公开接口外一律 401~~。
 - 顾客端结算页（`pages/order/checkout`）已接通：配送上门/到店自提双模式、地址交接、`POST /api/order/preview` 同源核价、货到/到店付款、微信 JSAPI 与会员储值（BALANCE 同步渠道，2026-10-24 接通）三种支付、结算选券抵扣（`GET /front/coupon/usable` + `usedCouponId`）、期望送达时间（2026-10-24 接通：尽快送达或预约今天/明天/后天四时段，`expectDeliveryTime` 与 H5 同口径透传）。会员中心在线充值（微信 JSAPI，回调自动入余额）已接通。支付宝小程序内无 JSAPI 能力保持灰显。~~自提门店地址 `/restaurant/info` 未出网~~（2026-10-24 已出网：接口返回 `tenant.address`，小程序门店卡与 H5 自提提示均展示，无值不渲染）。
 - ~~骑手在线状态、门店「暂停接单」的当前值不在详情接口里回传~~（2026-10-24 核实已修：staff 门店页读 `/store/detail` 的 `pauseOrder`、骑手「我的」页读 `/rider/auth/me` 的 `status`，进页即正确回显）。
 - ~~`packages/shared` 未做单元测试~~（2026-10-24 已补：`test/shared.test.mjs` 9 用例，`npm test` 覆盖 R.code 解包 / CSRF 头读写 / 401 回登录 / qs / 枚举 / 登录缓存；源文件相对导入已补 `.js` 扩展以兼容 Node 原生 ESM）。
-- 付费券包（O-18，2026-10-24）：优惠券页「可领取」顶部新增券包购买区（`/api/coupon-package/list|buy` + `payCouponPackageByWechat` 支付闭环，支付成功自动发放到「我的券」）；一期包内每模板限一张，权益卡/H5 入口未做。
+- 付费券包（O-18，2026-10-24）：优惠券页「可领取」顶部新增券包购买区（`/api/coupon-package/list|buy` + `payCouponPackageByWechat` 支付闭环，支付成功自动发放到「我的券」）；一期包内每模板限一张，权益卡形态未做（H5 券包入口已于 2026-10-24 接通）。
