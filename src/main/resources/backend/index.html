@@ -255,14 +255,14 @@
                 { id: '2-4', name: '菜品规格', url: 'page/food/spec-management.html', icon: 'ri-list-check-2' },
               ]},
 
-              /* ──3. 订单中心（合并订单管理+收银台+催菜；菜单信息架构收敛 O-21：
+              /* ──3. 订单中心（O-21 二期：支付记录并入订单明细弹窗；菜单信息架构收敛 O-21：
                       「待处理订单」与订单明细状态筛选重复，hidden:true=不进侧边栏、仅 Ctrl+K 可检索直达）── */
               { id: '3', name: '订单中心', icon: 'ri-file-list-3-line', children: [
                 { id: '3-1', name: '订单明细', url: 'page/order/list.html', icon: 'ri-file-list-3-line' },
                 { id: '3-2', name: '待处理订单', url: 'page/order/pending-monitor.html', icon: 'ri-radar-line', hidden: true },
                 { id: '3-7', name: '出餐大屏', url: 'page/kds/board.html', icon: 'ri-tv-line' },
                 { id: '3-3', name: '紧急催菜', url: 'page/urgency/urgency.html', icon: 'ri-alarm-warning-line' },
-                { id: '3-4', name: '支付管理', url: 'page/payment/order-list.html', icon: 'ri-money-dollar-circle-line' },
+                
                 { id: '3-8', name: '支付渠道配置', url: 'page/payment/channel-config.html', icon: 'ri-bank-card-line' },
                 { id: '3-5', name: '收银台', url: 'page/cashier/index.html', icon: 'ri-money-cny-circle-line' },
                 { id: '3-6', name: '收银日结', url: 'page/cashier/daily-settlement.html', icon: 'ri-calendar-check-line' },
