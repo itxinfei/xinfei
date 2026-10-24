@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>经营报表 - 心飞外卖管理端</title>
+
+  <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001004" />
+  <link rel="stylesheet" href="../../styles/chart-panel.css?v=20260926" />
+  <script src="../../plugins/echarts/echarts.min.js"></script>
+  <style>
+    /* ========== 基础布局（五 Tab 合并页 O-21⑤：原 5 报表页共用模式收编） ========== */
+    html, body { height: 100%; margin: 0; padding: 0;
+      background: var(--bg-page);
+      font-family: var(--font-family-base); }
+    /* 防抖动（2026-09-20）：滚动统一由 body 承担；若 html 也产生滚动条，append-to-body 的
+       下拉浮层超出视口底部时会撑高 html、闪现第二滚动条挤占宽度，表格随之左右横跳 */
+    html { overflow: hidden; }
+    body { overflow-x: hidden; overflow-y: auto; }
+
+    .management-page { min-height: 100%; display: flex; flex-direction: column; }
+    .management-page .container { flex: 1; background: transparent; padding: 10px;
+      min-width: 0; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+    /* Tab 页签与内容的间距（Element Plus tabs 默认偏紧） */
+    .report-tabs .el-tabs__header { margin-bottom: 12px; }
+    .report-tabs .el-tab-pane > div { margin-bottom: 0; }
+
+    /* 双图并排（销售/排行/时段/支付/日报共用） */
+    .report-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .chart-box { width: 100%; height: 380px; min-height: 300px; }
+    .chart-container { height: 300px; }
+
+    /* 支付分析：退款面板顶部紧凑汇总条：3 指标等宽，数值语义色 */
+    .refund-summary { display: flex; gap: 12px; margin-bottom: 12px; }
+    .refund-summary__item {
+      flex: 1; display: flex; flex-direction: column; gap: 2px;
+      padding: 8px 12px; background: var(--bg-page); border-radius: var(--radius-md);
+    }
+    .refund-summary__value { font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary); }
+    /* P0: 浅语义色压浅灰底仅 2.68~3.75:1，统一改用已达标文字变体 */
+    .refund-summary__value.is-danger { color: var(--color-danger-text); }
+    .refund-summary__value.is-success { color: var(--color-success-text); }
+    .refund-summary__value.is-warning { color: var(--color-warning-text); }
+    .refund-summary__label { font-size: var(--font-size-xs); color: var(--text-muted); }
+
+    /* search-extra 包装器，防止日期选择器+数字输入与搜索按钮重叠（自排行页收编） */
+    .search-extra-inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .search-extra-inline .el-input-number { overflow: hidden; }
+    .search-extra-inline .el-input-number .el-input { width: auto !important; max-width: 100%; }
+
+    /* ========== 导出任务中心组件补充样式（组件模板不携带 style 块） ========== */
+    .etc-quick-form { margin-bottom: 4px; }
+    .etc-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+      border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: 600; }
+    .etc-tag.is-excel { background: var(--el-color-primary-lighter); color: var(--el-color-primary); }
+    .etc-tag.is-pdf { background: var(--color-danger-light); color: var(--color-danger); }
+    .etc-tag.is-info { background: var(--color-info-light, var(--el-bg-ghost)); color: var(--color-info); }
+    .etc-tag.is-warning { background: var(--color-warning-light); color: var(--color-warning-text); }
+    .etc-tag.is-success { background: var(--color-success-light); color: var(--color-success); }
+    .etc-tag.is-danger { background: var(--color-danger-light); color: var(--color-danger); }
+    .etc-spin { display: inline-block; animation: etc-rotate 1s linear infinite; }
+    @keyframes etc-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* ========== 响应式 ========== */
+    @media (max-width: 1200px) {
+      .report-two-col { grid-template-columns: 1fr; }
+      .container { padding: var(--space-3) var(--space-4) !important; }
+    }
+    @media (max-width: 768px) {
+      .container { padding: var(--space-2) var(--space-3) !important; }
+      .chart-box { height: 300px; min-height: 260px; }
+      .chart-container { height: 260px; }
+      .refund-summary { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 键盘用户：跳转到主内容（WCAG 2.4.1）-->
+  <a href="#main-content" class="skip-link">跳转到主内容</a>
+
+  <div class="management-page" id="report-management-app">
+    <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">经营报表</h1>
+
+      <el-tabs v-model="activeTab" class="report-tabs" @tab-change="onTabChange">
+
+        <!-- ==================== Tab 1 营业日报（自 daily.html 移植） ==================== -->
+        <el-tab-pane label="营业日报" name="daily" lazy>
+          <div v-loading="daily.loading || daily.exporting" element-loading-text="正在导出..." element-loading-background="rgba(0,0,0,0.5)">
+            <!-- P2-1 骨架屏——日报加载态（图表/报表区域脉冲骨架，替代纯转圈） -->
+            <div v-if="daily.loading" class="daily-skeleton">
+              <div class="ds-skeleton">
+                <div class="ds-skeleton-title"></div>
+                <div class="ds-skeleton-row"><div class="ds-skeleton-cell"><div class="ds-skeleton-bar"></div></div></div>
+                <div class="ds-skeleton-row"><div class="ds-skeleton-cell"><div class="ds-skeleton-bar"></div></div></div>
+                <div class="ds-skeleton-row"><div class="ds-skeleton-cell"><div class="ds-skeleton-bar"></div></div></div>
+                <div class="ds-skeleton-row"><div class="ds-skeleton-cell"><div class="ds-skeleton-bar"></div></div></div>
+                <div class="ds-skeleton-row"><div class="ds-skeleton-cell"><div class="ds-skeleton-bar"></div></div></div>
+              </div>
+            </div>
+            <template v-else>
+              <stat-cards :cards="dailyCards"></stat-cards>
+
+              <table-bar
+                :search-items="[]"
+                :actions="dailyActions"
+                :show-refresh="true"
+                @refresh="loadDailyData()"
+                @search="loadDailyData"
+                @reset="onDailyReset"
+                @action="onDailyAction">
+                <template #search-extra>
+                  <el-date-picker
+                    v-model="daily.queryDate"
+                    type="daterange"
+                    range-separator="至"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    value-format="YYYY-MM-DD"
+                    :shortcuts="dateShortcuts"
+                    @change="onDailyDateChange"
+                    size="small"
+                  ></el-date-picker>
+                </template>
+              </table-bar>
+
+              <!-- 趋势图 + 分类销售 双图 -->
+              <div class="report-two-col" style="margin-bottom: var(--space-4);">
+                <chart-panel style="margin-bottom:0;">
+                  <template #title>
+                    <i class="ri-bar-chart-line" style="color:var(--el-color-primary);"></i>
+                    营收趋势
+                    <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-weight:400;margin-left:4px;">（{{ dailyTrendRangeLabel }}）</span>
+                  </template>
+                  <div style="flex:1;min-height:300px;" id="mgmtDailyTrendChart"></div>
+                </chart-panel>
+                <chart-panel style="margin-bottom:0;">
+                  <template #title>
+                    <i class="ri-pie-chart-line" style="color:var(--color-warning);"></i>
+                    菜品分类销售占比
+                    <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-weight:400;margin-left:4px;">（基于已选日期）</span>
+                  </template>
+                  <div style="flex:1;min-height:300px;" id="mgmtDailyCategoryChart"></div>
+                </chart-panel>
+              </div>
+            </template>
+          </div>
+        </el-tab-pane>
+
+        <!-- ==================== Tab 2 销售报表（自 sales-report.html 移植） ==================== -->
+        <el-tab-pane label="销售报表" name="sales" lazy>
+          <div v-loading="sales.loading">
+            <stat-cards :cards="salesCards"></stat-cards>
+
+            <table-bar
+              :search-items="[]"
+              :actions="salesActions"
+              :show-refresh="true"
+              @refresh="loadSalesData()"
+              @search="loadSalesData"
+              @reset="onSalesReset"
+              @action="onSalesAction">
+              <template #search-extra>
+                <div class="search-extra-inline">
+                  <el-radio-group v-model="sales.reportType" @change="loadSalesData" size="small">
+                    <el-radio-button value="weekly">周报</el-radio-button>
+                    <el-radio-button value="monthly">月报</el-radio-button>
+                    <el-radio-button value="yearly">年报</el-radio-button>
+                  </el-radio-group>
+
+                  <template v-if="sales.reportType === 'weekly'">
+                    <el-date-picker v-model="sales.year" type="year" value-format="YYYY" size="small" style="width: 100px" placeholder="年份"></el-date-picker>
+                    <el-input-number v-model="sales.week" :min="1" :max="53" size="small" style="width: 100px" placeholder="周数"></el-input-number>
+                  </template>
+
+                  <template v-if="sales.reportType === 'monthly'">
+                    <el-date-picker v-model="sales.year" type="year" value-format="YYYY" size="small" style="width: 100px;" placeholder="年份"></el-date-picker>
+                    <el-select v-model="sales.month" size="small" style="width: 80px;" placeholder="月份">
+                      <el-option v-for="i in 12" :key="i" :label="i + '月'" :value="i"></el-option>
+                    </el-select>
+                  </template>
+
+                  <template v-if="sales.reportType === 'yearly'">
+                    <el-date-picker v-model="sales.year" type="year" value-format="YYYY" size="small" style="width: 100px;" placeholder="年份"></el-date-picker>
+                  </template>
+                </div>
+              </template>
+            </table-bar>
+
+            <div class="report-two-col" style="margin-bottom: 20px;">
+              <chart-panel :title="'营业额趋势（' + salesPeriodLabel + '）'" icon="ri-bar-chart-2-line">
+                <div id="mgmtSalesRevenueChart" class="chart-container"></div>
+              </chart-panel>
+              <chart-panel :title="'订单数趋势（' + salesPeriodLabel + '）'" icon="ri-line-chart-line">
+                <div id="mgmtSalesOrderChart" class="chart-container"></div>
+              </chart-panel>
+            </div>
+
+            <crud-table
+              :data="sales.detailData"
+              :columns="salesTableColumns"
+              :loading="sales.loading"
+              :show-pagination="false"
+              :stripe="true"
+              :border="true"
+              aria-label="销售报表数据"
+              empty-hint="暂无数据，试试调整筛选条件">
+            </crud-table>
+          </div>
+        </el-tab-pane>
+
+        <!-- ==================== Tab 3 菜品排行（自 dish-ranking.html 移植） ==================== -->
+        <el-tab-pane label="菜品排行" name="rank" lazy>
+          <div v-loading="rank.loading">
+            <stat-cards :cards="rankCards"></stat-cards>
+
+            <table-bar
+              :search-items="rank.searchConfig"
+              :actions="rank.actionConfig"
+              :show-refresh="true"
+              @refresh="loadRankData()"
+              @search="onRankSearch"
+              @reset="onRankReset"
+              @action="onRankAction">
+              <template #search-extra>
+                <div class="search-extra-inline">
+                  <el-date-picker v-model="rank.dateRange" clearable value-format="YYYY-MM-DD"
+                    type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+                    size="small"></el-date-picker>
+                  <el-input-number v-model="rank.limit" :min="5" :max="50" :step="5"
+                    size="small" controls-position="right" style="width:100px;" placeholder="数量"></el-input-number>
+                </div>
+              </template>
+            </table-bar>
+
+            <div class="report-two-col" style="margin-bottom: 20px;">
+              <chart-panel :title="rankTitle" icon="ri-bar-chart-2-line">
+                <div id="mgmtRankBarChart" style="width:100%;height:340px;"></div>
+              </chart-panel>
+              <chart-panel title="Top 3 菜品销量趋势" icon="ri-line-chart-line" v-show="rank.tableData.length > 0">
+                <div id="mgmtRankTrendChart" style="width:100%;height:340px;"></div>
+              </chart-panel>
+            </div>
+
+            <crud-table
+              empty-hint="暂无相关记录"
+              :data="rank.tableData"
+              :columns="rankColumns"
+              :loading="rank.loading"
+              :show-pagination="false"
+              :stripe="true"
+              :border="true"
+              :selection="true"
+              aria-label="菜品销量排行"
+              @selection-change="onRankSelection">
+              <template #col-rank="{ $index }">
+                <span :class="['rank-badge', $index === 0 ? 'r1' : $index === 1 ? 'r2' : $index === 2 ? 'r3' : 'rn']">
+                  {{ $index + 1 }}
+                </span>
+              </template>
+              <template #col-ratio="{ row }">
+                <el-progress :percentage="rankCalcPercent(row.count)" :show-text="true"
+                  :stroke-width="12" :format="function(p) { return p + '%'; }"
+                  :color="rankProgressColor(row.count)">
+                </el-progress>
+              </template>
+            </crud-table>
+          </div>
+        </el-tab-pane>
+
+        <!-- ==================== Tab 4 时段分析（自 time-slot.html 移植） ==================== -->
+        <el-tab-pane label="时段分析" name="slot" lazy>
+          <div v-loading="slot.loading">
+            <stat-cards :cards="slotCards"></stat-cards>
+
+            <table-bar
+              :search-items="slot.searchItems"
+              :actions="slot.actionConfig"
+              :loading="slot.loading"
+              :show-refresh="true"
+              @refresh="loadSlotData()"
+              @search="onSlotSearch"
+              @reset="onSlotReset"
+              @action="onSlotAction">
+            </table-bar>
+
+            <chart-panel title="时段订单与营业额分布" icon="ri-bar-chart-2-line">
+              <div class="report-two-col">
+                <div id="mgmtSlotBarChart" class="chart-box"></div>
+                <div id="mgmtSlotPieChart" class="chart-box"></div>
+              </div>
+            </chart-panel>
+
+            <chart-panel title="工作日 × 时段 客流量热力图" icon="ri-map-2-line">
+              <div id="mgmtSlotHeatmapChart" style="width:100%;height:420px;min-height:320px;"></div>
+            </chart-panel>
+
+            <crud-table
+              empty-hint="暂无相关记录"
+              :data="slot.tableData"
+              :columns="slotColumns"
+              :loading="slot.loading"
+              :show-pagination="false"
+              :stripe="true"
+              :border="true"
+              :selection="true"
+              aria-label="时段分布数据"
+              @selection-change="onSlotSelection">
+              <template #col-ratio="{ row }"><span>{{ slotCalcPercent(row.count) }}%</span></template>
+              <template #col-amount="{ row }"><span>¥{{ formatMoney(row.amount) }}</span></template>
+              <template #col-heat="{ row }">
+                <el-progress :percentage="slotCalcPercent(row.count)" :show-text="true"
+                  :stroke-width="12" :format="function(p) { return p + '%'; }"
+                  :color="slotHeatColor(row)">
+                </el-progress>
+              </template>
+            </crud-table>
+          </div>
+        </el-tab-pane>
+
+        <!-- ==================== Tab 5 支付分析（自 payment-analysis.html 移植） ==================== -->
+        <el-tab-pane label="支付分析" name="pay" lazy>
+          <div v-loading="pay.loading">
+            <stat-cards :cards="payCards"></stat-cards>
+
+            <table-bar
+              :search-items="pay.searchItems"
+              :actions="pay.actionConfig"
+              :loading="pay.loading"
+              :show-refresh="true"
+              @refresh="loadPayData()"
+              @search="onPaySearch"
+              @reset="onPayReset"
+              @action="onPayAction">
+            </table-bar>
+
+            <chart-panel title="支付方式分布" icon="ri-bar-chart-2-line">
+              <div class="report-two-col">
+                <div id="mgmtPayPieChart" class="chart-box"></div>
+                <div id="mgmtPayBarChart" class="chart-box"></div>
+              </div>
+            </chart-panel>
+
+            <chart-panel title="每日支付金额趋势" icon="ri-line-chart-line">
+              <div id="mgmtPayTrendChart" style="width:100%;height:360px;min-height:300px;"></div>
+            </chart-panel>
+
+            <chart-panel title="退款分析" icon="ri-refund-2-line">
+              <div class="refund-summary">
+                <div v-for="c in refundSummary" :key="c.key" class="refund-summary__item">
+                  <span class="refund-summary__value" :class="c.cls">{{ c.value }}</span>
+                  <span class="refund-summary__label">{{ c.label }}</span>
+                </div>
+              </div>
+              <div id="mgmtPayRefundChart" style="width:100%;height:300px;min-height:260px;"></div>
+            </chart-panel>
+
+            <crud-table
+              empty-hint="暂无相关记录"
+              :data="pay.tableData"
+              :columns="payColumns"
+              :loading="pay.loading"
+              :show-pagination="false"
+              :stripe="true"
+              :border="true"
+              :selection="true"
+              aria-label="支付渠道数据"
+              @selection-change="onPaySelection">
+              <template #col-amount="{ row }">
+                <span>{{ row.amount != null ? '¥' + formatMoney(row.amount) : '-' }}</span>
+              </template>
+              <template #col-ratio="{ row }">
+                <el-progress :percentage="payCalcPercent(row.transactionCount)" :show-text="true"
+                  :stroke-width="12" :format="function(p) { return p + '%'; }"
+                  :color="payChannelProgressColor(row.key)">
+                </el-progress>
+              </template>
+            </crud-table>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </main>
+
+    <!-- 导出任务中心（O-25：原导出中心页收编为工具栏弹窗） -->
+    <export-task-center ref="exportCenter"></export-task-center>
+  </div>
+
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
+  <script src="../../plugins/axios/axios.min.js"></script>
+  <script src="../../js/request.js?v=20260930"></script>
+  <script src="../../js/accessibility-utils.js?v=20260927"></script>
+  <script src="../../js/performance-utils.js?v=20260926"></script>
+  <script src="../../api/report.js?v=20260926"></script>
+  <script src="../../api/report-enhanced.js?v=20260926"></script>
+  <script src="../../api/category.js?v=20260918"></script>
+  <script src="../../api/payment.js?v=20260926"></script>
+  <script src="../../api/export-task.js?v=20261024"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script src="../../js/chart-panel-v3.js?v=3001001"></script>
+  <script src="../../js/export-task-center.js?v=20261024"></script>
+  <script>
+    // 支付渠道文案与配色：统一走 XinfeiPalette（微信绿/支付宝蓝已收录为调色板字段），canvas 中禁止写 hex
+    const PAY_CHANNEL_LABEL = { wechat: '微信支付', alipay: '支付宝', balance: '线下/其他', other: '其他渠道' };
+    const PAY_CHANNEL_COLOR = {
+      wechat: XinfeiPalette.wechatGreen, // 微信支付品牌绿
+      alipay: XinfeiPalette.alipayBlue,  // 支付宝品牌蓝
+      balance: XinfeiPalette.brand,      // 余额支付 → 品牌金
+      other: XinfeiPalette.warning       // 其他渠道 → 警告橙
+    };
+    // 时段分布系列色（自 time-slot 收编，单一来源 XinfeiPalette）
+    const SLOT_COLORS = [XinfeiPalette.brand600, XinfeiPalette.success, XinfeiPalette.warning, XinfeiPalette.danger, XinfeiPalette.linkBlue, XinfeiPalette.seriesViolet, XinfeiPalette.emerald, XinfeiPalette.orange500];
+
+    createXinfeiApp({
+      el: '#report-management-app',
+      data() {
+        // 日期快捷选项：今天、近7天、近30天、本月、上月（日报 Tab 用）
+        const formatDate = function(d) {
+          return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+        };
+        const today = new Date();
+        const todayStr = formatDate(today);
+        const day7 = new Date(today);
+        day7.setDate(day7.getDate() - 6);
+        return {
+          activeTab: 'daily',
+          dateShortcuts: [
+            { text: '今天', value() { const d = new Date(); return [d, d]; } },
+            { text: '近7天', value() { const e = new Date(); const s = new Date(); s.setDate(s.getDate() - 6); return [s, e]; } },
+            { text: '近30天', value() { const e = new Date(); const s = new Date(); s.setDate(s.getDate() - 29); return [s, e]; } },
+            { text: '本月', value() { const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth(), 1); return [s, t]; } },
+            { text: '上月', value() { const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - 1, 1); const e = new Date(t.getFullYear(), t.getMonth(), 0); return [s, e]; } }
+          ],
+          // ========== Tab 1 营业日报 ==========
+          daily: {
+            loading: false,
+            exporting: false,
+            queryDate: [formatDate(day7), todayStr], // 默认范围：近7天
+            dailyData: {},
+            // 多日区间聚合（由趋势按天 orders/revenues 汇总）；单日时为 null
+            rangeSummary: null,
+            chart: null,
+            categoryChart: null,
+            lastTrendData: undefined,
+            lastCatData: undefined,
+            // 成功导出的 Blob 缓存不再需要：O-25 起导出走异步任务中心
+          },
+          // ========== Tab 2 销售报表 ==========
+          sales: {
+            loading: false,
+            reportType: 'weekly',
+            year: String(today.getFullYear()),
+            month: today.getMonth() + 1,
+            week: this.getWeekNumber(today),
+            report: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, completedCount: 0 },
+            detailData: [],
+            revenueChart: null,
+            orderChart: null
+          },
+          salesTableColumns: [
+            { prop: 'label', label: '时间', width: 120, align: 'center' },
+            { prop: 'revenue', label: '营业额', width: 120, type: 'money' },
+            { prop: 'orderCount', label: '订单数', width: 100, align: 'center', type: 'number' },
+            { prop: 'completedCount', label: '完成数', width: 100, align: 'center', type: 'number' },
+            { prop: 'avgOrderValue', label: '客单价', width: 120, type: 'money' }
+          ],
+          // ========== Tab 3 菜品排行 ==========
+          rank: {
+            loading: false,
+            dateRange: [],
+            limit: 10,
+            categoryId: null,
+            tableData: [],
+            exportRows: [],
+            categoryOptions: [],
+            searchConfig: [
+              { type: 'select', field: 'categoryId', placeholder: '全部分类', clearable: true, options: [] }
+            ],
+            actionConfig: [
+              { key: 'export', text: '导出 CSV', type: 'success', icon: 'ri-download-line', disabled: true },
+              { key: 'exportCenter', text: '导出中心', type: 'info', icon: 'ri-folder-download-line' }
+            ],
+            stats: { totalDishes: 0, topDishes: 0, totalSales: 0, avgSales: 0 },
+            chart: null,
+            trendChart: null
+          },
+          rankColumns: [
+            { prop: 'rank', label: '排名', width: 80, align: 'center', slot: true },
+            { prop: 'name', label: '菜品名称', width: 140 },
+            { prop: 'count', label: '销量（份）', width: 120, type: 'number' },
+            { prop: 'ratio', label: '相对榜首', width: 140, align: 'center', slot: true }
+          ],
+          // ========== Tab 4 时段分析 ==========
+          slot: {
+            loading: false,
+            dateRange: [],
+            tableData: [],
+            exportRows: [],
+            searchItems: [{ type: 'daterange', field: 'dateRange', placeholder: '日期范围' }],
+            actionConfig: [
+              { key: 'export', text: '导出 CSV', type: 'success', icon: 'ri-download-line', disabled: true },
+              { key: 'exportCenter', text: '导出中心', type: 'info', icon: 'ri-folder-download-line' }
+            ],
+            barChart: null,
+            pieChart: null,
+            heatmapChart: null,
+            observer: null
+          },
+          slotColumns: [
+            { prop: 'name', label: '时段', width: 120, align: 'center' },
+            { prop: 'count', label: '订单数', width: 120, type: 'number' },
+            { prop: 'ratio', label: '占比', width: 120, align: 'center', slot: true },
+            { prop: 'amount', label: '营业额（元）', width: 150, slot: true, type: 'money' },
+            { prop: 'heat', label: '时段热度', width: 160, align: 'center', slot: true }
+          ],
+          // ========== Tab 5 支付分析 ==========
+          pay: {
+            loading: false,
+            dateRange: [],
+            tableData: [],
+            exportRows: [],
+            searchItems: [{ type: 'daterange', field: 'dateRange', placeholder: '日期范围' }],
+            actionConfig: [
+              { key: 'export', text: '导出 CSV', type: 'success', icon: 'ri-download-line', disabled: true },
+              { key: 'exportCenter', text: '导出中心', type: 'info', icon: 'ri-folder-download-line' }
+            ],
+            pieChart: null,
+            barChart: null,
+            trendChart: null,
+            refundChart: null,
+            refundAnalysis: null
+          },
+          payColumns: [
+            { prop: 'channel', label: '支付渠道', width: 150, align: 'center' },
+            { prop: 'transactionCount', label: '交易笔数', width: 120, type: 'number' },
+            { prop: 'amount', label: '金额（元）', width: 150, slot: true, type: 'money' },
+            { prop: 'ratio', label: '占比', width: 160, align: 'center', slot: true }
+          ]
+        }
+      },
+      computed: {
+        // ========== 日报 ==========
+        dailyTrendRangeLabel() {
+          const q = this.daily.queryDate
+          if (!q || q.length < 2 || !q[0] || !q[1]) return ''
+          return q[0] === q[1] ? q[0] : (q[0] + ' ~ ' + q[1])
+        },
+        dailyCompletionRate() {
+          const total = this.daily.dailyData.totalOrders || 0
+          const completed = this.daily.dailyData.completedOrders || 0
+          if (!total) return '0.0'
+          return (completed / total * 100).toFixed(1)
+        },
+        dailyCanExport() {
+          const q = this.daily.queryDate
+          if (this.daily.loading || !q || q.length < 2 || !q[0] || !q[1]) return false
+          const d = this.daily.dailyData || {}
+          return (Number(d.totalOrders) || 0) > 0 || (Number(d.totalAmount) || 0) > 0
+        },
+        dailyActions() {
+          const dis = !this.dailyCanExport || this.daily.exporting
+          return [
+            { key: 'exportExcel', text: '导出 Excel', type: 'success', disabled: dis },
+            { key: 'exportPdf', text: '导出 PDF', type: 'warning', disabled: dis },
+            { key: 'exportCenter', text: '导出中心', type: 'info', icon: 'ri-folder-download-line' }
+          ]
+        },
+        dailyCards() {
+          const self = this
+          // 多日区间：前 3 张卡为整段聚合；第 4 张卡趋势无状态拆分，诚实展示统计天数
+          if (self.daily.rangeSummary) {
+            const rs = self.daily.rangeSummary;
+            return [
+              { key: '订单', icon: 'ri-bar-chart-2-line', label: '订单总数（区间）', value: rs.totalOrders, color: 'primary' },
+              { key: '营业额', icon: 'ri-line-chart-line', label: '营业额（元·区间）', value: '¥' + self.formatMoney(rs.totalAmount), color: 'success' },
+              { key: '客单价', icon: 'ri-money-cny-circle-line', label: '客单价（元·区间）', value: '¥' + self.formatMoney(rs.avgAmount), color: 'warning' },
+              { key: '天数', icon: 'ri-calendar-line', label: '统计天数', value: rs.days + ' 天', color: 'danger' }
+            ]
+          }
+          return [
+            { key: '订单', icon: 'ri-bar-chart-2-line', label: '订单总数', value: self.daily.dailyData.totalOrders || 0, color: 'primary' },
+            { key: '营业额', icon: 'ri-line-chart-line', label: '营业额（元）', value: '¥' + self.formatMoney(self.daily.dailyData.totalAmount), color: 'success' },
+            { key: '客单价', icon: 'ri-money-cny-circle-line', label: '客单价（元）', value: '¥' + self.formatMoney(self.daily.dailyData.avgAmount), color: 'warning' },
+            { key: '完成率', icon: 'ri-checkbox-circle-line', label: '完成 / 取消', value: (self.daily.dailyData.completedOrders || 0) + ' / ' + (self.daily.dailyData.cancelledOrders || 0), color: 'danger' }
+          ]
+        },
+        // ========== 销售 ==========
+        salesPeriodLabel() {
+          const s = this.sales
+          if (s.reportType === 'weekly') return s.year + '年 第' + s.week + '周'
+          if (s.reportType === 'monthly') return s.year + '年' + s.month + '月'
+          return s.year + '年'
+        },
+        salesCards() {
+          const s = this.sales
+          return [
+            { key: '营业额', icon: 'ri-money-cny-circle-line', label: '总营业额', value: '¥' + this.formatMoney(s.report.totalRevenue), color: 'primary' },
+            { key: '订单数', icon: 'ri-file-list-3-line', label: '总订单数', value: s.report.totalOrders, color: 'success' },
+            { key: '客单价', icon: 'ri-price-tag-3-line', label: '平均客单价', value: '¥' + this.formatMoney(s.report.avgOrderValue), color: 'warning' },
+            { key: '完成数', icon: 'ri-checkbox-circle-line', label: '完成订单', value: s.report.completedCount, color: 'info' }
+          ]
+        },
+        salesActions() {
+          return [
+            { key: 'exportCenter', text: '导出中心', type: 'info', icon: 'ri-folder-download-line' }
+          ]
+        },
+        // ========== 排行 ==========
+        rankTitle() {
+          return '菜品销量排行（Top ' + (this.rank.tableData ? this.rank.tableData.length : 0) + '）'
+        },
+        rankCards() {
+          const self = this
+          // 统计仅基于当前 Top N 榜单（接口按 limit 截断），文案明确口径避免误解为全店总计
+          const topN = self.rank.limit
+          const topSales = self.rank.tableData.length ? (self.rank.tableData[0].count || 0) : 0
+          return [
+            { key: '菜品', icon: 'ri-restaurant-2-line', label: '在榜菜品数（Top' + topN + '）', value: self.rank.stats.totalDishes || 0, color: 'primary' },
+            { key: '榜首', icon: 'ri-trophy-line', label: '榜首销量（份）', value: topSales, color: 'success' },
+            { key: '总销量', icon: 'ri-bar-chart-2-line', label: '在榜总销量（份）', value: self.rank.stats.totalSales || 0, color: 'warning' },
+            { key: '平均', icon: 'ri-line-chart-line', label: '在榜平均销量（份）', value: self.rank.stats.avgSales || 0, color: 'info' }
+          ]
+        },
+        // ========== 时段 ==========
+        slotTotalCount() { return this.slot.tableData.reduce(function(s, r) { return s + (r.count || 0); }, 0) },
+        slotTotalAmount() { return this.slot.tableData.reduce(function(s, r) { return s + (Number(r.amount) || 0); }, 0) },
+        slotPeak() {
+          if (!this.slot.tableData.length) return '--'
+          var p = this.slot.tableData.reduce(function(m, r) { return (r.count || 0) > (m.count || 0) ? r : m; }, this.slot.tableData[0])
+          return p.name || '--'
+        },
+        slotCards() {
+          return [
+            { key: '时段', icon: 'ri-time-line', label: '时段数量', value: this.slot.tableData.length || 0, color: 'primary' },
+            { key: '订单', icon: 'ri-file-list-3-line', label: '总订单数', value: this.slotTotalCount, color: 'success' },
+            { key: '营业额', icon: 'ri-money-cny-circle-line', label: '总营业额（元）', value: '¥' + this.formatMoney(this.slotTotalAmount), color: 'warning' },
+            { key: '高峰', icon: 'ri-fire-line', label: '高峰时段', value: this.slotPeak, color: 'info' }
+          ]
+        },
+        // ========== 支付 ==========
+        payTotalCount() { return this.pay.tableData.reduce(function(s, r) { return s + (r.transactionCount || 0); }, 0) },
+        payTotalAmount() { return this.pay.tableData.reduce(function(s, r) { return s + (Number(r.amount) || 0); }, 0) },
+        payTopChannel() {
+          if (!this.pay.tableData.length) return '--'
+          var top = this.pay.tableData.reduce(function(m, r) { return (r.transactionCount || 0) > (m.transactionCount || 0) ? r : m; }, this.pay.tableData[0])
+          return PAY_CHANNEL_LABEL[top.key] || top.channel || '--'
+        },
+        payCards() {
+          // 顶部固定 4 张支付卡；退款 3 指标聚合在退款分析面板顶部汇总条
+          return [
+            { key: '笔数', icon: 'ri-bank-card-line', label: '交易总笔数', value: this.payTotalCount, color: 'primary', clickable: false },
+            { key: '总额', icon: 'ri-money-cny-circle-line', label: '交易总额（元）', value: '¥' + this.formatMoney(this.payTotalAmount), color: 'success', clickable: false },
+            { key: '常用', icon: 'ri-medal-line', label: '最常用支付方式', value: this.payTopChannel, color: 'warning', clickable: false },
+            { key: '渠道', icon: 'ri-bar-chart-2-line', label: '支付渠道数', value: this.pay.tableData.length || 0, color: 'info', clickable: false }
+          ]
+        },
+        // 退款分析面板顶部 3 指标（退款单数/成功退款/退款金额），数据未加载时置 0
+        refundSummary() {
+          const a = this.pay.refundAnalysis || {}
+          return [
+            { key: 'count', label: '退款单数', value: a.totalCount || 0, cls: 'is-danger' },
+            { key: 'success', label: '成功退款', value: a.successCount || 0, cls: 'is-success' },
+            { key: 'amount', label: '退款金额（元）', value: '¥' + this.formatMoney(a.totalAmount || 0), cls: 'is-warning' }
+          ]
+        }
+      },
+      mounted() {
+        const self = this
+        this.rank.dateRange = this.monthRange()
+        this.slot.dateRange = this.defaultRange()
+        this.pay.dateRange = this.defaultRange()
+        this.loadRankCategoryOptions()
+        this.$nextTick(function() {
+          // 首屏 Tab（日报）：lazy 面板已挂载，初始化图表并加载数据
+          self.initDailyCharts()
+          self.loadDailyData()
+        })
+        // 全局 resize：所有已初始化图表（隐藏面板 resize 无害，激活时会再 resize）
+        this.resizeHandler = function() {
+          self.allCharts().forEach(function(ch) {
+            if (ch && !ch.isDisposed()) ch.resize()
+          })
+        }
+        window.addEventListener('resize', this.resizeHandler)
+      },
+      beforeUnmount() {
+        if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler)
+        if (this.slot.observer) this.slot.observer.disconnect()
+        this.allCharts().forEach(function(ch) {
+          if (ch) { try { ch.dispose(); } catch(e) {} }
+        })
+      },
+      methods: {
+        // ==================== 通用工具 ====================
+        allCharts() {
+          return [
+            this.daily.chart, this.daily.categoryChart,
+            this.sales.revenueChart, this.sales.orderChart,
+            this.rank.chart, this.rank.trendChart,
+            this.slot.barChart, this.slot.pieChart, this.slot.heatmapChart,
+            this.pay.pieChart, this.pay.barChart, this.pay.trendChart, this.pay.refundChart
+          ].filter(function(ch) { return ch })
+        },
+        emptyOption(text) {
+          return { title: { text: text, left: 'center', top: 'center',
+            textStyle: { color: XinfeiPalette.textSecondary, fontSize: 14, fontWeight: 'normal' } } }
+        },
+        // 取/重建图表实例：若缓存实例已失效（容器被 v-if 重建）则 dispose 旧实例并在新 DOM 上重新 init（日报骨架屏需要）
+        bindChart(ns, key, id) {
+          const el = document.getElementById(id)
+          if (!el) return null
+          let inst = this[ns][key]
+          const valid = inst && !inst.isDisposed() && inst.getDom && inst.getDom() === el
+          if (!valid) {
+            if (inst) { try { inst.dispose() } catch (e) {} }
+            inst = Vue.markRaw(echarts.init(el))
+            this[ns][key] = inst
+          }
+          return inst
+        },
+        formatMoney(val) {
+          if (val === null || val === undefined) return '0.00'
+          return Number(val).toFixed(2)
+        },
+        // 导出中心入口（全 Tab 共用）
+        openExportCenter() {
+          const center = this.$refs.exportCenter
+          if (center) center.open()
+        },
+        // 异步导出任务提交（O-25）：日报 Excel/PDF 与导出中心快捷导出走同一任务通道
+        submitExportTask(taskType, format, params) {
+          const self = this
+          self.daily.exporting = true
+          createExportTask({ taskType: taskType, fileFormat: format, params: params || {} })
+            .then(function(res) {
+              if (String(res.code) === '1') {
+                XinfeiUI.notify({
+                  title: '导出任务已提交',
+                  message: '文件生成完成后可在「导出中心」下载（保留 7 天）',
+                  type: 'success', duration: 5000, position: 'top-right'
+                })
+              } else {
+                XinfeiUI.error(res.msg || '导出任务提交失败')
+              }
+            })
+            .catch(function(err) { XinfeiUI.error('导出任务提交失败：' + (err.message || err)) })
+            .finally(function() { self.daily.exporting = false })
+        },
+
+        // ==================== Tab 切换（lazy 懒挂载 + 首次加载 + 重激活 resize） ====================
+        onTabChange(name) {
+          const self = this
+          this.$nextTick(function() {
+            if (name === 'daily') {
+              self.initDailyCharts()
+              if (!self.daily.loadedOnce) { self.loadDailyData() } else { self.resizeChartsOf(name) }
+            } else if (name === 'sales') {
+              self.initSalesCharts()
+              if (!self.sales.loadedOnce) { self.loadSalesData() } else { self.resizeChartsOf(name) }
+            } else if (name === 'rank') {
+              self.initRankCharts()
+              if (!self.rank.loadedOnce) { self.loadRankData() } else { self.resizeChartsOf(name) }
+            } else if (name === 'slot') {
+              self.initSlotCharts()
+              if (!self.slot.loadedOnce) { self.loadSlotData() } else { self.resizeChartsOf(name) }
+            } else if (name === 'pay') {
+              self.initPayCharts()
+              if (!self.pay.loadedOnce) { self.loadPayData() } else { self.resizeChartsOf(name) }
+            }
+          })
+        },
+        resizeChartsOf(name) {
+          const groups = {
+            daily: [this.daily.chart, this.daily.categoryChart],
+            sales: [this.sales.revenueChart, this.sales.orderChart],
+            rank: [this.rank.chart, this.rank.trendChart],
+            slot: [this.slot.barChart, this.slot.pieChart, this.slot.heatmapChart],
+            pay: [this.pay.pieChart, this.pay.barChart, this.pay.trendChart, this.pay.refundChart]
+          }
+          ;(groups[name] || []).forEach(function(ch) {
+            if (ch && !ch.isDisposed()) ch.resize()
+          })
+        },
+
+        // ==================== Tab 1 营业日报（自 daily.html 移植） ====================
+        initDailyCharts() {
+          const self = this
+          // 容器可能正被骨架屏 v-if 销毁（loading 中）：判空跳过，渲染阶段 bindChart 会重建
+          if (!this.daily.chart && document.getElementById('mgmtDailyTrendChart')) {
+            this.daily.chart = Vue.markRaw(echarts.init(document.getElementById('mgmtDailyTrendChart')))
+          }
+          if (!this.daily.categoryChart && document.getElementById('mgmtDailyCategoryChart')) {
+            this.daily.categoryChart = Vue.markRaw(echarts.init(document.getElementById('mgmtDailyCategoryChart')))
+          }
+          setTimeout(function() {
+            [self.daily.chart, self.daily.categoryChart].forEach(function(ch) { if (ch && !ch.isDisposed()) ch.resize() })
+          }, 400)
+        },
+        onDailyDateChange(val) {
+          if (val && val.length === 2) { this.loadDailyData() }
+        },
+        onDailyReset() {
+          const today = new Date()
+          const day7 = new Date(today)
+          day7.setDate(day7.getDate() - 6)
+          this.daily.queryDate = [this.formatDate(day7), this.formatDate(today)]
+          this.loadDailyData()
+        },
+        onDailyAction(payload) {
+          if (payload.key === 'exportExcel') { this.handleDailyExport('excel') }
+          else if (payload.key === 'exportPdf') { this.handleDailyExport('pdf') }
+          else if (payload.key === 'exportCenter') { this.openExportCenter() }
+        },
+        // 日报数据 + 趋势图 + 分类销售（多日区间聚合口径与原页一致）
+        async loadDailyData() {
+          if (!this.daily.queryDate || this.daily.queryDate.length < 2) {
+            XinfeiUI.warning('请选择日期范围')
+            return
+          }
+          const [startDate, endDate] = this.daily.queryDate
+          const self = this
+          this.daily.loading = true
+          try {
+            // 日报数据（使用开始日期作为日报日期参数）
+            const dailyRes = await reportDaily({ date: startDate })
+            if (String(dailyRes.code) === '1') {
+              this.daily.dailyData = dailyRes.data || {}
+            } else {
+              XinfeiUI.notify({
+                title: '日报加载失败',
+                message: dailyRes.msg || '无法获取日报数据，请重试',
+                type: 'error', duration: 5000
+              })
+            }
+
+            // 趋势数据：严格按所选起止日期按天统计。enhanced 接口按 startDate/endDate 返回
+            // { labels:['yyyy-MM-dd'...], revenues:[], orders:[] }，映射成 renderDailyTrend 需要的数组
+            const trendRes = await getSalesTrend({ period: 'day', startDate: startDate, endDate: endDate })
+            if (String(trendRes.code) === '1') {
+              const trendMap = trendRes.data || {}
+              const labels = trendMap.labels || []
+              const revenues = trendMap.revenues || []
+              const orderCounts = trendMap.orders || []
+              const trendList = labels.map(function(label, i) {
+                return {
+                  date: String(label).substring(5),
+                  orderCount: Number(orderCounts[i]) || 0,
+                  revenue: Number(revenues[i]) || 0
+                }
+              })
+              self.renderDailyTrend(trendList)
+              // 多日区间：按天 orders/revenues 聚合顶部卡片，避免卡片只反映区间起始日
+              if (startDate !== endDate) {
+                var sumOrders = 0
+                var sumRevenue = 0
+                trendList.forEach(function(t) {
+                  sumOrders += t.orderCount || 0
+                  sumRevenue += Number(t.revenue) || 0
+                })
+                self.daily.rangeSummary = {
+                  totalOrders: sumOrders,
+                  totalAmount: sumRevenue,
+                  avgAmount: sumOrders > 0 ? sumRevenue / sumOrders : 0,
+                  days: trendList.length
+                }
+              } else {
+                self.daily.rangeSummary = null
+              }
+            } else {
+              this.renderDailyTrend([])
+              this.daily.rangeSummary = null
+            }
+
+            // 分类销售数据
+            const catRes = await reportCategorySales({ startDate: startDate, endDate: endDate })
+            if (String(catRes.code) === '1') {
+              this.renderDailyCategory(catRes.data || [])
+            } else {
+              this.renderDailyCategory(null)
+            }
+          } catch (err) {
+            XinfeiUI.notify({
+              title: '请求失败',
+              message: err.message || String(err),
+              type: 'error', duration: 6000
+            })
+          } finally {
+            this.daily.loading = false
+            this.daily.loadedOnce = true
+            // v-if 骨架屏在 loading 期间会销毁图表容器，loading 结束 v-else 才重建 DOM。
+            // 此时 echarts 旧实例仍指向已游离的旧节点，必须 nextTick 后重新绑定并用最新数据补绘，否则图表空白
+            this.$nextTick(function() {
+              if (self.daily.lastTrendData !== undefined) self.renderDailyTrend(self.daily.lastTrendData)
+              if (self.daily.lastCatData !== undefined) self.renderDailyCategory(self.daily.lastCatData)
+            })
+          }
+        },
+        renderDailyTrend(trendData) {
+          this.daily.lastTrendData = trendData
+          const chart = this.bindChart('daily', 'chart', 'mgmtDailyTrendChart')
+          if (!chart) return
+          if (!trendData || trendData.length === 0) {
+            chart.setOption(this.emptyOption('暂无趋势数据'), true)
+            return
+          }
+          const dates   = trendData.map(t => t.date)
+          const orders  = trendData.map(t => t.orderCount || 0)
+          const amounts = trendData.map(t => Number(t.revenue) || 0)
+          const hasData = dates.length > 0
+          // 根据数据量自适应柱宽，防止图表拥挤变形
+          const barW = dates.length <= 5 ? 32 : dates.length <= 10 ? 26 : 20;
+          chart.setOption({
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: { type: 'cross', crossStyle: { color: XinfeiPalette.graySoft } },
+              backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2,
+              borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter(params) {
+                let html = '<b>' + params[0].axisValue + '</b><br/>'
+                params.forEach(p => {
+                  const val = p.seriesName === '营业额'
+                    ? '¥' + Number(p.value).toFixed(2)
+                    : p.value + ' 单'
+                  html += p.marker + ' ' + p.seriesName + '：<b>' + val + '</b><br/>'
+                })
+                return html
+              }
+            },
+            legend: { data: ['订单数', '营业额'], bottom: 8, textStyle: { color: XinfeiPalette.textRegular, fontSize: 13 } },
+            // 增大 top/bottom/right 防止双Y轴标签和 legend 被裁剪
+            grid: { left: 50, right: 65, top: 30, bottom: 52 },
+            xAxis: {
+              type: 'category',
+              data: hasData ? dates : ['暂无数据'],
+              axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } },
+              axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12, rotate: dates.length > 7 ? 30 : 0 }
+            },
+            yAxis: [
+              {
+                type: 'value', name: '订单量(单)',
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } },
+                axisLine: { show: false }, axisTick: { show: false }
+              },
+              {
+                type: 'value', name: '营业额(元)',
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12, formatter: '¥{value}' },
+                splitLine: { show: false },
+                axisLine: { show: false }, axisTick: { show: false }
+              }
+            ],
+            series: [
+              {
+                name: '订单数', type: 'bar', data: hasData ? orders : [0],
+                barWidth: barW, barGap: '20%',
+                itemStyle: {
+                  borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
+                  color: XinfeiPalette.seriesBlue
+                },
+                label: { show: hasData, position: 'top', color: XinfeiPalette.seriesBlue, fontSize: 12, fontWeight: 600, formatter: '{c}' }
+              },
+              {
+                name: '营业额', type: 'line', yAxisIndex: 1, data: hasData ? amounts : [0],
+                smooth: true, symbol: 'emptyCircle', symbolSize: 8,
+                lineStyle: { color: XinfeiPalette.seriesGreen, width: 3 },
+                itemStyle: { color: XinfeiPalette.seriesGreen, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                areaStyle: { color: XinfeiPalette.seriesGreenArea },
+                label: {
+                  show: hasData, position: 'top', color: XinfeiPalette.successDark, fontSize: 12, fontWeight: 700,
+                  formatter: p => '¥' + Number(p.value).toFixed(0)
+                }
+              }
+            ]
+          }, true)
+          // 渲染后延迟 resize 确保在 flex 布局中尺寸正确
+          setTimeout(function() { if (!chart.isDisposed()) chart.resize(); }, 200);
+        },
+        renderDailyCategory(data) {
+          this.daily.lastCatData = data
+          const chart = this.bindChart('daily', 'categoryChart', 'mgmtDailyCategoryChart')
+          if (!chart) return
+          if (!data || data.length === 0) {
+            chart.setOption(this.emptyOption('暂无分类数据'), true)
+            return
+          }
+          const colors = [XinfeiPalette.seriesBlue,XinfeiPalette.seriesGreen,XinfeiPalette.seriesGold,XinfeiPalette.seriesPink,XinfeiPalette.seriesSky,XinfeiPalette.seriesOrange,XinfeiPalette.seriesViolet,XinfeiPalette.seriesMagenta]
+          chart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c} 份({d}%)' },
+            legend: { bottom: 4, textStyle: { fontSize: 12 } },
+            series: [{
+              type: 'pie',
+              radius: ['45%', '72%'],
+              // center top 从 48% 提至 44%，为底部 legend 留出空间
+              center: ['50%', '44%'],
+              itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 2 },
+              label: { fontSize: 12, formatter: '{b}\n{d}%' },
+              emphasis: { scaleSize: 8, label: { fontSize: 15, fontWeight: 'bold' } },
+              data: data.map(function(item, i) {
+                return { name: item.name, value: item.count, itemStyle: { color: colors[i % colors.length] } }
+              })
+            }]
+          }, true)
+        },
+        // 日报导出：O-25 起创建异步任务（经营报表口径），不再同步阻塞请求线程
+        handleDailyExport(format) {
+          if (this.daily.exporting) return
+          if (!this.daily.queryDate || this.daily.queryDate.length < 2) {
+            XinfeiUI.warning('请先选择日期范围')
+            return
+          }
+          const [startDate, endDate] = this.daily.queryDate
+          this.submitExportTask('report', format, { startDate: startDate, endDate: endDate })
+        },
+
+        // ==================== Tab 2 销售报表（自 sales-report.html 移植） ====================
+        getWeekNumber(date) {
+          const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+          const dayNum = d.getUTCDay() || 7
+          d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+          const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+          return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+        },
+        initSalesCharts() {
+          const self = this
+          if (!this.sales.revenueChart) {
+            var dom1 = document.getElementById('mgmtSalesRevenueChart')
+            if (dom1) this.sales.revenueChart = Vue.markRaw(echarts.init(dom1))
+          }
+          if (!this.sales.orderChart) {
+            var dom2 = document.getElementById('mgmtSalesOrderChart')
+            if (dom2) this.sales.orderChart = Vue.markRaw(echarts.init(dom2))
+          }
+          setTimeout(function() {
+            [self.sales.revenueChart, self.sales.orderChart].forEach(function(ch) { if (ch && !ch.isDisposed()) ch.resize() })
+          }, 400)
+        },
+        onSalesReset() {
+          const now = new Date();
+          this.sales.reportType = 'weekly';
+          this.sales.year = String(now.getFullYear());
+          this.sales.month = now.getMonth() + 1;
+          this.sales.week = this.getWeekNumber(now);
+          this.loadSalesData();
+        },
+        onSalesAction(payload) {
+          if (payload.key === 'exportCenter') { this.openExportCenter() }
+        },
+        async loadSalesData() {
+          const self = this
+          this.sales.loading = true
+          try {
+            let res
+            const yearNum = parseInt(this.sales.year)
+            if (this.sales.reportType === 'weekly') {
+              res = await getWeeklyReport({ year: yearNum, week: this.sales.week })
+            } else if (this.sales.reportType === 'monthly') {
+              res = await getMonthlyReport({ year: yearNum, month: this.sales.month })
+            } else {
+              res = await getYearlyReport({ year: yearNum })
+            }
+
+            if (res.code === 1) {
+              const data = res.data
+
+              // 明细行准备
+              self.sales.detailData = []
+              const sourceData = data.dailyData || data.weeklyData || data.monthlyData || []
+              let totalRevenue = 0
+              let totalOrderCount = 0
+              let totalCompletedCount = 0
+              sourceData.forEach(item => {
+                const revenue = Number(item.revenue) || 0
+                const orderCount = Number(item.orderCount) || 0
+                const completedCount = Number(item.completedCount) || 0
+                totalRevenue += revenue
+                totalOrderCount += orderCount
+                totalCompletedCount += completedCount
+                self.sales.detailData.push({
+                  label: item.date || item.weekStart || (item.month + '月'),
+                  revenue: revenue,
+                  orderCount: orderCount,
+                  completedCount: completedCount,
+                  avgOrderValue: orderCount > 0 ? (revenue / orderCount) : 0
+                })
+              })
+
+              // 客单价 = 总营收 / 总订单数（此前误用后端 avgDailyRevenue=总营收/天数）；
+              // 完成订单数 = 明细 completedCount 求和（此前 totalOrders 含取消单）
+              self.sales.report = {
+                totalRevenue: data.totalRevenue || 0,
+                totalOrders: data.totalOrders || 0,
+                avgOrderValue: totalOrderCount > 0 ? (totalRevenue / totalOrderCount) : 0,
+                completedCount: totalCompletedCount
+              }
+
+              self.renderSalesCharts()
+            }
+          } catch (err) {
+            XinfeiUI.error('获取数据失败')
+          } finally {
+            this.sales.loading = false
+            this.sales.loadedOnce = true
+          }
+        },
+        renderSalesCharts() {
+          const self = this
+          const labels = this.sales.detailData.map(d => d.label)
+          const revenues = this.sales.detailData.map(d => d.revenue)
+          const orders = this.sales.detailData.map(d => d.orderCount)
+
+          // Revenue chart
+          // 第二参 true（notMerge）：切换周/月/年后轴与系列口径不同，防止旧配置残留
+          if (!this.sales.revenueChart) return
+          if (!labels.length) {
+            this.sales.revenueChart.setOption(this.emptyOption('暂无数据'), true)
+          } else {
+            this.sales.revenueChart.setOption({
+              // 金额 tooltip 统一半角 ¥ + 千分位（¥12,345.67）
+              tooltip: { trigger: 'axis', formatter: function(params) {
+                var p = params[0]
+                return p.name + '<br/>' + p.marker + p.seriesName + '：¥' + XinfeiFormat.formatMoney(p.value)
+              } },
+              grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+              xAxis: { type: 'category', data: labels },
+              yAxis: { type: 'value', name: '营业额(元)', axisLabel: {
+                formatter: function(v) { return '¥' + Number(v).toLocaleString('zh-CN'); } } },
+              series: [{
+                name: '营业额',
+                type: 'bar',
+                data: revenues,
+                // 金额系列用金额绿 seriesGreen（原误用链接蓝 linkBlue）
+                itemStyle: { color: XinfeiPalette.seriesGreen }
+              }]
+            }, true)
+          }
+
+          // Order chart
+          if (!this.sales.orderChart) return
+          if (!labels.length) {
+            this.sales.orderChart.setOption(this.emptyOption('暂无数据'), true)
+          } else {
+            this.sales.orderChart.setOption({
+              // 单数 tooltip：千分位整数 + 单位「单」
+              tooltip: { trigger: 'axis', formatter: function(params) {
+                var p = params[0]
+                return p.name + '<br/>' + p.marker + p.seriesName + '：' + XinfeiFormat.formatNumber(p.value) + ' 单'
+              } },
+              grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+              xAxis: { type: 'category', data: labels },
+              yAxis: { type: 'value', name: '订单数(单)', minInterval: 1,
+                axisLabel: { formatter: '{value} 单' } },
+              series: [{
+                name: '订单数',
+                type: 'line',
+                data: orders,
+                // 单数系列统一用 seriesBlue（原误用 success 绿）
+                itemStyle: { color: XinfeiPalette.seriesBlue },
+                areaStyle: { opacity: 0.3 }
+              }]
+            }, true)
+          }
+          setTimeout(function() {
+            [self.sales.revenueChart, self.sales.orderChart].forEach(function(ch) { if (ch && !ch.isDisposed()) ch.resize() })
+          }, 200)
+        },
+
+        // ==================== Tab 3 菜品排行（自 dish-ranking.html 移植） ====================
+        monthRange() {
+          const now = new Date();
+          const fmt = function(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+          return [fmt(new Date(now.getFullYear(), now.getMonth(), 1)),
+                  fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0))];
+        },
+        defaultRange() {
+          // 默认查询区间：本月 1 日 ~ 月末（时段/支付 Tab 共用）
+          return this.monthRange()
+        },
+        loadRankCategoryOptions() {
+          const self = this
+          categoryList().then(function(res) {
+            if (res && res.code === 1 && res.data) {
+              self.rank.categoryOptions = res.data;
+              // table-bar 的 select 选项需要 [{label, value}] 格式
+              self.rank.searchConfig[0]['options'] = res.data.map(function(c) { return { label: c.name, value: c.id } });
+            }
+          }).catch(function() {});
+        },
+        initRankCharts() {
+          const self = this
+          if (!this.rank.chart) {
+            var rEl = document.getElementById('mgmtRankBarChart')
+            if (rEl) this.rank.chart = Vue.markRaw(echarts.init(rEl))
+          }
+          if (!this.rank.trendChart) {
+            var tEl = document.getElementById('mgmtRankTrendChart')
+            if (tEl) this.rank.trendChart = Vue.markRaw(echarts.init(tEl))
+          }
+          setTimeout(function() {
+            if (self.rank.chart) self.rank.chart.resize();
+            if (self.rank.trendChart) self.rank.trendChart.resize();
+          }, 400);
+        },
+        // table-bar 搜索桥接：组件内部 searchValues 不与页面 data 双向绑定，
+        // 必须在此把分类参数同步回 this.rank.categoryId，否则筛选永远不生效
+        onRankSearch(params) {
+          this.rank.categoryId = params && params.categoryId ? params.categoryId : null;
+          this.loadRankData();
+        },
+        onRankReset() {
+          // 恢复首屏默认条件（本月区间、Top10、全部分类）后重新查询，避免重置后页面留空
+          this.rank.dateRange = this.monthRange();
+          this.rank.limit = 10;
+          this.rank.categoryId = null;
+          this.loadRankData();
+        },
+        onRankAction(payload) {
+          if (payload.key === 'export') { this.handleRankExport() }
+          else if (payload.key === 'exportCenter') { this.openExportCenter() }
+        },
+        onRankSelection(payload) {
+          this.rank.exportRows = (payload && payload.rows) ? payload.rows : [];
+          this.rank.actionConfig[0].disabled = this.rank.exportRows.length === 0;
+        },
+        loadRankData() {
+          const self = this;
+          self.rank.loading = true;
+          const params = { limit: self.rank.limit };
+          if (self.rank.dateRange && self.rank.dateRange.length >= 2) {
+            params.startDate = self.rank.dateRange[0]; params.endDate = self.rank.dateRange[1];
+          }
+          if (self.rank.categoryId) { params.categoryId = self.rank.categoryId; }
+
+          // 榜单与统计共用同一次请求结果（旧实现用相同参数请求两次）
+          reportDishRanking(params)
+            .then(function(res) {
+              if (String(res.code) === '1') {
+                const rows = res.data || [];
+                self.rank.tableData = rows;
+                self.rank.stats = self.computeRankStats(rows);
+                self.renderRankChart();
+                self.loadRankTrend();
+              } else { XinfeiUI.error(res.msg || '加载失败'); }
+            }).catch(function(err) { XinfeiUI.error('请求失败：' + err); })
+            .finally(function() { self.rank.loading = false; self.rank.loadedOnce = true; });
+        },
+        // 统计口径：当前 Top N 榜单内汇总（接口本身按 limit 截断，非全店数据）
+        computeRankStats(rows) {
+          const data = rows || [];
+          var totalSales = data.reduce(function(s, i) { return s + (i.count || 0); }, 0);
+          const avgSales = data.length > 0 ? Math.round(totalSales / data.length) : 0;
+          return { totalDishes: data.length, topDishes: data.length, totalSales: totalSales, avgSales: avgSales };
+        },
+        rankCalcPercent(count) {
+          if (!this.rank.tableData.length) return 0;
+          const max = this.rank.tableData[0].count || 1;
+          return Math.round(count / max * 100);
+        },
+        rankProgressColor(count) {
+          const max = this.rank.tableData.length ? (this.rank.tableData[0].count || 1) : 1;
+          const ratio = count / max;
+          if (ratio > 0.8) return XinfeiPalette.seriesRed;
+          if (ratio > 0.5) return XinfeiPalette.linkBlue;
+          return XinfeiPalette.seriesGreen;
+        },
+        loadRankTrend() {
+          const self = this;
+          if (!self.rank.trendChart) return;
+          if (!self.rank.tableData || self.rank.tableData.length === 0) { self.showRankTrendEmpty(); return; }
+          var top3Names = self.rank.tableData.slice(0, 3).map(function(d) { return d.name; });
+          if (top3Names.length === 0) { self.showRankTrendEmpty(); return; }
+          reportDishTrend({
+            names: top3Names.join(','),
+            startDate: self.rank.dateRange && self.rank.dateRange.length >= 2 ? self.rank.dateRange[0] : '',
+            endDate: self.rank.dateRange && self.rank.dateRange.length >= 2 ? self.rank.dateRange[1] : ''
+          }).then(function(res) {
+            if (res.code === 1 && res.data) self.renderRankTrend(res.data);
+            else self.showRankTrendEmpty();
+          }).catch(function(err) {
+            // 趋势为附属图，失败不弹错误条，图区给占位避免永久留白
+            console.warn('[菜品排行] 加载趋势数据失败:', err);
+            self.showRankTrendEmpty();
+          });
+        },
+        showRankTrendEmpty() {
+          if (!this.rank.trendChart) return;
+          this.rank.trendChart.setOption(this.emptyOption('暂无趋势数据'), true);
+        },
+        renderRankTrend(data) {
+          if (!this.rank.trendChart) return;
+          if (!data || !data.dates || !data.dates.length) {
+            this.rank.trendChart.setOption(this.emptyOption('暂无趋势数据'), true);
+            // v-show 从隐藏切到可见后 echarts 宽高为 0，需 resize 才能正确渲染
+            var emptyChart = this.rank.trendChart;
+            setTimeout(function() { if (emptyChart && !emptyChart.isDisposed()) emptyChart.resize(); }, 200);
+            return;
+          }
+          var hexToRgba = function(hex, alpha) {
+            let h = hex.replace('#','');
+            if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+            const r = parseInt(h.substring(0,2), 16);
+            const g = parseInt(h.substring(2,4), 16);
+            const b = parseInt(h.substring(4,6), 16);
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+          };
+          const colors = [XinfeiPalette.brand, XinfeiPalette.success, XinfeiPalette.warning];
+          const dates = data.dates || [];
+          var series = (data.series || []).map(function(s, i) {
+            const col = colors[i] || XinfeiPalette.textSecondary;
+            return {
+              name: s.name, type: 'line', data: s.data || [], smooth: true,
+              symbol: 'circle', symbolSize: 7,
+              lineStyle: { color: col, width: 3 },
+              itemStyle: { color: col, borderColor: XinfeiPalette.white, borderWidth: 2 },
+              areaStyle: { color: hexToRgba(col, 0.15) }
+            };
+          });
+          this.rank.trendChart.setOption({
+            tooltip: { trigger: 'axis', backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 } },
+            legend: { data: (data.series || []).map(function(s) { return s.name; }),
+              bottom: 8, textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
+            grid: { left: 55, right: 30, top: 25, bottom: 52 },
+            xAxis: { type: 'category', data: dates, boundaryGap: false,
+              axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } }, axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
+            yAxis: { type: 'value', name: '销量(份)',
+              nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+              splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } } },
+            series: series
+          }, true);
+          const chart = this.rank.trendChart;
+          setTimeout(function() { if (chart && !chart.isDisposed()) chart.resize(); }, 200);
+        },
+        renderRankChart() {
+          if (!this.rank.chart) return;
+          if (!this.rank.tableData || this.rank.tableData.length === 0) {
+            this.rank.chart.setOption(this.emptyOption('暂无排行数据'), true); return;
+          }
+          var names = this.rank.tableData.map(function(item) { return item.name; }).reverse();
+          var counts = this.rank.tableData.map(function(item) { return item.count; }).reverse();
+          const maxVal = counts.length ? Math.max.apply(null, counts) : 1;
+          const barWidth = names.length <= 5 ? 26 : names.length <= 10 ? 22 : 18;
+          this.rank.chart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+              backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(p) { return '<b>' + p[0].name + '</b><br/>' + p[0].marker + ' 销量：<b>' + p[0].value + ' 份</b>'; } },
+            grid: { left: 130, right: 70, top: 16, bottom: 30 },
+            xAxis: { type: 'value', name: '销量（份）',
+              splitLine: { lineStyle: { type: 'dashed', color: XinfeiPalette.bgLight } },
+              axisLabel: { color: XinfeiPalette.textSecondary } },
+            yAxis: { type: 'category', data: names,
+              axisLabel: { color: XinfeiPalette.textRegular, interval: 0, width: 110, overflow: 'truncate', fontSize: 13 } },
+            series: [{ type: 'bar', data: counts, barMaxWidth: barWidth,
+              itemStyle: {
+                borderRadius: [0, XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0],
+                color: function(params) {
+                  const v = params.value, r = v / maxVal;
+                  if (r > 0.8) return XinfeiPalette.seriesRed;
+                  if (r > 0.5) return XinfeiPalette.linkBlue;
+                  return XinfeiPalette.success;
+                }
+              },
+              label: { show: true, position: 'right', color: XinfeiPalette.textRegular, fontSize: 12, fontWeight: 600,
+                formatter: function(p) { return p.value + ' 份'; } }
+            }]
+          }, true);
+          this.$nextTick(function() { if (this.rank.chart) { this.rank.chart.resize(); } }.bind(this));
+        },
+        // 排行导出：当前表格勾选行 → CSV（原页口径不变）
+        handleRankExport() {
+          const self = this
+          if (!self.rank.dateRange || self.rank.dateRange.length < 2) {
+            XinfeiUI.warning('请先选择日期范围'); return;
+          }
+          if (!self.rank.exportRows || !self.rank.exportRows.length) {
+            XinfeiUI.warning('请先勾选要导出的记录'); return;
+          }
+          const esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"' }
+          const header = ['排名', '菜品名称', '销量（份）', '相对榜首(%)']
+          // 仅导出勾选行；排名保留该行在原榜单中的位次
+          const lines = self.rank.exportRows.map(function(r) {
+            var rank = self.rank.tableData.indexOf(r) + 1
+            return [rank, r.name, r.count, self.rankCalcPercent(r.count) + '%'].map(esc).join(',')
+          })
+          const csv = '\uFEFF' + header.map(esc).join(',') + '\r\n' + lines.join('\r\n')
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blob)
+          link.download = '菜品排行_' + self.rank.dateRange[0] + '_' + self.rank.dateRange[1] + '.csv'
+          document.body.appendChild(link); link.click(); document.body.removeChild(link)
+          URL.revokeObjectURL(link.href)
+          XinfeiUI.success('导出成功')
+        },
+
+        // ==================== Tab 4 时段分析（自 time-slot.html 移植） ====================
+        initSlotCharts() {
+          const self = this
+          var tryInit = function(domId, stateKey) {
+            if (self.slot[stateKey]) return self.slot[stateKey]
+            const el = document.getElementById(domId)
+            if (!el) { console.warn('[时段分析] 图表容器未找到:', domId); return null; }
+            const ch = Vue.markRaw(echarts.init(el))
+            self.slot[stateKey] = ch
+            // 延迟手动 resize 确保父子容器尺寸稳定后再渲染
+            setTimeout(function() { if (ch && !ch.isDisposed()) ch.resize(); }, 300);
+            return ch
+          }
+          tryInit('mgmtSlotBarChart', 'barChart')
+          tryInit('mgmtSlotPieChart', 'pieChart')
+          tryInit('mgmtSlotHeatmapChart', 'heatmapChart')
+          // ResizeObserver 监听本 Tab 图表容器尺寸变化（懒激活后容器已存在）
+          if (typeof ResizeObserver !== 'undefined' && !self.slot.observer) {
+            try {
+              self.slot.observer = new ResizeObserver(function() {
+                [self.slot.barChart, self.slot.pieChart, self.slot.heatmapChart].forEach(function(ch) {
+                  if (ch && !ch.isDisposed()) ch.resize();
+                });
+              });
+              const barEl = document.getElementById('mgmtSlotBarChart');
+              if (barEl && barEl.parentElement) self.slot.observer.observe(barEl.parentElement);
+            } catch(e) { console.warn('[时段分析] ResizeObserver 初始化失败:', e); }
+          }
+        },
+        onSlotSearch(params) {
+          // table-bar daterange 下发 dateRangeBegin/End（yyyy-MM-dd HH:mm:ss），本页口径纯日期，截取前10位
+          if (params && params.dateRangeBegin && params.dateRangeEnd) {
+            this.slot.dateRange = [String(params.dateRangeBegin).substring(0, 10), String(params.dateRangeEnd).substring(0, 10)];
+          }
+          this.loadSlotData();
+        },
+        onSlotReset() {
+          // 重置为默认本月区间再查询；清空后立即 loadData 必然触发“请选择日期范围”警告
+          this.slot.dateRange = this.defaultRange();
+          this.slot.tableData = [];
+          this.loadSlotData();
+        },
+        onSlotAction(action) {
+          if (action.key === 'export') this.handleSlotExport();
+          else if (action.key === 'exportCenter') this.openExportCenter();
+        },
+        onSlotSelection(payload) {
+          this.slot.exportRows = (payload && payload.rows) ? payload.rows : [];
+          this.slot.actionConfig[0].disabled = this.slot.exportRows.length === 0;
+        },
+        slotCalcPercent(count) {
+          const t = this.slotTotalCount; if (!t) return 0;
+          // count 在渲染早期可能是 undefined，NaN 进 el-progress 会报 Invalid prop
+          //（EP 的 percentage 只收 0~100 的数字），所以先强制成数再夹回区间。
+          const p = Number((((Number(count) || 0) / t) * 100).toFixed(1));
+          return p < 0 ? 0 : (p > 100 ? 100 : p);
+        },
+        slotHeatColor(row) {
+          if (!this.slot.tableData.length) return XinfeiPalette.textSecondary;
+          var max = this.slot.tableData.reduce(function(m, r) { return Math.max(m, r.count || 0); }, 1);
+          const r = (row.count || 0) / max;
+          if (r > 0.8) return XinfeiPalette.seriesRed; if (r > 0.5) return XinfeiPalette.warning; return XinfeiPalette.linkBlue;
+        },
+        loadSlotData() {
+          const self = this;
+          if (!self.slot.dateRange || self.slot.dateRange.length < 2) {
+            XinfeiUI.warning('请选择日期范围'); return;
+          }
+          self.slot.loading = true;
+          reportTimeSlot({ startDate: self.slot.dateRange[0], endDate: self.slot.dateRange[1] }).then(function(res) {
+            if (String(res.code) === '1') {
+              self.slot.tableData = res.data || [];
+              self.$nextTick(function() { self.renderSlotCharts(); self.loadSlotHeatmap(); });
+            } else { XinfeiUI.error(res.msg || '加载时段数据失败'); }
+          }).catch(function(err) { XinfeiUI.error('请求失败：' + (err || '网络异常')); })
+          .finally(function() { self.slot.loading = false; self.slot.loadedOnce = true; });
+        },
+        loadSlotHeatmap() {
+          const self = this; if (!self.slot.heatmapChart) return;
+          reportTimeSlotHeatmap({ startDate: self.slot.dateRange[0], endDate: self.slot.dateRange[1] })
+            .then(function(res) {
+              if (res.code === 1 && res.data) {
+                self.renderSlotHeatmap(res.data);
+              } else {
+                XinfeiUI.error((res && res.msg) || '加载热力图失败');
+              }
+            })
+            .catch(function(err) { XinfeiUI.error('加载热力图失败：' + (err || '网络异常')); });
+        },
+        renderSlotHeatmap(data) {
+          if (!this.slot.heatmapChart) return;
+          // 补齐坐标轴标签（后端仅返回 dayIdx/slotIdx/value 计数矩阵，此处前端按后端固定顺序构造 7天×5时段 标签）
+          // 与 ReportServiceImpl.SLOT_NAMES = {早市/午市/下午茶/晚市/夜市}、dayIdx 周一=0 对齐
+          const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+          const slots = ['早市(6-10)', '午市(10-14)', '下午茶(14-17)', '晚市(17-21)', '夜市(21-6)'];
+          var heatData = (data.data || []).map(function(d) { return [d.slotIdx || 0, d.dayIdx || 0, d.value || 0]; });
+          const maxVal = data.maxVal || 100;
+          // 空数据（无格子或全部为 0）时给居中占位，避免图区永久空白
+          var isEmpty = !heatData.length || heatData.every(function(d) { return !d[2]; });
+          if (isEmpty) {
+            this.slot.heatmapChart.setOption(this.emptyOption('暂无时段销售数据'), true);
+            return;
+          }
+          this.slot.heatmapChart.setOption({
+            tooltip: { formatter: function(p) { return days[p.value[1]] + ' ' + slots[p.value[0]] + ': ' + p.value[2] + ' 单'; },
+              backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 } },
+            grid: { left: 80, right: 30, top: 15, bottom: 70 },
+            xAxis: { type: 'category', data: slots, splitArea: { show: true },
+              axisLabel: { fontSize: 12, color: XinfeiPalette.textRegular } },
+            yAxis: { type: 'category', data: days, splitArea: { show: true },
+              axisLabel: { fontSize: 12, color: XinfeiPalette.textRegular } },
+            visualMap: { min: 0, max: maxVal, calculable: true,
+              orient: 'horizontal', left: 'center', bottom: 8,
+              inRange: { color: [XinfeiPalette.blueSoft,XinfeiPalette.blueSoft2,XinfeiPalette.linkBlue,XinfeiPalette.blueDark,XinfeiPalette.blueDarkest] },
+              text: ['高', '低'], textStyle: { fontSize: 11, color: XinfeiPalette.textRegular } },
+            series: [{ type: 'heatmap', data: heatData,
+              label: { show: true, fontSize: 12, color: function(p) { return p.value[2] > maxVal * 0.6 ? XinfeiPalette.white : XinfeiPalette.textPrimary; } },
+              emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } }]
+          }, true);
+        },
+        renderSlotCharts() {
+          const self = this;
+          // 渲染前先保障容器尺寸稳定
+          [self.slot.barChart, self.slot.pieChart].forEach(function(ch) {
+            if (ch && !ch.isDisposed()) ch.resize();
+          });
+          self.renderSlotBar(); self.renderSlotPie();
+        },
+        renderSlotBar() {
+          if (!this.slot.barChart) return;
+          if (!this.slot.tableData.length) {
+            this.slot.barChart.setOption(this.emptyOption('暂无时段数据'), true); return;
+          }
+          var names = this.slot.tableData.map(function(r) { return r.name; });
+          var counts = this.slot.tableData.map(function(r) { return r.count; });
+          var amounts = this.slot.tableData.map(function(r) { return Number(r.amount || 0).toFixed(2); });
+          const barW = names.length <= 3 ? 40 : names.length <= 5 ? 30 : 22;
+          this.slot.barChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+              backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(ps) {
+                // h 需累加拼接，声明为 const 会抛 "Assignment to constant variable"（悬停图表即崩溃）
+                let h = '<b>' + ps[0].axisValue + '</b><br/>';
+                ps.forEach(function(p) {
+                  const v = p.seriesName === '营业额' ? '¥' + Number(p.value).toFixed(2) : p.value + ' 单';
+                  h += p.marker + ' ' + p.seriesName + '：<b>' + v + '</b><br/>';
+                }); return h;
+              } },
+            legend: { data: ['订单数', '营业额'], bottom: 4, textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
+            // 增大右 padding 防止营业额标签被裁剪
+            grid: { left: 50, right: 70, top: 25, bottom: 48 },
+            xAxis: { type: 'category', data: names, axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textRegular, interval: 0, fontSize: 13 } },
+            yAxis: [
+              { type: 'value', name: '订单数(单)',
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 11 },
+                splitLine: { lineStyle: { type: 'dashed', color: XinfeiPalette.bgLight } },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
+              { type: 'value', name: '营业额(元)',
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 11 },
+                axisLabel: { formatter: '¥{value}', color: XinfeiPalette.textSecondary, fontSize: 12 },
+                splitLine: { show: false } }
+            ],
+            series: [
+              { name: '订单数', type: 'bar', data: counts, barWidth: barW,
+                itemStyle: { borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
+                  color: function(p) { return SLOT_COLORS[p.dataIndex % SLOT_COLORS.length]; } },
+                label: { show: true, position: 'top', fontSize: 12, fontWeight: 600, formatter: '{c} 单' } },
+              { name: '营业额', type: 'line', yAxisIndex: 1, data: amounts,
+                smooth: true, symbol: 'emptyCircle', symbolSize: 8,
+                lineStyle: { color: XinfeiPalette.seriesOrange, width: 3 },
+                itemStyle: { color: XinfeiPalette.seriesOrange, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                label: { show: true, position: 'top', fontSize: 12, fontWeight: 700, color: XinfeiPalette.warning,
+                  formatter: function(p) { return '¥' + Number(p.value).toFixed(0); } } }
+            ]
+          }, true);
+        },
+        renderSlotPie() {
+          if (!this.slot.pieChart) return;
+          var pieData = this.slot.tableData.map(function(r, i) { return { name: r.name, value: r.count,
+            itemStyle: { color: SLOT_COLORS[i % SLOT_COLORS.length] } }; });
+          var isEmpty = pieData.every(function(d) { return !d.value; }) || !pieData.length;
+          // 空态：与柱线图统一的居中文字范式（不渲染灰色假饼，legend 也不出现「暂无数据」）
+          if (isEmpty) {
+            this.slot.pieChart.setOption(this.emptyOption('暂无时段数据'), true);
+            return;
+          }
+          this.slot.pieChart.setOption({
+            tooltip: { trigger: 'item', backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(p) { return '<b>' + p.name + '</b><br/>' + p.marker + ' 订单：<b>' + p.value + ' 单</b>（' + p.percent + '%）'; } },
+            legend: { bottom: 0, left: 'center', itemWidth: 10, itemHeight: 10,
+              textStyle: { color: XinfeiPalette.textRegular, fontSize: 12 } },
+            title: { show: false },
+            series: [{ type: 'pie', radius: ['45%','68%'], center: ['50%','44%'],
+              avoidLabelOverlap: false, itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 3 },
+              label: { show: true, position: 'outside', formatter: '{b}\n{d}%',
+                fontSize: 13, lineHeight: 18, color: XinfeiPalette.textRegular },
+              labelLine: { show: true, length: 25, length2: 20, lineStyle: { color: XinfeiPalette.borderBase } },
+              emphasis: { scaleSize: 10, label: { fontSize: 16, fontWeight: 'bold' } },
+              data: pieData }]
+          }, true);
+        },
+        handleSlotExport() {
+          const self = this;
+          if (!self.slot.dateRange || self.slot.dateRange.length < 2) { XinfeiUI.warning('请先选择日期范围'); return; }
+          if (!self.slot.exportRows || !self.slot.exportRows.length) { XinfeiUI.warning('请先勾选要导出的记录'); return; }
+          const esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"' }
+          const header = ['时段', '订单数', '营业额（元）', '占比']
+          const lines = self.slot.exportRows.map(function(r) {
+            return [r.name, r.count, r.amount != null ? r.amount : 0, self.slotCalcPercent(r.count) + '%'].map(esc).join(',')
+          })
+          const csv = '\uFEFF' + header.map(esc).join(',') + '\r\n' + lines.join('\r\n')
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = '时段分析_' + self.slot.dateRange[0] + '_' + self.slot.dateRange[1] + '.csv';
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+          XinfeiUI.success('导出成功');
+        },
+
+        // ==================== Tab 5 支付分析（自 payment-analysis.html 移植） ====================
+        initPayCharts() {
+          const self = this
+          var initChart = function(id) {
+            const el = document.getElementById(id)
+            if (!el) { console.warn('[支付分析] 图表容器未找到:', id); return null; }
+            return Vue.markRaw(echarts.init(el))
+          }
+          if (!self.pay.pieChart) self.pay.pieChart = initChart('mgmtPayPieChart')
+          if (!self.pay.barChart) self.pay.barChart = initChart('mgmtPayBarChart')
+          if (!self.pay.trendChart) self.pay.trendChart = initChart('mgmtPayTrendChart')
+          if (!self.pay.refundChart) self.pay.refundChart = initChart('mgmtPayRefundChart')
+          // 延迟 resize 确保容器已撑开
+          setTimeout(function() {
+            [self.pay.pieChart, self.pay.barChart, self.pay.trendChart, self.pay.refundChart].forEach(function(ch) {
+              if (ch && !ch.isDisposed()) ch.resize();
+            });
+          }, 400);
+        },
+        onPaySearch(params) {
+          // table-bar daterange 下发 dateRangeBegin/End（yyyy-MM-dd HH:mm:ss），本页口径纯日期，截取前10位
+          if (params && params.dateRangeBegin && params.dateRangeEnd) {
+            this.pay.dateRange = [String(params.dateRangeBegin).substring(0, 10), String(params.dateRangeEnd).substring(0, 10)];
+          }
+          this.loadPayData();
+        },
+        onPayReset() {
+          this.pay.dateRange = this.defaultRange();
+          this.pay.tableData = [];
+          this.loadPayData();
+        },
+        onPayAction(action) {
+          if (action.key === 'export') this.handlePayExport();
+          else if (action.key === 'exportCenter') this.openExportCenter();
+        },
+        onPaySelection(payload) {
+          this.pay.exportRows = (payload && payload.rows) ? payload.rows : [];
+          this.pay.actionConfig[0].disabled = this.pay.exportRows.length === 0;
+        },
+        payCalcPercent(count) {
+          var t = this.payTotalCount;
+          if (!t) return 0;
+          var p = Math.round(((Number(count) || 0) / t) * 100);
+          return p < 0 ? 0 : (p > 100 ? 100 : p);
+        },
+        payChannelProgressColor(key) { return PAY_CHANNEL_COLOR[key] || XinfeiPalette.textSecondary; },
+        loadPayData() {
+          const self = this;
+          if (!self.pay.dateRange || self.pay.dateRange.length < 2) {
+            XinfeiUI.warning('请选择日期范围'); return;
+          }
+          self.pay.loading = true;
+          reportPayment({ startDate: self.pay.dateRange[0], endDate: self.pay.dateRange[1] }).then(function(res) {
+            if (String(res.code) === '1') {
+              self.pay.tableData = self.convertPayToArray(res.data || {});
+              self.$nextTick(function() { self.renderPayCharts(); self.loadPayTrend(); self.loadRefundAnalysis(); });
+            } else { XinfeiUI.error(res.msg || '加载支付数据失败'); }
+          }).catch(function(err) { XinfeiUI.error('请求失败：' + (err || '网络异常')); })
+          .finally(function() { self.pay.loading = false; self.pay.loadedOnce = true; });
+        },
+        convertPayToArray(data) {
+          return Object.keys(PAY_CHANNEL_LABEL).filter(function(k) { return data[k] != null; })
+            .map(function(k) { const item = data[k] || {}; return { key: k, channel: PAY_CHANNEL_LABEL[k],
+              transactionCount: item.count || 0, amount: item.amount != null ? item.amount : null }; });
+        },
+        loadRefundAnalysis() {
+          const self = this;
+          paymentRefundStats({ startDate: self.pay.dateRange[0], endDate: self.pay.dateRange[1] }).then(function(res) {
+            if (res && res.code === 1 && res.data) {
+              self.pay.refundAnalysis = res.data;
+              self.$nextTick(function() { self.renderPayRefund(); });
+            } else {
+              // 失败提示，并渲染占位避免图表区永久留白
+              XinfeiUI.error((res && res.msg) || '加载退款分析失败');
+              self.pay.refundAnalysis = null;
+              self.renderPayRefund();
+            }
+          }).catch(function(err) {
+            XinfeiUI.error('加载退款分析失败：' + (err || '网络异常'));
+            self.pay.refundAnalysis = null;
+            self.renderPayRefund();
+          });
+        },
+        renderPayRefund() {
+          if (!this.pay.refundChart) return;
+          const byReason = (this.pay.refundAnalysis && this.pay.refundAnalysis.byReason) || [];
+          if (!byReason.length) {
+            this.pay.refundChart.setOption(this.emptyOption('暂无退款数据'), true);
+            return;
+          }
+          const reasons = byReason.map(function(r) { return r.reason; }).reverse();
+          const amounts = byReason.map(function(r) { return Number(r.amount) || 0; }).reverse();
+          const counts = byReason.map(function(r) { return r.count || 0; }).reverse();
+          this.pay.refundChart.setOption({
+            tooltip: {
+              trigger: 'axis', axisPointer: { type: 'shadow' },
+              backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(params) {
+                if (!params || !params.length) return '';
+                var p = params[0];
+                // 金额统一半角 ¥ + 千分位
+                return p.name + '<br/>退款 ¥' + XinfeiFormat.formatMoney(p.value) + ' · ' + XinfeiFormat.formatNumber(counts[params[0].dataIndex]) + ' 笔';
+              }
+            },
+            grid: { left: 120, right: 60, top: 20, bottom: 30 },
+            xAxis: {
+              type: 'value', axisLabel: { color: XinfeiPalette.info, fontSize: 12,
+                formatter: function(v) { return '¥' + Number(v).toLocaleString('zh-CN'); } },
+              splitLine: { lineStyle: { color: XinfeiPalette.borderLighter2, type: 'dashed' } },
+              axisLine: { show: false }, axisTick: { show: false }
+            },
+            yAxis: {
+              type: 'category', data: reasons,
+              axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } }, axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textRegular, fontSize: 12 }
+            },
+            series: [{
+              name: '退款金额', type: 'bar', data: amounts, barWidth: 18,
+              itemStyle: { color: XinfeiPalette.danger, borderRadius: [0, XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0] },
+              label: { show: true, position: 'right', fontSize: 12, fontWeight: 600, color: XinfeiPalette.danger, formatter: function(p) { return '¥' + Number(p.value).toFixed(2); } }
+            }]
+          }, true);
+        },
+        loadPayTrend() {
+          const self = this;
+          if (!self.pay.trendChart) return;
+          reportPaymentTrend({ startDate: self.pay.dateRange[0], endDate: self.pay.dateRange[1] })
+            .then(function(res) {
+              if (res.code === 1 && res.data) {
+                self.renderPayTrend(res.data);
+              } else {
+                // 失败提示，并渲染占位避免图表区永久留白
+                XinfeiUI.error((res && res.msg) || '加载支付趋势失败');
+                self.renderPayTrend(null);
+              }
+            })
+            .catch(function(err) {
+              XinfeiUI.error('加载支付趋势失败：' + (err || '网络异常'));
+              self.renderPayTrend(null);
+            });
+        },
+        renderPayTrend(data) {
+          if (!this.pay.trendChart) return;
+          if (!data || !data.dates || !data.dates.length) {
+            this.pay.trendChart.setOption(this.emptyOption('暂无趋势数据'), true); return;
+          }
+          const dates = data.dates || [];
+          this.pay.trendChart.setOption({
+            // 金额 tooltip 统一半角 ¥ + 千分位（三个支付系列均为金额）
+            tooltip: { trigger: 'axis', backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(params) {
+                var lines = params.map(function(p) {
+                  return p.marker + ' ' + p.seriesName + '：<b>¥' + XinfeiFormat.formatMoney(p.value) + '</b>'
+                })
+                return '<b>' + params[0].axisValue + '</b><br/>' + lines.join('<br/>')
+              } },
+            legend: { data: ['微信支付', '支付宝', '线下/其他'], bottom: 8, textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
+            // 增大左/底部 padding 防止标签被裁剪
+            grid: { left: 55, right: 30, top: 25, bottom: 52 },
+            xAxis: { type: 'category', data: dates, boundaryGap: false,
+              axisLine: { lineStyle: { color: XinfeiPalette.borderLighter2 } }, axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
+            yAxis: { type: 'value', name: '金额(元)',
+              nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+              splitLine: { lineStyle: { color: XinfeiPalette.bgLight, type: 'dashed' } } },
+            series: [
+              { name: '微信支付', type: 'line', data: data.wechat || [], smooth: true, symbol: 'circle', symbolSize: 6,
+                lineStyle: { color: XinfeiPalette.wechatGreen, width: 3 }, itemStyle: { color: XinfeiPalette.wechatGreen, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                // 面积半透明（opacity 0.15），三条线重叠时互不遮盖
+                areaStyle: { color: XinfeiPalette.wechatGreen, opacity: 0.15 } },
+              { name: '支付宝', type: 'line', data: data.alipay || [], smooth: true, symbol: 'circle', symbolSize: 6,
+                lineStyle: { color: XinfeiPalette.alipayBlue, width: 3 }, itemStyle: { color: XinfeiPalette.alipayBlue, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                areaStyle: { color: XinfeiPalette.alipayBlue, opacity: 0.15 } },
+              { name: '线下/其他', type: 'line', data: data.balance || [], smooth: true, symbol: 'circle', symbolSize: 6,
+                lineStyle: { color: XinfeiPalette.warning, width: 3 }, itemStyle: { color: XinfeiPalette.warning, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                areaStyle: { color: XinfeiPalette.warning, opacity: 0.15 } }
+            ]
+          }, true);
+        },
+        renderPayCharts() {
+          // 渲染前 resize 确保容器尺寸正确
+          [this.pay.pieChart, this.pay.barChart].forEach(function(ch) {
+            if (ch && !ch.isDisposed()) ch.resize();
+          });
+          this.renderPayPie(); this.renderPayBar();
+        },
+        renderPayPie() {
+          if (!this.pay.pieChart || !this.pay.tableData.length) {
+            if (this.pay.pieChart) this.pay.pieChart.setOption(this.emptyOption('暂无支付数据'), true); return;
+          }
+          var pieData = this.pay.tableData.filter(function(r) { return r.transactionCount > 0; })
+            .map(function(r) { return { name: r.channel, value: r.transactionCount,
+              itemStyle: { color: PAY_CHANNEL_COLOR[r.key] || XinfeiPalette.textSecondary } }; });
+          this.pay.pieChart.setOption({
+            color: [XinfeiPalette.wechatGreen,XinfeiPalette.alipayBlue,XinfeiPalette.warning,XinfeiPalette.textSecondary],
+            tooltip: { trigger: 'item', backgroundColor: XinfeiPalette.white,
+              borderColor: XinfeiPalette.borderLighter2, borderWidth: 1, textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(p) { return '<b>' + p.name + '</b><br/>' + p.marker + ' 笔数：<b>' + p.value + '</b>（' + p.percent + '%）'; } },
+            legend: { bottom: 0, left: 'center', itemWidth: 10, itemHeight: 10,
+              textStyle: { color: XinfeiPalette.textRegular, fontSize: 12 } },
+            series: [{ type: 'pie', radius: ['45%','68%'], center: ['50%','44%'],
+              avoidLabelOverlap: false, itemStyle: { borderRadius: XinfeiPalette.radiusMd, borderColor: XinfeiPalette.white, borderWidth: 3 },
+              label: { position: 'outside', formatter: '{b}\n{d}%', fontSize: 13, lineHeight: 18, color: XinfeiPalette.textRegular },
+              labelLine: { length: 25, length2: 20, lineStyle: { color: XinfeiPalette.borderBase } },
+              emphasis: { scaleSize: 10, label: { fontSize: 16, fontWeight: 'bold' } },
+              data: pieData.length ? pieData : [{ name: '暂无数据', value: 1, itemStyle: { color: XinfeiPalette.borderLighter2 } }] }]
+          }, true);
+        },
+        renderPayBar() {
+          if (!this.pay.barChart || !this.pay.tableData.length) {
+            if (this.pay.barChart) this.pay.barChart.setOption(this.emptyOption('暂无支付数据'), true); return;
+          }
+          var rows = this.pay.tableData;
+          var names = rows.map(function(r) { return r.channel; });
+          var counts = rows.map(function(r) { return r.transactionCount; });
+          var amounts = this.pay.tableData.map(function(r) { return r.amount != null ? Number(r.amount).toFixed(2) : 0; });
+          var hasAmount = this.pay.tableData.some(function(r) { return r.amount != null; });
+          const barW = names.length <= 2 ? 48 : names.length <= 3 ? 36 : 24;
+          this.pay.barChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+              backgroundColor: XinfeiPalette.white, borderColor: XinfeiPalette.borderLighter2, borderWidth: 1,
+              textStyle: { color: XinfeiPalette.textPrimary, fontSize: 13 },
+              formatter: function(ps) {
+                // h 需累加拼接，声明为 const 会抛 "Assignment to constant variable"（悬停图表即崩溃）
+                let h = '<b>' + ps[0].axisValue + '</b><br/>';
+                ps.forEach(function(p) {
+                  // 金额统一半角 ¥ + 千分位（原 toFixed(2) 无千分位）
+                  const v = p.seriesName === '交易金额' ? '¥' + XinfeiFormat.formatMoney(p.value) : p.value + ' 笔';
+                  h += p.marker + ' ' + p.seriesName + '：<b>' + v + '</b><br/>';
+                }); return h;
+              } },
+            legend: { data: hasAmount ? ['交易笔数', '交易金额'] : ['交易笔数'], bottom: 4,
+              textStyle: { fontSize: 12, color: XinfeiPalette.textRegular } },
+            // 增大右 padding 防止金额标签被裁剪
+            grid: { left: 55, right: hasAmount ? 70 : 20, top: 25, bottom: 52 },
+            xAxis: { type: 'category', data: names, axisTick: { show: false },
+              axisLabel: { color: XinfeiPalette.textRegular, interval: 0, fontSize: 13 } },
+            yAxis: [
+              { type: 'value', name: '笔数',
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                splitLine: { lineStyle: { type: 'dashed', color: XinfeiPalette.bgLight } },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12 } },
+              hasAmount ? { type: 'value', name: '金额',
+                nameTextStyle: { color: XinfeiPalette.textSecondary, fontSize: 12 },
+                axisLabel: { color: XinfeiPalette.textSecondary, fontSize: 12,
+                  formatter: function(v) { return '¥' + Number(v).toLocaleString('zh-CN'); } },
+                splitLine: { show: false } } : {}
+            ].filter(function(y) { return Object.keys(y).length; }),
+            series: [
+              { name: '交易笔数', type: 'bar', data: counts, barWidth: barW,
+                itemStyle: { borderRadius: [XinfeiPalette.radiusMd, XinfeiPalette.radiusMd, 0, 0],
+                  // 按数据行真实渠道 key 取色（旧实现按 Object.keys 下标，渠道缺失/乱序时会错配）
+                  color: function(p) { const row = rows[p.dataIndex] || {}; return PAY_CHANNEL_COLOR[row.key] || XinfeiPalette.textSecondary; } },
+                label: { show: true, position: 'top', fontSize: 12, fontWeight: 600, formatter: '{c} 笔' } },
+              hasAmount ? { name: '交易金额', type: 'line', yAxisIndex: 1, data: amounts,
+                smooth: true, symbol: 'emptyCircle', symbolSize: 8,
+                lineStyle: { color: XinfeiPalette.seriesOrange, width: 3 },
+                itemStyle: { color: XinfeiPalette.seriesOrange, borderColor: XinfeiPalette.white, borderWidth: 2 },
+                label: { show: true, position: 'top', fontSize: 12, fontWeight: 700, color: XinfeiPalette.warning,
+                  formatter: function(p) { return '¥' + Number(p.value).toFixed(0); } } } : null
+            ].filter(function(s) { return s; })
+          }, true);
+        },
+        handlePayExport() {
+          const self = this;
+          if (!self.pay.dateRange || self.pay.dateRange.length < 2) { XinfeiUI.warning('请先选择日期范围'); return; }
+          if (!self.pay.exportRows || !self.pay.exportRows.length) { XinfeiUI.warning('请先勾选要导出的记录'); return; }
+          const esc = function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"' }
+          const header = ['支付渠道', '交易笔数', '交易金额（元）']
+          const lines = self.pay.exportRows.map(function(r) {
+            return [r.channel, r.transactionCount, r.amount != null ? r.amount : 0].map(esc).join(',')
+          })
+          const csv = '\uFEFF' + header.map(esc).join(',') + '\r\n' + lines.join('\r\n')
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = '支付分析_' + self.pay.dateRange[0] + '_' + self.pay.dateRange[1] + '.csv';
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+          XinfeiUI.success('导出成功');
+        },
+
+        // ==================== 其他 ====================
+        formatDate(date) {
+          const y = date.getFullYear()
+          const m = String(date.getMonth() + 1).padStart(2, '0')
+          const d = String(date.getDate()).padStart(2, '0')
+          return y + '-' + m + '-' + d
+        }
+      }
+    })
+  </script>
+</body>
+</html>
