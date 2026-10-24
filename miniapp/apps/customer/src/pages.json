@@ -83,6 +83,82 @@
         "navigationBarTitleText": "我的收藏",
         "enablePullDownRefresh": true
       }
+    },
+    {
+      "path": "pages/user/profile",
+      "style": {
+        "navigationBarTitleText": "编辑资料"
+      }
+    },
+    {
+      "path": "pages/message/message",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/history/browse",
+      "style": {
+        "navigationBarTitleText": "浏览记录",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/order/frequent",
+      "style": {
+        "navigationBarTitleText": "常购清单"
+      }
+    },
+    {
+      "path": "pages/order/evaluations",
+      "style": {
+        "navigationBarTitleText": "我的评价",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/invoice/invoice",
+      "style": {
+        "navigationBarTitleText": "开发票"
+      }
+    },
+    {
+      "path": "pages/invoice/my",
+      "style": {
+        "navigationBarTitleText": "我的发票",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/service/service",
+      "style": {
+        "navigationBarTitleText": "客服中心"
+      }
+    },
+    {
+      "path": "pages/ai/assistant",
+      "style": {
+        "navigationBarTitleText": "AI 助手"
+      }
+    },
+    {
+      "path": "pages/queue/queue",
+      "style": {
+        "navigationBarTitleText": "排队取号"
+      }
+    },
+    {
+      "path": "pages/reservation/reservation",
+      "style": {
+        "navigationBarTitleText": "预约订座"
+      }
+    },
+    {
+      "path": "pages/nowifi/no-wifi",
+      "style": {
+        "navigationBarTitleText": "网络异常"
+      }
     }
   ],
   "globalStyle": {

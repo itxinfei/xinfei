@@ -1,7 +1,7 @@
 <template>
   <view class="me">
-    <!-- 金色身份区 -->
-    <view class="profile">
+    <!-- 金色身份区（点击进编辑资料） -->
+    <view class="profile" hover-class="hover-press" @tap="toProfile">
       <image v-if="avatar" class="profile__avatar" :src="avatar" mode="aspectFill" />
       <view v-else class="profile__avatar profile__avatar--text">
         <text>{{ initial }}</text>
@@ -69,6 +69,51 @@
       <view class="grow" hover-class="hover-press" @tap="toFavorite">
         <text class="grow__label">我的收藏</text>
         <text class="grow__value">查看</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/order/frequent')">
+        <text class="grow__label">常购清单</text>
+        <text class="grow__value">快速再加购</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/order/evaluations')">
+        <text class="grow__label">我的评价</text>
+        <text class="grow__value">查看</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/history/browse')">
+        <text class="grow__label">浏览记录</text>
+        <text class="grow__value">查看</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/message/message')">
+        <text class="grow__label">消息中心</text>
+        <text class="grow__value">查看</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/invoice/my')">
+        <text class="grow__label">我的发票</text>
+        <text class="grow__value">查看</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/queue/queue')">
+        <text class="grow__label">排队取号</text>
+        <text class="grow__value">堂食排队</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/reservation/reservation')">
+        <text class="grow__label">预约订座</text>
+        <text class="grow__value">查看</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/service/service')">
+        <text class="grow__label">客服中心</text>
+        <text class="grow__value">在线客服/投诉</text>
+        <text class="grow__arrow">›</text>
+      </view>
+      <view class="grow" hover-class="hover-press" @tap="toPage('/pages/ai/assistant')">
+        <text class="grow__label">AI 助手</text>
+        <text class="grow__value">不知道吃什么？</text>
         <text class="grow__arrow">›</text>
       </view>
     </view>
@@ -174,6 +219,12 @@ export default {
     },
     toFavorite() {
       uni.navigateTo({ url: '/pages/favorite/list' })
+    },
+    toProfile() {
+      uni.navigateTo({ url: '/pages/user/profile' })
+    },
+    toPage(url) {
+      uni.navigateTo({ url })
     },
     logout() {
       customerAuth.logout().then(() => {

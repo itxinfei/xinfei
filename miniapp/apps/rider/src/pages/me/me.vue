@@ -26,6 +26,26 @@
       </view>
     </view>
 
+    <view class="cell" hover-class="hover-press" @tap="go('/pages/settlement/settlement')">
+      <text class="cell__label">结算提现</text>
+      <text class="cell__value">›</text>
+    </view>
+    <view class="cell" hover-class="hover-press" @tap="go('/pages/evaluation/evaluation')">
+      <text class="cell__label">我的评价</text>
+      <text class="cell__value">›</text>
+    </view>
+    <view class="cell" hover-class="hover-press" @tap="go('/pages/exception/exception')">
+      <text class="cell__label">异常上报</text>
+      <text class="cell__value">›</text>
+    </view>
+    <view class="cell" hover-class="hover-press" @tap="go('/pages/message/message')">
+      <text class="cell__label">消息中心</text>
+      <view class="cell__right">
+        <text v-if="unread > 0" class="cell__badge">{{ unread > 99 ? '99+' : unread }}</text>
+        <text class="cell__value">›</text>
+      </view>
+    </view>
+
     <view class="cell" hover-class="hover-press" @tap="reportLocation">
       <text class="cell__label">上报当前定位</text>
       <text class="cell__value">{{ lastReport || '未上报' }}</text>
@@ -36,14 +56,15 @@
 </template>
 
 <script>
-import { riderAuth, write, STORAGE_KEYS } from '@xinfei/mini-shared'
+import { riderAuth, http, write, STORAGE_KEYS } from '@xinfei/mini-shared'
 import { locationReporter } from '../../utils/location-reporter'
 
 export default {
   data() {
     return {
       rider: {},
-      lastReport: ''
+      lastReport: '',
+      unread: 0
     }
   },
   computed: {
@@ -65,6 +86,13 @@ export default {
       }).catch(() => {
         this.rider = riderAuth.cached() || {}
       })
+      // 消息中心未读角标：失败静默（不影响主档案展示）
+      http.get('/api/rider-message/unread-count', null, { silent: true }).then(data => {
+        this.unread = (data && data.count) || 0
+      }).catch(() => {})
+    },
+    go(url) {
+      uni.navigateTo({ url })
     },
     toggle() {
       const wasOnline = this.online
@@ -211,6 +239,23 @@ export default {
 .cell__value {
   font-size: 26rpx;
   color: var(--color-text-hint);
+}
+
+.cell__right {
+  display: flex;
+  align-items: center;
+}
+
+.cell__badge {
+  margin-right: 12rpx;
+  min-width: 32rpx;
+  box-sizing: border-box;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-round);
+  text-align: center;
+  font-size: 20rpx;
+  color: var(--color-danger-text);
+  background: var(--color-danger-tint);
 }
 
 .cell--btn {

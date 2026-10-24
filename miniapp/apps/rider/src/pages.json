@@ -33,6 +33,33 @@
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/evaluation/evaluation",
+      "style": {
+        "navigationBarTitleText": "我的评价",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/exception/exception",
+      "style": {
+        "navigationBarTitleText": "异常上报"
+      }
+    },
+    {
+      "path": "pages/message/message",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/settlement/settlement",
+      "style": {
+        "navigationBarTitleText": "结算提现",
+        "enablePullDownRefresh": true
+      }
     }
   ],
   "globalStyle": {

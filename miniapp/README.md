@@ -53,7 +53,7 @@ pnpm build                          # 三个端一起构建
 
 本轮每个端只落「能跑通主链路的最小骨架」，其余页面按台账逐个补。接口路径与字段名逐条取自 Controller，未做改名。
 
-### apps/customer（12 页已落）
+### apps/customer（24 页已落，Web 侧 26 页全部覆盖）
 
 | 页面 | 接口 | 状态 |
 |---|---|---|
@@ -69,14 +69,26 @@ pnpm build                          # 三个端一起构建
 | `pages/address/edit` | `GET /address-book/{id}`、`POST/PUT /address-book`、`GET /region/children?parentId=`、`DELETE /address-book?ids=` | 已落（新增/编辑同页；detail 与经纬度由后端拼接/地理编码） |
 | `pages/member/member` | `GET /api/member/member/my-info`、`GET /api/member/member/my-levels`、`GET /api/member/member/my-points`、`GET /api/member/member/my-recharges`、`POST /api/member/portal/open`、`POST /api/member/portal/recharge/create`、`GET /api/member/portal/recharge/status/{no}`、`POST /api/payment/recharge/pay`、mock 沙箱 `POST /api/payment/notify/WECHAT`（均经 shared/pay.js） | 已落（会员卡：等级/折扣徽章/积分/储值余额/券数/升级进度；非会员一键免费开通；积分明细与充值记录分页；**在线充值已接微信 JSAPI**——快捷金额 50/100/200/500 + 自定义 1~5000 元，建充值单→支付→轮询充值单 SUCCESS，回调自动入余额；非会员不显示充值入口） |
 | `pages/coupon/coupon` | `GET /front/coupon/available`、`GET /front/coupon/my`、`POST /front/coupon/claim/{templateId}`、`POST /front/coupon/exchange/{templateId}`、`GET /api/member/member/my-info` | 已落（可领取：免费领/积分兑换，按 `templateId` 去重已领置灰，兑换前本地积分预检+二次确认；我的券：unused/used/expired 前端三段，unused「去使用」回点餐首页；非会员显开通引导；支持 `?tab=mine` 跳入） |
+| `pages/favorite/list` | `GET /api/user-favorite/my`、`POST /api/user-favorite/toggle` | 已落（我的收藏；失效收藏可清理——取消路径后端不再校验菜品存在性） |
+| `pages/user/profile` | `GET /user/info`、`PUT /user/info`、`POST /common/upload`（bizType=avatar） | 已落（头像更换/昵称/性别；手机号只读脱敏展示；保存后同步本地缓存；生日无实体字段，Web 版亦无） |
+| `pages/message/message` | `GET /recommend/messages`、`GET /recommend/messages/unread-count`、`PUT /recommend/messages/{id}/read`、`PUT /recommend/messages/read-all` | 已落（分页+未读角标+全部已读+详情弹层；SSE 实时推送不适用小程序，靠下拉刷新兜底） |
+| `pages/history/browse` | `GET /recommend/browse-history?limit=30` | 已落（近 30 条足迹，行为标签；后端无清空端点，仅「去逛逛」） |
+| `pages/order/frequent` | `GET /order/userPage`（≤3 页聚合）、`POST /shopping-cart/add` | 已落（近 300 单按菜品/套餐聚合计次取前 20；单品一键再加购；带口味明细按无口味加购） |
+| `pages/order/evaluations` | `GET /api/dish-evaluation/user/my` | 已落（我的评价只读分页列表：星级/图片九宫/商家回复/审核状态；提交通道在 `pages/order/evaluate`，本页不重复提供） |
 
-待迁（Web 侧 `front/page/` 其余 15 页）：
-`pay-cashier` / `pay-success`、`qrcode-order`、`invoice` / `my-invoice`、
-`my-evaluations`（**按订单提交评价已落在 `pages/order/evaluate`，仅剩"我的评价"分页列表态未迁**）、
-`my-favorites`、`message`、`queue`、`reservation`、`browse-history`、`frequent-orders`、
-`customer-service`、`ai-assistant`、`no-wifi`、`user`（编辑资料）。
+| `pages/invoice/invoice` | `GET /order/userPage?status=4`、`GET /order/{id}`、`GET /invoice/title/list`、`POST /invoice/title/save`、`DELETE /invoice/title/{id}`、`GET /invoice/order/{orderId}`、`POST /invoice/apply/{orderId}` | 已落（选单+抬头管理（企业税号校验）+已有发票记录，详情页可带参直入；发票 PDF 查看不迁——`/common/download` 鉴权只认 Session） |
+| `pages/invoice/my` | `GET /invoice/my/page` | 已落（分页+状态四色标签，整卡跳开发票页） |
+| `pages/service/service` | `/cs/portal/**`（会话/消息/投诉/评价）+ `GET /order/userPage` | 已落（双 tab：在线客服（4s 轮询、快捷问题、自动已读）+ 投诉工单（五类型/关联订单/满意度评价）；图片消息与凭证不迁——`/common/upload` 只认 Session） |
+| `pages/ai/assistant` | `GET /api/ai/scene-config`、`POST /api/ai/chat`、`GET /api/ai/conversations/{id}` | 已落（对话+推荐菜品卡+conversationId 持久化恢复；SSE 流式不迁（uni.request 无法消费 POST+SSE），走非流式同链路，历史互通；多会话侧板/反馈不迁） |
+| `pages/queue/queue` | `GET /api/dining/queue/customer/my`、`POST /api/dining/queue/customer/take`、`PUT /api/dining/queue/customer/{id}/cancel` | 已落（取号/15s 叫号轮询/取消，与 Web 一一对应） |
+| `pages/reservation/reservation` | `POST /api/dining/reservation/customer`、`GET /api/dining/reservation/customer/my`、`PUT /api/dining/reservation/customer/{id}/cancel` | 已落（预订表单+我的预订+取消；桌台由商家安排不传 tableId） |
+| `pages/nowifi/no-wifi` | 无 | 已落（纯 CSS 插画 + 网络检测 + 重试/回首页） |
 
-### apps/rider（5 页已落，覆盖 Web 侧 8 页的主要功能）
+「我的」页已接入全部功能入口（资料/常购/评价/足迹/消息/发票/排队/订座/客服/AI）。
+
+不迁：`qrcode-order`（扫码点餐，依赖桌台码入口，暂缓）、`pay-cashier` / `pay-success`（已由 `shared/pay.js` 支付闭环取代）。
+
+### apps/rider（9 页已落，覆盖 Web 侧 8 页的全部功能）
 
 | 页面 | 接口 | 状态 |
 |---|---|---|
@@ -84,12 +96,15 @@ pnpm build                          # 三个端一起构建
 | `pages/hall/hall` | `GET /api/rider/tasks/hall`、`POST /api/rider/tasks/{id}/grab` | 已落 |
 | `pages/task/task` | `GET /api/rider/tasks/mine?scope=todo\|delivering\|history`、`accept`/`pickup?pickupCode=`/`deliver` | 已落 |
 | `pages/income/income` | `GET /api/rider/income/summary`、`GET /api/rider/income/records?range&page&size` | 已落 |
-| `pages/me/me` | `GET /api/rider/me`、`online`/`offline`/`location`、`POST /api/rider/logout` | 已落 |
+| `pages/me/me` | `GET /api/rider/me`、`online`/`offline`/`location`、`POST /api/rider/logout` | 已落（含评价/异常/消息/结算 4 个入口，消息带未读角标） |
+| `pages/evaluation/evaluation` | `GET /api/rider-evaluation/received`、`GET /api/rider-evaluation/rider/{id}/stats` | 已落（评分 hero+真分页列表，匿名脱敏/标签/商家回复；Web 版一次拉 100 条改为真分页） |
+| `pages/exception/exception` | `POST /api/rider-exception`、`GET /api/rider-exception/mine`、`GET /api/rider/tasks/mine` | 已落（选单上报+工单进度列表；Web 的转单弹窗属任务域未迁，异常类型 5「申请转单」可达同目的） |
+| `pages/message/message` | `GET /api/rider-message/mine`、`GET /api/rider-message/unread-count`、`PUT /api/rider-message/{id}/read`、`PUT /api/rider-message/read-all` | 已落（分页+未读数走专用接口+单条/全部已读） |
+| `pages/settlement/settlement` | `GET /api/rider/settlement/balance`、`POST /api/rider/settlement/withdraw?amount=`、`GET /api/rider/settlement/withdrawals` | 已落（余额 hero+提现弹层（`qs()` 拼 URL）+记录列表；后端无最低金额配置、记录接口无分页参数，均按实际契约实现） |
 
 > 位置自动上报：有在途单期间每 12s 上报一次 GCJ-02（`utils/location-reporter.js` 模块单例，接单即开、送完即停），App 切后台显式停表、回前台按 `/tasks/mine?scope=delivering` resync，定位连续失败 3 次自动停；「我的」页保留手动上报。顾客端 tracking 地图即消费该数据。
 
-待迁：`evaluation`（`/api/rider-evaluation/**`）、`exception`（`/api/rider-exception/**`）、
-`message`（`/api/rider-message/**`）、结算提现（`/api/rider/settlement/**`）。
+骑手端 Web 侧 8 页功能已全覆盖（结算在 Web 是 income.html 内一块，小程序独立成页）。
 
 ### apps/staff（5 页已落）
 
