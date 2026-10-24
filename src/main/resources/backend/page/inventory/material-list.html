@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001004" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -324,7 +324,7 @@
               } },
               { prop: 'unit', label: '单位', width: 60, align: 'center' },
               { prop: 'stockQty', label: '库存', width: 80, slot: true, type: 'number' },
-              { prop: 'minStock', label: '最低库存', width: 80, type: 'number' },
+              { prop: 'minStock', label: '最低库存', width: 100, type: 'number' },
               { prop: 'unitPrice', label: '单价', width: 110, align: 'center', slot: true, type: 'money' },
               { prop: 'supplierName', label: '供应商', width: 100, align: 'center', formatter: function (v, row) {
                 return mapName(self.supplierOptions, row.supplierId) || v || '-'

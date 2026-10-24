@@ -7,7 +7,7 @@
   <title>操作日志 - 心飞外卖管理端</title>
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
+    <link rel="stylesheet" href="../../styles/main-v3.css?v=3001004" />
 </head>
 <body>
   <!-- 键盘用户：跳转到主内容（WCAG 2.4.1） -->
@@ -109,15 +109,15 @@
           // 表格列配置
           columns: [
             { prop: 'id', label: 'ID', width: 80, align: 'center' },
-            { prop: 'operatorId', label: '操作人ID', width: 90, align: 'center' },
+            { prop: 'operatorId', label: '操作人ID', width: 110, align: 'center' },
             { prop: 'operatorIp', label: '操作IP', width: 120, align: 'center' },
             { prop: 'operatorName', label: '操作人', width: 90, slot: true, align: 'center' },
             { prop: 'module', label: '操作模块', width: 105, align: 'center' },
-            { prop: 'operationType', label: '操作类型', width: 80, align: 'center', slot: true },
+            { prop: 'operationType', label: '操作类型', width: 100, align: 'center', slot: true },
             { prop: 'description', label: '操作描述', minWidth: 120, align: 'center' },
             { prop: 'requestUrl', label: '请求地址', minWidth: 120, align: 'center' },
             { prop: 'requestMethod', label: '方法', width: 76, align: 'center', slot: true },
-            { prop: 'duration', label: '耗时(ms)', width: 85, type: 'number' },
+            { prop: 'duration', label: '耗时(ms)', width: 110, type: 'number' },
             { prop: 'isSuccess', label: '状态', width: 65, align: 'center', slot: true },
             { prop: 'errorMsg', label: '错误信息', minWidth: 120, align: 'center' },
             { prop: 'createTime', label: '操作时间', width: 150, align: 'center' }

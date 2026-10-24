@@ -12,7 +12,7 @@
   justify-content: flex-start;
   margin: 0 0 20px; /* 上下边距全站统一：上 0、下 20px（原仅 margin-bottom，杜绝个别页漂移） */
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* table-bar 统一刷新按钮：推到最右；action-group 已靠右时剩余空间为 0，自然成组 */
@@ -20,20 +20,22 @@
   margin-left: auto;
 }
 
-/* 搜索区域（<table-bar> 组件使用，聚合搜索控件+查询/重置按钮） */
+/* 搜索区域（<table-bar> 组件使用，聚合搜索控件+查询/重置按钮）
+   O-21 二期紧凑化：默认宽度收敛（input 200→170 / select 160→140 / daterange 340→300），
+   保证 3 搜索项+操作按钮在 1280px 视口下一行放下；极窄屏仍可换行兜底 */
 .container .tableBar .search-area {
   display: flex;
   align-items: center;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
-/* 搜索区内的输入框：默认 200px */
+/* 搜索区内的输入框：紧凑默认 170px */
 .container .tableBar .search-area .el-input {
-  flex: 0 1 200px;
-  min-width: 150px;
+  flex: 0 1 170px;
+  min-width: 130px;
   width: auto !important;
 }
 
@@ -44,10 +46,10 @@
   width: auto;
 }
 
-/* 搜索区内的下拉框：默认 160px */
+/* 搜索区内的下拉框：紧凑默认 140px */
 .container .tableBar .search-area .el-select {
-  flex: 0 1 160px;
-  min-width: 120px;
+  flex: 0 1 140px;
+  min-width: 110px;
   width: auto !important;
 }
 
@@ -58,10 +60,10 @@
   width: auto;
 }
 
-/* 搜索区内的日期选择器：默认 340px */
+/* 搜索区内的日期选择器：紧凑默认 300px */
 .container .tableBar .search-area .el-date-editor {
-  flex: 0 1 340px;
-  min-width: 260px;
+  flex: 0 1 300px;
+  min-width: 240px;
   width: auto !important;
 }
 

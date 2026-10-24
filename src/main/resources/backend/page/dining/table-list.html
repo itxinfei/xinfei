@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="../../plugins/remixicon/remixicon.css" />
 
-  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001004" />
   <style>
     /* 卡片视图切换 */
     .table-grid-toggle { display: flex; align-items: center; gap: 8px; }
@@ -448,10 +448,10 @@
           tableColumns: [
             { prop: 'name', label: '桌台名称', width: 100, align: 'center' },
             { prop: 'areaName', label: '区域', width: 70, align: 'center' },
-            { prop: 'seatCount', label: '座位', width: 50, type: 'number' },
+            { prop: 'seatCount', label: '座位', width: 64, type: 'number' },
             { prop: 'status', label: '状态', width: 70, align: 'center', slot: true },
-            { prop: 'minAmount', label: '最低消费', width: 80, slot: true, type: 'money' },
-            { prop: 'sort', label: '排序', width: 50, align: 'center' }
+            { prop: 'minAmount', label: '最低消费', width: 100, slot: true, type: 'money' },
+            { prop: 'sort', label: '排序', width: 64, align: 'center' }
           ],
           // 统计
           stats: { totalTables: 0, freeTables: 0, occupiedTables: 0, reservedTables: 0 },
