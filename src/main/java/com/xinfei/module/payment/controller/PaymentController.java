@@ -111,6 +111,10 @@ public class PaymentController {
     @Autowired
     private com.xinfei.module.user.service.UserService userService;
 
+    /** 会员储值支付（BALANCE 渠道）：按 userId 原子扣减余额（O-06） */
+    @Autowired
+    private com.xinfei.module.member.service.MemberRewardService memberRewardService;
+
     /**
      * 创建支付订单
      * @param dto 支付请求参数
@@ -149,6 +153,10 @@ public class PaymentController {
         // 复用 handlePaymentSuccess 下游（订单流转/KDS/拼团/取消自动退款），无需异步回调
         if ("SUBSIDY".equalsIgnoreCase(dto.getChannel())) {
             return payBySubsidy(order, payAmount, currentUserId, currentTenantId);
+        }
+        // 会员储值支付（BALANCE）：同步渠道——按 userId 原子扣减会员余额后直接走支付成功链路（O-06）
+        if ("BALANCE".equalsIgnoreCase(dto.getChannel())) {
+            return payByBalance(order, payAmount, currentUserId);
         }
         if (payAmount.compareTo(BigDecimal.ZERO) <= 0) {
             // 0 元订单：优惠券/折扣将实付压到 0，自动完成支付，不调用渠道。
@@ -240,6 +248,44 @@ public class PaymentController {
         response.setPayType("SUBSIDY");
         response.setTradeNo(paymentOrder.getTradeNo());
         log.info("[餐补支付] 完成: orderId={}, tradeNo={}, amount={}",
+                order.getId(), paymentOrder.getTradeNo(), payAmount);
+        return R.success(response);
+    }
+
+    /**
+     * 会员储值支付（BALANCE 渠道，O-06）：扣减会员余额（按 userId 原子扣，余额不足返回 false）
+     * → 推进支付单/订单到已支付。与收银台储值支付（payType=5）同一扣款内核
+     * {@code MemberRewardService#deductStoredBalance}，口径一致。
+     * <p>扣减失败时与餐补渠道同口径：保持订单待付款与支付单 PENDING，顾客可充值后重试或改用其他渠道。</p>
+     */
+    private R<PayResponse> payByBalance(Orders order, BigDecimal payAmount, Long userId) {
+        if (payAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            // 0 元单：无需扣余额，直接走 0 元支付闭环
+            paymentOrderService.completeZeroAmountPayment(order.getId());
+            PayResponse zeroPayResponse = new PayResponse();
+            zeroPayResponse.setSuccess(true);
+            zeroPayResponse.setRawResponse("0元订单自动完成支付");
+            return R.success(zeroPayResponse);
+        }
+        PaymentOrder paymentOrder = paymentOrderService.createPaymentOrder(order.getId(), "BALANCE", payAmount);
+        boolean deducted;
+        try {
+            deducted = memberRewardService.deductStoredBalance(userId, payAmount);
+        } catch (CustomException e) {
+            log.info("[储值支付] 扣减失败，保持待付款: orderId={}, err={}", order.getId(), e.getMessage());
+            return R.error(e.getMessage());
+        }
+        if (!deducted) {
+            // 未开通会员或余额不足（deductStoredBalance 对两者均返回 false，统一提示引导）
+            log.info("[储值支付] 扣减失败（未开通会员或余额不足），保持待付款: orderId={}", order.getId());
+            return R.error("会员储值不可用（未开通或余额不足），请充值或更换支付方式");
+        }
+        paymentOrderService.handlePaymentSuccess(paymentOrder.getTradeNo(), "BALANCE");
+        PayResponse response = new PayResponse();
+        response.setSuccess(true);
+        response.setPayType("BALANCE");
+        response.setTradeNo(paymentOrder.getTradeNo());
+        log.info("[储值支付] 完成: orderId={}, tradeNo={}, amount={}",
                 order.getId(), paymentOrder.getTradeNo(), payAmount);
         return R.success(response);
     }

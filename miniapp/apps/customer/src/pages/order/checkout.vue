@@ -35,14 +35,51 @@
       </view>
     </view>
 
-    <!-- 自提：门店信息卡（/restaurant/info 不返回地址，与 H5 同口径只展示名称/营业时间/公告） -->
+    <!-- 自提：门店信息卡（/restaurant/info 带 address 时展示门店地址，无值不渲染该行） -->
     <view v-else class="card pickup">
       <view class="pickup__head">
         <text class="pickup__name">{{ (restaurant && restaurant.name) || '门店自提' }}</text>
         <text v-if="restaurant && restaurant.businessHours" class="pickup__hours">营业时间 {{ restaurant.businessHours }}</text>
       </view>
+      <text v-if="restaurant && restaurant.address" class="pickup__addr">门店地址：{{ restaurant.address }}</text>
       <text v-if="restaurant && restaurant.notice" class="pickup__notice">{{ restaurant.notice }}</text>
       <text class="pickup__tip">下单后到店向店员出示取餐码即可取餐，无需配送</text>
+    </view>
+
+    <!-- 期望送达时间（O-07）：配送模式可选「尽快」或预约今天/明天/后天时段，与 H5 同口径 -->
+    <view v-if="!isPickup" class="card dtime">
+      <view class="dtime__row" hover-class="hover-press" @tap="timePanelOpen = !timePanelOpen">
+        <text class="dtime__label">期望送达</text>
+        <view class="dtime__value">
+          <text>{{ deliveryTimeText }}</text>
+          <text class="dtime__arrow">{{ timePanelOpen ? '⌃' : '⌄' }}</text>
+        </view>
+      </view>
+      <view v-if="timePanelOpen" class="dtime__panel">
+        <view class="dtime__days">
+          <text
+            v-for="(d, i) in timeDays"
+            :key="d.label"
+            class="dtime__day"
+            :class="{ 'dtime__day--on': timeDayIdx === i }"
+            hover-class="hover-press"
+            @tap="pickDay(i)"
+          >{{ d.label }}</text>
+        </view>
+        <view
+          v-for="(s, i) in timeSlotsForDay"
+          :key="s.value"
+          class="dtime__opt"
+          hover-class="hover-press"
+          @tap="pickSlot(i)"
+        >
+          <view class="dtime__main">
+            <text class="dtime__name">{{ s.label }}</text>
+            <text v-if="s.time" class="dtime__meta">{{ s.time }}</text>
+          </view>
+          <view class="radio" :class="{ 'radio--on': timeSlotIdx === i }"></view>
+        </view>
+      </view>
     </view>
 
     <!-- 商品明细（数据来自只读核价 preview，与下单同源） -->
@@ -92,6 +129,11 @@
         <view class="pay__item" hover-class="hover-press" @tap="payMethod = 2">
           <text class="pay__label">微信支付</text>
           <view class="radio" :class="{ 'radio--on': payMethod === 2 }"></view>
+        </view>
+        <!-- 会员储值（O-06）：余额>0 才展示；是否够付由服务端下单扣款时校验 -->
+        <view v-if="memberBalance > 0" class="pay__item" hover-class="hover-press" @tap="payMethod = 5">
+          <text class="pay__label">会员储值（余额 ¥{{ fmtAmount(memberBalance) }}）</text>
+          <view class="radio" :class="{ 'radio--on': payMethod === 5 }"></view>
         </view>
         <view class="pay__item" hover-class="hover-press" @tap="payMethod = 6">
           <text class="pay__label">{{ fulfillmentMode === 'pickup' ? '到店付款' : '货到付款' }}</text>
@@ -219,6 +261,25 @@ export default {
       pricing: null,
       remark: '',
       payMethod: 6,
+      // 会员储值余额（O-06）：null=未开通/未登录，>0 展示储值支付项；静默加载失败不影响其他支付方式
+      memberBalance: null,
+      // 期望送达时间（O-07）：今天+slot0=尽快送达；否则预约（orders.expect_delivery_time 透传落库）
+      timePanelOpen: false,
+      timeDayIdx: 0,
+      timeSlotIdx: 0,
+      soonEta: '',
+      timeDays: [
+        { label: '今天', offset: 0 },
+        { label: '明天', offset: 1 },
+        { label: '后天', offset: 2 }
+      ],
+      // 预约时段与 H5 add-order 的 scheduleTimeSlots 同口径同顺序
+      scheduleSlots: [
+        { value: 'MORNING', label: '早餐', time: '07:30-09:00' },
+        { value: 'LUNCH', label: '午餐', time: '11:30-12:30' },
+        { value: 'AFTERNOON', label: '下午茶', time: '14:00-16:00' },
+        { value: 'DINNER', label: '晚餐', time: '17:30-19:00' }
+      ],
       previewLoading: false,
       previewError: '',
       // 结算页选券：usableCoupons 为后端按商品额算出的当前可用券，chosenCouponId 是 coupon_user.id
@@ -232,6 +293,29 @@ export default {
   computed: {
     isPickup() {
       return this.fulfillmentMode === 'pickup'
+    },
+    // 时段选项：「尽快送达」仅今天可选（明天/后天无"尽快"语义）
+    timeSlotsForDay() {
+      const soon = [{ value: 'SOON', label: '尽快送达', time: '预计 ' + this.soonEta }]
+      return this.timeDayIdx === 0 ? soon.concat(this.scheduleSlots) : this.scheduleSlots
+    },
+    // 是否预约配送（非今天 或 非尽快档）
+    isScheduled() {
+      return !this.isPickup && !(this.timeDayIdx === 0 && this.timeSlotIdx === 0)
+    },
+    deliveryTimeText() {
+      if (this.isPickup) return ''
+      if (!this.isScheduled) return '尽快送达 · 预计 ' + this.soonEta
+      const s = this.timeSlotsForDay[this.timeSlotIdx] || {}
+      return this.timeDays[this.timeDayIdx].label + ' ' + s.label + '（' + s.time + '）'
+    },
+    // 提交口径与 H5 对齐：立即=「HH:MM 尽快送达」；预约=「yyyy-MM-dd HH:mm-HH:mm」
+    expectDeliveryTimeValue() {
+      if (this.isPickup) return null
+      if (!this.isScheduled) return this.soonEta + ' 尽快送达'
+      const s = this.timeSlotsForDay[this.timeSlotIdx] || {}
+      const d = new Date(Date.now() + this.timeDays[this.timeDayIdx].offset * 86400000)
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + s.time
     },
     details() {
       return this.pricing ? this.pricing.details || [] : []
@@ -303,6 +387,10 @@ export default {
     },
     bootstrap() {
       this.loadRestaurant()
+      this.loadMemberBalance()
+      // 尽快送达 ETA（O-07）：now+40 分钟，与页面停留时长无关，进入页面时算一次
+      const eta = new Date(Date.now() + 40 * 60000)
+      this.soonEta = pad2(eta.getHours()) + ':' + pad2(eta.getMinutes())
       // 无交接地址时取默认地址（自提模式切回配送也有值）；无论是否有地址都拉购物车（空车给引导）
       const addressReady = this.address
         ? Promise.resolve()
@@ -414,15 +502,54 @@ export default {
         addressBookId: this.isPickup ? null : this.address.id,
         source: this.isPickup ? 'SELF_PICKUP' : 'TAKEOUT',
         remark: this.remark.trim(),
+        // 期望送达（O-07）：配送模式必传（立即/预约两种口径），自提无配送环节传 null
+        expectDeliveryTime: this.expectDeliveryTimeValue,
         payMethod: this.payMethod,
         usedCouponId: this.chosenCouponId,
         idempotencyKey: this.idempotencyKey
       }).then(data => {
         // duplicate=true 是同一幂等键的重复提交，返回的就是已创建订单，同样按成功处理
         if (this.payMethod === 2) return this.handleOnlinePay(data)
+        if (this.payMethod === 5) return this.handleBalancePay(data)
         uni.showToast({ title: '下单成功', icon: 'success' })
         setTimeout(() => this.gotoOrderPlaced(data), 600)
       }).catch(() => {}).then(() => { this.setBusy(key, false) })
+    },
+    // 会员储值支付（O-06）：下单后走 BALANCE 同步渠道（服务端原子扣余额 + 订单 1→2），
+    // 失败（未开通/余额不足）订单保持待付款，引导到订单详情可重试或换支付方式
+    handleBalancePay(data) {
+      if (!data || !data.id) return Promise.resolve()
+      uni.showLoading({ title: '正在扣款', mask: true })
+      return http.post('/api/payment/pay', { orderId: data.id, channel: 'BALANCE' }, { silent: true })
+        .then(res => {
+          uni.hideLoading()
+          if (!res || res.success === false) {
+            throw new Error('储值支付失败，请稍后重试')
+          }
+          this.memberBalance = Math.max(0, Number(this.memberBalance || 0) - Number(data.amount || 0))
+          uni.showToast({ title: '支付成功', icon: 'success' })
+          setTimeout(() => this.gotoOrderPlaced(data), 600)
+        }).catch(err => {
+          uni.hideLoading()
+          const msg = (err && err.message) || '储值支付未完成'
+          uni.showToast({ title: msg, icon: 'none', duration: 2500 })
+          setTimeout(() => this.gotoOrderDetail(data.id), 1200)
+        })
+    },
+    // 会员余额（O-06）：未开通会员/未登录都静默置 null，不展示储值支付项
+    loadMemberBalance() {
+      http.get('/api/member/member/my-info', null, { silent: true }).then(info => {
+        this.memberBalance = info && info.balance != null ? Number(info.balance) : null
+      }).catch(() => { this.memberBalance = null })
+    },
+    // 期望送达（O-07）：切天时若当前档越界（明天/后天无「尽快送达」）回落到第一档
+    pickDay(idx) {
+      this.timeDayIdx = idx
+      if (this.timeSlotIdx >= this.timeSlotsForDay.length) this.timeSlotIdx = 0
+    },
+    pickSlot(idx) {
+      this.timeSlotIdx = idx
+      this.timePanelOpen = false
     },
     // 微信 JSAPI：下单成功后立即调起支付，终态以后端支付单回查为准
     handleOnlinePay(data) {
@@ -523,6 +650,14 @@ export default {
   color: var(--color-text-hint);
 }
 
+.pickup__addr {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  color: var(--color-text-secondary);
+}
+
 .pickup__notice {
   display: block;
   margin-top: 12rpx;
@@ -536,6 +671,85 @@ export default {
   margin-top: 12rpx;
   font-size: 24rpx;
   color: var(--color-primary-text-strong);
+}
+
+/* 期望送达时间（O-07） */
+.dtime__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dtime__label {
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+}
+
+.dtime__value {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+}
+
+.dtime__arrow {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.dtime__panel {
+  margin-top: 16rpx;
+  border-top: 1rpx solid var(--border-hairline);
+  padding-top: 16rpx;
+}
+
+.dtime__days {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.dtime__day {
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+}
+
+.dtime__day--on {
+  color: var(--color-primary-text);
+  background: var(--color-primary-tint-strong);
+  font-weight: 600;
+}
+
+.dtime__opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 4rpx;
+  border-bottom: 1rpx solid var(--border-hairline);
+}
+
+.dtime__opt:last-child {
+  border-bottom: none;
+}
+
+.dtime__main {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+}
+
+.dtime__name {
+  font-size: 26rpx;
+  color: var(--color-text-primary);
+}
+
+.dtime__meta {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
 }
 
 .address {

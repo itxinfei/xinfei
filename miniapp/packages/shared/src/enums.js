@@ -1,4 +1,4 @@
-import { getBaseUrl } from './config';
+import { getBaseUrl } from './config.js';
 
 /**
  * 状态与来源字典（三端共用，单一真源）。

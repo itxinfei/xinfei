@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from './config';
+import { STORAGE_KEYS } from './config.js';
 
 export function read(key) {
   try {

@@ -1,4 +1,4 @@
-import { http } from './request';
+import { http } from './request.js';
 
 /** 用户在微信支付密码弹层点了取消/关闭（非失败，不弹错误提示） */
 export const PAY_CANCEL = 'CANCEL';
@@ -198,6 +198,54 @@ export function payRechargeByWechat(rechargeNo, amount) {
     return invokeWxPay(params).then(() => {
       uni.showLoading({ title: '支付结果确认中', mask: true });
       return waitRechargeConfirmed(rechargeNo);
+    }).then(() => {
+      uni.hideLoading();
+      return { paid: true };
+    });
+  }).catch(err => {
+    uni.hideLoading();
+    throw err;
+  });
+}
+
+/**
+ * 小程序微信 JSAPI 付费券包购买闭环（O-18，优惠券页用）：
+ * 创建购买单后调用 → 券包支付单 → wx.requestPayment → 轮询支付单 SUCCESS（券已到账）。
+ * 支付单查询走通用 /api/payment/user/query/{tradeNo}，与订单支付同口径。
+ *
+ * @param {string} orderNo /api/coupon-package/buy 返回的购买单号
+ * @param {number|string} amount 售价（元），仅 mock 沙箱模拟回调计分数用
+ * @returns {Promise<{mock?: boolean, paid?: boolean}>}
+ * @rejects 错误口径同 payOrderByWechat（PAY_CANCEL / PAY_FAIL / PAY_PENDING / 后端业务拒绝）
+ */
+export function payCouponPackageByWechat(orderNo, amount) {
+  uni.showLoading({ title: '正在发起支付', mask: true });
+  return http.post('/api/payment/coupon-package/pay', {
+    orderNo: orderNo,
+    channel: 'WECHAT',
+    payType: 'JSAPI'
+  }, { silent: true }).then(data => {
+    if (!data || data.success === false) {
+      throw payError(PAY_FAIL, (data && data.errorMsg) || '券包下单失败，请稍后重试');
+    }
+    // mock 沙箱：与订单/充值同契约打模拟回调，回调联动拆包发券
+    if (data.mockMode && !(data.jsapiParams && data.jsapiParams.paySign)) {
+      return http.post('/api/payment/notify/WECHAT', {
+        out_trade_no: data.tradeNo,
+        total_fee: Math.round(Number(amount || 0) * 100)
+      }, { silent: true }).then(() => waitPaymentConfirmed(data.tradeNo)).then(() => {
+        uni.hideLoading();
+        return { mock: true };
+      });
+    }
+    const params = data.jsapiParams;
+    if (!params || !params.paySign) {
+      throw payError(PAY_FAIL, '支付参数缺失，请稍后重试');
+    }
+    uni.hideLoading();
+    return invokeWxPay(params).then(() => {
+      uni.showLoading({ title: '支付结果确认中', mask: true });
+      return waitPaymentConfirmed(data.tradeNo);
     }).then(() => {
       uni.hideLoading();
       return { paid: true };

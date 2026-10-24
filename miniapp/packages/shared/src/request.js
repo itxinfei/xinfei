@@ -1,5 +1,5 @@
-import { getBaseUrl, CSRF_HEADER, AUTH_HEADER, WRITE_METHODS, STORAGE_KEYS } from './config';
-import { read, write, clearSession } from './storage';
+import { getBaseUrl, CSRF_HEADER, AUTH_HEADER, WRITE_METHODS, STORAGE_KEYS } from './config.js';
+import { read, write, clearSession } from './storage.js';
 
 /**
  * 统一请求层：对应 Web 端的 shared/js/request-core.js + 各端 js/request.js。

@@ -2,8 +2,12 @@
   "name": "@xinfei/mini-shared",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "小程序三端共用的请求层、鉴权 API、状态枚举与设计令牌",
   "main": "src/index.js",
+  "scripts": {
+    "test": "node --test test/shared.test.mjs"
+  },
   "exports": {
     ".": "./src/index.js",
     "./request": "./src/request.js",

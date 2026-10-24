@@ -8,6 +8,32 @@
     <scroll-view class="list" scroll-y>
       <!-- ============ 可领取 ============ -->
       <block v-if="tab === 'available'">
+        <!-- 超值券包（O-18）：打包售卖，微信支付购买成功自动发放到「我的券」 -->
+        <view v-for="p in packages" :key="'pkg' + p.id" class="coupon coupon--pkg" hover-class="hover-press">
+          <view class="coupon__face coupon__face--pkg">
+            <text class="coupon__amount">¥{{ fmtAmount(p.price) }}</text>
+            <text class="coupon__cond">券包价</text>
+          </view>
+          <view class="coupon__body">
+            <view class="coupon__main">
+              <view class="coupon__titlerow">
+                <text class="coupon__name">{{ p.name }}</text>
+                <text class="coupon__new" v-if="p.originalValue">价值 ¥{{ fmtAmount(p.originalValue) }}</text>
+              </view>
+              <text class="coupon__meta">{{ pkgItemsText(p) }}</text>
+            </view>
+            <view class="coupon__foot">
+              <text class="coupon__type">券包</text>
+              <text
+                class="cbtn cbtn--main"
+                :class="{ 'cbtn--off': busy('pkg:' + p.id) }"
+                hover-class="hover-press"
+                @tap="buyPackage(p)"
+              >{{ busy('pkg:' + p.id) ? '支付中…' : '购买' }}</text>
+            </view>
+          </view>
+        </view>
+
         <view v-for="t in available" :key="t.id" class="coupon">
           <view class="coupon__face">
             <text class="coupon__amount">{{ faceText(t) }}</text>
@@ -107,7 +133,7 @@
 </template>
 
 <script>
-import { http, busyLock, fmtAmount, couponTypeText, couponStatusText } from '@xinfei/mini-shared'
+import { http, busyLock, fmtAmount, couponTypeText, couponStatusText, payCouponPackageByWechat, PAY_CANCEL } from '@xinfei/mini-shared'
 
 export default {
   data() {
@@ -119,6 +145,8 @@ export default {
       available: [],
       availLoading: false,
       availError: false,
+      // 超值券包（O-18）：上架券包，购买后自动发放
+      packages: [],
       // 我的券（接口无分页，前端分三段）
       mine: [],
       mineLoading: false,
@@ -165,6 +193,37 @@ export default {
     refresh() {
       this.loadAvailable()
       this.loadMemberThenMine()
+      this.loadPackages()
+    },
+    // 超值券包（O-18）：匿名可看，购买需登录（未登录 request 层自动回登录页）
+    loadPackages() {
+      http.get('/api/coupon-package/list', null, { silent: true }).then(list => {
+        this.packages = Array.isArray(list) ? list : []
+      }).catch(() => { this.packages = [] })
+    },
+    pkgItemsText(p) {
+      const items = (p.items || []).map(i => (i.templateSummary || '') + (i.templateName || ''))
+        .filter(s => s)
+      return items.length ? items.join(' · ') : (p.description || '多张优惠券打包')
+    },
+    buyPackage(p) {
+      const key = 'pkg:' + p.id
+      if (this.busy(key)) return
+      this.setBusy(key, true)
+      http.post('/api/coupon-package/buy?packageId=' + p.id, null, { silent: true })
+        .then(order => payCouponPackageByWechat(order.orderNo, p.price))
+        .then(() => {
+          uni.showToast({ title: '购买成功，券已到账', icon: 'success' })
+          this.refresh()
+        })
+        .catch(err => {
+          if (err && err.code === PAY_CANCEL) {
+            uni.showToast({ title: '支付已取消', icon: 'none' })
+            return
+          }
+          uni.showToast({ title: (err && err.message) || '购买未完成', icon: 'none', duration: 2500 })
+        })
+        .then(() => { this.setBusy(key, false) })
     },
     loadAvailable() {
       this.availLoading = true
@@ -399,6 +458,15 @@ export default {
   padding: 24rpx 12rpx;
   background: var(--color-primary-tint);
   border-right: 2rpx dashed var(--border-medium);
+}
+
+/* 券包卡（O-18）：主色实底突出售卖属性 */
+.coupon__face--pkg {
+  background: var(--color-primary-gradient);
+}
+
+.coupon--pkg .coupon__cond {
+  color: var(--color-primary-text);
 }
 
 .coupon__amount {

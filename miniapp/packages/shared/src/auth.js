@@ -1,6 +1,6 @@
-import { http } from './request';
-import { STORAGE_KEYS } from './config';
-import { read, write, clearSession } from './storage';
+import { http } from './request.js';
+import { STORAGE_KEYS } from './config.js';
+import { read, write, clearSession } from './storage.js';
 
 /**
  * 三端登录态：路径与字段名逐条取自后端 Controller，未做任何"顺手改名"。
