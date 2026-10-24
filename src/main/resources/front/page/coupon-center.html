@@ -31,6 +31,15 @@
         .cc-exp { font-size:11px; color:var(--c-gray-4); margin-top:6px; }
         .cc-right { flex:none; display:flex; align-items:center; padding:0 12px; }
         .cc-empty { text-align:center; color:var(--c-gray-5); padding:50px 0; font-size:13px; }
+        /* 券包卡（O-18）：主色渐变面卡区分售卖属性 */
+        .cc-left--pkg { background:var(--color-primary-gradient); }
+        .cc-pkg .cc-name { color:var(--color-primary-text-strong); }
+        /* 券包支付二维码弹窗 */
+        .cc-qr { padding:20px 16px 16px; text-align:center; }
+        .cc-qr__title { font-size:15px; font-weight:600; color:var(--c-text); }
+        .cc-qr__img { width:190px; height:190px; margin:14px auto 0; display:block; }
+        .cc-qr__amount { font-size:20px; font-weight:700; color:var(--c-red); margin-top:10px; }
+        .cc-qr__tip { font-size:12px; color:var(--c-gray-5); margin:6px 0 12px; }
     </style>
 </head>
 <body>
@@ -47,6 +56,22 @@
             <van-tabs v-model:active="activeTab" sticky offset-top="0">
                 <van-tab title="可领券">
                     <div style="height:10px"></div>
+                    <!-- 超值券包（O-18）：打包售卖，支付成功自动发放到「我的券」 -->
+                    <div class="cc-coupon cc-pkg" v-for="p in packages" :key="'p'+p.id">
+                        <div class="cc-left cc-left--pkg">
+                            <div class="big">¥{{ pkgPrice(p) }}</div>
+                            <div class="unit">券包价</div>
+                        </div>
+                        <div class="cc-mid">
+                            <div class="cc-name">{{ p.name }}</div>
+                            <div class="cc-cond" v-if="p.originalValue">价值 ¥{{ Number(p.originalValue).toFixed(0) }}</div>
+                            <div class="cc-exp">{{ pkgItemsText(p) }}</div>
+                        </div>
+                        <div class="cc-right">
+                            <van-button size="small" round type="primary" :loading="buyingId===p.id"
+                                        @click="buyPackage(p)">购买</van-button>
+                        </div>
+                    </div>
                     <div v-if="available.length===0" class="cc-empty">暂无可领取的优惠券</div>
                     <div class="cc-coupon" v-for="t in available" :key="'a'+t.id">
                         <div :class="['cc-left', isPoints(t)?'is-points':'']">
@@ -88,6 +113,18 @@
                 </van-tab>
             </van-tabs>
         </cend-shell>
+
+        <!-- 券包支付二维码弹窗（NATIVE 扫码；mock 沙箱自动回调，不弹此窗） -->
+        <van-popup :show="pay.showQr" position="center" round :close-on-click-overlay="false"
+                   :style="{ width: '260px' }" @close="stopPayPoll">
+            <div class="cc-qr">
+                <div class="cc-qr__title">微信扫码支付</div>
+                <img class="cc-qr__img" v-if="pay.qrCodeUrl" :src="pay.qrCodeUrl" alt="支付二维码">
+                <div class="cc-qr__amount">¥{{ pay.amount }}</div>
+                <div class="cc-qr__tip">支付完成后自动到账，无需手动操作</div>
+                <van-button size="small" plain round block @click="stopPayPoll">取消支付</van-button>
+            </div>
+        </van-popup>
     </div>
 
     <script src="../../backend/plugins/vue3/vue.global.js"></script>
@@ -97,7 +134,8 @@
     <script src="../../backend/plugins/axios/axios.min.js"></script>
     <script src="./../js/request.js?v=20260930"></script>
     <script src="./../api/member-center.js?v=20260929"></script>
-    <script src="./../api/coupon.js?v=20260929"></script>
+    <script src="./../api/coupon.js?v=20261024"></script>
+    <script src="./../api/payment.js?v=20261024"></script>
     <script>
         createVantApp({
             el: '#app',
@@ -107,12 +145,21 @@
                     points: 0,
                     available: [],
                     my: [],
-                    busyId: null
+                    busyId: null,
+                    // 付费券包（O-18）：上架券包 + 购买支付内联状态
+                    packages: [],
+                    buyingId: null,
+                    pay: { tradeNo: '', amount: 0, qrCodeUrl: '', showQr: false },
+                    payPollTimer: null
                 };
             },
             mounted: function () {
                 this.loadPoints();
                 this.loadAvailable();
+                this.loadPackages();
+            },
+            beforeUnmount: function () {
+                this.stopPayPoll();
             },
             methods: {
                 isPoints: function (t) {
@@ -164,6 +211,113 @@
                     getAvailableCouponsFront().then(function (res) {
                         if (res.code === 1) self.available = res.data || [];
                     }).catch(function () {});
+                },
+                // ── 付费券包（O-18）：与小程序优惠券页同口径的购买闭环 ──
+                loadPackages: function () {
+                    var self = this;
+                    getCouponPackagesFront().then(function (res) {
+                        if (res.code === 1) self.packages = res.data || [];
+                    }).catch(function () {});
+                },
+                pkgPrice: function (p) {
+                    return Number(p.price || 0).toFixed(2);
+                },
+                pkgItemsText: function (p) {
+                    var names = (p.items || []).map(function (i) {
+                        return (i.templateSummary || '') + (i.templateName || '');
+                    }).filter(function (s) { return s; });
+                    return names.length ? names.join(' · ') : (p.description || '多张优惠券打包');
+                },
+                buyPackage: async function (p) {
+                    if (this.buyingId) return;
+                    this.buyingId = p.id;
+                    try {
+                        // 1. 建购买单（幂等复用待支付单）
+                        var buyRes = await buyCouponPackageFront(p.id);
+                        if (buyRes.code !== 1 || !buyRes.data || !buyRes.data.orderNo) {
+                            vant.showFailToast(buyRes.msg || '购买发起失败');
+                            return;
+                        }
+                        var order = buyRes.data;
+                        // 2. 发起支付（H5 走 WECHAT 渠道默认 NATIVE 扫码；沙箱返回 mockMode）
+                        var payRes = await payCouponPackageFront(order.orderNo);
+                        if (payRes.code !== 1 || !payRes.data || payRes.data.success === false) {
+                            vant.showFailToast((payRes.data && payRes.data.errorMsg) || payRes.msg || '支付下单失败，请重试');
+                            return;
+                        }
+                        var d = payRes.data;
+                        this.pay.tradeNo = d.tradeNo || '';
+                        this.pay.amount = Number(order.price || 0).toFixed(2);
+                        if (d.mockMode) {
+                            // 3a. 沙箱：模拟渠道回调后轮询支付单（回调联动拆包发券）
+                            await this.mockNotifyPay();
+                            await this.pollPayStatus();
+                        } else if (d.qrCodeUrl) {
+                            // 3b. 真实渠道：展示二维码 + 轮询（扫码支付后自动到账）
+                            this.pay.qrCodeUrl = d.qrCodeUrl;
+                            this.pay.showQr = true;
+                            this.startPayPoll();
+                        } else if (d.payUrl) {
+                            window.location.href = d.payUrl;
+                        } else {
+                            vant.showFailToast('支付渠道响应异常，请重试');
+                        }
+                    } catch (e) {
+                        vant.showFailToast('网络异常，请稍后重试');
+                    } finally {
+                        this.buyingId = null;
+                    }
+                },
+                // 沙箱模拟微信回调（与 pay-cashier 同契约：total_fee 单位分）
+                mockNotifyPay: function () {
+                    var amount = Number(this.pay.amount || 0);
+                    return paymentNotifyMockApi('WECHAT', {
+                        out_trade_no: this.pay.tradeNo,
+                        total_fee: String(Math.round(amount * 100)),
+                        result_code: 'SUCCESS',
+                        return_code: 'SUCCESS',
+                        transaction_id: 'MOCK_WX_' + Date.now(),
+                        sign: 'mock'
+                    });
+                },
+                // 轮询支付单终态（2s × 90 次，口径同 pay-cashier）
+                startPayPoll: function () {
+                    var self = this;
+                    var times = 0;
+                    this.stopPayPoll();
+                    this.payPollTimer = setInterval(function () {
+                        times += 1;
+                        paymentQueryApi(self.pay.tradeNo).then(function (res) {
+                            var status = res && res.data && res.data.status;
+                            if (status === 'SUCCESS') {
+                                self.onPaySuccess();
+                            } else if (status === 'FAIL' || status === 'CLOSED' || status === 'REFUND') {
+                                self.stopPayPoll();
+                                vant.showFailToast('支付失败，如已扣款请联系商家');
+                            } else if (times >= 90) {
+                                self.stopPayPoll();
+                                vant.showFailToast('支付结果确认超时，请稍后在「我的券」查看');
+                            }
+                        }).catch(function () {
+                            if (times >= 90) {
+                                self.stopPayPoll();
+                                vant.showFailToast('支付结果确认超时，请稍后在「我的券」查看');
+                            }
+                        });
+                    }, 2000);
+                },
+                stopPayPoll: function () {
+                    if (this.payPollTimer) {
+                        clearInterval(this.payPollTimer);
+                        this.payPollTimer = null;
+                    }
+                    this.pay.showQr = false;
+                },
+                onPaySuccess: function () {
+                    this.stopPayPoll();
+                    vant.showSuccessToast('购买成功，券已到账');
+                    this.loadAvailable();
+                    this.loadMy();
                 },
                 loadMy: function () {
                     var self = this;

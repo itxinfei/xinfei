@@ -41,3 +41,31 @@ function exchangeCouponFront(templateId) {
     method: 'post'
   })
 }
+
+// ── 付费券包（O-18，2026-10-24）：多张券打包售卖，支付成功自动拆包发券 ──
+
+// 上架券包列表（匿名可看，购买需登录）
+function getCouponPackagesFront() {
+  return $axios({
+    url: '/api/coupon-package/list',
+    method: 'get'
+  })
+}
+
+// 创建购买单（幂等：同用户同包复用待支付单），返回 {orderNo, price, ...}
+function buyCouponPackageFront(packageId) {
+  return $axios({
+    url: '/api/coupon-package/buy',
+    method: 'post',
+    params: { packageId: packageId }
+  })
+}
+
+// 发起券包支付（H5 走 WECHAT 渠道默认 NATIVE 扫码；mock 沙箱返回 mockMode+tradeNo）
+function payCouponPackageFront(orderNo) {
+  return $axios({
+    url: '/api/payment/coupon-package/pay',
+    method: 'post',
+    data: { orderNo: orderNo, channel: 'WECHAT' }
+  })
+}
