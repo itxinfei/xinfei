@@ -93,6 +93,12 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
     private CouponUserService couponUserService;
 
     /**
+     * 员工提成（O-17 收银提成口径）：收银记录落库后按比例快照生成提成
+     */
+    @Autowired
+    private com.xinfei.module.cashier.service.CommissionService commissionService;
+
+    /**
      * 桌台服务（修改点 2026-09-18）：堂食结账完成后需释放桌台，否则结账闭环断裂
      * （订单已收款但桌台仍占用、可重复结账）。可选依赖，避免与 dining 模块循环注入问题。
      */
@@ -191,7 +197,12 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
     public boolean saveCashierRecord(CashierRecord cashierRecord) {
         cashierRecord.setCreateTime(LocalDateTime.now());
         try {
-            return cashierRecordMapper.insert(cashierRecord) > 0;
+            boolean saved = cashierRecordMapper.insert(cashierRecord) > 0;
+            if (saved) {
+                // O-17：手工补录收银同样计提（收银事实发生即计提，口径与在线收银一致）
+                recordCommissionQuietly(cashierRecord);
+            }
+            return saved;
         } catch (DuplicateKeyException e) {
             // uk_tenant_order：同一订单已有收银记录，手工补录同样禁止双记
             log.warn("保存收银记录被唯一索引拒绝（同订单已存在收银记录）: tenantId={}, orderId={}",
@@ -312,6 +323,8 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
             log.warn("收银幂等兜底：唯一索引拦截同订单重复收银记录: orderId={}", orderId);
             throw new CustomException("该订单已完成收银，请勿重复结账");
         }
+        // O-17：收银成功即按收银员比例生成提成（比例快照，幂等唯一键），失败不阻断收银
+        recordCommissionQuietly(cashierRecord);
 
         // 8. 更新订单状态为已支付（待接单），支付方式按真实选择记录；amount 回写为折后实收
         boolean eatIn = order.getTableId() != null
@@ -425,6 +438,8 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
             CashierRecord record = buildCashierRecord(main.getId(), main.getNumber(), payType, orderAmount,
                     actualAmount, changeAmount, cashierId, cashierName, mergedRemark, voucherUrl);
             cashierRecordMapper.insert(record);
+            // O-17：桌台合并结账同样按收银员计提
+            recordCommissionQuietly(record);
 
             // 8. 所有订单统一置「已完成(4)」，amount 回写为各单分摊实收，并写支付记录
             //    （堂食无 2→3→4 流转，直接完成）
@@ -737,6 +752,21 @@ public class CashierServiceImpl extends ServiceImpl<CashierRecordMapper, Cashier
             if (diff.compareTo(new BigDecimal("0.01")) > 0) {
                 throw new IllegalArgumentException("收银失败：实收金额与应付金额不一致");
             }
+        }
+    }
+
+    /**
+     * 收银成功后生成员工提成（O-17，收银提成口径）。
+     * <p>宽异常兜底：提成属于激励侧记录，生成失败只告警、不回滚收银主事务。</p>
+     *
+     * @param record 已落库的收银记录（须含 id）
+     */
+    private void recordCommissionQuietly(CashierRecord record) {
+        try {
+            commissionService.recordForCashier(record);
+        } catch (Exception e) {
+            // 宽异常兜底：有意捕获 Exception，避免提成故障阻断收银
+            log.error("[提成] 收银提成生成失败（不影响收银）: cashierRecordId={}", record.getId(), e);
         }
     }
 

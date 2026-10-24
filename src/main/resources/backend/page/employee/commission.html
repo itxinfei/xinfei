@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="X-CSRF-Token" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>员工提成 - 心飞外卖管理端</title>
+  <link rel="stylesheet" href="../../styles/main-v3.css?v=3001003" />
+  <style>
+    .section-title-block { margin: 16px 0 10px; font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); }
+    .caliber-note { margin-top: 14px; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); font-size: var(--font-size-xs); color: var(--text-muted); line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">跳转到主内容</a>
+
+  <div class="dashboard-container" id="commission-app">
+    <main class="container ds-page" id="main-content" role="main" aria-labelledby="page-title">
+      <h1 class="sr-only" id="page-title">员工提成</h1>
+
+      <!-- 期间汇总卡片（按当前筛选范围聚合） -->
+      <stat-cards :cards="statsCards"></stat-cards>
+
+      <!-- 搜索栏：期间（yyyy-MM）+ 日期范围（汇总口径） -->
+      <table-bar
+        :search-items="searchItems"
+        :show-refresh="true"
+        @search="onSearch"
+        @reset="onReset"
+        @refresh="loadAll"
+      ></table-bar>
+
+      <!-- 员工汇总表 -->
+      <h2 class="section-title-block">员工汇总</h2>
+      <crud-table
+        :data="summaryData"
+        :columns="summaryColumns"
+        :loading="summaryLoading"
+        :page="1"
+        :page-size="summaryData.length || 1"
+        :total="summaryData.length"
+        empty-hint="当前筛选范围暂无提成记录（员工在「员工管理」里配置提成比例后，收银成功即自动生成）"
+        aria-label="员工提成汇总"
+      >
+        <template #col-commissionAmount="{ row }">
+          <span style="color:var(--color-danger);font-weight:600;">¥{{ formatMoney(row.commissionAmount) }}</span>
+        </template>
+      </crud-table>
+
+      <!-- 明细表 -->
+      <h2 class="section-title-block">提成明细</h2>
+      <crud-table
+        :data="tableData"
+        :columns="columns"
+        :loading="loading"
+        :page="page"
+        :page-size="pageSize"
+        :total="counts"
+        empty-hint="暂无提成明细"
+        aria-label="提成明细列表"
+        @page-change="onPageChange"
+        @size-change="onSizeChange"
+      >
+        <template #col-status="{ row }">
+          <el-tag :type="row.status === 1 ? 'success' : 'warning'" size="small">{{ row.status === 1 ? '已结算' : '未结算' }}</el-tag>
+        </template>
+      </crud-table>
+
+      <div class="caliber-note">
+        口径说明：提成在收银成功时按员工当次比例快照生成，基数 = 实收金额 − 找零（现金），0 元单不计提；
+        员工比例在「员工管理 → 编辑员工 → 提成比例(%)」维护，留空即不参与；修改比例不影响历史记录。
+      </div>
+    </main>
+  </div>
+
+  <script src="../../plugins/vue3/vue.global.js"></script>
+  <script src="../../plugins/element-plus/index.full.min.js"></script>
+  <script src="../../plugins/element-plus/icons.global.iife.min.js"></script>
+  <script src="../../plugins/element-plus/locale.zh-cn.min.js"></script>
+  <script src="../../plugins/axios/axios.min.js"></script>
+  <script src="../../js/request.js?v=20260930"></script>
+  <script src="../../api/commission.js?v=20261024"></script>
+  <script src="../../js/components-v3.js?v=3001001"></script>
+  <script src="../../js/app-v3.js?v=3001001"></script>
+  <script>
+    createXinfeiApp({
+      el: '#commission-app',
+      mixins: [window.XinfeiListMixin],
+      data() {
+        return {
+          searchItems: [
+            { type: 'input', field: 'period', placeholder: '期间 yyyy-MM（明细筛选）', width: '200px' },
+            { type: 'date', field: 'range', placeholder: '选择日期（汇总范围）', width: '360px',
+              beginField: 'beginTime', endField: 'endTime' }
+          ],
+          filters: { period: '', beginTime: '', endTime: '' },
+          summaryColumns: [
+            { prop: 'employeeName', label: '员工', minWidth: 120 },
+            { prop: 'orderCount', label: '提成单数', width: 100, align: 'center' },
+            { prop: 'baseAmount', label: '提成基数合计', width: 130, align: 'center', type: 'money' },
+            { prop: 'commissionAmount', label: '提成合计', width: 120, align: 'center', slot: true }
+          ],
+          columns: [
+            { prop: 'period', label: '期间', width: 90, align: 'center' },
+            { prop: 'employeeName', label: '员工', minWidth: 110 },
+            { prop: 'orderId', label: '订单ID', width: 110, align: 'center' },
+            { prop: 'baseAmount', label: '基数', width: 100, align: 'center', type: 'money' },
+            { prop: 'rate', label: '比例(%)', width: 90, align: 'center' },
+            { prop: 'commissionAmount', label: '提成', width: 100, align: 'center', type: 'money' },
+            { prop: 'status', label: '状态', width: 90, align: 'center', slot: true },
+            { prop: 'createTime', label: '生成时间', width: 170, align: 'center' }
+          ],
+          summaryData: [],
+          summaryLoading: false
+        }
+      },
+      computed: {
+        statsCards() {
+          const total = this.summaryData.reduce((s, r) => s + Number(r.commissionAmount || 0), 0)
+          const base = this.summaryData.reduce((s, r) => s + Number(r.baseAmount || 0), 0)
+          const orders = this.summaryData.reduce((s, r) => s + Number(r.orderCount || 0), 0)
+          return [
+            { key: 'total', icon: 'ri-money-cny-circle-line', label: '提成总额', value: '¥' + this.formatMoney(total), color: 'danger' },
+            { key: 'base', icon: 'ri-scales-3-line', label: '提成基数合计', value: '¥' + this.formatMoney(base), color: 'primary' },
+            { key: 'orders', icon: 'ri-receipt-line', label: '提成单数', value: orders, color: 'info' },
+            { key: 'emps', icon: 'ri-group-line', label: '参与员工', value: this.summaryData.length, color: 'success' }
+          ]
+        }
+      },
+      mounted() {
+        this.loadAll()
+      },
+      methods: {
+        loadAll() {
+          this.loadSummary()
+          this.fetchData()
+        },
+        loadSummary() {
+          this.summaryLoading = true
+          getCommissionSummary({ beginTime: this.filters.beginTime, endTime: this.filters.endTime })
+            .then(res => {
+              if (res && res.code === 1) {
+                this.summaryData = res.data || []
+              } else {
+                this.summaryData = []
+                XinfeiUI.error((res && res.msg) || '提成汇总加载失败')
+              }
+            })
+            .catch(() => { this.summaryData = [] })
+            .finally(() => { this.summaryLoading = false })
+        },
+        // XinfeiListMixin 的 fetchData 钩子：明细分页
+        fetchData() {
+          this.loading = true
+          const params = {
+            page: this.page,
+            pageSize: this.pageSize,
+            period: this.filters.period || undefined
+          }
+          getCommissionPage(params).then(res => {
+            if (res && res.code === 1) {
+              this.tableData = (res.data && res.data.records) || []
+              this.counts = (res.data && res.data.total) || 0
+            } else {
+              this.tableData = []
+              this.counts = 0
+            }
+          }).catch(() => {
+            this.tableData = []
+            this.counts = 0
+          }).finally(() => { this.loading = false })
+        },
+        onSearch(payload) {
+          const values = (payload && payload.values) || payload || {}
+          this.filters = {
+            period: values.period || '',
+            beginTime: values.beginTime || '',
+            endTime: values.endTime || ''
+          }
+          this.page = 1
+          this.loadAll()
+        },
+        onReset() {
+          this.filters = { period: '', beginTime: '', endTime: '' }
+          this.page = 1
+          this.loadAll()
+        }
+      }
+    })
+  </script>
+</body>
+</html>

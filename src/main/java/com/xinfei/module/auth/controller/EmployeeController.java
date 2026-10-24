@@ -1057,6 +1057,14 @@ public class EmployeeController {
             String normalizedJobNumber = checkJobNumberUnique(existing.getTenantId(), employee.getJobNumber(), employee.getId());
             uw.set(Employee::getJobNumber, normalizedJobNumber);
         }
+        if (employee.getCommissionRate() != null) {
+            // 提成比例白名单（O-17）：负数或 >100 拒绝（防手滑把金额填进比例）
+            if (employee.getCommissionRate().compareTo(java.math.BigDecimal.ZERO) < 0
+                    || employee.getCommissionRate().compareTo(new java.math.BigDecimal("100")) > 0) {
+                return R.error("提成比例需在 0~100 之间");
+            }
+            uw.set(Employee::getCommissionRate, employee.getCommissionRate());
+        }
 
         log.info("修改员工信息，手机号={}，身份证号={}",
             LogMaskUtils.maskPhone(employee.getPhone()),

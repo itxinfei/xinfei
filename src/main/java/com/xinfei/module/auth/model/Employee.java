@@ -81,6 +81,9 @@ public class Employee implements Serializable {
     @Schema(description = "部门ID（企业组织架构，可选）", example = "1")
     private Long departmentId;
 
+    @Schema(description = "提成比例(%)，NULL/0=不参与提成（收银提成口径，O-17）", example = "5.00")
+    private java.math.BigDecimal commissionRate;
+
     @Schema(description = "租户ID", example = "1")
     @TableField(fill = FieldFill.INSERT)
     private Long tenantId;

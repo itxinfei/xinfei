@@ -166,6 +166,11 @@
             <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id"></el-option>
           </el-select>
         </el-form-item>
+        <!-- O-17 收银提成：NULL/空=不参与；基数=收银实收（现金扣除找零） -->
+        <el-form-item label="提成比例(%):">
+          <el-input-number v-model="memberForm.commissionRate" :min="0" :max="100" :precision="2" :step="0.5"
+            style="width:100%" :disabled="memberDialog.actionType === 'view'"></el-input-number>
+        </el-form-item>
         <el-form-item label="头像:">
           <rg-image-uploader v-model="memberForm.avatar" biz-type="avatar" :single="true" :round="true" :max="1" :disabled="memberDialog.actionType === 'view'"></rg-image-uploader>
         </el-form-item>
@@ -351,6 +356,7 @@
                jobNumber: '',
                position: '',
                departmentId: null,
+               commissionRate: null,
                avatar: ''
              },
              // 部门下拉（企业组织架构，来自 /sys/department/list）
@@ -603,6 +609,7 @@
                   jobNumber: data.jobNumber || '',
                   position: data.position || '',
                   departmentId: data.departmentId || null,
+                  commissionRate: data.commissionRate != null ? Number(data.commissionRate) : null,
                   avatar: data.avatar || ''
                 }
               } else {
@@ -623,6 +630,7 @@
               jobNumber: '',
               position: '',
               departmentId: null,
+              commissionRate: null,
               avatar: ''
             }
             if (this.$refs.memberForm) {

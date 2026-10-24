@@ -281,6 +281,7 @@ CREATE TABLE IF NOT EXISTS employee (
   tenant_id bigint NULL DEFAULT NULL COMMENT '租户id',
   role int NOT NULL DEFAULT 2 COMMENT '角色 1:超级管理员 2:普通员工',
   department_id bigint NULL DEFAULT NULL COMMENT '部门ID（企业组织架构，2026-10-06）',
+  commission_rate decimal(5,2) NULL DEFAULT NULL COMMENT '提成比例(%)，NULL/0=不参与提成（V10 O-17）',
   PRIMARY KEY (id),
   UNIQUE KEY idx_employee_username (username),
   UNIQUE KEY idx_employee_tenant_jobno (tenant_id,job_number),
