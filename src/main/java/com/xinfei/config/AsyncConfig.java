@@ -162,4 +162,46 @@ public class AsyncConfig {
         log.info("[线程池] AI健康探活线程池初始化完成：core=2, max=4, queue=50");
         return executor;
     }
+
+    /**
+     * 异步导出任务线程池（O-25 导出任务中心）
+     * <p>
+     * 用途：导出任务提交后异步生成文件（Excel/PDF）。导出是重内存操作（SXSSF 全量构建字节），
+     * 并发必须收口：core=1 串行兜底，max=2 允许双任务并行，队列 100 缓冲高峰。
+     * 拒绝策略必须为 AbortPolicy：CallerRuns 会把重导出回退到请求线程同步执行，
+     * 失去「提交即返回」语义；拒绝时由 ExportTaskController 把任务落 FAILED 并提示稍后重试。
+     */
+    @Bean("exportTaskExecutor")
+    public ThreadPoolTaskExecutor exportTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(2);
+        executor.setQueueCapacity(100);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("export-task-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        // 传递ThreadLocal上下文，确保异步线程能获取BaseContext中的userId和tenantId
+        executor.setTaskDecorator(runnable -> {
+            Long currentId = com.xinfei.common.BaseContext.getCurrentId();
+            Long currentTenantId = com.xinfei.common.BaseContext.getCurrentTenantId();
+            return () -> {
+                try {
+                    if (currentId != null) {
+                        com.xinfei.common.BaseContext.setCurrentId(currentId);
+                    }
+                    if (currentTenantId != null) {
+                        com.xinfei.common.BaseContext.setCurrentTenantId(currentTenantId);
+                    }
+                    runnable.run();
+                } finally {
+                    com.xinfei.common.BaseContext.remove();
+                }
+            };
+        });
+        executor.initialize();
+        log.info("[线程池] 异步导出任务线程池初始化完成：core=1, max=2, queue=100");
+        return executor;
+    }
 }
