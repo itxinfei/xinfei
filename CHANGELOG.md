@@ -2,6 +2,13 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | miniapp | 图片功能核实：token 通道与三处图片功能均已实现（O-37，文档滞后修正，零代码改动）
+- 核实结论：README 声称「评价图片未做——token 通道待后端改造」「客服图片消息与凭证不迁」均为**陈旧记载**。后端 CommonController 上传/下载双通道鉴权（Session + X-Auth-Token）早已落地，`AuthTokenChannelTest#userTokenGrantsUploadWithoutSession` 实测覆盖（本次复跑 7 例全绿）；小程序侧评价图片（chooseImage→顺序上传→5MB/张→上传中禁提交）、客服图片消息（bizType=chat）、投诉凭证图、头像更换、private 图 imgCache 带 token 下载全部已实现（shared/uploadFile 封装并自动补双头）。
+- 修正 README 两处台账；三端 pnpm build 全通过 + shared 9 测试绿。
+- 教训登记：功能升级.md/README 的「未做」条目完成后未回滚清除是文档债固定来源，本次起完成项随手划除并注日期。
+- **小程序代码层进度就此补齐至：顾客端/骑手端全部功能落地，剩余仅真机配置**（appid/证书/域名，见 O-36 检查单）。
+- 开发者：AI
+
 ## 2026-10-24 | 工程决策 | 「下线旧 Web 顾客端/骑手端」检查单登记（O-36，用户咨询可否删除）
 - 用户以 uniapp 重写前台/骑手端后咨询旧代码可否删除。盘点结论（分三类）：**可删**仅 target/ 本轮排查临时脚本（不入库）；**条件可删**为 front/（2.1M）与 rider/（128K）——四条活依赖：WebMvcConfig 资源映射、AuthConstants 白名单、tests/ 9 个 c-* E2E 打 Web 版、小程序未真机验收需旧端做兜底对照；**不可删**为 backend/ 82 页（后台完整功能唯一实现，小程序门店端仅 6 页）、miniapp/（新代码本体）、shared/（后台+小程序共用 + tokens 真源）。
 - 检查单已登记功能升级.md O-36：真机验收 → 冒烟替代 → 联动删映射/白名单/E2E → 文档口径同步；全部满足后一次性执行下线。
