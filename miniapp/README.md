@@ -58,9 +58,9 @@ pnpm build                          # 三个端一起构建
 | 页面 | 接口 | 状态 |
 |---|---|---|
 | `pages/login/login` | `POST /user/sendMsg`、`POST /user/login`、`POST /user/wxLogin`、`POST /user/loginout` | 已落（含微信一键登录） |
-| `pages/index/index` | `GET /category/list?type=1`、`GET /dish/list?categoryId=`、`POST /shopping-cart/add`、`POST /shopping-cart/sub`、`GET /shopping-cart/list` | 已落（「去结算」进结算页） |
+| `pages/index/index` | `GET /category/list?type=1`、`GET /dish/list?categoryId=`、`POST /shopping-cart/add`、`POST /shopping-cart/sub`、`GET /shopping-cart/list`、`GET /dish/list`（搜索全量） | 已落（「去结算」进结算页；O-42 口味弹层——带口味菜品「选规格」每组单选拼串；O-46 菜品搜索——首输懒拉全店本地跨分类过滤） |
 | `pages/order/list` | `GET /order/userPage`、`POST /order/again`、`PUT /order/userCancel?id=`、`PUT /order/userConfirmReceipt?id=` | 已落（整卡进详情，快捷操作 `.stop` 防冒泡） |
-| `pages/order/checkout` | `GET /restaurant/info`、`GET /address-book/default`、`GET /address-book/{id}`、`GET /shopping-cart/list`、`POST /api/order/preview`、`GET /front/coupon/usable`、`POST /order/submit`、`POST /api/payment/pay`、`GET /api/payment/user/query/{tradeNo}` | 已落（**配送上门/到店自提双模式**：自提 `source=SELF_PICKUP`、地址豁免、配送费 0、不起送价/不校验范围，下单即生成取餐码并跳详情；自提门店卡仅展示名称/营业时间/公告，`/restaurant/info` 不返回地址；**微信 JSAPI 在线支付已接通**——payMethod=2 下单后调 shared/pay.js 闭环，含 0 元单自动完成、支付结果 2s 轮询回查、mock 沙箱模拟回调分支；**结算选券抵扣已接**——`/front/coupon/usable` 按商品额拉可用券，preview/submit 带 `usedCouponId`，券失效自动清空重核；货到/到店付款 payMethod=6 保留；支付宝小程序内无 JSAPI 能力保持灰显；不含预约配送/会员余额） |
+| `pages/order/checkout` | `GET /restaurant/info`、`GET /address-book/default`、`GET /address-book/{id}`、`GET /shopping-cart/list`、`POST /api/order/preview`、`GET /front/coupon/usable`、`POST /order/submit`、`POST /api/payment/pay`、`GET /api/payment/user/query/{tradeNo}` | 已落（**P0-1 订阅授权**：下单成功 requestSubscribeMessage，模板 ID 留空安全降级；**配送上门/到店自提双模式**：自提 `source=SELF_PICKUP`、地址豁免、配送费 0、不起送价/不校验范围，下单即生成取餐码并跳详情；自提门店卡仅展示名称/营业时间/公告，`/restaurant/info` 不返回地址；**微信 JSAPI 在线支付已接通**——payMethod=2 下单后调 shared/pay.js 闭环，含 0 元单自动完成、支付结果 2s 轮询回查、mock 沙箱模拟回调分支；**结算选券抵扣已接**——`/front/coupon/usable` 按商品额拉可用券，preview/submit 带 `usedCouponId`，券失效自动清空重核；货到/到店付款 payMethod=6 保留；支付宝小程序内无 JSAPI 能力保持灰显；不含预约配送/会员余额） |
 | `pages/order/detail` | `GET /order/{id}`、`GET /order/userRefundRecords?id=`、`POST /order/again`、`POST /order/userApplyRefund?id=&reason=`、`PUT /order/userCancel?id=`、`PUT /order/userConfirmReceipt?id=`、`POST /api/urgency/customer/trigger/{id}`、`GET /api/dish-evaluation/order/{id}`、`GET /api/rider-evaluation/order/{id}?riderId=`、`POST /api/payment/pay`、`GET /api/payment/user/query/{tradeNo}` | 已落（状态横幅/履约信息/价格明细/售后记录；状态 4 按查重结果显示「去评价/评价骑手」入口；**状态 1 显示「去支付」**，复用 shared/pay.js 调起 JSAPI 并轮询回查，取消/超时/失败均不离开详情；发票、客服入口待对应页面落地） |
 | `pages/order/evaluate` | `GET /order/{id}`、`GET /api/dish-evaluation/order/{id}`、`POST /api/dish-evaluation`（逐菜）、`GET/POST /api/rider-evaluation/order/{id}` | 已落（同菜多风味合并为一条评价；星级必填+快捷标签+200 字文本+整单匿名；部分失败可重试剩余项；骑手评价独立提交；**评价图片已接**——shared/uploadFile 走 X-Auth-Token 通道（后端 CommonController 双通道鉴权早已支持，AuthTokenChannelTest#userTokenGrantsUploadWithoutSession 实测覆盖；README 旧记载「待后端改造」系文档滞后，2026-10-24 核实修正）） |
 | `pages/delivery/tracking` | `GET /api/delivery/tracking/{orderId}` | 已落（原生 `<map>` GCJ-02 渲染骑手位置+轨迹，WGS-84 历史点内置转换；15s 轮询，终态/堂食/自提停轮，onHide 停 onShow 续） |
@@ -68,7 +68,7 @@ pnpm build                          # 三个端一起构建
 | `pages/address/list` | `GET /address-book/list`、`PUT /address-book/default`、`DELETE /address-book?ids=` | 已落（支持 `?select=1` 选择模式，经 `customerSelectedAddressId` 一次性交接） |
 | `pages/address/edit` | `GET /address-book/{id}`、`POST/PUT /address-book`、`GET /region/children?parentId=`、`DELETE /address-book?ids=` | 已落（新增/编辑同页；detail 与经纬度由后端拼接/地理编码） |
 | `pages/member/member` | `GET /api/member/member/my-info`、`GET /api/member/member/my-levels`、`GET /api/member/member/my-points`、`GET /api/member/member/my-recharges`、`POST /api/member/portal/open`、`POST /api/member/portal/recharge/create`、`GET /api/member/portal/recharge/status/{no}`、`POST /api/payment/recharge/pay`、mock 沙箱 `POST /api/payment/notify/WECHAT`（均经 shared/pay.js） | 已落（会员卡：等级/折扣徽章/积分/储值余额/券数/升级进度；非会员一键免费开通；积分明细与充值记录分页；**在线充值已接微信 JSAPI**——快捷金额 50/100/200/500 + 自定义 1~5000 元，建充值单→支付→轮询充值单 SUCCESS，回调自动入余额；非会员不显示充值入口） |
-| `pages/coupon/coupon` | `GET /front/coupon/available`、`GET /front/coupon/my`、`POST /front/coupon/claim/{templateId}`、`POST /front/coupon/exchange/{templateId}`、`GET /api/member/member/my-info` | 已落（可领取：免费领/积分兑换，按 `templateId` 去重已领置灰，兑换前本地积分预检+二次确认；我的券：unused/used/expired 前端三段，unused「去使用」回点餐首页；非会员显开通引导；支持 `?tab=mine` 跳入） |
+| `pages/coupon/coupon` | `GET /front/coupon/available`、`GET /front/coupon/my`、`POST /front/coupon/claim/{templateId}`、`POST /front/coupon/exchange/{templateId}`、`GET /api/member/member/my-info` | 已落（**O-46 临期感知**：unused 态 3 天内到期置顶+即将过期角标；可领取：免费领/积分兑换，按 `templateId` 去重已领置灰，兑换前本地积分预检+二次确认；我的券：unused/used/expired 前端三段，unused「去使用」回点餐首页；非会员显开通引导；支持 `?tab=mine` 跳入） |
 | `pages/favorite/list` | `GET /api/user-favorite/my`、`POST /api/user-favorite/toggle` | 已落（我的收藏；失效收藏可清理——取消路径后端不再校验菜品存在性） |
 | `pages/user/profile` | `GET /user/info`、`PUT /user/info`、`POST /common/upload`（bizType=avatar） | 已落（头像更换/昵称/性别；手机号只读脱敏展示；保存后同步本地缓存；生日无实体字段，Web 版亦无） |
 | `pages/message/message` | `GET /recommend/messages`、`GET /recommend/messages/unread-count`、`PUT /recommend/messages/{id}/read`、`PUT /recommend/messages/read-all` | 已落（分页+未读角标+全部已读+详情弹层；SSE 实时推送不适用小程序，靠下拉刷新兜底） |
@@ -93,7 +93,7 @@ pnpm build                          # 三个端一起构建
 | 页面 | 接口 | 状态 |
 |---|---|---|
 | `pages/login/login` | `POST /api/rider/login` | 已落 |
-| `pages/hall/hall` | `GET /api/rider/tasks/hall`、`POST /api/rider/tasks/{id}/grab` | 已落 |
+| `pages/hall/hall` | `GET /api/rider/tasks/hall`、`POST /api/rider/tasks/{id}/grab` | 已落（O-46 新单声震：前台 10s 轮询 diff→震动+提示音+Toast；后台推送依赖订阅消息骑手模板，登记） |
 | `pages/task/task` | `GET /api/rider/tasks/mine?scope=todo\|delivering\|history`、`accept`/`pickup?pickupCode=`/`deliver` | 已落 |
 | `pages/income/income` | `GET /api/rider/income/summary`、`GET /api/rider/income/records?range&page&size` | 已落 |
 | `pages/me/me` | `GET /api/rider/me`、`online`/`offline`/`location`、`POST /api/rider/logout` | 已落（含评价/异常/消息/结算 4 个入口，消息带未读角标） |
@@ -106,7 +106,7 @@ pnpm build                          # 三个端一起构建
 
 骑手端 Web 侧 8 页功能已全覆盖（结算在 Web 是 income.html 内一块，小程序独立成页）。
 
-### apps/staff（5 页已落）
+### apps/staff（7 页已落）
 
 | 页面 | 接口 | 状态 |
 |---|---|---|
@@ -115,6 +115,7 @@ pnpm build                          # 三个端一起构建
 | `pages/order/order` | `GET /order/page`、`PUT /order/confirm?id=`、`/order/reject?id=`、`/order/complete?id=`、`/order/cancel?id=&reason=` | 已落 |
 | `pages/store/store` | `GET /store/detail/{tenantId}`、`PUT /store/{tenantId}/status?status=`、`PUT /store/{tenantId}/pause?pause=` | 已落 |
 | `pages/me/me` | `GET /employee/me`、`POST /employee/logout` | 已落 |
+| `pages/boss/boss`（O-43 老板驾驶舱） | `GET /api/dashboard/overview`、`GET /api/inventory/material/warning`、`GET /cashier/shift/page` | 已落（今日营业额大字+订单/客单/完成率+待退款+库存预警 Top5 比值排序+今日交班摘要；工作台入口） |
 
 后台其余 77 页不在小程序范围（菜品/套餐/分类维护、报表、库存、营销、财务、系统设置等），继续走 Web 后台。
 
