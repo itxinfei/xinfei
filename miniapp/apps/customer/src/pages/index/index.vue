@@ -90,7 +90,8 @@
               <view class="counter">
                 <text v-if="countOfDish(d.id)" class="counter__btn counter__btn--sub" :class="{ 'counter__btn--off': busy('cartd:' + d.id) }" hover-class="hover-press" @tap="subDish(d)">−</text>
                 <text v-if="countOfDish(d.id)" class="counter__num">{{ countOfDish(d.id) }}</text>
-                <text class="counter__btn counter__btn--add" :class="{ 'counter__btn--off': busy('cartd:' + d.id) }" hover-class="hover-press" @tap="addDish(d)">＋</text>
+                <text v-if="hasFlavor(d)" class="counter__spec" :class="{ 'counter__spec--off': busy('cartd:' + d.id) }" hover-class="hover-press" @tap="openFlavor(d)">选规格</text>
+                <text v-else class="counter__btn counter__btn--add" :class="{ 'counter__btn--off': busy('cartd:' + d.id) }" hover-class="hover-press" @tap="addDish(d)">＋</text>
               </view>
             </view>
           </view>
@@ -102,6 +103,52 @@
         </view>
         <x-empty v-if="!dishes.length && !setmeals.length && !loading && !listError" text="该分类下暂无在售商品" />
       </scroll-view>
+    </view>
+
+
+    <!-- 口味选择弹层（P0-4）：带口味菜品加购必经；语义对齐 H5 front 口味弹窗——每组单选、逗号拼串 -->
+    <view v-if="fsheet.visible" class="msheet-mask" @tap="closeFlavor">
+      <view class="fsheet" @tap.stop="noop">
+        <view class="fsheet__head">
+          <image v-if="fsheet.dish && fsheet.dish.image" class="fsheet__img" :src="img(fsheet.dish.image)" mode="aspectFill" />
+          <view class="fsheet__t">
+            <text class="fsheet__name">{{ fsheet.dish ? fsheet.dish.name : '' }}</text>
+            <view class="fsheet__pricebox">
+              <text class="fsheet__yen">¥</text>
+              <text class="fsheet__price">{{ fsheet.dish ? fmtAmount(fsheet.dish.price) : '0.00' }}</text>
+            </view>
+          </view>
+          <text class="fsheet__close" hover-class="hover-press" @tap="closeFlavor">×</text>
+        </view>
+        <scroll-view scroll-y class="fsheet__body">
+          <view v-for="g in fsheet.groups" :key="g.id" class="fg">
+            <view class="fg__name">{{ g.name }}</view>
+            <view class="fg__opts">
+              <text
+                v-for="opt in g.options"
+                :key="opt"
+                class="fg__opt"
+                :class="{ 'fg__opt--on': g.picked === opt }"
+                hover-class="hover-press"
+                @tap="pickFlavor(g, opt)"
+              >{{ opt }}</text>
+            </view>
+          </view>
+          <view v-if="!fsheet.groups.length" class="fsheet__empty">该菜品暂无可选口味</view>
+        </scroll-view>
+        <view class="fsheet__bar">
+          <view class="fsheet__bar-pricebox">
+            <text class="fsheet__yen">¥</text>
+            <text class="fsheet__price">{{ fsheet.dish ? fmtAmount(fsheet.dish.price) : '0.00' }}</text>
+          </view>
+          <text
+            class="fsheet__bar-add"
+            :class="{ 'fsheet__bar-add--off': busy('cartd:' + (fsheet.dish && fsheet.dish.id)) }"
+            hover-class="hover-press"
+            @tap="addFromFlavorSheet"
+          >加入购物车</text>
+        </view>
+      </view>
     </view>
 
     <!-- 深色购物车悬浮栏：小程序贴 webview 底（原生 tabBar 已占安全区），H5 条件编译抬到 tabBar 上方 -->
@@ -189,6 +236,8 @@ export default {
       loading: false,
       // 套餐明细底部弹层
       sheet: { visible: false, data: null, dishes: [] },
+      // 口味选择弹层（P0-4）：groups 每项 { id, name, options[], picked }
+      fsheet: { visible: false, dish: null, groups: [] },
       // 门店头信息（GET /restaurant/info，匿名可访问；失败静默不阻塞点餐）
       restaurant: {},
       // custom 导航：内容区上内边距（状态栏 + 导航条高度），px 为系统 API 返回单位
@@ -343,22 +392,31 @@ export default {
       const hit = this.cart.find(item => item.setmealId === setmealId)
       return hit ? hit.number : 0
     },
-    addDish(dish) {
+    addDish(dish, flavor) {
       const key = 'cartd:' + dish.id
-      if (this.busy(key)) return
+      if (this.busy(key)) return Promise.resolve(false)
       this.setBusy(key, true)
-      const exist = this.cart.find(item => item.dishId === dish.id && !item.setmealId)
+      // P0-4：多口味菜同 dishId 在购物车按口味分行——exist 必须按「同口味」匹配
+      const fv = flavor || ''
+      const exist = this.cart.find(item => item.dishId === dish.id && !item.setmealId && (item.dishFlavor || '') === fv)
       // name/image/amount 服务端按 DB 回填，前端传值会被覆盖
-      http.post('/shopping-cart/add', { dishId: dish.id, name: dish.name, number: exist ? exist.number + 1 : 1 })
-        .then(() => this.loadCart())
-        .catch(() => {}).then(() => { this.setBusy(key, false) })
+      const payload = { dishId: dish.id, name: dish.name, number: exist ? exist.number + 1 : 1 }
+      if (fv) payload.dishFlavor = fv
+      return http.post('/shopping-cart/add', payload)
+        .then(() => { this.loadCart(); return true })
+        .catch(() => false)
+        .then(ok => { this.setBusy(key, false); return ok })
     },
     subDish(dish) {
       const key = 'cartd:' + dish.id
       if (this.busy(key)) return
       this.setBusy(key, true)
+      // P0-4：多口味菜取该菜品首条购物车行——后端 /sub 按 dishId+dishFlavor 精确减，
+      // 无口味入参时只匹配空口味行，口味行会减不掉
       const exist = this.cart.find(item => item.dishId === dish.id && !item.setmealId)
-      http.post('/shopping-cart/sub', { dishId: dish.id, number: exist ? exist.number : 1 })
+      const payload = { dishId: dish.id, number: exist ? exist.number : 1 }
+      if (exist && exist.dishFlavor) payload.dishFlavor = exist.dishFlavor
+      http.post('/shopping-cart/sub', payload)
         .then(() => this.loadCart())
         .catch(() => {}).then(() => { this.setBusy(key, false) })
     },
@@ -403,6 +461,40 @@ export default {
     noop() {},
     joinFromSheet() {
       if (this.sheet.data) this.addSetmeal(this.sheet.data)
+    },
+    // ── P0-4 口味弹层 ──
+    hasFlavor(d) {
+      return !!(d && d.flavors && d.flavors.length)
+    },
+    openFlavor(d) {
+      // value 是 JSON 字符串（如 '["微辣","中辣"]'），逐组解析；非法值该组降级为空不中断弹层
+      const groups = (d.flavors || []).map(g => {
+        let options = []
+        try {
+          const arr = JSON.parse(g.value)
+          if (Array.isArray(arr)) options = arr
+        } catch (e) { /* 非法 JSON：该组无选项，提交时会被「请选择」拦住 */ }
+        return { id: g.id, name: g.name, options: options, picked: null }
+      })
+      this.fsheet = { visible: true, dish: d, groups: groups }
+    },
+    closeFlavor() {
+      this.fsheet.visible = false
+    },
+    pickFlavor(g, opt) {
+      g.picked = opt
+    },
+    addFromFlavorSheet() {
+      const dish = this.fsheet.dish
+      if (!dish) return
+      const unselected = this.fsheet.groups.find(g => !g.picked && g.options.length)
+      if (unselected) {
+        uni.showToast({ title: '请选择' + unselected.name, icon: 'none' })
+        return
+      }
+      const flavor = this.fsheet.groups.filter(g => g.picked).map(g => g.picked).join(',')
+      // 仅成功后关弹层（失败保持已选口味可直接重试，与 H5 口径一致）
+      this.addDish(dish, flavor).then(ok => { if (ok) this.fsheet.visible = false })
     },
     goCheckout() {
       if (!this.canCheckout) {
@@ -729,6 +821,93 @@ export default {
 .counter__btn--off {
   opacity: 0.5;
 }
+
+/* ── P0-4 选规格入口与口味弹层 ── */
+.counter__spec {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 108rpx;
+  height: 52rpx;
+  padding: 0 20rpx;
+  border-radius: var(--radius-round);
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--color-primary-text);
+  background: var(--color-primary-gradient);
+  box-shadow: var(--shadow-primary-sm);
+  box-sizing: border-box;
+}
+.counter__spec--off { opacity: 0.5; }
+
+.fsheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: var(--bg-page);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.fsheet__head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  background: var(--bg-card);
+}
+.fsheet__img { width: 120rpx; height: 120rpx; border-radius: var(--radius-md); flex-shrink: 0; }
+.fsheet__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.fsheet__name { font-size: 30rpx; font-weight: 700; color: var(--color-text-primary); }
+.fsheet__pricebox { display: flex; align-items: baseline; }
+.fsheet__yen { font-size: 24rpx; color: var(--color-primary-text-strong); }
+.fsheet__price { font-size: 34rpx; font-weight: 700; color: var(--color-primary-text-strong); }
+.fsheet__close {
+  width: 56rpx; height: 56rpx; border-radius: var(--radius-round);
+  background: var(--bg-page); color: var(--color-text-hint);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40rpx; flex-shrink: 0;
+}
+.fsheet__body { max-height: 46vh; padding: 8rpx 24rpx; box-sizing: border-box; }
+.fg { padding: 20rpx 0; }
+.fg__name { font-size: 27rpx; font-weight: 600; color: var(--color-text-primary); margin-bottom: 16rpx; }
+.fg__opts { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.fg__opt {
+  padding: 10rpx 32rpx;
+  border-radius: var(--radius-round);
+  font-size: 25rpx;
+  color: var(--color-text-secondary);
+  background: var(--bg-card);
+  border: 1rpx solid var(--color-border);
+}
+.fg__opt--on {
+  color: var(--color-primary-text);
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+.fsheet__empty { padding: 60rpx 0; text-align: center; font-size: 26rpx; color: var(--color-text-hint); }
+.fsheet__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--bg-card);
+  border-top: 1rpx solid var(--color-border-light);
+}
+.fsheet__bar-pricebox { display: flex; align-items: baseline; }
+.fsheet__bar-add {
+  padding: 16rpx 48rpx;
+  border-radius: var(--radius-round);
+  font-size: 27rpx;
+  font-weight: 700;
+  color: var(--color-primary-text);
+  background: var(--color-primary-gradient);
+  box-shadow: var(--shadow-primary-sm);
+}
+.fsheet__bar-add--off { opacity: 0.5; }
+
 
 .menu__loading,
 .menu__error {

@@ -27,7 +27,7 @@
         <image v-if="item.image" class="dish__img" :src="img(item.image)" mode="aspectFill" lazy-load />
         <view v-else class="dish__img dish__img--ph"><text>菜</text></view>
         <view class="dish__body">
-          <text class="dish__name">{{ item.name }}</text>
+          <text class="dish__name">{{ item.name }}<text v-if="item.dishFlavor" class="dish__flavor">（{{ item.dishFlavor }}）</text></text>
           <view class="dish__meta">
             <text class="dish__badge">点过{{ item.count }}次</text>
             <text v-if="lastTimeText(item.lastOrderTime)" class="dish__time">{{ lastTimeText(item.lastOrderTime) }}</text>
@@ -114,8 +114,9 @@ export default {
           const details = order.orderDetails || []
           for (const d of details) {
             // 菜品与套餐 ID 可能同值，必须带类型前缀（d_ / s_ / x_ 兜底），否则会误合并
+            // P0-4：聚合 key 带口味串——同菜不同口味是不同常购项（如 微辣/特辣），误合并会丢规格
             const key = d.setmealId != null ? 's_' + d.setmealId
-              : (d.dishId != null ? 'd_' + d.dishId : 'x_' + d.id)
+              : (d.dishId != null ? 'd_' + d.dishId + (d.dishFlavor ? '|' + d.dishFlavor : '') : 'x_' + d.id)
             const cat = d.setmealId != null ? '套餐' : '菜品'
             categorySet.add(cat)
             const existing = itemMap.get(key)
@@ -135,7 +136,8 @@ export default {
                 lastOrderTime: order.orderTime,
                 image: d.image || '',
                 dishId: d.dishId || null,
-                setmealId: d.setmealId || null
+                setmealId: d.setmealId || null,
+                dishFlavor: d.dishFlavor || ''
               })
             }
           }
@@ -154,7 +156,7 @@ export default {
       return (d.getMonth() + 1) + '月' + d.getDate() + '日'
     },
     // 一键再加购：单菜语义（非整单 /order/again），POST /shopping-cart/add
-    // amount/name/image 由服务端按 DB 校验回填，仅作为展示兜底；带 dishFlavor 的历史明细无法在此还原规格，按无口味加购
+    // amount/name/image 由服务端按 DB 校验回填，仅作展示兜底；P0-4：dishFlavor 从历史明细透传——精确还原该口味行
     reorder(item) {
       const key = 'add:' + item.key
       if (this.busy(key)) return
@@ -170,7 +172,11 @@ export default {
         image: item.image || ''
       }
       if (item.setmealId != null) params.setmealId = item.setmealId
-      else params.dishId = item.dishId
+      else {
+        params.dishId = item.dishId
+        // 空 dishFlavor 不传：后端空口味行与口味行是两条购物车记录
+        if (item.dishFlavor) params.dishFlavor = item.dishFlavor
+      }
       http.post('/shopping-cart/add', params).then(() => {
         uni.showToast({ title: '已加入购物车', icon: 'none' })
       }).catch(() => {}).then(() => { this.setBusy(key, false) })
@@ -309,6 +315,7 @@ export default {
   margin-top: 10rpx;
 }
 
+.dish__flavor { font-size: 22rpx; color: var(--color-text-hint); font-weight: 400; }
 .dish__badge {
   padding: 2rpx 14rpx;
   font-size: 20rpx;
