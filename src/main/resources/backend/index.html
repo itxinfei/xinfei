@@ -679,6 +679,12 @@
           },
           // 修改点(2026-08-12)：接收子页面（iframe）发来的未登录信号，由顶层窗口统一跳转登录页
           handleChildNotLogin(event) {
+            // P0-3 开店向导：子页请求打开菜单页（向导保持状态，商家操作完回来继续）
+            if (event && event.data && event.data.type === 'XINFEI_NAVIGATE' && event.data.url) {
+              const menu = this.menuList.find(function (m) { return m.url && m.url.split('?')[0] === event.data.url })
+              if (menu) this.menuHandle(menu, false)
+              return
+            }
             if (event && event.data && event.data.type === 'XINFEI_NOTLOGIN') {
               if (this.notLoginJumping) return  // 防重入：并发 401 只跳转一次
               this.notLoginJumping = true

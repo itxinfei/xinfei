@@ -620,6 +620,8 @@
         </div>
       </div>
 
+      <!-- P0-3 开店向导：首登检测触发 -->
+      <onboard-wizard :visible="onboardVisible" :checks="onboardChecks" @close="onboardVisible = false"></onboard-wizard>
     </main>
 
     <!-- 修改点：营收目标设置弹窗 -->
@@ -654,6 +656,7 @@
   <script src="../../api/inventory.js?v=20260926"></script>
   <script src="../../api/dashboard.js?v=20260926"></script>
   <script src="../../js/components-v3.js?v=3001002"></script>
+  <script src="../../js/onboard-wizard.js?v=20261025"></script>
   <script src="../../js/app-v3.js?v=3001003"></script>
 
   <script>
@@ -680,6 +683,9 @@
       data() {
         return {
           loading: false,
+          // P0-3 开店向导
+          onboardVisible: false,
+          onboardChecks: { noHours: false, noCategory: false, noDish: false },
           overview: {},
           trend: [],
           // 修改点：趋势图天数切换（7/14/30天）
@@ -777,7 +783,7 @@
           this.dailyTarget = Number(localStorage.getItem('rg_dashboard_dailyTarget')) || 0;
           this.monthlyTarget = Number(localStorage.getItem('rg_dashboard_monthlyTarget')) || 0;
         } catch (e) { /* 静默 */ }
-        this.loadAllData();
+        this.loadAllData().then(() => this.detectOnboard());
       },
       mounted() {
         // 修改点：监听窗口resize，自适应调整ECharts大小（iframe内必须）
@@ -862,6 +868,26 @@
           } finally {
             this.loading = false;
           }
+        },
+
+        // P0-3 开店向导首登检测：未配置营业时间 || 无分类 || 无菜品 → 弹五步向导（完成/不再提示后 localStorage 记忆）
+        async detectOnboard() {
+          try {
+            if (window.localStorage.getItem(window.XINFEI_ONBOARD_DONE_KEY) === '1') return
+            const [storeRes, catRes, dishRes] = await Promise.all([
+              $axios({ url: '/restaurant/info', method: 'get' }).catch(() => null),
+              $axios({ url: '/category/page', method: 'get', params: { page: 1, pageSize: 1 } }).catch(() => null),
+              $axios({ url: '/dish/page', method: 'get', params: { page: 1, pageSize: 1 } }).catch(() => null)
+            ])
+            const store = (storeRes && storeRes.code === 1 && storeRes.data) || {}
+            const noHours = !store.businessHours
+            const noCategory = !(catRes && catRes.code === 1 && catRes.data && Number(catRes.data.total) > 0)
+            const noDish = !(dishRes && dishRes.code === 1 && dishRes.data && Number(dishRes.data.total) > 0)
+            if (noHours || noCategory || noDish) {
+              this.onboardChecks = { noHours: noHours, noCategory: noCategory, noDish: noDish }
+              this.onboardVisible = true
+            }
+          } catch (e) { /* 检测失败不打扰工作台 */ }
         },
 
         // 修改点：切换趋势图天数，重新加载趋势数据

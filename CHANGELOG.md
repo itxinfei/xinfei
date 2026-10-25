@@ -2,6 +2,13 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-25 | 后台 | P0-3 新商户五步引导向导（O-45，P0 全线收官）
+- js/onboard-wizard.js：五步向导（店铺信息→分类→首菜→可选桌码→上线），去操作经 XINFEI_NAVIGATE 消息由壳层 menuHandle 开页（向导保持状态）；「不再提示/完成」localStorage 记忆；检测达标不打扰。
+- 工作台 detectOnboard：三轻查询并行（businessHours/分类 total/菜品 total）任一缺失即弹；零后端改动，向导不自动改业务数据。
+- 验证：语法+两门禁 0/0 + 8081 实测负向（达标不弹）与正向（五步/进度条/CTA 渲染）双路径通过。
+- **P0 四项全部落地**：P0-1 推送（代码层）+ P0-2 老板驾驶舱 + P0-3 向导 + P0-4 口味弹层。
+- 开发者：AI
+
 ## 2026-10-25 | miniapp/后端 | P0-1 订单状态推送·微信订阅消息（O-44，代码层全链）
 - 后端 notification/wxpush：WxSubscribePushService（stable_token 缓存 / subscribe/send / @Async / openid 脱敏 / 43101 常态 info）；三事件类（接单/取餐带骑手名/送达）；状态机四挂点全经 pushQuietly 双保险——任何失败不影响订单流转；单模板三节点复用（少两次授权）。
 - 小程序：checkout 下单成功即 requestSubscribeMessage（MP-WEIXIN 条件编译，拒绝/低版本静默）；模板 ID 在 shared/config 留空 = 全链安全降级。
