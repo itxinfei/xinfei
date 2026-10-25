@@ -93,7 +93,7 @@
         <view class="anon">
           <text class="anon__label">匿名评价</text>
           <!-- 微信 switch 的 color 只接受 hexColor、不支持 CSS 变量，此处显式写品牌金 -->
-          <switch :checked="anonymous" color="#ffc200" @change="onAnonymousChange" />
+          <switch :checked="anonymous" color="#ffc200" @change="onAnonymousChange" /> <!-- switch 原生属性不认 CSS 变量（合规例外，品牌主色） -->
         </view>
       </view>
 
@@ -141,7 +141,7 @@
           <view class="anon">
             <text class="anon__label">匿名评价</text>
             <!-- 微信 switch 的 color 只接受 hexColor、不支持 CSS 变量，此处显式写品牌金 -->
-            <switch :checked="rider.anonymous" color="#ffc200" @change="onRiderAnonymousChange" />
+            <switch :checked="rider.anonymous" color="#ffc200" @change="onRiderAnonymousChange" /> <!-- switch 原生属性不认 CSS 变量（合规例外） -->
           </view>
           <text
             class="rider-submit"

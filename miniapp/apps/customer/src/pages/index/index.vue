@@ -906,7 +906,7 @@ export default {
   text-align: center;
   border-radius: var(--radius-round);
   background: rgba(0, 0, 0, 0.4);
-  color: #fff;
+  color: var(--color-white, #fff);
   font-size: 36rpx;
 }
 
@@ -922,7 +922,7 @@ export default {
 .msheet__name {
   font-size: 36rpx;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-white, #fff);
 }
 
 .msheet__desc {

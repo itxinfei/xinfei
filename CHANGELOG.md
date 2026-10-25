@@ -2,6 +2,13 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | miniapp | uniapp 工程设计全面审查（O-39，1 违例修复）
+- **审查范围**：架构层（workspace/依赖/manifest/构建）→ shared 包（817 行封装质量）→ 运行时健壮性（40 页定时器/v-for key/规范纯度）→ 硬编码色分类。
+- **结论：架构与代码质量优秀**。三端依赖版本完全一致；request 双通道鉴权 + 401 统一收口；pay.js 三支付闭环只认后端 SUCCESS；40 页定时器全配对清理（queue 页疑点核实为误报——_timer 单例 + stopTimer 封装正确）；v-for :key 零缺失；data 全函数式；console.log 零残留；wx.* 专属 API 零泄漏（uni.* + provider 声明规范）；Options API 纯度 100%。
+- **唯一违例已修**：硬编码色 17 处——login.vue 品牌色系 7 处改令牌（4 令牌映射 + 渐变改 --color-primary-gradient）、index.vue #fff 改令牌白；其余 9 处属原生组件参数合规例外（uni.showModal confirmColor / 地图 polyline / switch color 属性不认 CSS 变量，与 Web 端 canvas 同口径）逐处补注释归类。复扫未标注例外为 0。
+- 验证：三端 pnpm build 全通过。建议级登记：easycom 组件抽取时再启用；manifest appid 留空属真机待办（O-36 检查单）。
+- 开发者：AI
+
 ## 2026-10-24 | 表格 | O-33「8 页迁移 crud-table」登记项复核：误判划除（O-38，零改动）
 - 逐页逐处核对 14 处手写 el-table 实际位置：combo 选菜/成本、employee 导入结果、delivery 阶梯弹窗、group-booking 明细、supplier 采购弹窗、platform 订单明细、subsidy 流水/对账、dining 区域、material 分类、order 支付记录、printer 桌台、kds 看板——**全部为弹窗内明细/辅助小表**；所有页面的主列表早已走 crud-table 组件（含选择列/批量条/统一空态）。
 - O-33 登记时以「页含手写 el-table」倒推「主列表未组件化」属口径错误，登记项划除；弹窗小表保持手写是合理设计（无分页/选择需求，组件能力用不上）。

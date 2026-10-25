@@ -355,7 +355,7 @@ export default {
       uni.showModal({
         title: '删除地址',
         content: '确定删除该收货地址？',
-        confirmColor: '#e64340',
+        confirmColor: '#e64340', // 原生组件参数不认 CSS 变量（合规例外，同 Web 端 canvas 口径）
         success: res => {
           if (!res.confirm) return
           // 后端为 @RequestParam List<Long> ids，必须走 query

@@ -229,10 +229,10 @@ export default {
         // callout 为 map 组件属性，CSS 变量无法注入，色值须显式写
         callout: {
           content: '骑手',
-          color: '#333333',
+          color: '#333333', // 地图原生组件参数不认 CSS 变量（合规例外）
           fontSize: 12,
           borderRadius: 6,
-          bgColor: '#ffffff',
+          bgColor: '#ffffff', // 同上
           padding: 6,
           display: 'ALWAYS',
           textAlign: 'center'

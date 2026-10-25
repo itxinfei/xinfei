@@ -297,7 +297,7 @@ export default {
   margin-top: 14rpx;
   font-size: 26rpx;
   letter-spacing: 10rpx;
-  color: #5d4404;
+  color: var(--color-primary-text-strong);
 }
 
 /* 底部弧形过渡：暖底椭圆上压 hero 底边 */
@@ -332,7 +332,7 @@ export default {
   text-align: center;
   font-size: 40rpx;
   font-weight: 700;
-  color: #3a2a10;
+  color: var(--color-primary-text);
 }
 
 .form__sub {
@@ -367,13 +367,13 @@ export default {
   height: 100%;
   font-size: 34rpx;
   font-weight: 500;
-  color: #3a2a10;
+  color: var(--color-primary-text);
 }
 
 .input__ph {
   font-size: 32rpx;
   font-weight: 400;
-  color: #8f856c;
+  color: var(--text-secondary);
 }
 
 .input__btn {
@@ -390,7 +390,7 @@ export default {
 }
 
 .input__btn--off {
-  color: #8f856c;
+  color: var(--text-secondary);
 }
 
 .submit {
@@ -401,8 +401,8 @@ export default {
   font-size: 34rpx;
   font-weight: 600;
   letter-spacing: 6rpx;
-  color: #4a3000;
-  background: linear-gradient(135deg, #ffd54f 0%, #ffc200 50%, #ff9a00 100%);
+  color: var(--color-primary-text-strong-active);
+  background: var(--color-primary-gradient);
   box-shadow: var(--shadow-primary);
 }
 
