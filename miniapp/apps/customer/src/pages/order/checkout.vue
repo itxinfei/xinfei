@@ -242,7 +242,7 @@
 
 <script>
 import {
-  http, fullImage, busyLock, fmtAmount, STORAGE_KEYS,
+  http, fullImage, busyLock, fmtAmount, STORAGE_KEYS, SUBSCRIBE_STATUS_TMPL,
   payOrderByWechat, PAY_CANCEL, PAY_PENDING
 } from '@xinfei/mini-shared'
 

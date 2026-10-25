@@ -6,6 +6,10 @@ import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.xinfei.common.BaseContext;
 import com.xinfei.common.CustomException;
 import com.xinfei.common.event.OrderCancelledEvent;
+import com.xinfei.module.notification.wxpush.OrderConfirmedPushEvent;
+import com.xinfei.module.notification.wxpush.OrderDeliveredPushEvent;
+import com.xinfei.module.notification.wxpush.OrderPickedUpPushEvent;
+import com.xinfei.module.notification.wxpush.WxSubscribePushService;
 import com.xinfei.common.event.OrderCompletedEvent;
 import com.xinfei.enums.DiningTableStatus;
 import com.xinfei.enums.OrderSource;
@@ -83,6 +87,17 @@ public class OrderStatusFlowServiceImpl
     /** Spring 事件发布器（订单完成/取消事件） */
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    /** P0-1 订阅消息推送（异步，失败静默不影响状态机；required=false 防 wxpush Bean 缺失阻塞启动） */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private WxSubscribePushService wxPushService;
+
+    /** 推送辅助：任何异常只记日志，绝不向上抛（状态机纪律） */
+    private void pushQuietly(com.xinfei.module.notification.wxpush.OrderPushEvent event) {
+        if (wxPushService != null) {
+            try { wxPushService.push(event); } catch (Exception e) { /* 双保险，push 内已兜底 */ }
+        }
+    }
 
     /** 支付单服务（已支付订单取消/拒单时检测与联动） */
     @Autowired
@@ -268,6 +283,10 @@ public class OrderStatusFlowServiceImpl
         // 注意：事件发布放在事务外由 Spring 保证（publishEvent 默认同步，
         // 事务提交前已发布，监听器 @Async 异步拾取），与原子状态更新的 ordering 由数据库 + 事件顺序保证
         eventPublisher.publishEvent(new OrderCompletedEvent(this, id, order.getTenantId()));
+        // P0-1：堂食/自提完成推送（外卖路径在 deliverRiderOrder 已推送达，按 riderId 区分防双推）
+        if (order.getRiderId() == null) {
+            pushQuietly(new OrderDeliveredPushEvent(this, id, order.getTenantId(), order.getUserId()));
+        }
         // 堂食订单完成 → 释放桌台（主事务内同步执行，失败不阻塞主流程）
         releaseTableIfEatIn(order);
         log.info("订单已完成并触发后续事件: id={}, number={}", id, order.getNumber());

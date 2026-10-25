@@ -7,7 +7,7 @@ export {
   couponTypeText, couponStatusText, pointsRecordSign
 } from './enums.js';
 export {
-  STORAGE_KEYS, CSRF_HEADER, AUTH_HEADER, DEFAULT_BASE_URL, getBaseUrl
+  STORAGE_KEYS, CSRF_HEADER, AUTH_HEADER, DEFAULT_BASE_URL, getBaseUrl, SUBSCRIBE_STATUS_TMPL
 } from './config.js';
 export { listState, busyLock, fmtAmount, fmtPercent } from './ui.js';
 export {

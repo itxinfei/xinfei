@@ -31,6 +31,13 @@ const AUTH_HEADER = 'X-Auth-Token';
 
 const WRITE_METHODS = ['post', 'put', 'delete', 'patch'];
 
+/**
+ * P0-1 订阅消息「订单状态通知」模板 ID（微信公众平台申请后填入）。
+ * 空串 = 未配置：checkout 的 requestOrderPushAuth 直接跳过，后端发送同样静默——
+ * 模板未申请时整条链路安全降级，不报错不打扰。
+ */
+const SUBSCRIBE_STATUS_TMPL = '';
+
 function getBaseUrl() {
   try {
     const override = uni.getStorageSync(STORAGE_KEYS.baseUrl);
@@ -42,4 +49,4 @@ function getBaseUrl() {
   return fromEnv || DEFAULT_BASE_URL;
 }
 
-export { DEFAULT_BASE_URL, STORAGE_KEYS, CSRF_HEADER, AUTH_HEADER, WRITE_METHODS, getBaseUrl };
+export { DEFAULT_BASE_URL, STORAGE_KEYS, CSRF_HEADER, AUTH_HEADER, WRITE_METHODS, getBaseUrl, SUBSCRIBE_STATUS_TMPL };

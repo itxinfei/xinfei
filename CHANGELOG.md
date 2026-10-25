@@ -2,6 +2,12 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-25 | miniapp/后端 | P0-1 订单状态推送·微信订阅消息（O-44，代码层全链）
+- 后端 notification/wxpush：WxSubscribePushService（stable_token 缓存 / subscribe/send / @Async / openid 脱敏 / 43101 常态 info）；三事件类（接单/取餐带骑手名/送达）；状态机四挂点全经 pushQuietly 双保险——任何失败不影响订单流转；单模板三节点复用（少两次授权）。
+- 小程序：checkout 下单成功即 requestSubscribeMessage（MP-WEIXIN 条件编译，拒绝/低版本静默）；模板 ID 在 shared/config 留空 = 全链安全降级。
+- 验证：4 例单测 + 编译 + AuthTokenChannelTest 回归 + 三端构建 + shared 9 测试全绿。真机待办：公众平台申请模板后填后端 subscribe.status-template-id 与前端 SUBSCRIBE_STATUS_TMPL（留空期间链路静默）。
+- 开发者：AI
+
 ## 2026-10-25 | miniapp | P0-2 老板驾驶舱（O-43，staff 小程序一页，零后端改动）
 - 新页 pages/boss/boss：大字营业额+订单/客单/完成率 chip+数据时间；待接单/待退款（红）两行可跳订单列表（status 预筛）；库存预警 Top5 按库存/安全线比值升序+健康空态；今日交班最近 5 条+合计。入口在工作台快捷操作首位；下拉刷新。
 - 数据全现成：overview（含 pendingRefund/serverTime）、material/warning、cashier/shift/page——S 级工时兑现。
