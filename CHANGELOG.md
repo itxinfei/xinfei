@@ -2,6 +2,12 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-24 | 表格 | O-33「8 页迁移 crud-table」登记项复核：误判划除（O-38，零改动）
+- 逐页逐处核对 14 处手写 el-table 实际位置：combo 选菜/成本、employee 导入结果、delivery 阶梯弹窗、group-booking 明细、supplier 采购弹窗、platform 订单明细、subsidy 流水/对账、dining 区域、material 分类、order 支付记录、printer 桌台、kds 看板——**全部为弹窗内明细/辅助小表**；所有页面的主列表早已走 crud-table 组件（含选择列/批量条/统一空态）。
+- O-33 登记时以「页含手写 el-table」倒推「主列表未组件化」属口径错误，登记项划除；弹窗小表保持手写是合理设计（无分页/选择需求，组件能力用不上）。
+- 连续两个登记项（O-37 图片、O-38 表格）复核后均为「已完成但登记未回滚」——文档债双例，教训已在 O-37 固化。
+- 开发者：AI
+
 ## 2026-10-24 | miniapp | 图片功能核实：token 通道与三处图片功能均已实现（O-37，文档滞后修正，零代码改动）
 - 核实结论：README 声称「评价图片未做——token 通道待后端改造」「客服图片消息与凭证不迁」均为**陈旧记载**。后端 CommonController 上传/下载双通道鉴权（Session + X-Auth-Token）早已落地，`AuthTokenChannelTest#userTokenGrantsUploadWithoutSession` 实测覆盖（本次复跑 7 例全绿）；小程序侧评价图片（chooseImage→顺序上传→5MB/张→上传中禁提交）、客服图片消息（bizType=chat）、投诉凭证图、头像更换、private 图 imgCache 带 token 下载全部已实现（shared/uploadFile 封装并自动补双头）。
 - 修正 README 两处台账；三端 pnpm build 全通过 + shared 9 测试绿。
