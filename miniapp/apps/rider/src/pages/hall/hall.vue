@@ -55,11 +55,21 @@ export default {
     return Object.assign(listState(), busyLock(), {
       tasks: [],
       grabbed: {},
-      loading: false
+      loading: false,
+      // P1-1 新单声震提醒：已见单 ID 集合（会话内防重复震）；提醒开关（我的页可关，默认开）
+      seenIds: {},
+      alertOn: true
     })
   },
   onShow() {
     this.load()
+    this.startPoll()
+  },
+  onHide() {
+    this.stopPoll()
+  },
+  onUnload() {
+    this.stopPoll()
   },
   onPullDownRefresh() {
     this.load().then(() => uni.stopPullDownRefresh())
@@ -68,11 +78,52 @@ export default {
     load() {
       this.loading = true
       this.listError = false
-      return http.get('/api/rider/tasks/hall').then(list => {
-        this.tasks = list || []
+      return http.get('/api/rider/tasks/hall', null, { silent: true }).then(list => {
+        const fresh = list || []
+        this.alertNewTasks(fresh)
+        this.tasks = fresh
       }).catch(() => { this.listError = true }).then(() => {
         this.loading = false
       })
+    },
+    // P1-1：前台 10s 轮询大厅（骑手驻页即感知新单；小程序后台不运行——
+    // 真后台推送依赖 P0-1 订阅消息骑手模板，登记为后续）
+    startPoll() {
+      this.stopPoll()
+      this._timer = setInterval(() => {
+        if (!this.alertOn) return
+        this.load().catch(() => {})
+      }, 10000)
+    },
+    stopPoll() {
+      if (this._timer) { clearInterval(this._timer); this._timer = null }
+    },
+    // diff 新单 → 震动 + 提示音 + Toast（首刷只记基线不震；同单会话内只提醒一次）
+    alertNewTasks(fresh) {
+      if (!this.alertOn) return
+      const news = fresh.filter(t => t && t.id != null && !this.seenIds[t.id])
+      fresh.forEach(t => { if (t && t.id != null) this.seenIds[t.id] = true })
+      if (this._baselineDone !== true) {
+        this._baselineDone = true
+        return
+      }
+      if (!news.length) return
+      try { uni.vibrateLong() } catch (e) { /* 设备不支持静默 */ }
+      this.beep()
+      uni.showToast({ title: '新增 ' + news.length + ' 单可抢', icon: 'none', duration: 2000 })
+    },
+    // 短提示音：音频资产真机阶段配置（static/brand/alert.mp3）；缺失时 onError 自毁静默
+    beep() {
+      // #ifdef MP-WEIXIN
+      try {
+        const inner = uni.createInnerAudioContext()
+        inner.src = '/static/brand/alert.mp3'
+        inner.volume = 1
+        inner.play()
+        inner.onEnded(() => inner.destroy())
+        inner.onError(() => inner.destroy())
+      } catch (e) { /* 音频缺失静默 */ }
+      // #endif
     },
     grab(task) {
       const key = 'grab:' + task.id

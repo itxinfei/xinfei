@@ -109,6 +109,7 @@
               <view class="coupon__main">
                 <view class="coupon__titlerow">
                   <text class="coupon__name">{{ c.name || '优惠券' }}</text>
+                  <text v-if="c.expiringSoon" class="coupon__soon">即将过期</text>
                   <text v-if="c.status !== 'unused'" class="coupon__status">{{ couponStatusText(c.status) }}</text>
                 </view>
                 <text class="coupon__meta">{{ mineTimeText(c) }}</text>
@@ -169,7 +170,13 @@ export default {
       return map
     },
     mineFiltered() {
-      return this.mine.filter(c => c.status === this.mineFilter)
+      const list = this.mine.filter(c => c.status === this.mineFilter)
+      // P1-3：unused 态下临期券（3 天内到期）置顶，并打 expiringSoon 标供角标渲染
+      if (this.mineFilter === 'unused') {
+        list.forEach(c => { c.expiringSoon = this.isExpiringSoon(c) })
+        list.sort((a, b) => (b.expiringSoon ? 1 : 0) - (a.expiringSoon ? 1 : 0))
+      }
+      return list
     },
     counts() {
       const r = { unused: 0, used: 0, expired: 0 }
@@ -352,6 +359,15 @@ export default {
       }
       return '优惠券'
     },
+    // P1-3：expireTime 距今 <3 天视为临期（解析失败按不临期，保守不打扰）
+    isExpiringSoon(c) {
+      if (!c || !c.expireTime || c.status !== 'unused') return false
+      try {
+        const t = new Date(String(c.expireTime).replace(/-/g, '/')).getTime()
+        if (isNaN(t)) return false
+        return t - Date.now() < 3 * 24 * 3600 * 1000
+      } catch (e) { return false }
+    },
     condText(c) {
       const n = Number(c.conditionAmount || 0)
       return n > 0 ? '满 ¥' + fmtAmount(c.conditionAmount) + ' 可用' : '无门槛'
@@ -359,7 +375,7 @@ export default {
     mineTimeText(c) {
       if (c.status === 'used') return c.usedTime ? '已于 ' + c.usedTime + ' 使用' : '已使用'
       if (c.status === 'expired') return c.expireTime ? '已于 ' + c.expireTime + ' 过期' : '已过期'
-      return c.expireTime ? '有效期至 ' + c.expireTime : '长期有效'
+      return c.expiringSoon ? c.expireTime + ' 到期，抓紧使用' : (c.expireTime ? '有效期至 ' + c.expireTime : '长期有效')
     }
   }
 }
@@ -510,6 +526,13 @@ export default {
   border-radius: var(--radius-sm);
 }
 
+.coupon__soon {
+  font-size: 20rpx;
+  color: var(--color-danger, #e64340);
+  background: rgba(230, 67, 64, 0.1);
+  border-radius: var(--radius-round);
+  padding: 2rpx 12rpx;
+}
 .coupon__status {
   margin-left: 12rpx;
   font-size: 22rpx;

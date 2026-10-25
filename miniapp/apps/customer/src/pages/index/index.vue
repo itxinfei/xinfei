@@ -20,7 +20,19 @@
         </view>
       </view>
 
-      <view v-if="restaurant.notice" class="notice" hover-class="hover-press" @tap="showNotice">
+            <!-- P1-2 菜品搜索：跨分类本地过滤（名称/描述），清空恢复分类视图 -->
+      <view class="searchbar">
+        <input
+          class="searchbar__input"
+          type="text"
+          :value="searchKw"
+          placeholder="搜索菜品"
+          confirm-type="search"
+          @input="onSearchInput"
+        />
+        <text v-if="searchKw" class="searchbar__clear" hover-class="hover-press" @tap="clearSearch">×</text>
+      </view>
+<view v-if="restaurant.notice" class="notice" hover-class="hover-press" @tap="showNotice">
         <text class="notice__tag">公告</text>
         <text class="notice__text">{{ restaurant.notice }}</text>
       </view>
@@ -46,7 +58,7 @@
       <!-- 修改点(2026-10-17)：移除 @scrolltolower 空绑定——/dish/list 服务端封顶 200 条，无客户端翻页可触发 -->
       <scroll-view class="menu__main" scroll-y>
         <!-- 套餐在前：整行点开明细弹层，＋直接加购（@tap.stop 阻止冒泡） -->
-        <view v-for="sm in setmeals" :key="'s' + sm.id" class="setmeal" hover-class="hover-press" @tap="openSetmeal(sm)">
+        <view v-for="sm in displayedSetmeals" :key="'s' + sm.id" class="setmeal" hover-class="hover-press" @tap="openSetmeal(sm)">
           <view class="setmeal__imgbox">
             <image class="setmeal__img" :src="img(sm.image)" mode="aspectFill" lazy-load />
             <text class="setmeal__tag">套餐</text>
@@ -70,7 +82,7 @@
 
         <view v-if="setmeals.length && dishes.length" class="menu__divider"><text class="menu__divider-text">单点菜品</text></view>
 
-        <view v-for="d in dishes" :key="'d' + d.id" class="dish">
+        <view v-for="d in displayedDishes" :key="'d' + (d._hit !== undefined ? d.id + 's' : d.id)" class="dish">
           <!-- 菜品收藏：金色实心=已收藏；未登录由全局 401 拦截跳登录页 -->
           <text
             class="dish__fav"
@@ -101,7 +113,7 @@
           <text>加载失败</text>
           <text class="menu__retry" @tap="reload()">重试</text>
         </view>
-        <x-empty v-if="!dishes.length && !setmeals.length && !loading && !listError" text="该分类下暂无在售商品" />
+        <x-empty v-if="!dishes.length && !setmeals.length && !loading && !listError" :text="searchActive ? '没有找到相关菜品，换个词试试' : '该分类下暂无在售商品'" />
       </scroll-view>
     </view>
 
@@ -245,6 +257,20 @@ export default {
     })
   },
   computed: {
+    // P1-2：搜索态（有关键字且已拉全量）→ 跨分类过滤；否则回分类视图
+    searchActive() {
+      return !!(this.searchKw && this.searchKw.trim() && this.allDishes)
+    },
+    displayedSetmeals() {
+      return this.searchActive ? [] : this.setmeals
+    },
+    displayedDishes() {
+      if (!this.searchActive) return this.dishes
+      const kw = this.searchKw.trim().toLowerCase()
+      return this.allDishes.filter(d =>
+        (d.name || '').toLowerCase().indexOf(kw) !== -1 ||
+        (d.description || '').toLowerCase().indexOf(kw) !== -1)
+    },
     cartCount() {
       return this.cart.reduce((sum, item) => sum + (item.number || 0), 0)
     },
@@ -323,6 +349,16 @@ export default {
         }
         return null
       }).catch(() => { this.listError = true })
+    },
+    // P1-2 搜索：首次输入懒拉全店菜品（/dish/list 不带 categoryId 即全量，后端封顶 200 条）
+    onSearchInput(e) {
+      this.searchKw = (e && e.detail && e.detail.value) || ''
+      if (this.searchKw.trim() && !this.allDishes) {
+        http.get('/dish/list').then(list => { this.allDishes = list || [] }).catch(() => {})
+      }
+    },
+    clearSearch() {
+      this.searchKw = ''
     },
     switchCategory(id) {
       if (id === this.activeCategoryId) return
@@ -594,6 +630,26 @@ export default {
   color: var(--color-text-hint);
 }
 
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 16rpx 24rpx 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-round);
+  padding: 10rpx 24rpx;
+}
+.searchbar__input {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--color-text-primary);
+  height: 52rpx;
+}
+.searchbar__clear {
+  font-size: 36rpx;
+  color: var(--color-text-hint);
+  padding: 0 8rpx;
+}
 .notice {
   display: flex;
   align-items: center;
