@@ -2,6 +2,12 @@
 
 格式：日期 | 模块 | 更新内容 | 开发者
 
+## 2026-10-25 | miniapp | P0-2 老板驾驶舱（O-43，staff 小程序一页，零后端改动）
+- 新页 pages/boss/boss：大字营业额+订单/客单/完成率 chip+数据时间；待接单/待退款（红）两行可跳订单列表（status 预筛）；库存预警 Top5 按库存/安全线比值升序+健康空态；今日交班最近 5 条+合计。入口在工作台快捷操作首位；下拉刷新。
+- 数据全现成：overview（含 pendingRefund/serverTime）、material/warning、cashier/shift/page——S 级工时兑现。
+- 验证：staff 构建+产物核对+三端全构建绿；真机待 P2-1。
+- 开发者：AI
+
 ## 2026-10-25 | miniapp | P0-4 口味选择弹层（O-42，点餐主链路功能回退修复）
 - 契约零后端改动：/dish/list 本就返回 flavors、add/sub 本就收 dishFlavor（后端 2026-09-30 已修多口味 sub 精确匹配）——小程序此前纯未接线。
 - index.vue：带口味菜品「＋」→「选规格」入口 + 半屏口味弹层（每组单选 / JSON 解析防中断 / 未选全 toast / 仅成功关弹层保持已选可重试，H5 同口径）；addDish 按同口味行匹配，subDish 对准首条行带口味（空口味入参只减空口味行——后端契约）。

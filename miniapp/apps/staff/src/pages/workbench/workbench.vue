@@ -33,6 +33,7 @@
     <view class="quick">
       <text class="quick__title">快捷操作</text>
       <view class="quick__row">
+        <text class="quick__item" hover-class="hover-press" @tap="toBoss">老板驾驶舱</text>
         <text class="quick__item" hover-class="hover-press" @tap="toOrders(null)">订单列表</text>
         <text class="quick__item" hover-class="hover-press" @tap="toStore">门店状态</text>
       </view>
@@ -87,6 +88,9 @@ export default {
       // 订单页在 tabBar 上，switchTab 不接受 query，用本地存储交接筛选状态
       if (status) uni.setStorageSync('staffOrderStatus', String(status))
       uni.switchTab({ url: '/pages/order/order' })
+    },
+    toBoss() {
+      uni.navigateTo({ url: '/pages/boss/boss' })
     },
     toStore() {
       uni.switchTab({ url: '/pages/store/store' })

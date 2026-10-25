@@ -15,6 +15,13 @@
       }
     },
     {
+      "path": "pages/boss/boss",
+      "style": {
+        "navigationBarTitleText": "老板驾驶舱",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
       "path": "pages/order/order",
       "style": {
         "navigationBarTitleText": "订单处理",
@@ -52,10 +59,22 @@
     "backgroundColor": "#FFFFFF",
     "borderStyle": "black",
     "list": [
-      { "pagePath": "pages/workbench/workbench", "text": "工作台" },
-      { "pagePath": "pages/order/order", "text": "订单" },
-      { "pagePath": "pages/store/store", "text": "门店" },
-      { "pagePath": "pages/me/me", "text": "我的" }
+      {
+        "pagePath": "pages/workbench/workbench",
+        "text": "工作台"
+      },
+      {
+        "pagePath": "pages/order/order",
+        "text": "订单"
+      },
+      {
+        "pagePath": "pages/store/store",
+        "text": "门店"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
     ]
   }
 }
