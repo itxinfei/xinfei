@@ -2,13 +2,13 @@
 
 **更新日期**：2026-10-22
 **适用范围**：仅 `src/main/resources/backend/`（管理后台壳层 + `page/` 内容页）
-**事实优先级**：本文档与 `agents.md` / `CLAUDE.md` 冲突时，以 `agents.md` 为准；组件实际行为以 `backend/js/components-v3.js`、`backend/js/app-v3.js` 源码为准。
+**事实优先级**：本文档与 `AGENTS.md` / `CLAUDE.md` 冲突时，以 `AGENTS.md` 为准；组件实际行为以 `backend/js/components-v3.js`、`backend/js/app-v3.js` 源码为准。
 
 ---
 
 ## 0. 当前状态（先读这段，不要按"待迁移"处理）
 
-- 后台**已完成** Vue 2 + Element UI 2 → **Vue 3 + Element Plus** 迁移：壳层 `index.html` + `page/` 下 80 个业务内容页（另 1 个标准模板 `_templates/list-page.html`）统一走 v3 装配，`backend/api/*.js` 共 39 个接口封装；后台**不存在待迁移的 Vue2 页面**。
+- 后台**已完成** Vue 2 + Element UI 2 → **Vue 3 + Element Plus** 迁移：壳层 `index.html` + `page/` 下 70 个页面（另 1 个标准模板 `_templates/list-page.html`）统一走 v3 装配，其中 68 个挂侧边栏、2 个由页面内 iframe 打开，`backend/api/*.js` 共 39 个接口封装；后台**不存在待迁移的 Vue2 页面**。
 - 旧 Vue 2 / Element UI 2 二进制资产（`vue.js`、`element-ui`、`components.js`、`chart-panel.js`、旧样式链、旧图标字体，共 14 个文件约 1.61 MB）已于 2026-10-22 整体删除，需要时从 git 历史找回，禁止重新引入。
 - 本文档用途：
   1. 新写后台页面时必须遵守的 v3 / Element Plus 写法与项目封装契约；
@@ -92,7 +92,7 @@
 8. `main-core.css`（键盘焦点环）；
 9. `element-plus-adapt.css`（EP DOM 适配层，必须最后加载）。
 
-颜色一律引用设计令牌 `var(--token, #回退)`，禁止硬编码 hex；canvas / ECharts 场景无法使用 `var()`，走 `components-v3.js` 暴露的 `window.XinfeiPalette`（运行时读令牌，hex 仅为回退值）。合规例外口径见 `agents.md` 前端段。
+颜色一律引用设计令牌 `var(--token, #回退)`，禁止硬编码 hex；canvas / ECharts 场景无法使用 `var()`，走 `components-v3.js` 暴露的 `window.XinfeiPalette`（运行时读令牌，hex 仅为回退值）。合规例外口径见 `AGENTS.md` 前端段。
 
 ---
 
@@ -384,10 +384,10 @@
 - `front/`、`rider/` 个别旧版页面的 Vant 4 收尾与本后台 EP 迁移无关，归属用户端迁移清单。
 - 小程序 token 会话、验证码 Redis、openid 登录、微信支付 JSAPI 等前置改造见 `miniapp/README.md` 第 5 节。
 
-### 6.4 文档口径遗留（非代码，按归属另轮刷新）
+### 6.4 文档口径遗留（2026-11-04 收口）
 
-- **根目录 `README.md`**：徽章（JDK 1.8 / Boot 2.4.5 / Druid / Vue 2.6 / Element-UI）、96–97 行三端描述、247–248 / 260–262 行技术栈表、286 行免构建说明、465 行目录树注释仍为旧栈口径。该文件是对外门面，刷新须配 `192.168.20.130` 真实运行环境实测截图（项目硬约束，不接受占位图），与本轮后台规范收口分属两轮，未在本轮改动。
-- **`docs/后台页面清单.md`**：顶部已加技术栈口径声明；正文 41 / 55 / 178 / 184 等行旧组件名作为历史记录保留，未逐行改写。
+- **根目录 `README.md`**：徽章与正文的技术栈、规模已按实测重刷为 JDK 25 / Boot 4.1.1 / HikariCP 7.0.2 / Vue 3.5.44 / Element Plus 2.14.7 / Vant 4.10.2 / 41 模块 / 136 张表 / 1160 个 `@Test` / 70 个后台页面；截图沿用仓库内既有的 `docs/screenshots/*.png`，未新拍。
+- **`docs/后台页面清单.md`**：第 1~6 节已按 70 个页面、68 个菜单挂载、21 个自研 css、`components-v3.js` 等现状改写；第 7~9 节的设计方案与提示词留档保留旧名并标注为历史记录。
 - **`docs/竞品与市场分析_竞析_2026.md`**：顶部已加现行栈口径注记；76 / 147 行对比表与结论中的 Vue2 表述为历史分析快照，保留不改。
 - **`docs/FLYWAY_MIGRATION.md`**：第 10 行依赖版本已按 Boot 4.1.1 / Flyway 12.4.0 / `flyway-mysql` 显式依赖订正，旧 7.1.1 口径仅作历史背景保留。
 

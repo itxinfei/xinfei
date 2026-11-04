@@ -12,7 +12,7 @@
 | [项目总览.md](./项目总览.md) | 项目概览、技术栈、目录结构、构建与运行 |
 | [模块与接口.md](./模块与接口.md) | 业务模块清单、Controller 与 API 端点分组 |
 | [数据模型.md](./数据模型.md) | 持久化实体、字段约定、多租户与乐观锁策略 |
-| [后台页面清单.md](./后台页面清单.md) | 管理后台页面清单、目录结构、组件与样式规范（页面业务归属仍有效；技术栈口径以 `agents.md` 与迁移计划为准） |
+| [后台页面清单.md](./后台页面清单.md) | 管理后台页面清单、目录结构、组件与样式规范（页面业务归属仍有效；技术栈口径以 `AGENTS.md` 与迁移计划为准） |
 | [Element-Plus迁移计划.md](./Element-Plus迁移计划.md) | 后台 Vue3 + Element Plus 现状契约、Vue2/Vue3 与 Element UI2/EP 对照表、新页面骨架、封装规范与排查清单（AI agent 写后台页面前必读） |
 | [架构设计.md](./架构设计.md) | 分层架构、异常处理、多租户、安全、约定等关键设计决策 |
 | [需求文档/](./需求文档/) | 需求文档集（面向大模型开发，入口 [README.md](./需求文档/README.md)）：[约束.md](./需求文档/约束.md)（技术红线+流程纪律）、[功能升级.md](./需求文档/功能升级.md)（P0-P2 迭代路线）、[PRD.md](./需求文档/PRD.md)（业务域与完成状态）、[UI设计.md](./需求文档/UI设计.md)、[Java设计.md](./需求文档/Java设计.md)、[功能调研.md](./需求文档/功能调研.md) |
@@ -32,7 +32,7 @@
 ## 项目速览
 
 - **性质**: 多租户餐饮全栈系统（开源自托管，面向商家自行部署与二开）
-- **后端**: Spring Boot 4.1.1 + MyBatis-Plus 3.5.17 + JDK 25（2026-10-20 从 Boot 2.4.5 / JDK 8 一步升级；详见 `agents.md` 技术栈节）
+- **后端**: Spring Boot 4.1.1 + MyBatis-Plus 3.5.17 + JDK 25（2026-10-20 从 Boot 2.4.5 / JDK 8 一步升级；详见 `AGENTS.md` 技术栈节）
 - **前端**: 三端免构建静态资源 —— 管理后台 Vue3 + Element Plus、用户点餐端 Vue3 + Vant 4、骑手端 Vue3 + Vant 4（均为原生 JS，无编译步骤）；小程序端 `miniapp/` 为独立 uni-app pnpm 工程
-- **规模**: 40 个业务模块 / 109 个 Controller / 874 个 API 端点 / 129 张业务数据表（Flyway V1 基线，另有 1 张 `flyway_schema_history`）/ 后台 80 个业务内容页（`backend/page/**/*.html`，不含 `_templates`）+ 1 个标准模板 `page/_templates/list-page.html` + 1 个壳层 `index.html` / 后台 API 封装在 `backend/api/*.js`。前端技术栈以 `agents.md` 与 [Element-Plus迁移计划.md](./Element-Plus迁移计划.md) 为准
-- **测试**: 131 个可执行测试类（另有 1 个抽象基类 `BaseControllerTest`）、1019 个测试用例（`mvn test`，0 失败 0 跳过，含 JaCoCo 覆盖率报告）
+- **规模**: 41 个模块（40 个业务 + 1 个 JDK 25 演示 `concurrency`）/ 117 个 Controller / 901 个 API 端点 / 129 个持久化实体 / 136 张数据表（V1 基线 129，V8/V12~V16 新增 7）/ 后台 70 个页面（`backend/page/**/*.html`，不含 `_templates`）+ 1 个标准模板 `page/_templates/list-page.html` + 1 个壳层 `index.html` / 后台 API 封装 39 个 `backend/api/*.js`。前端技术栈以 `AGENTS.md` 与 [Element-Plus迁移计划.md](./Element-Plus迁移计划.md) 为准
+- **测试**: 157 个可执行测试类（另有 1 个抽象基类 `BaseControllerTest`）、1160 个 `@Test`（2026-11-04 静态统计；最近一次全量 `mvn test` 为 2026-10-20 的 1064 个用例、0 失败 0 跳过，含 JaCoCo 覆盖率报告）
