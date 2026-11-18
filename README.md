@@ -66,7 +66,7 @@
 <br>
 
 <a href="https://itxinfei.github.io/xinfei/"><img src="docs/badges/shield-39.svg" alt="项目官网"></a>
-<a href="https://gitee.com/itxinfei/xinfei"><img src="docs/badges/shield-40.svg" alt="Gitee"></a>
+<a href="https://gitee.com/itxinfei/xfwm"><img src="docs/badges/shield-40.svg" alt="Gitee"></a>
 
 </div>
 
@@ -294,7 +294,7 @@ Session + HttpOnly Cookie 鉴权（HttpSession 落 Redis，多副本共享登录
 
 ```bash
 # 1. 克隆项目
-git clone https://gitee.com/itxinfei/xinfei.git
+git clone https://gitee.com/itxinfei/xfwm.git
 cd xinfei
 
 # 2. 创建数据库（务必指定 utf8mb4，否则中文数据乱码）
@@ -606,7 +606,7 @@ mvn clean compile
 
 <br>
 
-仓库：[gitee.com/itxinfei/xinfei](https://gitee.com/itxinfei/xinfei)<br>
+仓库：[gitee.com/itxinfei/xfwm](https://gitee.com/itxinfei/xfwm)<br>
 官网：[itxinfei.github.io/xinfei](https://itxinfei.github.io/xinfei/)<br>
 QQ 交流群：**[661543188](https://qm.qq.com/cgi-bin/qm/qr?k=gNgch-wCkfUu-QbI7DZSudrax2BN7vY0)**
 
@@ -618,6 +618,6 @@ QQ 交流群：**[661543188](https://qm.qq.com/cgi-bin/qm/qr?k=gNgch-wCkfUu-QbI7
 
 ### 如果这个项目对你有帮助，欢迎点个 Star
 
-<a href="https://gitee.com/itxinfei/xinfei"><img src="docs/badges/shield-41.svg" alt="Star"></a>
+<a href="https://gitee.com/itxinfei/xfwm"><img src="docs/badges/shield-41.svg" alt="Star"></a>
 
 </div>

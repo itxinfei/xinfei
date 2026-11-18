@@ -52,6 +52,6 @@
 
 - QQ 交流群：**661543188**
 - 商务 / 技术支持 QQ：**747011882**
-- Issue：[gitee.com/itxinfei/xinfei/issues](https://gitee.com/itxinfei/xinfei/issues)
+- Issue：[gitee.com/itxinfei/xfwm/issues](https://gitee.com/itxinfei/xfwm/issues)
 
 再次感谢你的贡献，一起把项目做得更好！🎉
