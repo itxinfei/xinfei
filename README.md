@@ -51,7 +51,7 @@
 <img src="docs/badges/shield-29.svg" alt="Mockito 5.23">
 <img src="docs/badges/shield-30.svg" alt="JaCoCo">
 <img src="docs/badges/shield-31.svg" alt="Maven">
-<img src="docs/badges/shield-32.svg" alt="Apache 2.0">
+<img src="docs/badges/shield-32.svg" alt="BUSL-1.1">
 
 <br>
 
@@ -73,8 +73,8 @@
 <table align="center">
 <tr>
 <td align="center" width="100%">
-<b>本项目以 Apache-2.0 协议开源，可以学习、做毕设、二次开发，也可以商用</b><br>
-另提供二次开发、私有化部署、功能定制与项目讲解服务 &nbsp;|&nbsp;
+<b>本项目以 BUSL-1.1 授权：个人学习、毕设、自用免费，商用需取得书面授权</b><br>
+另提供商业授权、二次开发、私有化部署、功能定制与项目讲解服务 &nbsp;|&nbsp;
 QQ：<code>747011882</code> &nbsp;·&nbsp; 交流群：<code>661543188</code>
 </td>
 </tr>
@@ -233,9 +233,9 @@ Session + HttpOnly Cookie 鉴权（HttpSession 落 Redis，多副本共享登录
 | 你是… | 心飞能给你 |
 |---|---|
 | 计算机专业学生 | 三端、AI、多租户、真实支付都在一个项目里，适合拿来读源码、做毕业设计，也能写进简历 |
-| 餐饮商家 / 创业者 | 自己部署，数据留在自己机器上，一套系统管门店，不用按年买 SaaS |
+| 餐饮商家 / 创业者 | 取得商业授权后可私有化部署，数据留在自己机器上，一套系统管门店，不用按年买 SaaS |
 | 全栈开发者 | 分层、多租户、支付和 1160 个 @Test 都在，可以直接二开，也可以拆出来当脚手架 |
-| 外包 / 技术团队 | Apache-2.0 允许商用交付，起步阶段不必从零搭架子 |
+| 外包 / 技术团队 | 可申请商业授权用于客户交付，起步阶段不必从零搭架子 |
 
 ---
 
@@ -585,7 +585,7 @@ mvn clean compile
 
 ### 付费技术服务
 
-本项目以 Apache-2.0 协议开源，可以免费使用。作者另外提供付费的技术支持：
+本项目以 Business Source License 1.1 授权（源码可见，非 OSI 开源）：个人学习、毕设、自有开发测试免费；生产环境、商业运营、对外提供服务须先取得商业授权，详见 [LICENSE](LICENSE)。作者另外提供付费的技术支持：
 
 - 二次开发与功能定制（对接平台、新增业务、UI 调整）
 - 私有化部署交付（服务器、域名、支付商户配置）
