@@ -67,6 +67,7 @@
 
 <a href="https://itxinfei.github.io/xinfei/"><img src="docs/badges/shield-39.svg" alt="项目官网"></a>
 <a href="https://gitee.com/itxinfei/xfwm"><img src="docs/badges/shield-40.svg" alt="Gitee"></a>
+<a href="https://github.com/itxinfei/xinfei"><img src="https://img.shields.io/badge/GitHub-xinfei-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"></a>
 
 </div>
 
