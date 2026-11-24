@@ -5,7 +5,7 @@
 #            可选：APP_PORT / XINFEI_SERVER_URL / XINFEI_*_MOCK_MODE / ALLOW_MOCK_IN_PROD / FLYWAY_ENABLED
 services:
   mysql:
-    image: mysql:8.4.11
+    image: mysql:8.4.13
     container_name: xinfei-mysql
     restart: unless-stopped
     environment:
@@ -40,7 +40,7 @@ services:
   # 一次性确保库存在（幂等，每次 up 都会跑一遍，不丢数据）。
   # 建表/种子已移交应用启动期的 Flyway，此处不再挂载 schema 与 seed 脚本。
   db-init:
-    image: mysql:8.4.11
+    image: mysql:8.4.13
     container_name: xinfei-db-init
     restart: "no"
     depends_on:
