@@ -1,7 +1,7 @@
 # Xinfei 外卖系统 — 多阶段构建
 # 阶段一：JDK 8 + Maven 编译（enforcer 强制 [1.8,1.9)，必须用 JDK 8 镜像）
 # 阶段二：JRE 8 运行时
-FROM maven:3.8-openjdk-8 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /build
 
 # 先拷 pom 单独拉依赖，源码不变时命中缓存层，二次构建不重下依赖
@@ -11,7 +11,7 @@ RUN mvn -B -q dependency:go-offline
 COPY src ./src
 RUN mvn -B -q -DskipTests package
 
-FROM eclipse-temurin:8-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 RUN apt-get update -qq \
     && apt-get install -y -qq --no-install-recommends curl tzdata \
     && rm -rf /var/lib/apt/lists/*

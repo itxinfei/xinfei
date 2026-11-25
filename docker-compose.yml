@@ -25,7 +25,7 @@ services:
       start_period: 30s
 
   redis:
-    image: redis:7-alpine
+    image: redis:8.10.3-alpine
     container_name: xinfei-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
