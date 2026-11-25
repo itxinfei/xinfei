@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.3</version>
         <relativePath/>
     </parent>
 
@@ -140,7 +140,7 @@
         <!-- 数据库迁移：Flyway。Boot 4 已把 Flyway 自动配置从 spring-boot-autoconfigure 拆到
              独立模块 spring-boot-flyway —— 只引 flyway-core 时 spring.flyway.* 全部静默失效
              （迁移不执行、日志无输出、启动照样成功），必须显式引入本模块。
-             版本由 BOM 管理（Boot 4.1.1 → Flyway 12.4.0）。
+             版本由 BOM 管理（Boot 4.1.3 → Flyway 12.4.0）。
              基线语义见 application.yml 的 spring.flyway 与 docs/FLYWAY_MIGRATION.md -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -315,7 +315,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>4.1.1</version>
+                <version>4.1.3</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
