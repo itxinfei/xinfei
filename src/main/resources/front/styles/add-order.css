@@ -60,7 +60,7 @@
   height: 17rem;
   opacity: 1;
   font-size: 12rem;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   /* 修改点(2026-09-17)：与大地址同色同级无主次 → 降为二级色，突出地址本身 */
@@ -96,7 +96,7 @@
   height: 47rem;
   opacity: 1;
   font-size: 12rem;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   color: var(--color-text-primary);
@@ -118,7 +118,7 @@
   line-height: 56rem;
   opacity: 1;
   font-size: 16rem;
-  font-family: "PingFangSC", "PingFangSC-Semibold";
+  font-family: var(--font-family-title);
   font-weight: 600;
   text-align: left;
   color: var(--color-text-primary);
@@ -163,7 +163,7 @@
   height: 22rem;
   opacity: 1;
   font-size: 16rem;
-  font-family: "PingFangSC", "PingFangSC-Semibold";
+  font-family: var(--font-family-title);
   font-weight: 600;
   text-align: left;
   color: var(--color-text-primary);
@@ -185,7 +185,7 @@
   height: 20rem;
   opacity: 1;
   font-size: 14rem;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   color: var(--color-text-secondary);
@@ -196,12 +196,12 @@
 
 /* 修改点(2026-09-17)：数量数字用 DIN 等宽字体 */
 #add_order .divContent .order .itemList .item .desc .numPrice .num {
-  font-family: DIN, DIN-Medium;
+  font-family: var(--font-family-number);
 }
 
 #add_order .divContent .order .itemList .item .desc .numPrice .price {
   font-size: 20rem;
-  font-family: DIN, DIN-Medium;
+  font-family: var(--font-family-number);
   font-weight: 500;
   text-align: left;
   color: var(--color-price);
@@ -235,7 +235,7 @@
   height: 56rem;
   opacity: 1;
   font-size: 16rem;
-  font-family: "PingFangSC", "PingFangSC-Semibold";
+  font-family: var(--font-family-title);
   font-weight: 600;
   text-align: left;
   color: var(--color-text-primary);
@@ -303,7 +303,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  font-family: DIN, DIN-Medium;
+  font-family: var(--font-family-number);
   color: var(--color-text-white);
 }
 #add_order .divCart .num-symbol { font-size: 13rem; font-weight: 600; }
@@ -386,7 +386,7 @@
   height: 44rem;
   line-height: 44rem;
   font-size: 16rem;
-  font-family: "PingFangSC", "PingFangSC-Semibold";
+  font-family: var(--font-family-title);
   font-weight: 600;
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--bg-hover);
@@ -431,7 +431,7 @@
 
 /* 微信：浅绿底 + 品牌绿图标（美团式色块，纯色无背景偏单薄） */
 #add_order .pay-wechat-icon {
-  background: rgba(7, 193, 96, 0.12);
+  background: var(--color-success-tint);
   color: var(--color-success-text);
 }
 
@@ -549,7 +549,7 @@
 }
 
 #add_order .price-row.total span:last-child {
-  font-family: DIN, DIN-Medium;
+  font-family: var(--font-family-number);
   font-size: 20rem;
   font-weight: 600;
   color: var(--color-price);
@@ -666,7 +666,7 @@
 #add_order .coupon-popup .coupon-amount {
   display: block;
   font-size: 22rem;
-  font-family: DIN, DIN-Medium;
+  font-family: var(--font-family-number);
   font-weight: 600;
   color: var(--color-price);
   line-height: 1.2;
@@ -754,7 +754,7 @@
 #add_order .items-popup .pi-name { font-size: 14rem; color: var(--color-text-primary); }
 #add_order .items-popup .pi-meta { font-size: 12rem; color: var(--color-text-hint); margin-top: 2rem; }
 #add_order .items-popup .pi-num { font-size: 13rem; color: var(--color-text-hint); flex-shrink: 0; }
-#add_order .items-popup .pi-amount { font-size: 14rem; font-weight: 600; color: var(--color-price); font-family: DIN, DIN-Medium; flex-shrink: 0; }
+#add_order .items-popup .pi-amount { font-size: 14rem; font-weight: 600; color: var(--color-price); font-family: var(--font-family-number); flex-shrink: 0; }
 
 /* 修改点：送达时间选择器弹窗样式 */
 #add_order .time-picker-popup {
@@ -1052,7 +1052,7 @@
   border-radius: 4rem;
 }
 #add_order .divContent .order .itemList .gift-item .gift-num {
-  font-family: DIN, DIN-Medium;
+  font-family: var(--font-family-number);
   color: var(--color-text-secondary);
 }
 

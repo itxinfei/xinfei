@@ -747,7 +747,7 @@ select {
 
 ::-webkit-input-placeholder {
   font-size: 13px;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   color: var(--color-text-hint);
@@ -756,7 +756,7 @@ select {
 :-moz-placeholder {
   /* Firefox 18- */
   font-size: 13px;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   color: var(--color-text-hint);
@@ -764,7 +764,7 @@ select {
 ::-moz-placeholder {
   /* Firefox 19+ */
   font-size: 13px;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   color: var(--color-text-hint);
@@ -772,7 +772,7 @@ select {
 
 :-ms-input-placeholder {
   font-size: 13px;
-  font-family: "PingFangSC", "PingFangSC-Regular";
+  font-family: var(--font-family-body);
   font-weight: 400;
   text-align: left;
   color: var(--color-text-hint);
